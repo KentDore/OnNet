@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Onnet — Simulateur brut → net</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,450;9..144,550;9..144,650&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
+    --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%; overflow-x:hidden; width:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; line-height:1.4; overflow-x:hidden; width:100%;
+    -webkit-user-select:none; -moz-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
+  }
+  input, select, textarea{
+    -webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:24px 16px 64px;}
+  @media (min-width:640px){ .wrap{padding:48px 32px 80px;} }
+
+  header{margin-bottom:16px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+  h1{font-family:'Fraunces',serif; font-weight:550; font-size:30px; line-height:1.15; margin:0 0 10px; letter-spacing:-.01em;}
+  @media (min-width:640px){ h1{font-size:38px;} }
+  header p{color:var(--ink-soft); font-size:14.5px; line-height:1.55; max-width:60ch; margin:0 0 18px;}
+  .header-top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
+  .header-top .eyebrow{margin-bottom:0;}
+  .brand-block{display:flex; flex-direction:column; gap:3px;}
+  .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1;}
+  .brand-accent{color:var(--accent);}
+  .print-btn{
+    display:inline-flex; align-items:center; gap:7px; flex:none;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--line); border-radius:999px; padding:8px 14px 8px 12px; cursor:pointer;
+  }
+  .print-btn svg{width:14px; height:14px; flex:none;}
+  .print-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+  .print-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn{font-family:'Inter',sans-serif; font-weight:600; font-size:15px; border-radius:12px; padding:14px 18px; cursor:pointer; border:none; width:100%;}
+  @media (min-width:640px){ .btn{width:auto;} }
+  .btn-primary{background:var(--ink); color:#fff;}
+  .btn-primary:hover{background:var(--accent);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px;}
+  .panel > summary{cursor:pointer; font-family:'Fraunces',serif; font-weight:550; font-size:16px; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px; padding:2px 0;}
+  .panel > summary::-webkit-details-marker{display:none;}
+  .panel > summary::after{content:"+"; font-family:'IBM Plex Mono',monospace; color:var(--accent); margin-left:auto; font-size:16px;}
+  .panel[open] > summary::after{content:"–";}
+  .panel-body{padding-top:16px;}
+
+  .panel-advanced{background:transparent; border:1px dashed var(--line); box-shadow:none;}
+  .panel-advanced > summary{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-soft);}
+  .panel-advanced > summary::after{color:var(--ink-soft);}
+
+  /* ---- Modules (add-on style panels: augmentation, absence, ...) ---- */
+  .modules-section{margin-bottom:16px;}
+  .modules-head{margin-bottom:10px;}
+  .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
+  .modules-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  .modules-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  @media (min-width:720px){ .modules-grid{grid-template-columns:1fr 1fr 1fr;} }
+  .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+  .module-toggle-head{width:100%; display:flex; align-items:center; gap:12px; padding:16px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Inter',sans-serif;}
+  .module-toggle-head-static{cursor:default;}
+  .module-icon{flex:none; width:34px; height:34px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center;}
+  .module-icon svg{width:18px; height:18px;}
+  .module-card-soon .module-icon{background:var(--bg); color:var(--ink-soft);}
+  .module-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .module-name{font-weight:600; font-size:14px; color:var(--ink);}
+  .module-desc{font-size:12px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .module-switch{flex:none; width:34px; height:20px; border-radius:999px; background:var(--line); position:relative; transition:background .15s ease;}
+  .module-switch::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .module-card.is-open .module-switch{background:var(--accent);}
+  .module-card.is-open .module-icon{background:var(--accent); color:#fff;}
+  .module-card.is-open .module-switch::after{transform:translateX(14px);}
+  .module-card-soon{border-style:dashed; opacity:.7;}
+  .module-body{padding:0 16px 18px;}
+  .module-card .hint{margin-top:0;}
+
+  .panel-nested{margin-top:18px; border-top:1px solid var(--line); padding-top:4px;}
+  .panel-nested > summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); list-style:none; display:flex; align-items:center; gap:6px; padding:8px 0;}
+  .panel-nested > summary::-webkit-details-marker{display:none;}
+  .panel-nested > summary::before{content:"+"; font-family:'IBM Plex Mono',monospace; font-size:14px;}
+  .panel-nested[open] > summary::before{content:"–";}
+  .panel-nested-body{padding-top:10px;}
+
+  .hint{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-2px 0 14px;}
+  h2.bars-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 4px;}
+
+  /* ---- Insight callout ---- */
+  .insight{
+    font-family:'Fraunces',serif; font-size:15.5px; line-height:1.5; color:var(--ink);
+    background:var(--accent-soft); border-radius:12px; padding:12px 16px; margin:14px 0 6px;
+  }
+  .insight strong{color:var(--accent);}
+  .insight.neutral{background:var(--bg); color:var(--ink-soft); font-family:'Inter',sans-serif; font-size:13px;}
+
+  /* ---- Stacked breakdown chart ---- */
+  .stack-chart-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; padding:2px;}
+  .stack-chart{display:flex; gap:14px; align-items:flex-end; justify-content:center; flex-wrap:nowrap; padding:16px 2px 8px; width:max-content; min-width:100%;}
+  .stack-col{
+    display:flex; flex-direction:column; align-items:center; width:124px; flex:none;
+    background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:16px 10px 14px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .stack-col.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .stack-col[data-setref]{cursor:pointer;}
+  .stack-col[data-setref]:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .stack-col[data-setref]:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .stack-brut{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; color:var(--ink-soft);
+    background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px 10px; margin-bottom:12px; white-space:nowrap;
+  }
+  .stack-bar{width:60px; display:flex; flex-direction:column; gap:3px;}
+  .stack-seg{width:100%; min-height:0; border-radius:5px; box-shadow:0 1px 2px rgba(23,36,31,.08);}
+  .stack-seg:first-child{border-top-left-radius:12px; border-top-right-radius:12px;}
+  .stack-seg:last-child{border-bottom-left-radius:12px; border-bottom-right-radius:12px;}
+  .stack-seg-cotis{background:var(--stack-cotis);}
+  .stack-seg-mutres{background:var(--gold);}
+  .stack-seg-net{background:linear-gradient(165deg, #2E8A62 0%, var(--accent) 75%); display:flex; align-items:flex-start; justify-content:center; padding-top:8px;}
+  .stack-net-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.85);}
+  .stack-ref-row{display:flex; align-items:center; gap:6px; margin-top:12px; max-width:104px;}
+  .stack-ref-dot{width:9px; height:9px; border-radius:50%; border:2px solid var(--line); background:var(--surface); flex:none;}
+  .stack-ref-dot.is-ref{border-color:var(--accent); background:var(--accent);}
+  .stack-name{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; line-height:1.3; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stack-col.is-ref .stack-name{color:var(--accent);}
+  .stack-net{font-family:'Fraunces',serif; font-weight:600; font-size:19px; margin-top:2px;}
+  .stack-delta{font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; margin-top:6px; padding:2px 8px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);}
+  .stack-delta.pos{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
+  .stack-delta.neg{background:var(--warn-soft); color:var(--warn); border-color:transparent;}
+  .stack-legend{display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:500; color:var(--ink);}
+  .legend-swatch{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(23,36,31,.05);}
+  @media (max-width:480px){ .stack-chart{gap:10px;} .stack-col{width:100px; padding:14px 8px 12px;} .stack-bar{width:48px;} .stack-ref-row{max-width:80px;} .stack-name{font-size:12px;} .stack-net{font-size:16px;} }
+
+  /* ---- Raise chips ---- */
+  .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+  .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
+  .raise-chip:hover{background:var(--accent); color:#fff;}
+  .raise-chip.eur{border-color:var(--gold); background:var(--gold-soft); color:#7A5F1E;}
+  .raise-chip.eur:hover{background:var(--gold); color:#fff;}
+  .raise-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px;}
+  .raise-type-toggle{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
+  .raise-type-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:11px 16px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .raise-type-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  #raiseAmount{width:110px; font-family:'Inter',sans-serif; font-size:16px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); flex:none;}
+  #raiseAmount:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:#fff;}
+  @media (max-width:480px){ .raise-controls{flex-direction:column; align-items:stretch;} #raiseAmount{width:100%;} .raise-controls .btn{width:100%;} }
+
+  /* ---- Secondary comparison ---- */
+  .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
+  .ref-row label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:0;}
+  .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
+  .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
+  .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .metric-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .bar-row{margin-bottom:14px;}
+  .bar-row:last-child{margin-bottom:0;}
+  .bar-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:8px;}
+  .bar-name{font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-value{font-family:'IBM Plex Mono',monospace; font-size:13.5px; white-space:nowrap; display:flex; align-items:center; gap:8px;}
+  .bar-delta{font-size:11px; font-weight:600; padding:2px 7px; border-radius:999px; background:var(--line); color:var(--ink-soft);}
+  .bar-delta.pos{background:var(--accent-soft); color:var(--accent);}
+  .bar-delta.neg{background:var(--warn-soft); color:var(--warn);}
+  .bar-track{background:var(--bg); border-radius:8px; height:10px; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--accent); border-radius:8px; transition:width .2s ease;}
+  @media (prefers-reduced-motion:reduce){ .bar-fill{transition:none;} }
+
+  .icon-inline{width:15px; height:15px; flex:none; margin-top:1px;}
+  .alert{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.5; border-radius:10px; padding:11px 13px; margin-top:14px;}
+  .alert-warn{background:var(--warn-soft); color:var(--warn); border:1px solid #E3C4B4;}
+  .alert-info{background:var(--gold-soft); color:#7A5F1E; border:1px solid #E5D5AC;}
+
+  /* ---- Pill toggles (reused for hero unit + duration) ---- */
+  .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
+  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .pill-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  .pill-toggle.small button{padding:7px 12px; font-size:12px;}
+
+  /* ---- Cards bar (global toggles + nav) ---- */
+  .cards-bar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
+  .cards-bar-toggles{display:flex; gap:8px; flex-wrap:wrap;}
+  .cards-bar-nav{display:flex; gap:6px;}
+  .nav-btn{width:36px; height:36px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
+  .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-btn:disabled{opacity:.3; cursor:default;}
+
+  /* ---- Horizontal-only card rail ---- */
+  .cards-scroll{
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
+    padding:2px 16px 12px; margin:0 -16px;
+  }
+  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px;} }
+  .cards-scroll::-webkit-scrollbar{height:8px;}
+  .cards-scroll::-webkit-scrollbar-track{background:var(--line); border-radius:4px;}
+  .cards-scroll::-webkit-scrollbar-thumb{background:#A9B0A6; border-radius:4px;}
+  .cards{display:flex; gap:16px;}
+  .card{
+    flex:0 0 272px; scroll-snap-align:start; position:relative;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;
+  }
+  @media (min-width:480px){ .card{flex-basis:296px;} }
+  .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 0; width:100%; border-bottom:1px solid transparent;}
+  input.name-input:focus{outline:none; border-bottom-color:var(--accent);}
+  .ref-badge{font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 7px; border-radius:999px; white-space:nowrap;}
+  .remove-btn{flex:none; width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); font-size:15px; line-height:1; cursor:pointer;}
+  .remove-btn:hover{background:var(--warn-soft); color:var(--warn); border-color:var(--warn);}
+
+  .card-add{
+    border-style:dashed; background:transparent; appearance:none; -webkit-appearance:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    color:var(--ink-soft); font-family:'Inter',sans-serif; cursor:pointer; text-align:center; min-height:180px;
+  }
+  .card-add:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+  .card-add:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .card-add-icon{width:36px; height:36px; border-radius:999px; background:var(--bg); display:flex; align-items:center; justify-content:center; flex:none;}
+  .card-add-icon svg{width:18px; height:18px;}
+  .card-add:hover .card-add-icon{background:#fff;}
+  .card-add-label{font-weight:600; font-size:14px;}
+
+  .hero{margin:14px 0 16px; padding:14px 0 16px; border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .hero-value{font-family:'Fraunces',serif; font-weight:550; font-size:30px; line-height:1.1;}
+  .hero-label{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .hero-pas{font-size:12px; color:var(--ink-soft); margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);}
+  .hero-pas strong{color:var(--ink); font-weight:600;}
+
+  .field-row{margin-bottom:14px;}
+  .field-row:last-child{margin-bottom:0;}
+  .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
+  .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
+  .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
+  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:#fff;}
+  .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  .section-tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin:18px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--line);}
+  .section-tag:first-child{margin-top:0;}
+
+  details.more{margin-top:8px; border-top:1px solid var(--line); padding-top:12px;}
+  details.more > summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); list-style:none; display:flex; align-items:center; gap:6px; padding:4px 0;}
+  details.more > summary::-webkit-details-marker{display:none;}
+  details.more > summary::before{content:"+"; font-family:'IBM Plex Mono',monospace; font-size:14px;}
+  details.more[open] > summary::before{content:"–";}
+  details.more .more-body{padding-top:14px;}
+
+  .subline{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 0; font-size:13px;}
+  .subline .val{font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap;}
+
+  .disclaimer{margin-top:24px; font-size:12px; line-height:1.6; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; max-width:82ch;}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+
+  @media print{
+    body{background:#fff;}
+    .header-top .print-btn, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .cards-scroll{overflow:visible; margin:0; padding:0;}
+    .cards{flex-wrap:wrap;}
+    .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
+    .panel{break-inside:avoid; border-color:#bbb;}
+    .stack-chart-scroll{overflow:visible;}
+    .stack-chart{flex-wrap:wrap; width:auto; justify-content:flex-start;}
+    details.more > summary, .panel-nested > summary{display:none;}
+    details.more .more-body{padding-top:0;}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-top">
+      <div class="brand-block">
+        <div class="brand">On<span class="brand-accent">net</span></div>
+        <div class="eyebrow">Simulateur de paie · règles 2026</div>
+      </div>
+      <button class="print-btn" id="printBtn">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+        <span>Imprimer / exporter</span>
+      </button>
+    </div>
+    <h1>Le brut promet. Le net décide.</h1>
+    <p>Poste actuel, offre reçue, augmentation en négociation : mettez vos salaires côte à côte et voyez en un coup d'œil ce qui atterrit vraiment sur votre compte.</p>
+  </header>
+
+  <section class="modules-section" aria-label="Modules complémentaires">
+    <div class="modules-head">
+      <h2 class="modules-title">Modules</h2>
+      <p class="modules-sub">Activez les outils dont vous avez besoin pour ce comparatif.</p>
+    </div>
+    <div class="modules-grid">
+
+      <div class="module-card" id="raiseModule">
+        <button type="button" class="module-toggle-head" id="raiseModuleToggle" aria-expanded="false" aria-controls="raiseModuleBody">
+          <span class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
+          <span class="module-info">
+            <span class="module-name">Simuler une augmentation</span>
+            <span class="module-desc">Comparer une hausse en % ou en euros</span>
+          </span>
+          <span class="module-switch" aria-hidden="true"></span>
+        </button>
+        <div class="module-body" id="raiseModuleBody" hidden>
+          <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Un clic crée un nouveau salaire à comparer.</div>
+          <div class="raise-chips" id="raiseChipsPct"></div>
+          <div class="raise-chips" id="raiseChipsEur"></div>
+          <div class="raise-controls">
+            <div class="raise-type-toggle" role="group" aria-label="Type d'augmentation">
+              <button type="button" data-rtype="pct" aria-pressed="true">%</button>
+              <button type="button" data-rtype="eur" aria-pressed="false">€ / mois</button>
+            </div>
+            <label class="sr-only" for="raiseAmount">Montant de l'augmentation</label>
+            <input type="text" inputmode="decimal" id="raiseAmount" value="5">
+            <button class="btn btn-primary" id="addRaiseScenario">Ajouter</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="module-card" id="absenceModule">
+        <button type="button" class="module-toggle-head" id="absenceModuleToggle" aria-expanded="false" aria-controls="absenceModuleBody">
+          <span class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 0 0 0-20 0Z"></path><path d="M12 12v8a2 2 0 0 0 4 0"></path><path d="M12 2v1"></path></svg></span>
+          <span class="module-info">
+            <span class="module-name">Simuler une absence</span>
+            <span class="module-desc">Congés payés ou arrêt de travail</span>
+          </span>
+          <span class="module-switch" aria-hidden="true"></span>
+        </button>
+        <div class="module-body" id="absenceModuleBody" hidden>
+          <div class="hint">Calculé à partir de <strong id="absenceBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas, sur la base d'un mois de 30 jours.</div>
+
+          <div class="field-row">
+            <label>1. Type d'absence</label>
+            <div class="pill-toggle" id="absenceTypeToggle" role="group" aria-label="Type d'absence" style="width:100%;">
+              <button type="button" data-atype="conges" aria-pressed="true" style="flex:1;">Congés payés</button>
+              <button type="button" data-atype="arret" aria-pressed="false" style="flex:1;">Arrêt de travail</button>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="absenceDuree">2. Durée de l'absence (jours sur le mois)</label>
+            <input type="text" inputmode="decimal" id="absenceDuree" value="5">
+          </div>
+
+          <div id="arretExtraFields" style="display:none;">
+            <div class="field-row">
+              <label for="ancienneteSelect">3. Ancienneté dans l'entreprise</label>
+              <select id="ancienneteSelect">
+                <option value="90">1 an ou plus — maintien à 90 % (loi de mensualisation)</option>
+                <option value="50">Moins d'1 an — indemnités de la Sécu seules (≈ 50 %)</option>
+                <option value="custom">Je connais mon propre taux</option>
+              </select>
+              <div class="sub-hint">Détermine le % du salaire maintenu. Votre convention collective peut prévoir mieux : vérifiez votre bulletin de paie ou votre service RH si vous en avez un.</div>
+            </div>
+            <div class="field-row" id="arretPctRow" style="display:none;">
+              <label for="arretPct">% du salaire maintenu (votre taux)</label>
+              <input type="text" inputmode="decimal" id="arretPct" value="90">
+            </div>
+
+            <div class="field-row">
+              <label>4. Délai de carence (3 premiers jours)</label>
+              <div class="pill-toggle" id="carenceToggle" role="group" aria-label="Délai de carence" style="width:100%;">
+                <button type="button" data-carence="non" aria-pressed="true" style="flex:1;">Non payée (cas général)</button>
+                <button type="button" data-carence="oui" aria-pressed="false" style="flex:1;">Payée par l'employeur</button>
+              </div>
+            </div>
+          </div>
+
+          <button type="button" class="btn btn-primary" id="addAbsenceScenario" style="width:100%; margin-top:6px;">Ajouter ce salaire</button>
+
+          <div class="sub-hint" id="absenceHint" style="margin-top:14px; margin-bottom:0;"></div>
+        </div>
+      </div>
+
+      <div class="module-card module-card-soon" aria-disabled="true">
+        <div class="module-toggle-head module-toggle-head-static">
+          <span class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>
+          <span class="module-info">
+            <span class="module-name">D'autres modules à venir</span>
+            <span class="module-desc">Impôt à la source, temps partiel…</span>
+          </span>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <div class="panel" id="comparePanel">
+    <h2 class="bars-title">Où part votre salaire ?</h2>
+    <div class="hint">Chaque colonne, c'est un salaire brut mensuel découpé : ce qui part en charges et en titres restaurant, et ce qu'il vous reste vraiment. Cliquez sur une carte pour la définir comme référence de comparaison.</div>
+    <div id="insightBox"></div>
+    <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
+    <div class="stack-legend" id="stackLegend"></div>
+
+    <details class="panel-nested" id="moreMetrics">
+      <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
+      <div class="panel-nested-body">
+        <div class="ref-row">
+          <label for="refSelect">Salaire de référence</label>
+          <select id="refSelect"></select>
+        </div>
+        <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
+          <button data-metric="netApres" aria-pressed="true">Net</button>
+          <button data-metric="netHoraire" aria-pressed="false">Net horaire</button>
+          <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
+          <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
+          <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
+          <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
+          <button data-metric="coutEmployeur" aria-pressed="false">Coût employeur</button>
+        </div>
+        <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
+        <div id="barsBody" aria-live="polite"></div>
+        <div id="barsAlerts"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="cards-bar">
+    <div class="cards-bar-toggles">
+      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
+        <button data-amt="net" aria-pressed="true">Net</button>
+        <button data-amt="brut" aria-pressed="false">Brut</button>
+      </div>
+      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+        <button data-period="mois" aria-pressed="true">Mensuel</button>
+        <button data-period="an" aria-pressed="false">Annuel</button>
+      </div>
+    </div>
+    <div class="cards-bar-nav">
+      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
+      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
+    </div>
+  </div>
+  <div class="cards-scroll" id="cardsScroll">
+    <div class="cards" id="cardsBody"></div>
+  </div>
+
+  <div class="disclaimer">
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
+  </div>
+</div>
+
+<script>
+"use strict";
+
+// ---------- Legal parameters (editable in the advanced panel) ----------
+const P = {
+  pmss: 4005, plafondTR: 7.32,
+  csgDed: 6.80, csgNonDed: 2.40, crds: 0.50,
+  vieillessePlaf: 6.90, vieillesseDeplaf: 0.40,
+  rcT1: 3.15, cegT1: 0.86, rcT2: 8.64, cegT2: 1.08, cet: 0.14, apec: 0.024,
+  fpRate: 17, majoration: 25, reducHS: 11.31, plafondExoIR: 7500, patronal: 42
+};
+
+let scenarioDefaults = {
+  mutuelle: 45, mutuellePat: 45, joursResto: 18, valeurResto: 9,
+  partResto: 50, nbMois: 12
+};
+
+const ICON = {
+  info: '<svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>',
+  warn: '<svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+  plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'
+};
+
+const rateNames = { 'non-cadre':'Non-cadre', 'cadre':'Cadre', 'fp':'Fonction publique', 'custom':'Taux forfaitaire' };
+const HEURES_BASE = 151.67;
+
+// ---------- Utilities ----------
+function parseNum(v){
+  if(v === null || v === undefined) return 0;
+  const s = String(v).replace(/\s/g,'').replace(',', '.');
+  const n = parseFloat(s);
+  return isFinite(n) ? n : 0;
+}
+function clamp(n, min, max){
+  if(typeof min === 'number' && n < min) return min;
+  if(typeof max === 'number' && n > max) return max;
+  return n;
+}
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR') + ' €'; }
+function fmtHoraire(n){ return n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €/h'; }
+function fmtHoraireSigned(n){
+  const s = Math.abs(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return (n > 0 ? '+' : (n < 0 ? '−' : '')) + s + ' €/h';
+}
+function fmtSigned(n){
+  const s = Math.round(Math.abs(n)).toLocaleString('fr-FR');
+  return (n > 0 ? '+' : (n < 0 ? '−' : '')) + s + ' €';
+}
+function esc(s){
+  return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------- Cotisation engine ----------
+function cotisations(assiette, statut, plafond, tauxForfaitaire){
+  const l = { csgDed:0, csgNonDed:0, crds:0, vieillessePlaf:0, vieillesseDeplaf:0,
+              rcT1:0, cegT1:0, rcT2:0, cegT2:0, cet:0, apec:0,
+              retraite:0, total:0, deductible:0, nonDeductible:0 };
+  if(assiette <= 0) return l;
+
+  if(statut === 'fp' || statut === 'custom'){
+    const rate = statut === 'fp' ? P.fpRate : (tauxForfaitaire || 0);
+    l.total = assiette * rate/100;
+    const baseCSG = Math.min(assiette, 4*plafond) * 0.9825 + Math.max(0, assiette - 4*plafond);
+    l.csgNonDed = baseCSG * P.csgNonDed/100;
+    l.crds = baseCSG * P.crds/100;
+    l.nonDeductible = l.csgNonDed + l.crds;
+    l.deductible = Math.max(0, l.total - l.nonDeductible);
+    return l;
+  }
+
+  const T1 = Math.min(assiette, plafond);
+  const T2 = Math.max(0, Math.min(assiette, 8*plafond) - plafond);
+  const baseCSG = Math.min(assiette, 4*plafond) * 0.9825 + Math.max(0, assiette - 4*plafond);
+
+  l.csgDed = baseCSG * P.csgDed/100;
+  l.csgNonDed = baseCSG * P.csgNonDed/100;
+  l.crds = baseCSG * P.crds/100;
+  l.vieillessePlaf = T1 * P.vieillessePlaf/100;
+  l.vieillesseDeplaf = assiette * P.vieillesseDeplaf/100;
+  l.rcT1 = T1 * P.rcT1/100;
+  l.cegT1 = T1 * P.cegT1/100;
+  l.rcT2 = T2 * P.rcT2/100;
+  l.cegT2 = T2 * P.cegT2/100;
+  l.cet = assiette > plafond ? Math.min(assiette, 8*plafond) * P.cet/100 : 0;
+  l.apec = statut === 'cadre' ? Math.min(assiette, 4*plafond) * P.apec/100 : 0;
+
+  l.retraite = l.vieillessePlaf + l.vieillesseDeplaf + l.rcT1 + l.cegT1 + l.rcT2 + l.cegT2 + l.cet;
+  l.total = l.retraite + l.csgDed + l.csgNonDed + l.crds + l.apec;
+  l.nonDeductible = l.csgNonDed + l.crds;
+  l.deductible = l.retraite + l.csgDed + l.apec;
+  return l;
+}
+
+function titresResto(jours, valeur, partSalariePct){
+  const partEmployeurPct = 100 - partSalariePct;
+  const parTitreEmployeur = valeur * partEmployeurPct/100;
+  const totalEmployeur = jours * parTitreEmployeur;
+  const totalSalarie = jours * valeur * partSalariePct/100;
+
+  let reintegre = 0, motif = null;
+  if(partEmployeurPct < 50){
+    reintegre = totalEmployeur;
+    motif = 'sous50';
+  } else {
+    let exces = 0;
+    if(partEmployeurPct > 60){
+      exces = Math.max(exces, jours * valeur * (partEmployeurPct - 60)/100);
+      motif = 'sur60';
+    }
+    if(parTitreEmployeur > P.plafondTR){
+      const excesPlafond = jours * (parTitreEmployeur - P.plafondTR);
+      if(excesPlafond > exces){ exces = excesPlafond; motif = 'plafond'; }
+    }
+    reintegre = exces;
+  }
+  return { partEmployeurPct, parTitreEmployeur, totalEmployeur, totalSalarie, reintegre, motif };
+}
+
+function splitHeures(s){
+  const heuresSemaine = s.dureeType === '39' ? 39 : 35;
+  const heuresSup = Math.max(0, heuresSemaine - 35) * 52 / 12;
+  const totalEquiv = HEURES_BASE + heuresSup * (1 + P.majoration/100);
+  const tauxHoraire = totalEquiv > 0 ? s.brut / totalEquiv : 0;
+  const brutBase = tauxHoraire * HEURES_BASE;
+  return { heuresSup, brutBase, brutHS: Math.max(0, s.brut - brutBase), tauxHoraire };
+}
+
+function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr){
+  const assiette = brutBase + brutHS + tr.reintegre;
+  const c = cotisations(assiette, s.statut, plafond, s.rate);
+
+  const tauxMoyenRetraite = assiette > 0 ? (c.retraite / assiette) * 100 : 0;
+  const tauxReduc = Math.min(P.reducHS, tauxMoyenRetraite);
+  const reducHS = brutHS * tauxReduc/100;
+
+  const cotisNettes = Math.max(0, c.total - reducHS);
+  const brutTotal = brutBase + brutHS;
+
+  const netApres = brutTotal - cotisNettes - mutSal - tr.totalSalarie;
+  const netSocial = brutTotal - cotisNettes - mutSal;
+
+  const deductibleNet = Math.max(0, c.deductible - reducHS);
+  const netImposable = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+
+  const coutEmployeur = brutTotal * (1 + P.patronal/100) + mutPat + tr.totalEmployeur;
+  const pouvoirAchat = netApres + tr.totalEmployeur;
+
+  return { c, assiette, reducHS, cotisNettes, brutTotal, netApres, netSocial,
+           netImposable, coutEmployeur, pouvoirAchat };
+}
+
+function compute(s){
+  const hasHS = s.dureeType === '39';
+  const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
+  const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
+
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, s.mutuellePat, tr);
+
+  // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
+  // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
+  // d'absence, pour rester le taux "normal" du contrat.
+  const heuresReelles = HEURES_BASE + split.heuresSup;
+  const brutHoraire = split.tauxHoraire;
+  const netHoraire = heuresReelles > 0 ? m.netApres / heuresReelles : 0;
+
+  const nbMois = s.nbMois || 12;
+  const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
+  const aBase = split.brutBase * nbMois + (s.primes || 0);
+  const aHS = split.brutHS * 12;
+  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, s.mutuellePat * 12, trAnnuel);
+
+  // Absence (congés payés / arrêt de travail): blend a normally-worked portion
+  // of the month with an absent portion, over a 30-day reference month.
+  // Simplified estimate — see the panel's disclaimer, not a real IJSS calculation.
+  if(s.absenceType === 'conges' || s.absenceType === 'arret'){
+    const duree = Math.max(0, Math.min(30, s.absenceDuree || 0));
+    const netSansTR = m.netApres + tr.totalSalarie; // back out the TR deduction
+    const netTravaille = ((30 - duree) / 30) * m.netApres;
+
+    let netAbsence;
+    if(s.absenceType === 'conges'){
+      netAbsence = (duree / 30) * netSansTR; // base salary maintained, no TR
+    } else {
+      const joursCarence = s.carenceCouverte ? 0 : Math.min(3, duree);
+      const joursIndemnises = Math.max(0, duree - joursCarence);
+      const pct = (s.maintienPct || 0) / 100;
+      netAbsence = (joursIndemnises / 30) * netSansTR * pct;
+    }
+
+    const netFinal = netTravaille + netAbsence;
+    const ratio = m.netApres > 0 ? netFinal / m.netApres : 0;
+    m.netApres = netFinal;
+    m.netImposable *= ratio; m.coutEmployeur *= ratio;
+    a.netApres *= ratio; a.netImposable *= ratio; a.coutEmployeur *= ratio;
+  }
+
+  // Prélèvement à la source : simple estimate, taux personnel appliqué au net imposable.
+  const pasRate = clamp(s.pasRate || 0, 0, 100);
+  const netApresImpot = Math.max(0, m.netApres - m.netImposable * pasRate/100);
+  const annuelNetApresImpot = Math.max(0, a.netApres - a.netImposable * pasRate/100);
+
+  return {
+    hasHS, heuresSup: split.heuresSup, brutHS: split.brutHS,
+    tr, m, a,
+    netApres: m.netApres, netImposable: m.netImposable,
+    coutEmployeur: m.coutEmployeur, annuelNet: a.netApres,
+    netApresImpot, annuelNetApresImpot,
+    brutHoraire, netHoraire,
+    tauxEffectif: s.brut > 0 ? (m.cotisNettes / s.brut) * 100 : 0
+  };
+}
+
+// ---------- State ----------
+let idCounter = 0;
+function mkScenario(over){
+  const base = {
+    id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
+    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuellePat,
+    pasRate:0,
+    joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
+    partResto:scenarioDefaults.partResto,
+    dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
+    maintienPct:90, carenceCouverte:false,
+    absenceType:'none', absenceDuree:0
+  };
+  return Object.assign(base, over || {});
+}
+
+let scenarios = [
+  mkScenario({ name:'Poste actuel', brut:2300, dureeType:'39', joursResto:21, valeurResto:8 }),
+  mkScenario({ name:'Négociation', brut:3100, dureeType:'39' })
+];
+let refId = scenarios[0].id;
+let metric = 'netApres';
+let openCardIds = new Set();
+let displayAmt = 'net';
+let displayPeriod = 'mois';
+
+const metricLabels = {
+  netApres: 'Net', netImposable: 'Net imposable',
+  annuelNet: 'Net annuel', netApresImpot: 'Net après impôt',
+  netHoraire: 'Net horaire', brutHoraire: 'Brut horaire',
+  coutEmployeur: 'Coût total employeur (mensuel)'
+};
+const metricHints = {
+  netApres: 'Ce qui arrive vraiment sur votre compte chaque mois — le chiffre à regarder pour votre budget.',
+  netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
+  annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
+  netApresImpot: 'Le net une fois votre taux de prélèvement à la source appliqué — renseignez-le sur chaque salaire pour l\'activer.',
+  netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
+  brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.',
+  coutEmployeur: 'Ce que vous coûtez réellement à l\'entreprise, charges patronales incluses — un repère utile en négociation.'
+};
+
+function findScenario(id){ return scenarios.find(s => s.id === id); }
+function heroValue(r){
+  if(displayAmt === 'net') return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
+  return displayPeriod === 'mois' ? r.m.brutTotal : r.a.brutTotal;
+}
+function heroLabel(){
+  return (displayAmt === 'net' ? 'Net' : 'Brut') + ' ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+}
+function heroPasValue(r){
+  return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+}
+function heroPasShown(s){
+  return displayAmt === 'net' && (s.pasRate || 0) > 0;
+}
+
+// ---------- Card rendering ----------
+function num(id, key, uid, value, opts){
+  const o = opts || {};
+  return `<input type="text" inputmode="decimal" id="${id}" value="${String(value).replace('.', ',')}"
+    data-id="${uid}" data-key="${key}"
+    ${o.min !== undefined ? `data-min="${o.min}"` : ''}
+    ${o.max !== undefined ? `data-max="${o.max}"` : ''}>`;
+}
+
+function renderCard(s, r, showRemove){
+  const uid = s.id;
+  const statutOptions = Object.keys(rateNames).map(k => `<option value="${k}" ${s.statut===k?'selected':''}>${rateNames[k]}</option>`).join('');
+  const isRef = s.id === refId;
+
+  const rateField = s.statut === 'custom'
+    ? `<div class="field-row"><label for="f-rate-${uid}">Taux forfaitaire de cotisations (%)</label>${num(`f-rate-${uid}`,'rate',uid,s.rate,{min:0,max:60})}</div>`
+    : `<div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>`;
+
+  const trWarn = r.tr.reintegre > 0.005;
+  const trMotifs = {
+    sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
+    sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
+    plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+  };
+
+  return `
+  <div class="card ${isRef ? 'is-ref' : ''}" data-card="${uid}">
+    <div class="card-top">
+      <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
+      <input class="name-input" id="f-name-${uid}" value="${esc(s.name)}" data-id="${uid}" data-key="name">
+      ${isRef ? '<span class="ref-badge">référence</span>' : ''}
+      ${showRemove ? `<button class="remove-btn" data-remove="${uid}" aria-label="Supprimer le salaire ${esc(s.name)}">✕</button>` : ''}
+    </div>
+
+    <div class="hero">
+      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${fmt(heroValue(r))}</div>
+      <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown(s) ? '' : 'display:none;'}">Après impôt (${s.pasRate} %) : <strong>${fmt(heroPasValue(r))}</strong></div>
+    </div>
+    ${s.absenceType === 'arret' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j d'arrêt sur 30, ${s.maintienPct}% maintenus, ${s.carenceCouverte ? 'carence de 3 j couverte' : 'délai de carence de 3 j inclus'}. Ancienneté et convention collective non prises en compte.</span></div>` : ''}
+    ${s.absenceType === 'conges' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j de congés payés sur 30 : salaire de base maintenu, sans titres restaurant sur ces jours.</span></div>` : ''}
+
+    <div class="field-row">
+      <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
+      ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
+    </div>
+
+    <div class="field-row">
+      <label for="f-statut-${uid}">Statut</label>
+      <select id="f-statut-${uid}" data-id="${uid}" data-key="statut">${statutOptions}</select>
+    </div>
+    ${rateField}
+
+    <div class="field-row">
+      <label>Base horaire</label>
+      <div class="pill-toggle" data-durree-group="${uid}">
+        <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
+        <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
+      </div>
+    </div>
+
+    <details class="more">
+      <summary>Mutuelle, titres restaurant &amp; impôt</summary>
+      <div class="more-body">
+        <div class="field-row">
+          <label for="f-mutuelle-${uid}">Mutuelle (€ / mois)</label>
+          ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+        </div>
+        <div class="three-col">
+          <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
+          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
+          <div class="field-row"><label for="f-part-${uid}">Part (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
+        </div>
+        <div class="subline"><span>Part patronale par titre</span><span class="val" id="c-trTitre-${uid}">${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)</span></div>
+        <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
+          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
+        </div>
+        <div class="field-row" style="margin-top:14px;">
+          <label for="f-pasrate-${uid}">Taux de prélèvement à la source (%)</label>
+          ${num(`f-pasrate-${uid}`,'pasRate',uid,s.pasRate,{min:0,max:45})}
+          <div class="sub-hint">Indiqué sur votre avis d'imposition ou votre bulletin de paie. Laissez à 0 si vous ne le connaissez pas. Estimation appliquée au net imposable — voir le disclaimer en bas de page.</div>
+        </div>
+      </div>
+    </details>
+  </div>`;
+}
+
+// ---------- Add-scenario ghost card ----------
+function renderAddCard(){
+  return `
+  <button type="button" class="card card-add" id="addScenario" aria-label="Ajouter un salaire">
+    <span class="card-add-icon">${ICON.plus}</span>
+    <span class="card-add-label">Ajouter un salaire</span>
+  </button>`;
+}
+
+// ---------- Stacked breakdown chart ----------
+const STACK_COLORS = { cotis:'var(--stack-cotis)', mutres:'var(--gold)', net:'var(--accent)' };
+
+function renderStack(computed){
+  const sorted = [...computed].sort((a,b) => b.r.m.netApres - a.r.m.netApres);
+  const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
+  const maxPx = 240;
+  const ref = computed.find(x => x.s.id === refId) || computed[0];
+
+  return sorted.map(({s, r}) => {
+    const m = r.m;
+    const cotis = m.cotisNettes;
+    const mutRes = s.mutuelle + r.tr.totalSalarie;
+    const net = m.netApres;
+    const brut = m.brutTotal;
+    const scale = maxPx / maxBrut;
+
+    const delta = net - ref.r.m.netApres;
+    const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
+
+    let barHtml, brutLabel;
+    if(s.absenceType !== 'none'){
+      const pxNet = Math.max(22, Math.round(net * scale));
+      barHtml = `
+      <div class="stack-bar">
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}">
+          <span class="stack-net-tag">net</span>
+        </div>
+      </div>`;
+      brutLabel = s.absenceType === 'arret'
+        ? `${s.absenceDuree} j arrêt, ${s.maintienPct}%`
+        : `${s.absenceDuree} j congés`;
+    } else {
+      const pxCotis = Math.round(cotis * scale);
+      const pxMutRes = Math.round(mutRes * scale);
+      const pxNet = Math.max(22, Math.round(net * scale));
+      barHtml = `
+      <div class="stack-bar">
+        <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}"></div>
+        <div class="stack-seg stack-seg-mutres" style="height:${pxMutRes}px" title="Mutuelle + titres restaurant : ${fmt(mutRes)}"></div>
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}">
+          <span class="stack-net-tag">net</span>
+        </div>
+      </div>`;
+      brutLabel = `brut ${fmt(brut)}`;
+    }
+
+    const isRef = s.id === refId;
+    return `
+    <div class="stack-col ${isRef?'is-ref':''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+      <div class="stack-brut">${brutLabel}</div>
+      ${barHtml}
+      <div class="stack-ref-row">
+        <span class="stack-ref-dot ${isRef?'is-ref':''}" aria-hidden="true"></span>
+        <span class="stack-name">${esc(s.name)}</span>
+      </div>
+      <div class="stack-net">${fmt(net)}</div>
+      <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
+    </div>`;
+  }).join('');
+}
+
+function renderStackLegend(){
+  return `
+  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.net}"></span>Net</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.mutres}"></span>Mutuelle &amp; titres restaurant</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
+}
+
+function renderInsight(computed){
+  if(computed.length < 2) return '';
+  const ref = computed.find(x => x.s.id === refId) || computed[0];
+  const others = computed.filter(x => x.s.id !== refId);
+  if(!others.length) return '';
+  const best = others.reduce((a,b) => b.r.m.netApres > a.r.m.netApres ? b : a);
+  const delta = best.r.m.netApres - ref.r.m.netApres;
+  if(Math.abs(delta) < 1){
+    return `<div class="insight neutral">Ces salaires donnent à peu près le même net.</div>`;
+  }
+  const diffBrut = best.r.m.brutTotal - ref.r.m.brutTotal;
+  let convNote = '';
+  if(diffBrut > 1 && delta > 0){
+    const convPct = (delta/diffBrut)*100;
+    convNote = ` — vous gardez ${convPct.toFixed(0)} % de l'augmentation en net`;
+  }
+  const verb = delta > 0 ? 'donne' : 'donne';
+  const sign = delta > 0 ? 'de plus' : 'de moins';
+  return `<div class="insight"><strong>${esc(best.s.name)}</strong> ${verb} ${fmt(Math.abs(delta))} ${sign} par mois que <strong>${esc(ref.s.name)}</strong>${convNote}.</div>`;
+}
+
+const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
+
+function renderBars(computed){
+  const ref = computed.find(x => x.s.id === refId) || computed[0];
+  const isHourly = HOURLY_METRICS.has(metric);
+  const fmtV = isHourly ? fmtHoraire : fmt;
+  const fmtD = isHourly ? fmtHoraireSigned : fmtSigned;
+  const vals = computed.map(x => x.r[metric]);
+  const maxVal = Math.max(...vals.map(v => Math.abs(v)), 1);
+  return computed.map(({s, r}) => {
+    const v = r[metric];
+    const pct = Math.max(3, Math.round((Math.abs(v)/maxVal)*100));
+    const delta = v - ref.r[metric];
+    const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
+    return `
+    <div class="bar-row">
+      <div class="bar-top">
+        <span class="bar-name">${esc(s.name)}${s.id===refId ? ' · réf.' : ''}</span>
+        <span class="bar-value"><span>${fmtV(v)}</span><span class="bar-delta ${cls}">${fmtD(delta)}</span></span>
+      </div>
+      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderAlerts(computed){
+  const out = [];
+  const nbMoisSet = new Set(computed.map(x => x.s.nbMois));
+  if(metric === 'netApres' && nbMoisSet.size > 1){
+    out.push(`<div class="alert alert-info"><span>${ICON.info}</span><span>Ces salaires n'ont pas le même nombre de mois de paie. Comparez le <strong>net annuel</strong> pour un écart représentatif.</span></div>`);
+  }
+  return out.join('');
+}
+
+// ---------- Render ----------
+function render(){
+  const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+
+  updateRaiseBaseName();
+  document.getElementById('insightBox').innerHTML = renderInsight(computed);
+  document.getElementById('stackChart').innerHTML = renderStack(computed);
+  bindRefPickers();
+  document.getElementById('stackLegend').innerHTML = renderStackLegend();
+  document.getElementById('barsBody').innerHTML = renderBars(computed);
+  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('refSelect').innerHTML = scenarios
+    .map(s => `<option value="${s.id}" ${s.id===refId?'selected':''}>${esc(s.name)}</option>`).join('');
+  document.getElementById('cardsBody').innerHTML =
+    computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
+  document.getElementById('addScenario').addEventListener('click', addScenario);
+
+  document.querySelectorAll('.metric-toggle button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.metric === metric ? 'true' : 'false');
+  });
+  setHTML('metricHint', metricHints[metric] || '');
+
+  document.querySelectorAll('.card').forEach(cardEl => {
+    const id = parseInt(cardEl.dataset.card, 10);
+    const d = cardEl.querySelector('details.more');
+    if(d){
+      if(openCardIds.has(id)) d.open = true;
+      d.addEventListener('toggle', () => {
+        if(d.open) openCardIds.add(id); else openCardIds.delete(id);
+      });
+    }
+  });
+
+  bindScenarioInputs();
+  updateNavButtons();
+}
+
+function bindScenarioInputs(){
+  document.querySelectorAll('#cardsBody [data-key]').forEach(el => {
+    if(el.type === 'checkbox'){
+      el.addEventListener('change', onCheck);
+    } else if(el.tagName === 'SELECT'){
+      el.addEventListener('change', onStructural);
+    } else {
+      el.addEventListener('input', onInput);
+      el.addEventListener('blur', onBlurClamp);
+    }
+  });
+  document.querySelectorAll('[data-remove]').forEach(btn => {
+    btn.addEventListener('click', () => removeScenario(parseInt(btn.dataset.remove, 10)));
+  });
+  document.querySelectorAll('[data-duree]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.id, 10);
+      const s = findScenario(id);
+      if(!s) return;
+      s.dureeType = btn.dataset.duree;
+      document.querySelectorAll(`[data-durree-group="${id}"] button`).forEach(b => {
+        b.setAttribute('aria-pressed', b.dataset.duree === s.dureeType ? 'true' : 'false');
+      });
+      updateComputed();
+    });
+  });
+}
+
+function bindRefPickers(){
+  document.querySelectorAll('[data-setref]').forEach(el => {
+    el.addEventListener('click', () => {
+      refId = parseInt(el.dataset.setref, 10);
+      render();
+    });
+    el.addEventListener('keydown', (e) => {
+      if(e.key === 'Enter' || e.key === ' '){
+        e.preventDefault();
+        refId = parseInt(el.dataset.setref, 10);
+        render();
+      }
+    });
+  });
+}
+
+// ---------- Live patching (never touches inputs while typing) ----------
+function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
+function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
+function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
+
+function updateComputed(){
+  const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  document.getElementById('insightBox').innerHTML = renderInsight(computed);
+  document.getElementById('stackChart').innerHTML = renderStack(computed);
+  bindRefPickers();
+  document.getElementById('barsBody').innerHTML = renderBars(computed);
+  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+
+  computed.forEach(({s, r}) => {
+    const u = s.id;
+    setText(`c-hero-${u}`, fmt(heroValue(r)));
+    setText(`c-herolabel-${u}`, heroLabel());
+    setHTML(`c-heropas-${u}`, `Après impôt (${s.pasRate} %) : <strong>${fmt(heroPasValue(r))}</strong>`);
+    setShown(`c-heropas-${u}`, heroPasShown(s));
+    setText(`c-trTitre-${u}`, `${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)`);
+
+    const hint = document.getElementById(`rate-hint-${u}`);
+    if(hint) hint.innerHTML = `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut`;
+
+    const trWarn = r.tr.reintegre > 0.005;
+    setShown(`c-trwarn-${u}`, trWarn);
+    if(trWarn){
+      const motifs = {
+        sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
+        sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
+        plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+      };
+      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || '');
+    }
+  });
+}
+
+// ---------- Horizontal card rail navigation ----------
+function updateNavButtons(){
+  const scroller = document.getElementById('cardsScroll');
+  const prev = document.getElementById('scrollPrev');
+  const next = document.getElementById('scrollNext');
+  if(!scroller) return;
+  const atStart = scroller.scrollLeft <= 4;
+  const atEnd = scroller.scrollLeft + scroller.clientWidth >= scroller.scrollWidth - 4;
+  prev.disabled = atStart;
+  next.disabled = atEnd || scroller.scrollWidth <= scroller.clientWidth + 4;
+}
+document.getElementById('cardsScroll').addEventListener('scroll', updateNavButtons);
+document.getElementById('scrollPrev').addEventListener('click', () => {
+  document.getElementById('cardsScroll').scrollBy({ left: -300, behavior: 'smooth' });
+});
+document.getElementById('scrollNext').addEventListener('click', () => {
+  document.getElementById('cardsScroll').scrollBy({ left: 300, behavior: 'smooth' });
+});
+window.addEventListener('resize', updateNavButtons);
+
+// ---------- Events ----------
+function onInput(e){
+  const id = parseInt(e.target.dataset.id, 10);
+  const key = e.target.dataset.key;
+  const s = findScenario(id);
+  if(!s) return;
+  if(key === 'name'){
+    s.name = e.target.value;
+    updateComputed();
+    if(s.id === refId){ setText('raiseBaseName', s.name); setText('absenceBaseName', s.name); }
+    document.getElementById('refSelect').innerHTML = scenarios
+      .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
+    return;
+  }
+  s[key] = parseNum(e.target.value);
+  updateComputed();
+}
+
+function onBlurClamp(e){
+  const key = e.target.dataset.key;
+  if(key === 'name') return;
+  const id = parseInt(e.target.dataset.id, 10);
+  const s = findScenario(id);
+  if(!s) return;
+  const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
+  const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
+  const v = clamp(parseNum(e.target.value), min, max);
+  s[key] = v;
+  e.target.value = String(v).replace('.', ',');
+  updateComputed();
+}
+
+function onStructural(e){
+  const id = parseInt(e.target.dataset.id, 10);
+  const s = findScenario(id);
+  if(!s) return;
+  s[e.target.dataset.key] = e.target.value;
+  render();
+}
+
+function onCheck(e){ /* no checkboxes in the simplified card, kept for safety */ }
+
+function addScenario(){
+  const last = scenarios[scenarios.length-1];
+  scenarios.push(mkScenario({
+    name:'Salaire ' + (scenarios.length+1),
+    brut:last.brut, statut:last.statut, rate:last.rate, dureeType:last.dureeType
+  }));
+  render();
+  const scroller = document.getElementById('cardsScroll');
+  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+}
+
+function removeScenario(id){
+  if(scenarios.length <= 1) return;
+  scenarios = scenarios.filter(s => s.id !== id);
+  openCardIds.delete(id);
+  if(refId === id) refId = scenarios[0].id;
+  render();
+}
+
+document.getElementById('printBtn').addEventListener('click', () => {
+  const toOpen = Array.from(document.querySelectorAll('details.more, #moreMetrics'));
+  const prevOpen = toOpen.map(d => d.open);
+  toOpen.forEach(d => { d.open = true; });
+
+  function restore(){
+    toOpen.forEach((d, i) => { d.open = prevOpen[i]; });
+    window.removeEventListener('afterprint', restore);
+  }
+  window.addEventListener('afterprint', restore);
+
+  // Wait two frames so the newly-opened <details> and reflowed layout
+  // are painted before the print snapshot is taken.
+  requestAnimationFrame(() => {
+    requestAnimationFrame(() => {
+      window.print();
+    });
+  });
+});
+document.getElementById('refSelect').addEventListener('change', e => {
+  refId = parseInt(e.target.value, 10);
+  render();
+});
+document.querySelectorAll('.metric-toggle button').forEach(b => {
+  b.addEventListener('click', () => { metric = b.dataset.metric; render(); });
+});
+document.querySelectorAll('#amtToggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    displayAmt = b.dataset.amt;
+    document.querySelectorAll('#amtToggle button').forEach(x => x.setAttribute('aria-pressed', x===b?'true':'false'));
+    updateComputed();
+  });
+});
+document.querySelectorAll('#periodToggle button').forEach(b => {
+  b.addEventListener('click', () => {
+    displayPeriod = b.dataset.period;
+    document.querySelectorAll('#periodToggle button').forEach(x => x.setAttribute('aria-pressed', x===b?'true':'false'));
+    updateComputed();
+  });
+});
+
+// ---------- Modules (activable add-ons) ----------
+function bindModuleToggle(cardId, toggleId, bodyId){
+  const card = document.getElementById(cardId);
+  const toggle = document.getElementById(toggleId);
+  const body = document.getElementById(bodyId);
+  if(!card || !toggle || !body) return;
+  toggle.addEventListener('click', () => {
+    const willOpen = body.hasAttribute('hidden');
+    if(willOpen){ body.removeAttribute('hidden'); } else { body.setAttribute('hidden',''); }
+    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
+    card.classList.toggle('is-open', willOpen);
+  });
+}
+bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
+bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
+
+// ---------- Raise simulator ----------
+let raiseType = 'pct';
+const RAISE_PCT_PRESETS = [2, 3, 5, 8, 10];
+const RAISE_EUR_PRESETS = [50, 100, 150, 250, 400];
+
+function renderRaiseChips(){
+  document.getElementById('raiseChipsPct').innerHTML = RAISE_PCT_PRESETS
+    .map(v => `<button type="button" class="raise-chip" data-raise-pct="${v}">+${v} %</button>`).join('');
+  document.getElementById('raiseChipsEur').innerHTML = RAISE_EUR_PRESETS
+    .map(v => `<button type="button" class="raise-chip eur" data-raise-eur="${v}">+${v} €</button>`).join('');
+  document.querySelectorAll('[data-raise-pct]').forEach(btn => {
+    btn.addEventListener('click', () => addRaiseScenario('pct', parseFloat(btn.dataset.raisePct)));
+  });
+  document.querySelectorAll('[data-raise-eur]').forEach(btn => {
+    btn.addEventListener('click', () => addRaiseScenario('eur', parseFloat(btn.dataset.raiseEur)));
+  });
+}
+
+function addRaiseScenario(type, value){
+  const base = findScenario(refId);
+  if(!base || !value) return;
+  const newBrut = type === 'pct' ? base.brut * (1 + value/100) : base.brut + value;
+  const label = type === 'pct' ? `+${value} %` : `+${fmt(value)}`;
+  const clone = Object.assign({}, base);
+  delete clone.id;
+  scenarios.push(mkScenario(Object.assign(clone, {
+    name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
+  })));
+  render();
+  const scroller = document.getElementById('cardsScroll');
+  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+}
+
+function updateRaiseBaseName(){
+  const base = findScenario(refId);
+  setText('raiseBaseName', base ? base.name : '');
+  setText('absenceBaseName', base ? base.name : '');
+}
+
+document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    raiseType = btn.dataset.rtype;
+    document.querySelectorAll('.raise-type-toggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+    document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
+  });
+});
+document.getElementById('addRaiseScenario').addEventListener('click', () => {
+  const val = parseNum(document.getElementById('raiseAmount').value);
+  addRaiseScenario(raiseType, val);
+});
+renderRaiseChips();
+
+// ---------- Absence simulator (congés payés / arrêt de travail) ----------
+function scrollToNewCard(){
+  const scroller = document.getElementById('cardsScroll');
+  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+}
+
+let absenceType = 'conges';
+let carenceCouverte = false;
+
+function updateAbsenceUI(){
+  document.querySelectorAll('#absenceTypeToggle button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.atype === absenceType ? 'true' : 'false');
+  });
+  document.getElementById('arretExtraFields').style.display = absenceType === 'arret' ? '' : 'none';
+  document.getElementById('addAbsenceScenario').textContent =
+    absenceType === 'arret' ? 'Ajouter ce salaire en arrêt de travail' : 'Ajouter ce salaire en congés payés';
+  const duree = parseNum(document.getElementById('absenceDuree').value) || 0;
+  const pct = parseNum(document.getElementById('arretPct').value) || 90;
+  setText('absenceHint', absenceType === 'arret'
+    ? `Sur ${duree} j d'arrêt, le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Sur les jours d'arrêt : ${carenceCouverte ? 'la carence est payée, donc tous les jours sont indemnisés' : 'les 3 premiers jours (carence) ne sont pas payés'}, le reste à ${pct} %.`
+    : `Sur ${duree} j de congés, le salaire de base reste maintenu ; le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Aucun titre restaurant sur les jours de congés.`);
+}
+
+document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
+  btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
+});
+document.getElementById('absenceDuree').addEventListener('input', updateAbsenceUI);
+
+document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
+  const v = e.target.value;
+  const pctRow = document.getElementById('arretPctRow');
+  if(v === 'custom'){
+    pctRow.style.display = '';
+  } else {
+    pctRow.style.display = 'none';
+    document.getElementById('arretPct').value = v;
+  }
+  updateAbsenceUI();
+});
+document.getElementById('arretPct').addEventListener('input', updateAbsenceUI);
+
+document.querySelectorAll('#carenceToggle button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    carenceCouverte = btn.dataset.carence === 'oui';
+    document.querySelectorAll('#carenceToggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
+    updateAbsenceUI();
+  });
+});
+
+function addAbsenceScenario(){
+  const base = findScenario(refId);
+  if(!base) return;
+  const duree = clamp(parseNum(document.getElementById('absenceDuree').value) || 0, 0, 30);
+  const clone = Object.assign({}, base);
+  delete clone.id;
+
+  if(absenceType === 'arret'){
+    const pct = clamp(parseNum(document.getElementById('arretPct').value) || 90, 0, 100);
+    scenarios.push(mkScenario(Object.assign(clone, {
+      name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
+      absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
+    })));
+  } else {
+    scenarios.push(mkScenario(Object.assign(clone, {
+      name: `${base.name} (congés ${duree}j)`,
+      absenceType: 'conges', absenceDuree: duree
+    })));
+  }
+  render();
+  scrollToNewCard();
+}
+
+document.getElementById('addAbsenceScenario').addEventListener('click', addAbsenceScenario);
+updateAbsenceUI();
+
+render();
+</script>
+</body>
+</html>
