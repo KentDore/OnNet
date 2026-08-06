@@ -104,6 +104,18 @@
   .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
   .share-banner[hidden]{display:none;}
+  .onboarding-banner{
+    font-family:'Inter',sans-serif; font-size:13px; line-height:1.5; color:var(--ink);
+    background:var(--accent-soft); border-radius:12px; padding:12px 14px; margin:0 0 14px;
+    display:flex; gap:10px; align-items:flex-start;
+  }
+  .onboarding-banner strong{color:var(--accent);}
+  .onboarding-close{
+    flex:none; margin-left:auto; width:22px; height:22px; border-radius:999px; border:none;
+    background:transparent; color:var(--ink-soft); font-size:14px; line-height:1; cursor:pointer; padding:0;
+  }
+  .onboarding-close:hover{background:var(--surface); color:var(--ink);}
+  .onboarding-close:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
   .toast{
     position:fixed; left:50%; bottom:24px; transform:translate(-50%, 12px);
     background:var(--ink); color:var(--bg); font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
@@ -518,6 +530,7 @@
   <div class="panel" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
     <div class="hint">Chaque colonne, c'est un salaire brut mensuel découpé : ce qui part en charges et en titres restaurant, et ce qu'il vous reste vraiment. Cliquez sur une carte pour la définir comme référence de comparaison.</div>
+    <div id="onboardingBox"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
@@ -913,6 +926,10 @@ const persisted = loadPersistedState();
 const loadedFromShare = !!shareState;
 let suppressAutosave = loadedFromShare;
 const initialSource = shareState || persisted;
+// Onboarding only makes sense the first time ever (no saved state, no shared
+// link) or right after a reset — both land here, since neither localStorage
+// nor the URL hash provided anything to restore.
+let showOnboarding = !initialSource;
 
 if(loadedFromShare){
   // Drop the share payload from the address bar once read — avoids re-triggering
@@ -1146,6 +1163,17 @@ function renderStackLegend(){
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
 }
 
+function renderOnboarding(computed){
+  if(!showOnboarding) return '';
+  const ref = computed.find(x => x.s.id === refId) || computed[0];
+  if(!ref) return '';
+  return `<div class="onboarding-banner" id="onboardingBanner">
+    <span>${ICON.info}</span>
+    <span><strong>${esc(ref.s.name)}</strong> est votre salaire de référence : les écarts affichés ci-dessous et sur chaque carte sont calculés par rapport à lui. Cliquez sur une autre carte à tout moment pour en faire la nouvelle référence.</span>
+    <button type="button" class="onboarding-close" id="onboardingClose" aria-label="Fermer ce message">✕</button>
+  </div>`;
+}
+
 function renderInsight(computed){
   if(computed.length < 2) return '';
   const ref = computed.find(x => x.s.id === refId) || computed[0];
@@ -1207,6 +1235,9 @@ function render(){
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
 
   updateRaiseBaseName();
+  document.getElementById('onboardingBox').innerHTML = renderOnboarding(computed);
+  const onboardingClose = document.getElementById('onboardingClose');
+  if(onboardingClose) onboardingClose.addEventListener('click', () => { showOnboarding = false; render(); });
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
   document.getElementById('stackChart').innerHTML = renderStack(computed);
   bindRefPickers();
@@ -1293,6 +1324,9 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 
 function updateComputed(){
   const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  document.getElementById('onboardingBox').innerHTML = renderOnboarding(computed);
+  const onboardingClose = document.getElementById('onboardingClose');
+  if(onboardingClose) onboardingClose.addEventListener('click', () => { showOnboarding = false; render(); });
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
   document.getElementById('stackChart').innerHTML = renderStack(computed);
   bindRefPickers();
