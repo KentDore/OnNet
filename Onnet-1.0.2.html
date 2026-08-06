@@ -56,6 +56,7 @@
        bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
        constants dans les deux thèmes. */
     --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
+    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark){
@@ -195,7 +196,7 @@
   .module-switch{flex:none; width:34px; height:20px; border-radius:999px; background:var(--line); position:relative; transition:background .15s ease;}
   .module-switch::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.2);}
   .module-card.is-open .module-switch{background:var(--accent);}
-  .module-card.is-open .module-icon{background:var(--accent); color:#fff;}
+  .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
   .module-body{padding:0 16px 18px;}
   .module-card .hint{margin-top:0;}
@@ -285,13 +286,13 @@
   /* ---- Puces d'augmentation ---- */
   .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
   .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
-  .raise-chip:hover{background:var(--accent); color:#fff;}
+  .raise-chip:hover{background:var(--btn-primary-bg); color:#fff;}
   .raise-chip.eur{border-color:var(--gold); background:var(--gold-soft); color:var(--gold-ink);}
-  .raise-chip.eur:hover{background:var(--gold); color:#fff;}
+  .raise-chip.eur:hover{background:var(--btn-gold-bg); color:#fff;}
   .raise-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px;}
   .raise-type-toggle{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
   .raise-type-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:11px 16px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .raise-type-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  .raise-type-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   #raiseAmount{width:110px; font-family:'Inter',sans-serif; font-size:16px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); flex:none;}
   #raiseAmount:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
   @media (max-width:480px){ .raise-controls{flex-direction:column; align-items:stretch;} #raiseAmount{width:100%;} .raise-controls .btn{width:100%;} }
@@ -302,7 +303,7 @@
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
   .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
   .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .metric-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .metric-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff; border-color:var(--btn-toggle-active-bg);}
   .bar-row{margin-bottom:14px;}
   .bar-row:last-child{margin-bottom:0;}
   .bar-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:8px;}
@@ -323,7 +324,7 @@
   /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
   .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .pill-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
   /* ---- Barre des cartes (bascules globales + navigation) ---- */
@@ -353,7 +354,11 @@
   .card-enter{ animation:card-enter .32s cubic-bezier(.25,.8,.3,1); }
   @keyframes card-leave{ to{ opacity:0; transform:scale(.94) translateY(6px); } }
   .card-leave{ animation:card-leave .2s cubic-bezier(.4,0,1,1) forwards; pointer-events:none; }
-  @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave{ animation:none; } }
+  @keyframes rail-bounce-left{ 0%{ transform:translateX(0); } 35%{ transform:translateX(16px); } 100%{ transform:translateX(0); } }
+  @keyframes rail-bounce-right{ 0%{ transform:translateX(0); } 35%{ transform:translateX(-16px); } 100%{ transform:translateX(0); } }
+  .cards.bounce-left{ animation:rail-bounce-left .34s cubic-bezier(.34,1.56,.64,1); }
+  .cards.bounce-right{ animation:rail-bounce-right .34s cubic-bezier(.34,1.56,.64,1); }
+  @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave, .cards.bounce-left, .cards.bounce-right{ animation:none; } }
   .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 0; width:100%; border-bottom:1px solid transparent;}
@@ -385,7 +390,8 @@
   .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
   .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
-  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input[data-key="brut"]{padding:13px 18px; font-size:18px; font-weight:600;}
   .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
   .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -1219,12 +1225,28 @@ function wfSeg(cls, dotStyle, label, val, pctVal, note){
   <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
     <div class="wf-label"><span class="wf-dot" style="${dotStyle}"></span>${label}</div>
     <div class="wf-track">
-      <div class="wf-bar ${cls}" style="width:${Math.max(pctVal, 1.5)}%">
+      <div class="wf-bar ${cls}" style="width:${Math.min(100, Math.max(pctVal, 1.5))}%">
         <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
       </div>
     </div>
   </div>
   ${note ? `<div class="wf-note">${note}</div>` : ''}`;
+}
+
+// Le choix libellé-dedans/dehors dans wfSeg() est fait sur un seuil en % de
+// la piste totale — insuffisant : sur un petit écran, ou quand une seule
+// catégorie (ex. titres restaurant) dépasse le brut, un % au-dessus du
+// seuil peut quand même correspondre à trop peu de pixels pour contenir le
+// texte, qui déborde alors de la barre. On corrige après coup en mesurant
+// la largeur réellement disponible.
+function fixWaterfallLabelFit(){
+  document.querySelectorAll('.wf-bar').forEach(bar => {
+    const val = bar.querySelector('.wf-val');
+    if(!val) return;
+    val.classList.remove('wf-val-out');
+    const fits = val.getBoundingClientRect().width + 20 <= bar.getBoundingClientRect().width;
+    if(!fits) val.classList.add('wf-val-out');
+  });
 }
 
 function renderWaterfall(computed){
@@ -1329,6 +1351,7 @@ function render(){
   const stackChartEl = document.getElementById('stackChart');
   stackChartEl.className = isSingle ? '' : 'stack-chart';
   stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+  if(isSingle) fixWaterfallLabelFit();
   bindRefPickers();
   document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
@@ -1420,8 +1443,12 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 
 function updateComputed(){
   const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  const isSingle = computed.length === 1;
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
-  document.getElementById('stackChart').innerHTML = renderStack(computed);
+  const stackChartEl = document.getElementById('stackChart');
+  stackChartEl.className = isSingle ? '' : 'stack-chart';
+  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+  if(isSingle) fixWaterfallLabelFit();
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
@@ -1470,6 +1497,47 @@ document.getElementById('scrollNext').addEventListener('click', () => {
   document.getElementById('cardsScroll').scrollBy({ left: 300, behavior: 'smooth' });
 });
 window.addEventListener('resize', updateNavButtons);
+
+// ---------- Rebond léger en butée du rail de cartes ----------
+(function setupRailBounce(){
+  const scroller = document.getElementById('cardsScroll');
+  if(!scroller) return;
+  // scroll-snap-align + le padding du rail font naturellement reposer
+  // scrollLeft sur le padding-left (16px sur mobile, 2px au-delà de
+  // 640px) plutôt que sur 0 pile : la marge de tolérance suit ce padding
+  // au lieu d'un seuil fixe qui casserait sur l'un des deux gabarits.
+  const edgeTolerance = () => parseFloat(getComputedStyle(scroller).paddingLeft || '0') + 4;
+  const atLeft = () => scroller.scrollLeft <= edgeTolerance();
+  const atRight = () => scroller.scrollLeft >= scroller.scrollWidth - scroller.clientWidth - edgeTolerance();
+
+  function triggerRailBounce(dir){
+    const cards = document.getElementById('cardsBody');
+    if(!cards) return;
+    const cls = dir === 'left' ? 'bounce-left' : 'bounce-right';
+    if(cards.classList.contains('bounce-left') || cards.classList.contains('bounce-right')) return;
+    cards.classList.add(cls);
+    cards.addEventListener('animationend', () => cards.classList.remove(cls), { once:true });
+  }
+
+  scroller.addEventListener('wheel', (e) => {
+    if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // molette verticale de la page, pas ce rail
+    if(e.deltaX < 0 && atLeft()) triggerRailBounce('left');
+    else if(e.deltaX > 0 && atRight()) triggerRailBounce('right');
+  }, { passive:true });
+
+  let touchStartX = null;
+  let touchBounced = false;
+  scroller.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchBounced = false;
+  }, { passive:true });
+  scroller.addEventListener('touchmove', (e) => {
+    if(touchStartX === null || touchBounced) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    if(dx > 8 && atLeft()){ triggerRailBounce('left'); touchBounced = true; }
+    else if(dx < -8 && atRight()){ triggerRailBounce('right'); touchBounced = true; }
+  }, { passive:true });
+})();
 
 // ---------- Événements ----------
 function onInput(e){
