@@ -183,10 +183,8 @@
   @media (min-width:720px){ .modules-grid{grid-template-columns:1fr 1fr 1fr;} }
   .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
   .module-toggle-head{width:100%; display:flex; align-items:center; gap:12px; padding:16px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Inter',sans-serif;}
-  .module-toggle-head-static{cursor:default;}
   .module-icon{flex:none; width:34px; height:34px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center;}
   .module-icon svg{width:18px; height:18px;}
-  .module-card-soon .module-icon{background:var(--bg); color:var(--ink-soft);}
   .module-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
   .module-name{font-weight:600; font-size:14px; color:var(--ink);}
   .module-desc{font-size:12px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
@@ -195,7 +193,6 @@
   .module-card.is-open .module-switch{background:var(--accent);}
   .module-card.is-open .module-icon{background:var(--accent); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
-  .module-card-soon{border-style:dashed; opacity:.7;}
   .module-body{padding:0 16px 18px;}
   .module-card .hint{margin-top:0;}
 
@@ -419,6 +416,56 @@
     </div>
   </header>
 
+  <div class="panel" id="comparePanel">
+    <h2 class="bars-title">Où part votre salaire ?</h2>
+    <div class="hint">Chaque colonne, c'est un salaire brut mensuel découpé : ce qui part en charges et en titres restaurant, et ce qu'il vous reste vraiment. Cliquez sur une carte pour la définir comme référence de comparaison.</div>
+    <div id="insightBox"></div>
+    <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
+    <div class="stack-legend" id="stackLegend"></div>
+
+    <details class="panel-nested" id="moreMetrics">
+      <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
+      <div class="panel-nested-body">
+        <div class="ref-row">
+          <label for="refSelect">Salaire de référence</label>
+          <select id="refSelect"></select>
+        </div>
+        <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
+          <button data-metric="netApres" aria-pressed="true">Net</button>
+          <button data-metric="netHoraire" aria-pressed="false">Net horaire</button>
+          <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
+          <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
+          <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
+          <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
+          <button data-metric="coutEmployeur" aria-pressed="false">Coût employeur</button>
+        </div>
+        <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
+        <div id="barsBody" aria-live="polite"></div>
+        <div id="barsAlerts"></div>
+      </div>
+    </details>
+  </div>
+
+  <div class="cards-bar">
+    <div class="cards-bar-toggles">
+      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
+        <button data-amt="net" aria-pressed="true">Net</button>
+        <button data-amt="brut" aria-pressed="false">Brut</button>
+      </div>
+      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+        <button data-period="mois" aria-pressed="true">Mensuel</button>
+        <button data-period="an" aria-pressed="false">Annuel</button>
+      </div>
+    </div>
+    <div class="cards-bar-nav">
+      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
+      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
+    </div>
+  </div>
+  <div class="cards-scroll" id="cardsScroll">
+    <div class="cards" id="cardsBody"></div>
+  </div>
+
   <section class="modules-section" aria-label="Modules complémentaires">
     <div class="modules-head">
       <h2 class="modules-title">Modules</h2>
@@ -506,68 +553,8 @@
         </div>
       </div>
 
-      <div class="module-card module-card-soon" aria-disabled="true">
-        <div class="module-toggle-head module-toggle-head-static">
-          <span class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg></span>
-          <span class="module-info">
-            <span class="module-name">D'autres modules à venir</span>
-            <span class="module-desc">Impôt à la source, temps partiel…</span>
-          </span>
-        </div>
-      </div>
-
     </div>
   </section>
-
-  <div class="panel" id="comparePanel">
-    <h2 class="bars-title">Où part votre salaire ?</h2>
-    <div class="hint">Chaque colonne, c'est un salaire brut mensuel découpé : ce qui part en charges et en titres restaurant, et ce qu'il vous reste vraiment. Cliquez sur une carte pour la définir comme référence de comparaison.</div>
-    <div id="insightBox"></div>
-    <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
-    <div class="stack-legend" id="stackLegend"></div>
-
-    <details class="panel-nested" id="moreMetrics">
-      <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
-      <div class="panel-nested-body">
-        <div class="ref-row">
-          <label for="refSelect">Salaire de référence</label>
-          <select id="refSelect"></select>
-        </div>
-        <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
-          <button data-metric="netApres" aria-pressed="true">Net</button>
-          <button data-metric="netHoraire" aria-pressed="false">Net horaire</button>
-          <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
-          <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
-          <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
-          <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
-          <button data-metric="coutEmployeur" aria-pressed="false">Coût employeur</button>
-        </div>
-        <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
-        <div id="barsBody" aria-live="polite"></div>
-        <div id="barsAlerts"></div>
-      </div>
-    </details>
-  </div>
-
-  <div class="cards-bar">
-    <div class="cards-bar-toggles">
-      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
-        <button data-amt="net" aria-pressed="true">Net</button>
-        <button data-amt="brut" aria-pressed="false">Brut</button>
-      </div>
-      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
-        <button data-period="mois" aria-pressed="true">Mensuel</button>
-        <button data-period="an" aria-pressed="false">Annuel</button>
-      </div>
-    </div>
-    <div class="cards-bar-nav">
-      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
-      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
-    </div>
-  </div>
-  <div class="cards-scroll" id="cardsScroll">
-    <div class="cards" id="cardsBody"></div>
-  </div>
 
   <div class="disclaimer">
     <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
