@@ -604,7 +604,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 45, mutuellePat: 45, joursResto: 18, valeurResto: 9,
+  mutuelle: 30, mutuellePat: 45, joursResto: 18, valeurResto: 9,
   partResto: 50, nbMois: 12
 };
 
@@ -1498,15 +1498,16 @@ function onStructural(e){
 
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
-function addScenario(){
+async function addScenario(){
+  const answers = await showAddScenarioModal();
+  if(!answers) return; // annulé
   const last = scenarios[scenarios.length-1];
-  scenarios.push(mkScenario({
+  scenarios.push(mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
     brut:last.brut, statut:last.statut, rate:last.rate, dureeType:last.dureeType
-  }));
+  }, answers)));
   render();
-  const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  scrollToNewCard();
 }
 
 async function removeScenario(id){
@@ -1664,52 +1665,43 @@ function showShareModal(url){
 
 const ONBOARDING_MUTUELLE_DEFAUT = 30;
 
-function showOnboardingModal(){
-  const html = `
-    <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
-    <div class="field-row" style="margin:0 0 4px;">
-      <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
-    </div>
-
-    <details class="more" id="modalOnboardingMore">
-      <summary>Mutuelle &amp; titres restaurant</summary>
-      <div class="more-body">
+// Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
+// nouveau salaire, pour ne jamais deviner silencieusement ces montants.
+function renderMutuelleTrFields(idPrefix, opts){
+  const o = opts || {};
+  const wrapOpen = o.collapsible ? `<details class="more" id="${idPrefix}More"><summary>Mutuelle &amp; titres restaurant</summary><div class="more-body">` : '';
+  const wrapClose = o.collapsible ? `</div></details>` : '';
+  return `${wrapOpen}
         <div class="field-row">
-          <label for="modalOnboardingMutuelle">Mutuelle (€ / mois)</label>
-          <input type="text" inputmode="decimal" id="modalOnboardingMutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
+          <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
           <div class="sub-hint">Laissé vide, on part sur ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
         </div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
-          <div class="pill-toggle" id="modalOnboardingTrToggle" role="group" aria-label="Titres restaurant">
+          <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
             <button type="button" data-tr="non" aria-pressed="true">Non</button>
             <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
           </div>
         </div>
-        <div id="modalOnboardingTrFields" hidden style="margin-top:14px;">
+        <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
-            <div class="field-row"><label for="modalOnboardingJours">Jours/mois</label><input type="text" inputmode="decimal" id="modalOnboardingJours" value="18"></div>
-            <div class="field-row"><label for="modalOnboardingValeur">Valeur (€)</label><input type="text" inputmode="decimal" id="modalOnboardingValeur" value="9"></div>
-            <div class="field-row"><label for="modalOnboardingPart">Part salariale (%)</label><input type="text" inputmode="decimal" id="modalOnboardingPart" value="50"></div>
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="18"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="9"></div>
+            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
-        </div>
-      </div>
-    </details>
+        </div>${wrapClose}`;
+}
 
-    <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
-    </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
-  const overlay = document.getElementById('modalOverlay');
-  const input = overlay.querySelector('#modalOnboardingInput');
-  const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
-  const mutuelleInput = overlay.querySelector('#modalOnboardingMutuelle');
-  const trToggle = overlay.querySelector('#modalOnboardingTrToggle');
-  const trFields = overlay.querySelector('#modalOnboardingTrFields');
-  const joursInput = overlay.querySelector('#modalOnboardingJours');
-  const valeurInput = overlay.querySelector('#modalOnboardingValeur');
-  const partInput = overlay.querySelector('#modalOnboardingPart');
+// Branche les interactions du bloc ci-dessus et renvoie une fonction de
+// lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
+function bindMutuelleTrFields(overlay, idPrefix){
+  const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+  const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
+  const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
+  const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
+  const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
+  const partInput = overlay.querySelector(`#${idPrefix}Part`);
 
   let trOui = false;
   trToggle.querySelectorAll('button').forEach(b => {
@@ -1720,22 +1712,65 @@ function showOnboardingModal(){
     });
   });
 
-  const trySubmit = () => {
-    const v = parseNum(input.value);
-    if(!(v > 0)) return;
+  return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { brut: v, mutuelle, joursResto: 0 };
+    const result = { mutuelle, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
+    return result;
+  };
+}
+
+function showOnboardingModal(){
+  const html = `
+    <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
+      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
+    </div>
+
+    ${renderMutuelleTrFields('modalOnboarding', { collapsible: true })}
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
+    </div>`;
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
+  const overlay = document.getElementById('modalOverlay');
+  const input = overlay.querySelector('#modalOnboardingInput');
+  const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
+  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
+
+  const trySubmit = () => {
+    const v = parseNum(input.value);
+    if(!(v > 0)) return;
+    const result = Object.assign({ brut: v }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
   submitBtn.addEventListener('click', trySubmit);
+  return pending;
+}
+
+// Redemandé à chaque nouveau salaire — les avantages (mutuelle, TR) diffèrent
+// souvent d'une offre à l'autre, impossible de les deviner silencieusement.
+function showAddScenarioModal(){
+  const html = `
+    <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer. Le brut et les autres réglages restent modifiables directement sur la carte une fois créée.</p>
+    ${renderMutuelleTrFields('modalAdd')}
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
+      <button type="button" class="btn btn-primary" id="modalAddSubmit">Ajouter ce salaire</button>
+    </div>`;
+  const pending = openModal(html, { dismissible: true });
+  const overlay = document.getElementById('modalOverlay');
+  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
+  overlay.querySelector('#modalAddSubmit').addEventListener('click', () => closeModal(readMutuelleTr()));
+  overlay.querySelector('#modalAddCancel').addEventListener('click', () => closeModal(false));
   return pending;
 }
 
@@ -1832,8 +1867,7 @@ function addRaiseScenario(type, value){
     name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
   })));
   render();
-  const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  scrollToNewCard();
 }
 
 function updateRaiseBaseName(){
@@ -1856,9 +1890,15 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 renderRaiseChips();
 
 // ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
+// Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
+// "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
+// dépassait et laissait la carte tout juste créée à peine visible.
 function scrollToNewCard(){
-  const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  requestAnimationFrame(() => {
+    const cards = document.querySelectorAll('#cardsBody .card:not(.card-add)');
+    const target = cards[cards.length - 1];
+    if(target) target.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+  });
 }
 
 let absenceType = 'conges';
