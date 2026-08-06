@@ -8,7 +8,14 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet.html` (ou le fichier `.html` le plus récent) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.0.4.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+
+## Versions
+
+Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/) `MAJEUR.MINEUR.CORRECTIF` :
+- **MAJEUR** — refonte ou changement important dans la façon d'utiliser l'outil
+- **MINEUR** — nouvelle fonctionnalité (rétrocompatible)
+- **CORRECTIF** — correction de bug ou ajustement visuel/ergonomique sur l'existant
 
 ## Fonctionnalités
 

@@ -47,8 +47,8 @@
   :root{
     --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
     --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
-    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
-    --stack-tr:#7C93AE;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C17A4E;
+    --stack-tr:#D9BC85;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
     /* Fonds de bouton fixes (non inversés) : --ink/--accent/--warn s'inversent
@@ -56,14 +56,15 @@
        bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
        constants dans les deux thèmes. */
     --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
+    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark){
     :root{
       --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
       --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
-      --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#B98F68;
-      --stack-tr:#9CB3D1;
+      --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#D99A6C;
+      --stack-tr:#E6D1A0;
       --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
       --scrollbar-thumb:#3A423D;
     }
@@ -74,8 +75,8 @@
   :root[data-theme="dark"]{
     --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
     --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
-    --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#B98F68;
-    --stack-tr:#9CB3D1;
+    --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#D99A6C;
+    --stack-tr:#E6D1A0;
     --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
     --scrollbar-thumb:#3A423D;
     color-scheme: dark;
@@ -83,8 +84,8 @@
   :root[data-theme="light"]{
     --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
     --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
-    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
-    --stack-tr:#7C93AE;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C17A4E;
+    --stack-tr:#D9BC85;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
     color-scheme: light;
@@ -149,8 +150,9 @@
   @media print{ .toast, .share-banner, .modal-overlay{display:none !important;} }
   .header-top .eyebrow{margin-bottom:0;}
   .brand-block{display:flex; flex-direction:column; gap:3px;}
-  .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1;}
+  .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1; display:flex; align-items:baseline; gap:6px;}
   .brand-accent{color:var(--accent);}
+  .brand-version{font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:10.5px; letter-spacing:.02em; color:var(--ink-soft);}
   .print-btn{
     display:inline-flex; align-items:center; gap:7px; flex:none;
     font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; color:var(--ink-soft);
@@ -195,7 +197,7 @@
   .module-switch{flex:none; width:34px; height:20px; border-radius:999px; background:var(--line); position:relative; transition:background .15s ease;}
   .module-switch::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.2);}
   .module-card.is-open .module-switch{background:var(--accent);}
-  .module-card.is-open .module-icon{background:var(--accent); color:#fff;}
+  .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
   .module-body{padding:0 16px 18px;}
   .module-card .hint{margin-top:0;}
@@ -285,13 +287,13 @@
   /* ---- Puces d'augmentation ---- */
   .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
   .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
-  .raise-chip:hover{background:var(--accent); color:#fff;}
+  .raise-chip:hover{background:var(--btn-primary-bg); color:#fff;}
   .raise-chip.eur{border-color:var(--gold); background:var(--gold-soft); color:var(--gold-ink);}
-  .raise-chip.eur:hover{background:var(--gold); color:#fff;}
+  .raise-chip.eur:hover{background:var(--btn-gold-bg); color:#fff;}
   .raise-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px;}
   .raise-type-toggle{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
   .raise-type-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:11px 16px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .raise-type-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  .raise-type-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   #raiseAmount{width:110px; font-family:'Inter',sans-serif; font-size:16px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); flex:none;}
   #raiseAmount:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
   @media (max-width:480px){ .raise-controls{flex-direction:column; align-items:stretch;} #raiseAmount{width:100%;} .raise-controls .btn{width:100%;} }
@@ -302,7 +304,7 @@
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
   .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
   .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .metric-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff; border-color:var(--ink);}
+  .metric-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff; border-color:var(--btn-toggle-active-bg);}
   .bar-row{margin-bottom:14px;}
   .bar-row:last-child{margin-bottom:0;}
   .bar-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:8px;}
@@ -323,7 +325,7 @@
   /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
   .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
-  .pill-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
+  .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
   /* ---- Barre des cartes (bascules globales + navigation) ---- */
@@ -338,8 +340,12 @@
   .cards-scroll{
     overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
     padding:2px 16px 12px; margin:0 -16px;
+    /* Sans ça, scroll-snap-align:start sur .card ignore le padding du
+       rail et aligne le bord de la carte sur celui du conteneur — ça
+       "mange" le padding gauche au repos, collant la 1ère carte à l'écran. */
+    scroll-padding-left:16px; scroll-padding-right:16px;
   }
-  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px;} }
+  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px; scroll-padding-left:2px; scroll-padding-right:2px;} }
   .cards-scroll::-webkit-scrollbar{height:8px;}
   .cards-scroll::-webkit-scrollbar-track{background:var(--line); border-radius:4px;}
   .cards-scroll::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb); border-radius:4px;}
@@ -349,6 +355,15 @@
     background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;
   }
   @media (min-width:480px){ .card{flex-basis:296px;} }
+  @keyframes card-enter{ from{ opacity:0; transform:scale(.94) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+  .card-enter{ animation:card-enter .32s cubic-bezier(.25,.8,.3,1); }
+  @keyframes card-leave{ to{ opacity:0; transform:scale(.94) translateY(6px); } }
+  .card-leave{ animation:card-leave .2s cubic-bezier(.4,0,1,1) forwards; pointer-events:none; }
+  @keyframes rail-bounce-left{ 0%{ transform:translateX(0); } 35%{ transform:translateX(16px); } 100%{ transform:translateX(0); } }
+  @keyframes rail-bounce-right{ 0%{ transform:translateX(0); } 35%{ transform:translateX(-16px); } 100%{ transform:translateX(0); } }
+  .cards.bounce-left{ animation:rail-bounce-left .34s cubic-bezier(.34,1.56,.64,1); }
+  .cards.bounce-right{ animation:rail-bounce-right .34s cubic-bezier(.34,1.56,.64,1); }
+  @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave, .cards.bounce-left, .cards.bounce-right{ animation:none; } }
   .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 0; width:100%; border-bottom:1px solid transparent;}
@@ -380,7 +395,8 @@
   .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
   .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
-  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input[data-key="brut"]{padding:13px 18px; font-size:18px; font-weight:600;}
   .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
   .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
@@ -420,7 +436,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand">On<span class="brand-accent">net</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.0.4</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -604,7 +620,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 45, mutuellePat: 45, joursResto: 18, valeurResto: 9,
+  mutuelle: 30, mutuellePat: 45, joursResto: 18, valeurResto: 9,
   partResto: 50, nbMois: 12
 };
 
@@ -805,6 +821,9 @@ function compute(s){
 
 // ---------- État ----------
 let idCounter = 0;
+// Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
+// une seule fois (effacé à la fin du render() qui l'utilise).
+let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
@@ -1047,7 +1066,7 @@ function renderCard(s, r, showRemove){
   };
 
   return `
-  <div class="card ${isRef ? 'is-ref' : ''}" data-card="${uid}">
+  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
     <div class="card-top">
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
       <input class="name-input" id="f-name-${uid}" value="${esc(s.name)}" data-id="${uid}" data-key="name">
@@ -1181,7 +1200,7 @@ function renderStack(computed){
 
     const isRef = s.id === refId;
     return `
-    <div class="stack-col ${isRef?'is-ref':''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+    <div class="stack-col ${isRef?'is-ref':''} ${s.id === justAddedId ? 'card-enter' : ''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
       <div class="stack-brut">${brutLabel}</div>
       ${barHtml}
       <div class="stack-ref-row">
@@ -1211,12 +1230,28 @@ function wfSeg(cls, dotStyle, label, val, pctVal, note){
   <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
     <div class="wf-label"><span class="wf-dot" style="${dotStyle}"></span>${label}</div>
     <div class="wf-track">
-      <div class="wf-bar ${cls}" style="width:${Math.max(pctVal, 1.5)}%">
+      <div class="wf-bar ${cls}" style="width:${Math.min(100, Math.max(pctVal, 1.5))}%">
         <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
       </div>
     </div>
   </div>
   ${note ? `<div class="wf-note">${note}</div>` : ''}`;
+}
+
+// Le choix libellé-dedans/dehors dans wfSeg() est fait sur un seuil en % de
+// la piste totale — insuffisant : sur un petit écran, ou quand une seule
+// catégorie (ex. titres restaurant) dépasse le brut, un % au-dessus du
+// seuil peut quand même correspondre à trop peu de pixels pour contenir le
+// texte, qui déborde alors de la barre. On corrige après coup en mesurant
+// la largeur réellement disponible.
+function fixWaterfallLabelFit(){
+  document.querySelectorAll('.wf-bar').forEach(bar => {
+    const val = bar.querySelector('.wf-val');
+    if(!val) return;
+    val.classList.remove('wf-val-out');
+    const fits = val.getBoundingClientRect().width + 20 <= bar.getBoundingClientRect().width;
+    if(!fits) val.classList.add('wf-val-out');
+  });
 }
 
 function renderWaterfall(computed){
@@ -1321,6 +1356,7 @@ function render(){
   const stackChartEl = document.getElementById('stackChart');
   stackChartEl.className = isSingle ? '' : 'stack-chart';
   stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+  if(isSingle) fixWaterfallLabelFit();
   bindRefPickers();
   document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
@@ -1330,6 +1366,12 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   document.getElementById('addScenario').addEventListener('click', addScenario);
+  // Nettoie la classe d'animation une fois jouée : les mises à jour légères
+  // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
+  // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
+  document.querySelectorAll('#cardsBody .card-enter, #stackChart .card-enter').forEach(el => {
+    el.addEventListener('animationend', () => el.classList.remove('card-enter'), { once:true });
+  });
 
   document.querySelectorAll('.metric-toggle button').forEach(b => {
     b.setAttribute('aria-pressed', b.dataset.metric === metric ? 'true' : 'false');
@@ -1352,6 +1394,7 @@ function render(){
   updateNavButtons();
   saveState();
   suppressAutosave = false;
+  justAddedId = null; // l'animation d'entrée ne doit jouer qu'une fois
 }
 
 function bindScenarioInputs(){
@@ -1405,8 +1448,12 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 
 function updateComputed(){
   const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  const isSingle = computed.length === 1;
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
-  document.getElementById('stackChart').innerHTML = renderStack(computed);
+  const stackChartEl = document.getElementById('stackChart');
+  stackChartEl.className = isSingle ? '' : 'stack-chart';
+  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+  if(isSingle) fixWaterfallLabelFit();
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
@@ -1456,6 +1503,47 @@ document.getElementById('scrollNext').addEventListener('click', () => {
 });
 window.addEventListener('resize', updateNavButtons);
 
+// ---------- Rebond léger en butée du rail de cartes ----------
+(function setupRailBounce(){
+  const scroller = document.getElementById('cardsScroll');
+  if(!scroller) return;
+  // scroll-snap-align + le padding du rail font naturellement reposer
+  // scrollLeft sur le padding-left (16px sur mobile, 2px au-delà de
+  // 640px) plutôt que sur 0 pile : la marge de tolérance suit ce padding
+  // au lieu d'un seuil fixe qui casserait sur l'un des deux gabarits.
+  const edgeTolerance = () => parseFloat(getComputedStyle(scroller).paddingLeft || '0') + 4;
+  const atLeft = () => scroller.scrollLeft <= edgeTolerance();
+  const atRight = () => scroller.scrollLeft >= scroller.scrollWidth - scroller.clientWidth - edgeTolerance();
+
+  function triggerRailBounce(dir){
+    const cards = document.getElementById('cardsBody');
+    if(!cards) return;
+    const cls = dir === 'left' ? 'bounce-left' : 'bounce-right';
+    if(cards.classList.contains('bounce-left') || cards.classList.contains('bounce-right')) return;
+    cards.classList.add(cls);
+    cards.addEventListener('animationend', () => cards.classList.remove(cls), { once:true });
+  }
+
+  scroller.addEventListener('wheel', (e) => {
+    if(Math.abs(e.deltaX) <= Math.abs(e.deltaY)) return; // molette verticale de la page, pas ce rail
+    if(e.deltaX < 0 && atLeft()) triggerRailBounce('left');
+    else if(e.deltaX > 0 && atRight()) triggerRailBounce('right');
+  }, { passive:true });
+
+  let touchStartX = null;
+  let touchBounced = false;
+  scroller.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchBounced = false;
+  }, { passive:true });
+  scroller.addEventListener('touchmove', (e) => {
+    if(touchStartX === null || touchBounced) return;
+    const dx = e.touches[0].clientX - touchStartX;
+    if(dx > 8 && atLeft()){ triggerRailBounce('left'); touchBounced = true; }
+    else if(dx < -8 && atRight()){ triggerRailBounce('right'); touchBounced = true; }
+  }, { passive:true });
+})();
+
 // ---------- Événements ----------
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
@@ -1498,15 +1586,22 @@ function onStructural(e){
 
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
-function addScenario(){
+async function addScenario(){
   const last = scenarios[scenarios.length-1];
-  scenarios.push(mkScenario({
+  const answers = await showAddScenarioModal(last.brut);
+  if(!answers) return; // annulé
+  disableCardSnap();
+  const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    brut:last.brut, statut:last.statut, rate:last.rate, dureeType:last.dureeType
-  }));
+    statut:last.statut, rate:last.rate, dureeType:last.dureeType
+  }, answers));
+  scenarios.push(created);
+  justAddedId = created.id;
   render();
-  const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  // Attend la fin de la disparition de la modale (200ms, voir closeModal)
+  // pour que le défilement vers la nouvelle carte soit visible et fluide
+  // au lieu de se produire caché derrière la modale encore à l'écran.
+  setTimeout(scrollToNewCard, 220);
 }
 
 async function removeScenario(id){
@@ -1515,10 +1610,20 @@ async function removeScenario(id){
   const label = target ? target.name.trim() || 'ce salaire' : 'ce salaire';
   const ok = await showConfirmModal(`Supprimer « ${label} » du comparatif ?`, { danger:true, confirmLabel:'Supprimer' });
   if(!ok) return;
-  scenarios = scenarios.filter(s => s.id !== id);
-  openCardIds.delete(id);
-  if(refId === id) refId = scenarios[0].id;
-  render();
+  const doRemove = () => {
+    scenarios = scenarios.filter(s => s.id !== id);
+    openCardIds.delete(id);
+    if(refId === id) refId = scenarios[0].id;
+    render();
+  };
+  const cardEl = document.querySelector(`.card[data-card="${id}"]`);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(cardEl && !reduceMotion){
+    cardEl.classList.add('card-leave');
+    cardEl.addEventListener('animationend', doRemove, { once:true });
+  } else {
+    doRemove();
+  }
 }
 
 document.getElementById('resetBtn').addEventListener('click', async () => {
@@ -1664,52 +1769,43 @@ function showShareModal(url){
 
 const ONBOARDING_MUTUELLE_DEFAUT = 30;
 
-function showOnboardingModal(){
-  const html = `
-    <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
-    <div class="field-row" style="margin:0 0 4px;">
-      <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
-    </div>
-
-    <details class="more" id="modalOnboardingMore">
-      <summary>Mutuelle &amp; titres restaurant</summary>
-      <div class="more-body">
+// Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
+// nouveau salaire, pour ne jamais deviner silencieusement ces montants.
+function renderMutuelleTrFields(idPrefix, opts){
+  const o = opts || {};
+  const wrapOpen = o.collapsible ? `<details class="more" id="${idPrefix}More"><summary>Mutuelle &amp; titres restaurant</summary><div class="more-body">` : '';
+  const wrapClose = o.collapsible ? `</div></details>` : '';
+  return `${wrapOpen}
         <div class="field-row">
-          <label for="modalOnboardingMutuelle">Mutuelle (€ / mois)</label>
-          <input type="text" inputmode="decimal" id="modalOnboardingMutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
+          <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
           <div class="sub-hint">Laissé vide, on part sur ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
         </div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
-          <div class="pill-toggle" id="modalOnboardingTrToggle" role="group" aria-label="Titres restaurant">
+          <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
             <button type="button" data-tr="non" aria-pressed="true">Non</button>
             <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
           </div>
         </div>
-        <div id="modalOnboardingTrFields" hidden style="margin-top:14px;">
+        <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
-            <div class="field-row"><label for="modalOnboardingJours">Jours/mois</label><input type="text" inputmode="decimal" id="modalOnboardingJours" value="18"></div>
-            <div class="field-row"><label for="modalOnboardingValeur">Valeur (€)</label><input type="text" inputmode="decimal" id="modalOnboardingValeur" value="9"></div>
-            <div class="field-row"><label for="modalOnboardingPart">Part salariale (%)</label><input type="text" inputmode="decimal" id="modalOnboardingPart" value="50"></div>
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="18"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="9"></div>
+            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
-        </div>
-      </div>
-    </details>
+        </div>${wrapClose}`;
+}
 
-    <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
-    </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
-  const overlay = document.getElementById('modalOverlay');
-  const input = overlay.querySelector('#modalOnboardingInput');
-  const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
-  const mutuelleInput = overlay.querySelector('#modalOnboardingMutuelle');
-  const trToggle = overlay.querySelector('#modalOnboardingTrToggle');
-  const trFields = overlay.querySelector('#modalOnboardingTrFields');
-  const joursInput = overlay.querySelector('#modalOnboardingJours');
-  const valeurInput = overlay.querySelector('#modalOnboardingValeur');
-  const partInput = overlay.querySelector('#modalOnboardingPart');
+// Branche les interactions du bloc ci-dessus et renvoie une fonction de
+// lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
+function bindMutuelleTrFields(overlay, idPrefix){
+  const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+  const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
+  const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
+  const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
+  const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
+  const partInput = overlay.querySelector(`#${idPrefix}Part`);
 
   let trOui = false;
   trToggle.querySelectorAll('button').forEach(b => {
@@ -1720,22 +1816,82 @@ function showOnboardingModal(){
     });
   });
 
-  const trySubmit = () => {
-    const v = parseNum(input.value);
-    if(!(v > 0)) return;
+  return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { brut: v, mutuelle, joursResto: 0 };
+    const result = { mutuelle, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
+    return result;
+  };
+}
+
+function showOnboardingModal(){
+  const html = `
+    <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
+      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
+    </div>
+
+    ${renderMutuelleTrFields('modalOnboarding', { collapsible: true })}
+
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
+    </div>`;
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
+  const overlay = document.getElementById('modalOverlay');
+  const input = overlay.querySelector('#modalOnboardingInput');
+  const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
+  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
+
+  const trySubmit = () => {
+    const v = parseNum(input.value);
+    if(!(v > 0)) return;
+    const result = Object.assign({ brut: v }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
   submitBtn.addEventListener('click', trySubmit);
+  return pending;
+}
+
+// Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
+// TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
+// silencieusement.
+function showAddScenarioModal(brutPrefill){
+  const html = `
+    <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label for="modalAddInput">Salaire brut mensuel (€)</label>
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" autocomplete="off">
+    </div>
+    ${renderMutuelleTrFields('modalAdd')}
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
+      <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
+    </div>`;
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
+  const overlay = document.getElementById('modalOverlay');
+  const input = overlay.querySelector('#modalAddInput');
+  const submitBtn = overlay.querySelector('#modalAddSubmit');
+  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
+
+  const trySubmit = () => {
+    const v = parseNum(input.value);
+    if(!(v > 0)) return;
+    closeModal(Object.assign({ brut: v }, readMutuelleTr()));
+  };
+  const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
+  updateSubmitState();
+  input.addEventListener('input', updateSubmitState);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
+  submitBtn.addEventListener('click', trySubmit);
+  overlay.querySelector('#modalAddCancel').addEventListener('click', () => closeModal(false));
   return pending;
 }
 
@@ -1828,12 +1984,14 @@ function addRaiseScenario(type, value){
   const label = type === 'pct' ? `+${value} %` : `+${fmt(value)}`;
   const clone = Object.assign({}, base);
   delete clone.id;
-  scenarios.push(mkScenario(Object.assign(clone, {
+  disableCardSnap();
+  const created = mkScenario(Object.assign(clone, {
     name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
-  })));
+  }));
+  scenarios.push(created);
+  justAddedId = created.id;
   render();
-  const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  scrollToNewCard();
 }
 
 function updateRaiseBaseName(){
@@ -1856,9 +2014,54 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 renderRaiseChips();
 
 // ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
-function scrollToNewCard(){
+// Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
+// "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
+// dépassait et laissait la carte tout juste créée à peine visible.
+//
+// L'animation est faite à la main (au lieu de scrollIntoView/scrollTo en
+// behavior:'smooth') et scroll-snap-type est coupé dès avant le re-rendu
+// qui insère la nouvelle carte : sinon le navigateur "corrige" tout seul la
+// position au point d'ancrage le plus proche dès que le DOM change — un
+// saut instantané, avant même que l'animation n'ait eu la main.
+function disableCardSnap(){
   const scroller = document.getElementById('cardsScroll');
-  requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
+  if(scroller.dataset.snapPrev === undefined) scroller.dataset.snapPrev = scroller.style.scrollSnapType || '';
+  scroller.style.scrollSnapType = 'none';
+}
+function restoreCardSnap(){
+  const scroller = document.getElementById('cardsScroll');
+  scroller.style.scrollSnapType = scroller.dataset.snapPrev || '';
+  delete scroller.dataset.snapPrev;
+}
+
+function animateScrollLeft(el, target, duration, onDone){
+  const start = el.scrollLeft;
+  const change = target - start;
+  if(Math.abs(change) < 1){ if(onDone) onDone(); return; }
+  const startTime = performance.now();
+  const ease = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+  function step(now){
+    const t = Math.min(1, (now - startTime) / duration);
+    el.scrollLeft = start + change * ease(t);
+    if(t < 1) requestAnimationFrame(step);
+    else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
+function scrollToNewCard(){
+  requestAnimationFrame(() => {
+    const cards = document.querySelectorAll('#cardsBody .card:not(.card-add)');
+    const target = cards[cards.length - 1];
+    if(!target){ restoreCardSnap(); return; }
+    const scroller = document.getElementById('cardsScroll');
+    const targetRect = target.getBoundingClientRect();
+    const scrollerRect = scroller.getBoundingClientRect();
+    const delta = (targetRect.left + targetRect.width / 2) - (scrollerRect.left + scrollerRect.width / 2);
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    const dest = Math.max(0, Math.min(maxScroll, scroller.scrollLeft + delta));
+    animateScrollLeft(scroller, dest, 380, restoreCardSnap);
+  });
 }
 
 let absenceType = 'conges';
@@ -1910,19 +2113,24 @@ function addAbsenceScenario(){
   const duree = clamp(parseNum(document.getElementById('absenceDuree').value) || 0, 0, 30);
   const clone = Object.assign({}, base);
   delete clone.id;
+  disableCardSnap();
 
+  let created;
   if(absenceType === 'arret'){
     const pct = clamp(parseNum(document.getElementById('arretPct').value) || 90, 0, 100);
-    scenarios.push(mkScenario(Object.assign(clone, {
+    created = mkScenario(Object.assign(clone, {
       name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
       absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
-    })));
+    }));
+    scenarios.push(created);
   } else {
-    scenarios.push(mkScenario(Object.assign(clone, {
+    created = mkScenario(Object.assign(clone, {
       name: `${base.name} (congés ${duree}j)`,
       absenceType: 'conges', absenceDuree: duree
-    })));
+    }));
+    scenarios.push(created);
   }
+  justAddedId = created.id;
   render();
   scrollToNewCard();
 }
