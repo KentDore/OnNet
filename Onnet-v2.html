@@ -254,6 +254,7 @@
   .stack-delta.pos{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
   .stack-delta.neg{background:var(--warn-soft); color:var(--warn); border-color:transparent;}
   .stack-legend{display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+  .stack-legend:empty{display:none;}
   .legend-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:500; color:var(--ink);}
   .legend-swatch{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(23,36,31,.05);}
   @media (max-width:480px){ .stack-chart{gap:10px;} .stack-col{width:100px; padding:14px 8px 12px;} .stack-bar{width:48px;} .stack-ref-row{max-width:80px;} .stack-name{font-size:12px;} .stack-net{font-size:16px;} }
