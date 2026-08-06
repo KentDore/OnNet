@@ -1238,7 +1238,8 @@ function renderWaterfall(computed){
   const tr = r.tr.totalSalarie;
   const net = m.netApres;
   const netSansTR = m.netSocial;
-  const trNote = tr > 0.5 ? `Sans titres restaurant, votre net serait de <strong>${fmt(netSansTR)}</strong> — mais vous n'auriez pas les titres eux-mêmes.` : '';
+  const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
+  const trNote = tr > 0.5 ? `Sans titres restaurant, votre net serait de <strong>${fmt(netSansTR)}</strong> — mais vous n'auriez pas les <strong>${fmt(trValeurFaciale)}</strong> de titres restaurant que cela procure.` : '';
 
   return `
   <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
