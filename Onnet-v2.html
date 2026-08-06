@@ -60,6 +60,24 @@
       --scrollbar-thumb:#3A423D;
     }
   }
+  /* Explicit overrides win over the OS-level media query in both directions —
+     relevant when hosted in a viewer with its own light/dark toggle. */
+  :root[data-theme="dark"]{
+    --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
+    --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
+    --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#B98F68;
+    --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
+    --scrollbar-thumb:#3A423D;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
+    --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
+    --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
+    --scrollbar-thumb:#A9B0A6;
+    color-scheme: light;
+  }
   *{box-sizing:border-box;}
   html{-webkit-text-size-adjust:100%; overflow-x:hidden; width:100%;}
   body{
