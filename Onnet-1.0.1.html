@@ -349,6 +349,11 @@
     background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;
   }
   @media (min-width:480px){ .card{flex-basis:296px;} }
+  @keyframes card-enter{ from{ opacity:0; transform:scale(.94) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+  .card-enter{ animation:card-enter .32s cubic-bezier(.25,.8,.3,1); }
+  @keyframes card-leave{ to{ opacity:0; transform:scale(.94) translateY(6px); } }
+  .card-leave{ animation:card-leave .2s cubic-bezier(.4,0,1,1) forwards; pointer-events:none; }
+  @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave{ animation:none; } }
   .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 0; width:100%; border-bottom:1px solid transparent;}
@@ -805,6 +810,9 @@ function compute(s){
 
 // ---------- État ----------
 let idCounter = 0;
+// Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
+// une seule fois (effacé à la fin du render() qui l'utilise).
+let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
@@ -1047,7 +1055,7 @@ function renderCard(s, r, showRemove){
   };
 
   return `
-  <div class="card ${isRef ? 'is-ref' : ''}" data-card="${uid}">
+  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
     <div class="card-top">
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
       <input class="name-input" id="f-name-${uid}" value="${esc(s.name)}" data-id="${uid}" data-key="name">
@@ -1181,7 +1189,7 @@ function renderStack(computed){
 
     const isRef = s.id === refId;
     return `
-    <div class="stack-col ${isRef?'is-ref':''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+    <div class="stack-col ${isRef?'is-ref':''} ${s.id === justAddedId ? 'card-enter' : ''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
       <div class="stack-brut">${brutLabel}</div>
       ${barHtml}
       <div class="stack-ref-row">
@@ -1330,6 +1338,12 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   document.getElementById('addScenario').addEventListener('click', addScenario);
+  // Nettoie la classe d'animation une fois jouée : les mises à jour légères
+  // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
+  // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
+  document.querySelectorAll('#cardsBody .card-enter, #stackChart .card-enter').forEach(el => {
+    el.addEventListener('animationend', () => el.classList.remove('card-enter'), { once:true });
+  });
 
   document.querySelectorAll('.metric-toggle button').forEach(b => {
     b.setAttribute('aria-pressed', b.dataset.metric === metric ? 'true' : 'false');
@@ -1352,6 +1366,7 @@ function render(){
   updateNavButtons();
   saveState();
   suppressAutosave = false;
+  justAddedId = null; // l'animation d'entrée ne doit jouer qu'une fois
 }
 
 function bindScenarioInputs(){
@@ -1499,15 +1514,21 @@ function onStructural(e){
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
 async function addScenario(){
-  const answers = await showAddScenarioModal();
-  if(!answers) return; // annulé
   const last = scenarios[scenarios.length-1];
-  scenarios.push(mkScenario(Object.assign({
+  const answers = await showAddScenarioModal(last.brut);
+  if(!answers) return; // annulé
+  disableCardSnap();
+  const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    brut:last.brut, statut:last.statut, rate:last.rate, dureeType:last.dureeType
-  }, answers)));
+    statut:last.statut, rate:last.rate, dureeType:last.dureeType
+  }, answers));
+  scenarios.push(created);
+  justAddedId = created.id;
   render();
-  scrollToNewCard();
+  // Attend la fin de la disparition de la modale (200ms, voir closeModal)
+  // pour que le défilement vers la nouvelle carte soit visible et fluide
+  // au lieu de se produire caché derrière la modale encore à l'écran.
+  setTimeout(scrollToNewCard, 220);
 }
 
 async function removeScenario(id){
@@ -1516,10 +1537,20 @@ async function removeScenario(id){
   const label = target ? target.name.trim() || 'ce salaire' : 'ce salaire';
   const ok = await showConfirmModal(`Supprimer « ${label} » du comparatif ?`, { danger:true, confirmLabel:'Supprimer' });
   if(!ok) return;
-  scenarios = scenarios.filter(s => s.id !== id);
-  openCardIds.delete(id);
-  if(refId === id) refId = scenarios[0].id;
-  render();
+  const doRemove = () => {
+    scenarios = scenarios.filter(s => s.id !== id);
+    openCardIds.delete(id);
+    if(refId === id) refId = scenarios[0].id;
+    render();
+  };
+  const cardEl = document.querySelector(`.card[data-card="${id}"]`);
+  const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(cardEl && !reduceMotion){
+    cardEl.classList.add('card-leave');
+    cardEl.addEventListener('animationend', doRemove, { once:true });
+  } else {
+    doRemove();
+  }
 }
 
 document.getElementById('resetBtn').addEventListener('click', async () => {
@@ -1756,20 +1787,37 @@ function showOnboardingModal(){
   return pending;
 }
 
-// Redemandé à chaque nouveau salaire — les avantages (mutuelle, TR) diffèrent
-// souvent d'une offre à l'autre, impossible de les deviner silencieusement.
-function showAddScenarioModal(){
+// Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
+// TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
+// silencieusement.
+function showAddScenarioModal(brutPrefill){
   const html = `
-    <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer. Le brut et les autres réglages restent modifiables directement sur la carte une fois créée.</p>
+    <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label for="modalAddInput">Salaire brut mensuel (€)</label>
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" autocomplete="off">
+    </div>
     ${renderMutuelleTrFields('modalAdd')}
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
-      <button type="button" class="btn btn-primary" id="modalAddSubmit">Ajouter ce salaire</button>
+      <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
+  const input = overlay.querySelector('#modalAddInput');
+  const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
-  overlay.querySelector('#modalAddSubmit').addEventListener('click', () => closeModal(readMutuelleTr()));
+
+  const trySubmit = () => {
+    const v = parseNum(input.value);
+    if(!(v > 0)) return;
+    closeModal(Object.assign({ brut: v }, readMutuelleTr()));
+  };
+  const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
+  updateSubmitState();
+  input.addEventListener('input', updateSubmitState);
+  input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
+  submitBtn.addEventListener('click', trySubmit);
   overlay.querySelector('#modalAddCancel').addEventListener('click', () => closeModal(false));
   return pending;
 }
@@ -1863,9 +1911,12 @@ function addRaiseScenario(type, value){
   const label = type === 'pct' ? `+${value} %` : `+${fmt(value)}`;
   const clone = Object.assign({}, base);
   delete clone.id;
-  scenarios.push(mkScenario(Object.assign(clone, {
+  disableCardSnap();
+  const created = mkScenario(Object.assign(clone, {
     name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
-  })));
+  }));
+  scenarios.push(created);
+  justAddedId = created.id;
   render();
   scrollToNewCard();
 }
@@ -1893,11 +1944,50 @@ renderRaiseChips();
 // Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
 // "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
 // dépassait et laissait la carte tout juste créée à peine visible.
+//
+// L'animation est faite à la main (au lieu de scrollIntoView/scrollTo en
+// behavior:'smooth') et scroll-snap-type est coupé dès avant le re-rendu
+// qui insère la nouvelle carte : sinon le navigateur "corrige" tout seul la
+// position au point d'ancrage le plus proche dès que le DOM change — un
+// saut instantané, avant même que l'animation n'ait eu la main.
+function disableCardSnap(){
+  const scroller = document.getElementById('cardsScroll');
+  if(scroller.dataset.snapPrev === undefined) scroller.dataset.snapPrev = scroller.style.scrollSnapType || '';
+  scroller.style.scrollSnapType = 'none';
+}
+function restoreCardSnap(){
+  const scroller = document.getElementById('cardsScroll');
+  scroller.style.scrollSnapType = scroller.dataset.snapPrev || '';
+  delete scroller.dataset.snapPrev;
+}
+
+function animateScrollLeft(el, target, duration, onDone){
+  const start = el.scrollLeft;
+  const change = target - start;
+  if(Math.abs(change) < 1){ if(onDone) onDone(); return; }
+  const startTime = performance.now();
+  const ease = t => t < 0.5 ? 2*t*t : 1 - Math.pow(-2*t + 2, 2) / 2;
+  function step(now){
+    const t = Math.min(1, (now - startTime) / duration);
+    el.scrollLeft = start + change * ease(t);
+    if(t < 1) requestAnimationFrame(step);
+    else if(onDone) onDone();
+  }
+  requestAnimationFrame(step);
+}
+
 function scrollToNewCard(){
   requestAnimationFrame(() => {
     const cards = document.querySelectorAll('#cardsBody .card:not(.card-add)');
     const target = cards[cards.length - 1];
-    if(target) target.scrollIntoView({ behavior:'smooth', inline:'center', block:'nearest' });
+    if(!target){ restoreCardSnap(); return; }
+    const scroller = document.getElementById('cardsScroll');
+    const targetRect = target.getBoundingClientRect();
+    const scrollerRect = scroller.getBoundingClientRect();
+    const delta = (targetRect.left + targetRect.width / 2) - (scrollerRect.left + scrollerRect.width / 2);
+    const maxScroll = scroller.scrollWidth - scroller.clientWidth;
+    const dest = Math.max(0, Math.min(maxScroll, scroller.scrollLeft + delta));
+    animateScrollLeft(scroller, dest, 380, restoreCardSnap);
   });
 }
 
@@ -1950,19 +2040,24 @@ function addAbsenceScenario(){
   const duree = clamp(parseNum(document.getElementById('absenceDuree').value) || 0, 0, 30);
   const clone = Object.assign({}, base);
   delete clone.id;
+  disableCardSnap();
 
+  let created;
   if(absenceType === 'arret'){
     const pct = clamp(parseNum(document.getElementById('arretPct').value) || 90, 0, 100);
-    scenarios.push(mkScenario(Object.assign(clone, {
+    created = mkScenario(Object.assign(clone, {
       name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
       absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
-    })));
+    }));
+    scenarios.push(created);
   } else {
-    scenarios.push(mkScenario(Object.assign(clone, {
+    created = mkScenario(Object.assign(clone, {
       name: `${base.name} (congés ${duree}j)`,
       absenceType: 'conges', absenceDuree: duree
-    })));
+    }));
+    scenarios.push(created);
   }
+  justAddedId = created.id;
   render();
   scrollToNewCard();
 }
