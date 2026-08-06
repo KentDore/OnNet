@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet.html` (ou le fichier `.html` le plus récent) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.0.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Fonctionnalités
 
