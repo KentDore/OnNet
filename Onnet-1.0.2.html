@@ -339,8 +339,12 @@
   .cards-scroll{
     overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
     padding:2px 16px 12px; margin:0 -16px;
+    /* Sans ça, scroll-snap-align:start sur .card ignore le padding du
+       rail et aligne le bord de la carte sur celui du conteneur — ça
+       "mange" le padding gauche au repos, collant la 1ère carte à l'écran. */
+    scroll-padding-left:16px; scroll-padding-right:16px;
   }
-  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px;} }
+  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px; scroll-padding-left:2px; scroll-padding-right:2px;} }
   .cards-scroll::-webkit-scrollbar{height:8px;}
   .cards-scroll::-webkit-scrollbar-track{background:var(--line); border-radius:4px;}
   .cards-scroll::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb); border-radius:4px;}
