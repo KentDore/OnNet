@@ -31,6 +31,7 @@
   @media (min-width:640px){ h1{font-size:38px;} }
   header p{color:var(--ink-soft); font-size:14.5px; line-height:1.55; max-width:60ch; margin:0 0 18px;}
   .header-top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
+  .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
   .header-top .eyebrow{margin-bottom:0;}
   .brand-block{display:flex; flex-direction:column; gap:3px;}
   .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1;}
@@ -261,7 +262,7 @@
 
   @media print{
     body{background:#fff;}
-    .header-top .print-btn, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .header-top .print-btn, .header-actions, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
     .cards-scroll{overflow:visible; margin:0; padding:0;}
     .cards{flex-wrap:wrap;}
     .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
@@ -281,10 +282,16 @@
         <div class="brand">On<span class="brand-accent">net</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
-      <button class="print-btn" id="printBtn">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-        <span>Imprimer / exporter</span>
-      </button>
+      <div class="header-actions">
+        <button class="print-btn" id="resetBtn" title="Effacer les salaires enregistrés et revenir à l'exemple de départ">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
+          <span>Réinitialiser</span>
+        </button>
+        <button class="print-btn" id="printBtn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+          <span>Imprimer / exporter</span>
+        </button>
+      </div>
     </div>
     <h1>Le brut promet. Le net décide.</h1>
     <p>Poste actuel, offre reçue, augmentation en négociation : mettez vos salaires côte à côte et voyez en un coup d'œil ce qui atterrit vraiment sur votre compte.</p>
@@ -673,15 +680,81 @@ function mkScenario(over){
   return Object.assign(base, over || {});
 }
 
-let scenarios = [
-  mkScenario({ name:'Poste actuel', brut:2300, dureeType:'39', joursResto:21, valeurResto:8 }),
-  mkScenario({ name:'Négociation', brut:3100, dureeType:'39' })
-];
-let refId = scenarios[0].id;
-let metric = 'netApres';
-let openCardIds = new Set();
-let displayAmt = 'net';
-let displayPeriod = 'mois';
+function defaultScenarios(){
+  return [
+    mkScenario({ name:'Poste actuel', brut:2300, dureeType:'39', joursResto:21, valeurResto:8 }),
+    mkScenario({ name:'Négociation', brut:3100, dureeType:'39' })
+  ];
+}
+
+// ---------- Persistence (localStorage only — nothing leaves the browser) ----------
+const STORAGE_KEY = 'onnet.state.v1';
+const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','pasRate','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const METRIC_KEYS = ['netApres','netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire','coutEmployeur'];
+
+function sanitizeScenario(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  const clean = Object.assign({}, raw);
+  NUMERIC_KEYS.forEach(k => {
+    if(clean[k] === undefined) return;
+    const n = Number(clean[k]);
+    if(Number.isFinite(n)) clean[k] = n; else delete clean[k];
+  });
+  if(typeof clean.name !== 'string' || !clean.name.trim()) delete clean.name;
+  if(!Object.keys(rateNames).includes(clean.statut)) delete clean.statut;
+  if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
+  if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
+  clean.carenceCouverte = !!clean.carenceCouverte;
+  if(!Number.isInteger(clean.id)) delete clean.id;
+  return clean;
+}
+
+function loadPersistedState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return null;
+    const data = JSON.parse(raw);
+    if(!data || !Array.isArray(data.scenarios)) return null;
+    const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
+    if(!cleaned.length) return null;
+    return { scenarios: cleaned, refId: data.refId, metric: data.metric,
+             displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
+             openCardIds: data.openCardIds };
+  } catch(e){ return null; }
+}
+
+function saveState(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+      v:1, scenarios, refId, metric, displayAmt, displayPeriod,
+      openCardIds:[...openCardIds]
+    }));
+  } catch(e){ /* storage full/unavailable — app keeps working in-memory */ }
+}
+
+function clearPersistedState(){
+  try{ localStorage.removeItem(STORAGE_KEY); } catch(e){ /* ignore */ }
+}
+
+const persisted = loadPersistedState();
+let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod;
+if(persisted){
+  scenarios = persisted.scenarios.map(sv => mkScenario(sv));
+  idCounter = scenarios.reduce((max, s) => Math.max(max, s.id), -1) + 1;
+  refId = scenarios.some(s => s.id === persisted.refId) ? persisted.refId : scenarios[0].id;
+  metric = METRIC_KEYS.includes(persisted.metric) ? persisted.metric : 'netApres';
+  displayAmt = persisted.displayAmt === 'brut' ? 'brut' : 'net';
+  displayPeriod = persisted.displayPeriod === 'an' ? 'an' : 'mois';
+  const validIds = new Set(scenarios.map(s => s.id));
+  openCardIds = new Set(Array.isArray(persisted.openCardIds) ? persisted.openCardIds.filter(id => validIds.has(id)) : []);
+} else {
+  scenarios = defaultScenarios();
+  refId = scenarios[0].id;
+  metric = 'netApres';
+  openCardIds = new Set();
+  displayAmt = 'net';
+  displayPeriod = 'mois';
+}
 
 const metricLabels = {
   netApres: 'Net', netImposable: 'Net imposable',
@@ -796,6 +869,17 @@ function renderCard(s, r, showRemove){
           ${num(`f-pasrate-${uid}`,'pasRate',uid,s.pasRate,{min:0,max:45})}
           <div class="sub-hint">Indiqué sur votre avis d'imposition ou votre bulletin de paie. Laissez à 0 si vous ne le connaissez pas. Estimation appliquée au net imposable — voir le disclaimer en bas de page.</div>
         </div>
+        <div class="two-col" style="margin-top:14px;">
+          <div class="field-row">
+            <label for="f-nbmois-${uid}">Mensualités / an</label>
+            ${num(`f-nbmois-${uid}`,'nbMois',uid,s.nbMois,{min:1,max:24})}
+          </div>
+          <div class="field-row">
+            <label for="f-primes-${uid}">Primes annuelles (€)</label>
+            ${num(`f-primes-${uid}`,'primes',uid,s.primes,{min:0})}
+          </div>
+        </div>
+        <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
       </div>
     </details>
   </div>`;
@@ -835,7 +919,7 @@ function renderStack(computed){
       const pxNet = Math.max(22, Math.round(net * scale));
       barHtml = `
       <div class="stack-bar">
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}">
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}" role="img" aria-label="Net estimé : ${fmt(net)}">
           <span class="stack-net-tag">net</span>
         </div>
       </div>`;
@@ -848,9 +932,9 @@ function renderStack(computed){
       const pxNet = Math.max(22, Math.round(net * scale));
       barHtml = `
       <div class="stack-bar">
-        <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}"></div>
-        <div class="stack-seg stack-seg-mutres" style="height:${pxMutRes}px" title="Mutuelle + titres restaurant : ${fmt(mutRes)}"></div>
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}">
+        <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
+        <div class="stack-seg stack-seg-mutres" style="height:${pxMutRes}px" title="Mutuelle + titres restaurant : ${fmt(mutRes)}" role="img" aria-label="Mutuelle et titres restaurant : ${fmt(mutRes)}"></div>
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}">
           <span class="stack-net-tag">net</span>
         </div>
       </div>`;
@@ -864,7 +948,7 @@ function renderStack(computed){
       ${barHtml}
       <div class="stack-ref-row">
         <span class="stack-ref-dot ${isRef?'is-ref':''}" aria-hidden="true"></span>
-        <span class="stack-name">${esc(s.name)}</span>
+        <span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span>
       </div>
       <div class="stack-net">${fmt(net)}</div>
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
@@ -917,7 +1001,7 @@ function renderBars(computed){
     return `
     <div class="bar-row">
       <div class="bar-top">
-        <span class="bar-name">${esc(s.name)}${s.id===refId ? ' · réf.' : ''}</span>
+        <span class="bar-name" title="${esc(s.name)}">${esc(s.name)}${s.id===refId ? ' · réf.' : ''}</span>
         <span class="bar-value"><span>${fmtV(v)}</span><span class="bar-delta ${cls}">${fmtD(delta)}</span></span>
       </div>
       <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
@@ -964,12 +1048,14 @@ function render(){
       if(openCardIds.has(id)) d.open = true;
       d.addEventListener('toggle', () => {
         if(d.open) openCardIds.add(id); else openCardIds.delete(id);
+        saveState();
       });
     }
   });
 
   bindScenarioInputs();
   updateNavButtons();
+  saveState();
 }
 
 function bindScenarioInputs(){
@@ -1051,6 +1137,7 @@ function updateComputed(){
       setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || '');
     }
   });
+  saveState();
 }
 
 // ---------- Horizontal card rail navigation ----------
@@ -1128,11 +1215,21 @@ function addScenario(){
 
 function removeScenario(id){
   if(scenarios.length <= 1) return;
+  const target = findScenario(id);
+  const label = target ? target.name.trim() || 'ce salaire' : 'ce salaire';
+  if(!confirm(`Supprimer « ${label} » du comparatif ?`)) return;
   scenarios = scenarios.filter(s => s.id !== id);
   openCardIds.delete(id);
   if(refId === id) refId = scenarios[0].id;
   render();
 }
+
+document.getElementById('resetBtn').addEventListener('click', () => {
+  const ok = confirm('Effacer tous les salaires enregistrés et revenir à l\'exemple de départ ? Cette action est irréversible.');
+  if(!ok) return;
+  clearPersistedState();
+  location.reload();
+});
 
 document.getElementById('printBtn').addEventListener('click', () => {
   const toOpen = Array.from(document.querySelectorAll('details.more, #moreMetrics'));
