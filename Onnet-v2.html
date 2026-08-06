@@ -48,6 +48,7 @@
     --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
     --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
     --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
+    --stack-tr:#7C93AE;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
     /* Fonds de bouton fixes (non inversés) : --ink/--accent/--warn s'inversent
@@ -62,6 +63,7 @@
       --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
       --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
       --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#B98F68;
+      --stack-tr:#9CB3D1;
       --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
       --scrollbar-thumb:#3A423D;
     }
@@ -73,6 +75,7 @@
     --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
     --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
     --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#B98F68;
+    --stack-tr:#9CB3D1;
     --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
     --scrollbar-thumb:#3A423D;
     color-scheme: dark;
@@ -81,6 +84,7 @@
     --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69726A;
     --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#B2542E; --warn-soft:#F8EDE6;
     --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
+    --stack-tr:#7C93AE;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
     color-scheme: light;
@@ -235,7 +239,8 @@
   .stack-seg:first-child{border-top-left-radius:12px; border-top-right-radius:12px;}
   .stack-seg:last-child{border-bottom-left-radius:12px; border-bottom-right-radius:12px;}
   .stack-seg-cotis{background:var(--stack-cotis);}
-  .stack-seg-mutres{background:var(--gold);}
+  .stack-seg-mutuelle{background:var(--gold);}
+  .stack-seg-tr{background:var(--stack-tr);}
   .stack-seg-net{background:linear-gradient(165deg, #2E8A62 0%, var(--accent) 75%); display:flex; align-items:flex-start; justify-content:center; padding-top:8px;}
   .stack-net-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.85);}
   .stack-ref-row{display:flex; align-items:center; gap:6px; margin-top:12px; max-width:104px;}
@@ -244,6 +249,7 @@
   .stack-name{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; line-height:1.3; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
   .stack-col.is-ref .stack-name{color:var(--accent);}
   .stack-net{font-family:'Fraunces',serif; font-weight:600; font-size:19px; margin-top:2px;}
+  .stack-net-notr{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); margin-top:1px;}
   .stack-delta{font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; margin-top:6px; padding:2px 8px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);}
   .stack-delta.pos{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
   .stack-delta.neg{background:var(--warn-soft); color:var(--warn); border-color:transparent;}
@@ -263,13 +269,16 @@
   .wf-bar{position:absolute; top:0; bottom:0; left:0; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding:0 10px; box-shadow:0 1px 2px rgba(23,36,31,.08); min-width:2px;}
   .wf-bar-total{background:var(--surface); border:1px solid var(--line);}
   .wf-bar-cotis{background:var(--stack-cotis);}
-  .wf-bar-mutres{background:var(--gold);}
+  .wf-bar-mutuelle{background:var(--gold);}
+  .wf-bar-tr{background:var(--stack-tr);}
   .wf-bar-net{background:linear-gradient(100deg, #2E8A62 0%, var(--accent) 85%);}
   .wf-val{font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700; color:var(--ink); white-space:nowrap;}
   .wf-bar-total .wf-val{color:var(--ink);}
-  .wf-bar-cotis .wf-val, .wf-bar-mutres .wf-val{color:rgba(23,36,31,.82);}
+  .wf-bar-cotis .wf-val, .wf-bar-mutuelle .wf-val, .wf-bar-tr .wf-val{color:rgba(23,36,31,.82);}
   .wf-bar-net .wf-val{color:rgba(255,255,255,.95);}
   .wf-val-out{position:absolute; left:100%; margin-left:8px; top:50%; transform:translateY(-50%); color:var(--ink) !important;}
+  .wf-note{font-family:'Inter',sans-serif; font-size:11.5px; line-height:1.4; color:var(--ink-soft); margin:-2px 0 4px 142px;}
+  .wf-note strong{color:var(--ink);}
   @media (max-width:480px){ .wf-row{grid-template-columns:104px 1fr; gap:8px;} .wf-label{font-size:11.5px;} .wf-val{font-size:10.5px;} }
 
   /* ---- Puces d'augmentation ---- */
@@ -902,18 +911,41 @@ function buildShareUrl(){
 }
 
 let showToastImpl = null;
+
+// Repli historique : fonctionne même là où l'API Clipboard moderne est
+// bloquée par une Permissions Policy (ex. Artifact affiché dans un iframe
+// sandboxé), car execCommand('copy') n'est pas soumis à cette politique.
+function legacyCopy(text){
+  const ta = document.createElement('textarea');
+  ta.value = text;
+  ta.setAttribute('readonly', '');
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  ta.setSelectionRange(0, text.length);
+  let ok = false;
+  try{ ok = document.execCommand('copy'); } catch(e){ ok = false; }
+  document.body.removeChild(ta);
+  return ok;
+}
+
 async function shareLink(){
   const url = buildShareUrl();
   // Cas normal : copie directe sur ce clic (un vrai geste utilisateur récent)
   // et simple affichage du toast — pas de fenêtre en plus. La modale n'est
-  // qu'un repli, affiché seulement si la copie échoue vraiment (API Clipboard
-  // indisponible ou bloquée), pour ne jamais perdre le lien pour autant.
+  // qu'un dernier repli, affiché seulement si les deux méthodes de copie
+  // échouent vraiment, pour ne jamais perdre le lien pour autant.
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
       await navigator.clipboard.writeText(url);
       showToastImpl('Lien copié dans le presse-papiers !');
       return;
-    } catch(e){ /* on passe au repli sur la modale ci-dessous */ }
+    } catch(e){ /* on tente le repli ci-dessous */ }
+  }
+  if(legacyCopy(url)){
+    showToastImpl('Lien copié dans le presse-papiers !');
+    return;
   }
   showShareModal(url);
 }
@@ -1096,7 +1128,7 @@ function renderAddCard(){
 }
 
 // ---------- Graphique empilé de répartition ----------
-const STACK_COLORS = { cotis:'var(--stack-cotis)', mutres:'var(--gold)', net:'var(--accent)' };
+const STACK_COLORS = { cotis:'var(--stack-cotis)', mutuelle:'var(--gold)', tr:'var(--stack-tr)', net:'var(--accent)' };
 
 function renderStack(computed){
   const sorted = [...computed].sort((a,b) => b.r.m.netApres - a.r.m.netApres);
@@ -1107,8 +1139,10 @@ function renderStack(computed){
   return sorted.map(({s, r}) => {
     const m = r.m;
     const cotis = m.cotisNettes;
-    const mutRes = s.mutuelle + r.tr.totalSalarie;
+    const mutuelle = s.mutuelle;
+    const tr = r.tr.totalSalarie;
     const net = m.netApres;
+    const netSansTR = m.netSocial;
     const brut = m.brutTotal;
     const scale = maxPx / maxBrut;
 
@@ -1129,12 +1163,14 @@ function renderStack(computed){
         : `${s.absenceDuree} j congés`;
     } else {
       const pxCotis = Math.round(cotis * scale);
-      const pxMutRes = Math.round(mutRes * scale);
+      const pxMutuelle = Math.round(mutuelle * scale);
+      const pxTr = Math.round(tr * scale);
       const pxNet = Math.max(22, Math.round(net * scale));
       barHtml = `
       <div class="stack-bar">
         <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
-        <div class="stack-seg stack-seg-mutres" style="height:${pxMutRes}px" title="Mutuelle + titres restaurant : ${fmt(mutRes)}" role="img" aria-label="Mutuelle et titres restaurant : ${fmt(mutRes)}"></div>
+        <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
+        <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
         <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}">
           <span class="stack-net-tag">net</span>
         </div>
@@ -1152,6 +1188,7 @@ function renderStack(computed){
         <span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span>
       </div>
       <div class="stack-net">${fmt(net)}</div>
+      ${(s.absenceType === 'none' && tr > 0.5) ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -1160,13 +1197,14 @@ function renderStack(computed){
 function renderStackLegend(){
   return `
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.net}"></span>Net</div>
-  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.mutres}"></span>Mutuelle &amp; titres restaurant</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.tr}"></span>Titres restaurant</div>
+  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.mutuelle}"></span>Mutuelle</div>
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
 }
 
 const WF_MIN_INSIDE = 15; // largeur (%) en dessous de laquelle le libellé sort de la barre
 
-function wfSeg(cls, dotStyle, label, val, pctVal){
+function wfSeg(cls, dotStyle, label, val, pctVal, note){
   const inside = pctVal >= WF_MIN_INSIDE;
   return `
   <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
@@ -1176,7 +1214,8 @@ function wfSeg(cls, dotStyle, label, val, pctVal){
         <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
       </div>
     </div>
-  </div>`;
+  </div>
+  ${note ? `<div class="wf-note">${note}</div>` : ''}`;
 }
 
 function renderWaterfall(computed){
@@ -1195,15 +1234,19 @@ function renderWaterfall(computed){
   }
 
   const cotis = m.cotisNettes;
-  const mutRes = s.mutuelle + r.tr.totalSalarie;
+  const mutuelle = s.mutuelle;
+  const tr = r.tr.totalSalarie;
   const net = m.netApres;
+  const netSansTR = m.netSocial;
+  const trNote = tr > 0.5 ? `Sans titres restaurant, votre net serait de <strong>${fmt(netSansTR)}</strong> — mais vous n'auriez pas les titres eux-mêmes.` : '';
 
   return `
-  <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutRes)} de mutuelle et titres restaurant, ${fmt(net)} de net">
+  <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
     ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut', fmt(brut), 100)}
     ${wfSeg('wf-bar-cotis', `background:${STACK_COLORS.cotis}`, '− Cotisations sociales', '−' + fmt(cotis), pct(cotis))}
-    ${wfSeg('wf-bar-mutres', `background:${STACK_COLORS.mutres}`, '− Mutuelle & titres restaurant', '−' + fmt(mutRes), pct(mutRes))}
-    ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, '= Net', fmt(net), pct(net))}
+    ${wfSeg('wf-bar-mutuelle', `background:${STACK_COLORS.mutuelle}`, '− Mutuelle', '−' + fmt(mutuelle), pct(mutuelle))}
+    ${tr > 0.5 ? wfSeg('wf-bar-tr', `background:${STACK_COLORS.tr}`, '− Titres restaurant', '−' + fmt(tr), pct(tr)) : ''}
+    ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, '= Net', fmt(net), pct(net), trNote)}
   </div>`;
 }
 
@@ -1617,23 +1660,76 @@ function showShareModal(url){
   });
 }
 
+const ONBOARDING_MUTUELLE_DEFAUT = 30;
+
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
-    <div class="field-row" style="margin:0 0 18px;">
+    <div class="field-row" style="margin:0 0 4px;">
       <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
     </div>
-    <div class="modal-actions">
+
+    <details class="more" id="modalOnboardingMore">
+      <summary>Mutuelle &amp; titres restaurant</summary>
+      <div class="more-body">
+        <div class="field-row">
+          <label for="modalOnboardingMutuelle">Mutuelle (€ / mois)</label>
+          <input type="text" inputmode="decimal" id="modalOnboardingMutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          <div class="sub-hint">Laissé vide, on part sur ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
+        </div>
+        <div class="field-row" style="margin-bottom:0;">
+          <label>Avez-vous des titres restaurant ?</label>
+          <div class="pill-toggle" id="modalOnboardingTrToggle" role="group" aria-label="Titres restaurant">
+            <button type="button" data-tr="non" aria-pressed="true">Non</button>
+            <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+          </div>
+        </div>
+        <div id="modalOnboardingTrFields" hidden style="margin-top:14px;">
+          <div class="three-col">
+            <div class="field-row"><label for="modalOnboardingJours">Jours/mois</label><input type="text" inputmode="decimal" id="modalOnboardingJours" value="18"></div>
+            <div class="field-row"><label for="modalOnboardingValeur">Valeur (€)</label><input type="text" inputmode="decimal" id="modalOnboardingValeur" value="9"></div>
+            <div class="field-row"><label for="modalOnboardingPart">Part salariale (%)</label><input type="text" inputmode="decimal" id="modalOnboardingPart" value="50"></div>
+          </div>
+        </div>
+      </div>
+    </details>
+
+    <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
     </div>`;
   const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
+  const mutuelleInput = overlay.querySelector('#modalOnboardingMutuelle');
+  const trToggle = overlay.querySelector('#modalOnboardingTrToggle');
+  const trFields = overlay.querySelector('#modalOnboardingTrFields');
+  const joursInput = overlay.querySelector('#modalOnboardingJours');
+  const valeurInput = overlay.querySelector('#modalOnboardingValeur');
+  const partInput = overlay.querySelector('#modalOnboardingPart');
+
+  let trOui = false;
+  trToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      trOui = b.dataset.tr === 'oui';
+      trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      trFields.hidden = !trOui;
+    });
+  });
+
   const trySubmit = () => {
     const v = parseNum(input.value);
-    if(v > 0) closeModal(v);
+    if(!(v > 0)) return;
+    const mutuelleRaw = mutuelleInput.value.trim();
+    const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
+    const result = { brut: v, mutuelle, joursResto: 0 };
+    if(trOui){
+      result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
+      result.valeurResto = Math.max(0, parseNum(valeurInput.value));
+      result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
+    }
+    closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
@@ -1834,8 +1930,8 @@ updateAbsenceUI();
 
 render();
 if(showOnboarding){
-  showOnboardingModal().then(value => {
-    scenarios[0].brut = value;
+  showOnboardingModal().then(result => {
+    Object.assign(scenarios[0], result);
     render();
   });
 }
