@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Onnet — Simulateur brut → net</title>
 <style>
-/* Self-hosted fonts (embedded, no external network request) — subset: Latin,
-   covers French diacritics (à-ÿ, œ). Fraunces and Inter are variable fonts,
-   so a single file each covers every weight used on the page. */
+/* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
+   latin, couvre les diacritiques françaises (à-ÿ, œ). Fraunces et Inter sont des
+   polices variables, donc un seul fichier par famille couvre toutes les graisses
+   utilisées sur la page. */
 @font-face {
   font-family: 'Fraunces';
   font-style: normal;
@@ -49,9 +50,10 @@
     --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
-    /* Fixed (non-flipping) button fills: --ink/--accent/--warn invert lightness
-       between themes for text-legibility reasons, which breaks white-text-on-fill
-       buttons in dark mode. These stay constant in both themes instead. */
+    /* Fonds de bouton fixes (non inversés) : --ink/--accent/--warn s'inversent
+       entre les thèmes pour rester lisibles en tant que texte, ce qui casse un
+       bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
+       constants dans les deux thèmes. */
     --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
     color-scheme: light dark;
   }
@@ -64,8 +66,9 @@
       --scrollbar-thumb:#3A423D;
     }
   }
-  /* Explicit overrides win over the OS-level media query in both directions —
-     relevant when hosted in a viewer with its own light/dark toggle. */
+  /* Ces surcharges explicites l'emportent sur la préférence système, dans les
+     deux sens — utile quand hébergé dans un visualiseur avec son propre
+     bascule clair/sombre. */
   :root[data-theme="dark"]{
     --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
     --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
@@ -123,7 +126,7 @@
     opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:1000;
   }
   .toast.show{opacity:1; transform:translate(-50%, 0);}
-  /* ---- Custom modal (replaces window.confirm()/prompt(), blocked in sandboxed iframes) ---- */
+  /* ---- Modale maison (remplace window.confirm()/prompt(), bloqués dans les iframes sandboxées) ---- */
   .modal-overlay{
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center; padding:20px;
@@ -182,7 +185,7 @@
   .panel-advanced > summary{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-soft);}
   .panel-advanced > summary::after{color:var(--ink-soft);}
 
-  /* ---- Modules (add-on style panels: augmentation, absence, ...) ---- */
+  /* ---- Modules (panneaux complémentaires : augmentation, absence, ...) ---- */
   .modules-section{margin-bottom:16px;}
   .modules-head{margin-bottom:10px;}
   .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
@@ -217,7 +220,7 @@
   .hint{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-2px 0 14px;}
   h2.bars-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 4px;}
 
-  /* ---- Insight callout ---- */
+  /* ---- Encart d'analyse ---- */
   .insight{
     font-family:'Fraunces',serif; font-size:15.5px; line-height:1.5; color:var(--ink);
     background:var(--accent-soft); border-radius:12px; padding:12px 16px; margin:14px 0 6px;
@@ -225,7 +228,7 @@
   .insight strong{color:var(--accent);}
   .insight.neutral{background:var(--bg); color:var(--ink-soft); font-family:'Inter',sans-serif; font-size:13px;}
 
-  /* ---- Stacked breakdown chart ---- */
+  /* ---- Graphique empilé de répartition ---- */
   .stack-chart-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; padding:2px;}
   .stack-chart{display:flex; gap:14px; align-items:flex-end; justify-content:center; flex-wrap:nowrap; padding:16px 2px 8px; width:max-content; min-width:100%;}
   .stack-col{
@@ -263,7 +266,7 @@
   .legend-swatch{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(23,36,31,.05);}
   @media (max-width:480px){ .stack-chart{gap:10px;} .stack-col{width:100px; padding:14px 8px 12px;} .stack-bar{width:48px;} .stack-ref-row{max-width:80px;} .stack-name{font-size:12px;} .stack-net{font-size:16px;} }
 
-  /* ---- Raise chips ---- */
+  /* ---- Puces d'augmentation ---- */
   .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
   .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
   .raise-chip:hover{background:var(--accent); color:#fff;}
@@ -277,7 +280,7 @@
   #raiseAmount:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
   @media (max-width:480px){ .raise-controls{flex-direction:column; align-items:stretch;} #raiseAmount{width:100%;} .raise-controls .btn{width:100%;} }
 
-  /* ---- Secondary comparison ---- */
+  /* ---- Comparaison secondaire ---- */
   .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
   .ref-row label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:0;}
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
@@ -301,13 +304,13 @@
   .alert-warn{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn-line);}
   .alert-info{background:var(--gold-soft); color:var(--gold-ink); border:1px solid var(--gold-line);}
 
-  /* ---- Pill toggles (reused for hero unit + duration) ---- */
+  /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
   .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
   .pill-toggle button[aria-pressed="true"]{background:var(--ink); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
-  /* ---- Cards bar (global toggles + nav) ---- */
+  /* ---- Barre des cartes (bascules globales + navigation) ---- */
   .cards-bar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
   .cards-bar-toggles{display:flex; gap:8px; flex-wrap:wrap;}
   .cards-bar-nav{display:flex; gap:6px;}
@@ -315,7 +318,7 @@
   .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
   .nav-btn:disabled{opacity:.3; cursor:default;}
 
-  /* ---- Horizontal-only card rail ---- */
+  /* ---- Rail de cartes défilant horizontalement ---- */
   .cards-scroll{
     overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
     padding:2px 16px 12px; margin:0 -16px;
@@ -586,7 +589,7 @@
 <script>
 "use strict";
 
-// ---------- Legal parameters (editable in the advanced panel) ----------
+// ---------- Paramètres légaux (modifiables dans le panneau avancé) ----------
 const P = {
   pmss: 4005, plafondTR: 7.32,
   csgDed: 6.80, csgNonDed: 2.40, crds: 0.50,
@@ -609,7 +612,7 @@ const ICON = {
 const rateNames = { 'non-cadre':'Non-cadre', 'cadre':'Cadre', 'fp':'Fonction publique', 'custom':'Taux forfaitaire' };
 const HEURES_BASE = 151.67;
 
-// ---------- Utilities ----------
+// ---------- Fonctions utilitaires ----------
 function parseNum(v){
   if(v === null || v === undefined) return 0;
   const s = String(v).replace(/\s/g,'').replace(',', '.');
@@ -635,7 +638,7 @@ function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------- Cotisation engine ----------
+// ---------- Moteur de calcul des cotisations ----------
 function cotisations(assiette, statut, plafond, tauxForfaitaire){
   const l = { csgDed:0, csgNonDed:0, crds:0, vieillessePlaf:0, vieillesseDeplaf:0,
               rcT1:0, cegT1:0, rcT2:0, cegT2:0, cet:0, apec:0,
@@ -754,17 +757,17 @@ function compute(s){
   const aHS = split.brutHS * 12;
   const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, s.mutuellePat * 12, trAnnuel);
 
-  // Absence (congés payés / arrêt de travail): blend a normally-worked portion
-  // of the month with an absent portion, over a 30-day reference month.
-  // Simplified estimate — see the panel's disclaimer, not a real IJSS calculation.
+  // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
+  // normalement et une portion d'absence, sur un mois de référence de 30 jours.
+  // Estimation simplifiée — voir le disclaimer du panneau, pas un vrai calcul d'IJSS.
   if(s.absenceType === 'conges' || s.absenceType === 'arret'){
     const duree = Math.max(0, Math.min(30, s.absenceDuree || 0));
-    const netSansTR = m.netApres + tr.totalSalarie; // back out the TR deduction
+    const netSansTR = m.netApres + tr.totalSalarie; // on retire la déduction des titres restaurant
     const netTravaille = ((30 - duree) / 30) * m.netApres;
 
     let netAbsence;
     if(s.absenceType === 'conges'){
-      netAbsence = (duree / 30) * netSansTR; // base salary maintained, no TR
+      netAbsence = (duree / 30) * netSansTR; // salaire de base maintenu, sans titres restaurant
     } else {
       const joursCarence = s.carenceCouverte ? 0 : Math.min(3, duree);
       const joursIndemnises = Math.max(0, duree - joursCarence);
@@ -779,7 +782,7 @@ function compute(s){
     a.netApres *= ratio; a.netImposable *= ratio; a.coutEmployeur *= ratio;
   }
 
-  // Prélèvement à la source : simple estimate, taux personnel appliqué au net imposable.
+  // Prélèvement à la source : estimation simple, taux personnel appliqué au net imposable.
   const pasRate = clamp(s.pasRate || 0, 0, 100);
   const netApresImpot = Math.max(0, m.netApres - m.netImposable * pasRate/100);
   const annuelNetApresImpot = Math.max(0, a.netApres - a.netImposable * pasRate/100);
@@ -795,7 +798,7 @@ function compute(s){
   };
 }
 
-// ---------- State ----------
+// ---------- État ----------
 let idCounter = 0;
 function mkScenario(over){
   const base = {
@@ -818,7 +821,7 @@ function defaultScenarios(){
   ];
 }
 
-// ---------- Persistence (localStorage only — nothing leaves the browser) ----------
+// ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
 const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','pasRate','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 const METRIC_KEYS = ['netApres','netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire','coutEmployeur'];
@@ -861,14 +864,14 @@ function saveState(){
       v:1, scenarios, refId, metric, displayAmt, displayPeriod,
       openCardIds:[...openCardIds]
     }));
-  } catch(e){ /* storage full/unavailable — app keeps working in-memory */ }
+  } catch(e){ /* stockage plein/indisponible — l'app continue de fonctionner en mémoire */ }
 }
 
 function clearPersistedState(){
-  try{ localStorage.removeItem(STORAGE_KEY); } catch(e){ /* ignore */ }
+  try{ localStorage.removeItem(STORAGE_KEY); } catch(e){ /* ignoré */ }
 }
 
-// ---------- URL sharing (state lives in the hash — never sent to a server) ----------
+// ---------- Partage par URL (l'état vit dans le hash — jamais envoyé à un serveur) ----------
 function toBase64Url(str){
   const bytes = new TextEncoder().encode(str);
   let bin = '';
@@ -907,16 +910,16 @@ function buildShareUrl(){
 let showToastImpl = null;
 async function shareLink(){
   const url = buildShareUrl();
-  // Happy path: copy directly on this click (a genuine, fresh user gesture)
-  // and just show the toast — no extra window. The modal is a fallback,
-  // shown only if the copy actually fails (e.g. Clipboard API unavailable
-  // or blocked), so the link is never lost even then.
+  // Cas normal : copie directe sur ce clic (un vrai geste utilisateur récent)
+  // et simple affichage du toast — pas de fenêtre en plus. La modale n'est
+  // qu'un repli, affiché seulement si la copie échoue vraiment (API Clipboard
+  // indisponible ou bloquée), pour ne jamais perdre le lien pour autant.
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
       await navigator.clipboard.writeText(url);
       showToastImpl('Lien copié dans le presse-papiers !');
       return;
-    } catch(e){ /* fall through to the modal fallback below */ }
+    } catch(e){ /* on passe au repli sur la modale ci-dessous */ }
   }
   showShareModal(url);
 }
@@ -926,14 +929,15 @@ const persisted = loadPersistedState();
 const loadedFromShare = !!shareState;
 let suppressAutosave = loadedFromShare;
 const initialSource = shareState || persisted;
-// Onboarding only makes sense the first time ever (no saved state, no shared
-// link) or right after a reset — both land here, since neither localStorage
-// nor the URL hash provided anything to restore.
+// L'onboarding n'a de sens que tout premier chargement (aucun état enregistré,
+// aucun lien partagé) ou juste après une réinitialisation — les deux cas
+// arrivent ici, puisque ni le localStorage ni le hash de l'URL n'ont fourni
+// quoi que ce soit à restaurer.
 let showOnboarding = !initialSource;
 
 if(loadedFromShare){
-  // Drop the share payload from the address bar once read — avoids re-triggering
-  // this on a plain refresh and keeps the URL bar tidy.
+  // On retire les données de partage de la barre d'adresse une fois lues —
+  // évite de redéclencher ceci sur un simple rechargement et garde l'URL propre.
   history.replaceState(null, '', location.pathname + location.search);
 }
 
@@ -987,7 +991,7 @@ function heroPasShown(s){
   return displayAmt === 'net' && (s.pasRate || 0) > 0;
 }
 
-// ---------- Card rendering ----------
+// ---------- Rendu des cartes ----------
 function num(id, key, uid, value, opts){
   const o = opts || {};
   return `<input type="text" inputmode="decimal" id="${id}" value="${String(value).replace('.', ',')}"
@@ -1085,7 +1089,7 @@ function renderCard(s, r, showRemove){
   </div>`;
 }
 
-// ---------- Add-scenario ghost card ----------
+// ---------- Carte fantôme d'ajout de salaire ----------
 function renderAddCard(){
   return `
   <button type="button" class="card card-add" id="addScenario" aria-label="Ajouter un salaire">
@@ -1094,7 +1098,7 @@ function renderAddCard(){
   </button>`;
 }
 
-// ---------- Stacked breakdown chart ----------
+// ---------- Graphique empilé de répartition ----------
 const STACK_COLORS = { cotis:'var(--stack-cotis)', mutres:'var(--gold)', net:'var(--accent)' };
 
 function renderStack(computed){
@@ -1229,7 +1233,7 @@ function renderAlerts(computed){
   return out.join('');
 }
 
-// ---------- Render ----------
+// ---------- Rendu ----------
 function render(){
   const computed = scenarios.map(s => ({ s, r: compute(s) }));
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
@@ -1317,7 +1321,7 @@ function bindRefPickers(){
   });
 }
 
-// ---------- Live patching (never touches inputs while typing) ----------
+// ---------- Mise à jour ciblée (ne touche jamais aux champs en cours de saisie) ----------
 function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
 function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
 function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
@@ -1358,7 +1362,7 @@ function updateComputed(){
   saveState();
 }
 
-// ---------- Horizontal card rail navigation ----------
+// ---------- Navigation du rail de cartes horizontal ----------
 function updateNavButtons(){
   const scroller = document.getElementById('cardsScroll');
   const prev = document.getElementById('scrollPrev');
@@ -1378,7 +1382,7 @@ document.getElementById('scrollNext').addEventListener('click', () => {
 });
 window.addEventListener('resize', updateNavButtons);
 
-// ---------- Events ----------
+// ---------- Événements ----------
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
@@ -1418,7 +1422,7 @@ function onStructural(e){
   render();
 }
 
-function onCheck(e){ /* no checkboxes in the simplified card, kept for safety */ }
+function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
 function addScenario(){
   const last = scenarios[scenarios.length-1];
@@ -1453,7 +1457,7 @@ document.getElementById('resetBtn').addEventListener('click', async () => {
   location.reload();
 });
 
-// ---------- Toast (non-blocking confirmation, e.g. "lien copié") ----------
+// ---------- Toast (confirmation non bloquante, ex. « lien copié ») ----------
 let toastTimer = null;
 showToastImpl = function(msg){
   let el = document.getElementById('toast');
@@ -1471,9 +1475,10 @@ showToastImpl = function(msg){
   toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 };
 
-// ---------- Custom modal (replaces window.confirm()/prompt(), which browsers
-// commonly block silently — no dialog, no error — inside a sandboxed iframe
-// with no allow-modals permission, e.g. this app embedded as a preview). ----------
+// ---------- Modale maison (remplace window.confirm()/prompt(), que les
+// navigateurs bloquent souvent silencieusement — aucun dialogue, aucune
+// erreur — dans une iframe sandboxée sans la permission allow-modals,
+// par ex. cette app intégrée en aperçu). ----------
 let modalState = null;
 let modalPrevBodyOverflow = '';
 
@@ -1594,8 +1599,8 @@ document.getElementById('printBtn').addEventListener('click', () => {
   }
   window.addEventListener('afterprint', restore);
 
-  // Wait two frames so the newly-opened <details> and reflowed layout
-  // are painted before the print snapshot is taken.
+  // On attend deux frames pour que les <details> tout juste ouverts et la
+  // mise en page recalculée soient peints avant que l'aperçu d'impression soit pris.
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
       window.print();
@@ -1624,7 +1629,7 @@ document.querySelectorAll('#periodToggle button').forEach(b => {
   });
 });
 
-// ---------- Modules (activable add-ons) ----------
+// ---------- Modules (compléments activables) ----------
 function bindModuleToggle(cardId, toggleId, bodyId){
   const card = document.getElementById(cardId);
   const toggle = document.getElementById(toggleId);
@@ -1640,7 +1645,7 @@ function bindModuleToggle(cardId, toggleId, bodyId){
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
 bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
-// ---------- Raise simulator ----------
+// ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
 const RAISE_PCT_PRESETS = [2, 3, 5, 8, 10];
 const RAISE_EUR_PRESETS = [50, 100, 150, 250, 400];
@@ -1692,7 +1697,7 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 });
 renderRaiseChips();
 
-// ---------- Absence simulator (congés payés / arrêt de travail) ----------
+// ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
 function scrollToNewCard(){
   const scroller = document.getElementById('cardsScroll');
   requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
