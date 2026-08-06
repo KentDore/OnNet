@@ -49,6 +49,10 @@
     --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C7A17C;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
+    /* Fixed (non-flipping) button fills: --ink/--accent/--warn invert lightness
+       between themes for text-legibility reasons, which breaks white-text-on-fill
+       buttons in dark mode. These stay constant in both themes instead. */
+    --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark){
@@ -107,7 +111,35 @@
     opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:1000;
   }
   .toast.show{opacity:1; transform:translate(-50%, 0);}
-  @media print{ .toast, .share-banner{display:none !important;} }
+  /* ---- Custom modal (replaces window.confirm()/prompt(), blocked in sandboxed iframes) ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:1100;
+  }
+  .modal-overlay.show{opacity:1; pointer-events:auto;}
+  .modal-overlay[hidden]{display:none;}
+  .modal{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
+    transform:translateY(8px) scale(.98); transition:transform .18s ease;
+    font-family:'Inter',sans-serif;
+  }
+  .modal-overlay.show .modal{transform:translateY(0) scale(1);}
+  .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
+  .modal-share-row{display:flex; gap:8px; margin:2px 0 18px;}
+  .modal-share-row .btn{width:auto; flex:none;}
+  .modal-share-input{
+    flex:1; min-width:0; font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:11px 12px; border:1px solid var(--line); border-radius:10px;
+    background:var(--bg); color:var(--ink);
+  }
+  .modal-share-input:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;}
+  .modal-actions .btn{width:auto; padding:11px 16px; font-size:14px;}
+  .modal-btn-cancel{background:var(--bg); color:var(--ink); border:1px solid var(--line);}
+  .modal-btn-cancel:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent);}
+  @media print{ .toast, .share-banner, .modal-overlay{display:none !important;} }
   .header-top .eyebrow{margin-bottom:0;}
   .brand-block{display:flex; flex-direction:column; gap:3px;}
   .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1;}
@@ -122,8 +154,10 @@
   .print-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
   .btn{font-family:'Inter',sans-serif; font-weight:600; font-size:15px; border-radius:12px; padding:14px 18px; cursor:pointer; border:none; width:100%;}
   @media (min-width:640px){ .btn{width:auto;} }
-  .btn-primary{background:var(--ink); color:#fff;}
-  .btn-primary:hover{background:var(--accent);}
+  .btn-primary{background:var(--btn-primary-bg); color:#fff;}
+  .btn-primary:hover{background:var(--btn-primary-bg-hover);}
+  .btn-danger{background:var(--btn-danger-bg); color:#fff;}
+  .btn-danger:hover{filter:brightness(1.1);}
 
   .panel{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px;}
   .panel > summary{cursor:pointer; font-family:'Fraunces',serif; font-weight:550; font-size:16px; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px; padding:2px 0;}
@@ -860,15 +894,15 @@ function buildShareUrl(){
 let showToastImpl = null;
 async function shareLink(){
   const url = buildShareUrl();
-  let copied = false;
+  // Best-effort silent copy — never conditions what the user sees: the modal
+  // always opens next, with its own "Copier" button for a fresh user gesture
+  // (a new click gives the Clipboard API its best chance of succeeding, even
+  // if this first silent attempt was blocked by a sandboxed iframe's
+  // permissions policy).
   if(navigator.clipboard && navigator.clipboard.writeText){
-    try{ await navigator.clipboard.writeText(url); copied = true; } catch(e){ copied = false; }
+    try{ await navigator.clipboard.writeText(url); } catch(e){ /* modal takes over */ }
   }
-  if(copied){
-    if(showToastImpl) showToastImpl('Lien copié dans le presse-papiers !');
-  } else {
-    window.prompt('Copiez ce lien pour partager ce comparatif :', url);
-  }
+  showShareModal(url);
 }
 
 const shareState = loadShareState();
@@ -1360,19 +1394,23 @@ function addScenario(){
   requestAnimationFrame(() => scroller.scrollTo({ left: scroller.scrollWidth, behavior: 'smooth' }));
 }
 
-function removeScenario(id){
+async function removeScenario(id){
   if(scenarios.length <= 1) return;
   const target = findScenario(id);
   const label = target ? target.name.trim() || 'ce salaire' : 'ce salaire';
-  if(!confirm(`Supprimer « ${label} » du comparatif ?`)) return;
+  const ok = await showConfirmModal(`Supprimer « ${label} » du comparatif ?`, { danger:true, confirmLabel:'Supprimer' });
+  if(!ok) return;
   scenarios = scenarios.filter(s => s.id !== id);
   openCardIds.delete(id);
   if(refId === id) refId = scenarios[0].id;
   render();
 }
 
-document.getElementById('resetBtn').addEventListener('click', () => {
-  const ok = confirm('Effacer tous les salaires enregistrés et revenir à l\'exemple de départ ? Cette action est irréversible.');
+document.getElementById('resetBtn').addEventListener('click', async () => {
+  const ok = await showConfirmModal(
+    'Effacer tous les salaires enregistrés et revenir à l\'exemple de départ ? Cette action est irréversible.',
+    { danger:true, confirmLabel:'Effacer' }
+  );
   if(!ok) return;
   clearPersistedState();
   location.reload();
@@ -1395,6 +1433,111 @@ showToastImpl = function(msg){
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2400);
 };
+
+// ---------- Custom modal (replaces window.confirm()/prompt(), which browsers
+// commonly block silently — no dialog, no error — inside a sandboxed iframe
+// with no allow-modals permission, e.g. this app embedded as a preview). ----------
+let modalState = null;
+let modalPrevBodyOverflow = '';
+
+function onModalKeydown(e){
+  if(!modalState) return;
+  if(e.key === 'Escape'){ e.preventDefault(); closeModal(false); return; }
+  if(e.key === 'Tab'){
+    const focusables = modalState.box.querySelectorAll('button, input');
+    if(!focusables.length) return;
+    const first = focusables[0], last = focusables[focusables.length - 1];
+    if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if(!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+}
+
+function closeModal(result){
+  if(!modalState) return;
+  const { overlay, previousFocus, resolve } = modalState;
+  overlay.classList.remove('show');
+  document.removeEventListener('keydown', onModalKeydown, true);
+  document.body.style.overflow = modalPrevBodyOverflow;
+  modalState = null;
+  setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
+  if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
+  if(resolve) resolve(result);
+}
+
+function openModal(bodyHtml, opts){
+  const initialFocusSelector = (opts || {}).initialFocusSelector;
+  let overlay = document.getElementById('modalOverlay');
+  if(!overlay){
+    overlay = document.createElement('div');
+    overlay.id = 'modalOverlay';
+    overlay.className = 'modal-overlay';
+    overlay.addEventListener('click', (e) => { if(e.target === overlay) closeModal(false); });
+    document.body.appendChild(overlay);
+  }
+  overlay.hidden = false;
+  overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
+  const box = overlay.querySelector('#modalBox');
+
+  modalPrevBodyOverflow = document.body.style.overflow;
+  document.body.style.overflow = 'hidden';
+  const previousFocus = document.activeElement;
+  document.addEventListener('keydown', onModalKeydown, true);
+
+  return new Promise(resolve => {
+    modalState = { overlay, box, previousFocus, resolve };
+    requestAnimationFrame(() => {
+      overlay.classList.add('show');
+      const target = initialFocusSelector ? box.querySelector(initialFocusSelector) : box.querySelector('button, input');
+      if(target) target.focus();
+      if(target && target.tagName === 'INPUT') target.select();
+    });
+  });
+}
+
+function showConfirmModal(message, opts){
+  const o = opts || {};
+  const danger = !!o.danger;
+  const confirmLabel = o.confirmLabel || 'Confirmer';
+  const cancelLabel = o.cancelLabel || 'Annuler';
+  const confirmClass = danger ? 'btn btn-danger' : 'btn btn-primary';
+  const html = `
+    <p id="modalMsg" class="modal-msg">${esc(message)}</p>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>${esc(cancelLabel)}</button>
+      <button type="button" class="${confirmClass}" data-modal-confirm>${esc(confirmLabel)}</button>
+    </div>`;
+  const initialFocusSelector = danger ? '[data-modal-cancel]' : '[data-modal-confirm]';
+  const pending = openModal(html, { initialFocusSelector });
+  const overlay = document.getElementById('modalOverlay');
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => closeModal(false));
+  overlay.querySelector('[data-modal-confirm]').addEventListener('click', () => closeModal(true));
+  return pending;
+}
+
+function showShareModal(url){
+  const html = `
+    <p id="modalMsg" class="modal-msg">Copiez ce lien pour partager ce comparatif :</p>
+    <div class="modal-share-row">
+      <input type="text" readonly class="modal-share-input" id="modalShareInput" value="${esc(url)}">
+      <button type="button" class="btn btn-primary" id="modalCopyBtn">Copier</button>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Fermer</button>
+    </div>`;
+  openModal(html, { initialFocusSelector: '#modalShareInput' });
+  const overlay = document.getElementById('modalOverlay');
+  const input = overlay.querySelector('#modalShareInput');
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => closeModal(false));
+  overlay.querySelector('#modalCopyBtn').addEventListener('click', async () => {
+    try{
+      await navigator.clipboard.writeText(url);
+      showToastImpl('Lien copié dans le presse-papiers !');
+    }catch(e){
+      input.focus(); input.select();
+      showToastImpl('Copie automatique indisponible — le lien est sélectionné, utilisez Ctrl+C.');
+    }
+  });
+}
 
 document.getElementById('shareBtn').addEventListener('click', shareLink);
 
