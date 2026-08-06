@@ -894,13 +894,16 @@ function buildShareUrl(){
 let showToastImpl = null;
 async function shareLink(){
   const url = buildShareUrl();
-  // Best-effort silent copy — never conditions what the user sees: the modal
-  // always opens next, with its own "Copier" button for a fresh user gesture
-  // (a new click gives the Clipboard API its best chance of succeeding, even
-  // if this first silent attempt was blocked by a sandboxed iframe's
-  // permissions policy).
+  // Happy path: copy directly on this click (a genuine, fresh user gesture)
+  // and just show the toast — no extra window. The modal is a fallback,
+  // shown only if the copy actually fails (e.g. Clipboard API unavailable
+  // or blocked), so the link is never lost even then.
   if(navigator.clipboard && navigator.clipboard.writeText){
-    try{ await navigator.clipboard.writeText(url); } catch(e){ /* modal takes over */ }
+    try{
+      await navigator.clipboard.writeText(url);
+      showToastImpl('Lien copié dans le presse-papiers !');
+      return;
+    } catch(e){ /* fall through to the modal fallback below */ }
   }
   showShareModal(url);
 }
