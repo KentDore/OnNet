@@ -366,6 +366,12 @@
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
   .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
   .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
+  .field-highlight{border-color:var(--accent) !important; box-shadow:0 0 0 3px var(--accent-soft); animation:field-pulse 1.8s ease-in-out infinite;}
+  @keyframes field-pulse{
+    0%, 100%{box-shadow:0 0 0 3px var(--accent-soft);}
+    50%{box-shadow:0 0 0 5px var(--accent-soft);}
+  }
+  @media (prefers-reduced-motion: reduce){ .field-highlight{animation:none;} }
   .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
@@ -995,6 +1001,7 @@ function heroPasShown(s){
 function num(id, key, uid, value, opts){
   const o = opts || {};
   return `<input type="text" inputmode="decimal" id="${id}" value="${String(value).replace('.', ',')}"
+    class="${o.className || ''}"
     data-id="${uid}" data-key="${key}"
     ${o.min !== undefined ? `data-min="${o.min}"` : ''}
     ${o.max !== undefined ? `data-max="${o.max}"` : ''}>`;
@@ -1035,7 +1042,7 @@ function renderCard(s, r, showRemove){
 
     <div class="field-row">
       <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
-      ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
+      ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0, className: (showOnboarding && isRef) ? 'field-highlight' : ''})}
     </div>
 
     <div class="field-row">
@@ -1173,7 +1180,7 @@ function renderOnboarding(computed){
   if(!ref) return '';
   return `<div class="onboarding-banner" id="onboardingBanner">
     <span>${ICON.info}</span>
-    <span><strong>${esc(ref.s.name)}</strong> est votre salaire de référence : les écarts affichés ci-dessous et sur chaque carte sont calculés par rapport à lui. Cliquez sur une autre carte à tout moment pour en faire la nouvelle référence.</span>
+    <span><strong>${esc(ref.s.name)}</strong> est votre salaire de référence — remplacez le montant surligné plus bas (${fmt(ref.r.m.brutTotal)}) par votre salaire brut mensuel réel pour des comparaisons fidèles à votre situation. Les écarts affichés ci-dessous et sur chaque carte sont calculés par rapport à lui ; cliquez sur une autre carte à tout moment pour en faire la nouvelle référence.</span>
     <button type="button" class="onboarding-close" id="onboardingClose" aria-label="Fermer ce message">✕</button>
   </div>`;
 }
@@ -1397,6 +1404,15 @@ function onInput(e){
     return;
   }
   s[key] = parseNum(e.target.value);
+  if(key === 'brut' && s.id === refId && showOnboarding){
+    // L'utilisateur remplit son propre salaire de référence : l'onboarding a
+    // rempli son rôle. On le retire sans passer par render() (qui reconstruit
+    // #cardsBody et couperait la saisie en cours).
+    showOnboarding = false;
+    e.target.classList.remove('field-highlight');
+    const banner = document.getElementById('onboardingBanner');
+    if(banner) banner.remove();
+  }
   updateComputed();
 }
 
