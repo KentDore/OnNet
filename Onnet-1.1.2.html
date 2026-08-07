@@ -444,7 +444,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.1</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.2</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1923,11 +1923,13 @@ document.getElementById('shareBtn').addEventListener('click', shareLink);
 
 // ---------- Champ focalisé toujours amené dans la vue ----------
 // Sur mobile, le clavier virtuel peut couvrir la partie basse de l'écran ;
-// délégué sur document car les champs sont recréés à chaque render().
+// délégué sur document car les champs sont recréés à chaque render(). Vaut
+// aussi à l'intérieur des modales (ex. TR dépliés dans l'onboarding) : les
+// aligner en haut de l'écran ne suffit pas si le champ visé est plus bas
+// que ce que le clavier laisse de place visible.
 document.addEventListener('focusin', (e) => {
   const el = e.target;
   if(!el.matches || !el.matches('input, select, textarea')) return;
-  if(el.closest('.modal-overlay')) return; // la modale gère déjà sa propre visibilité
   setTimeout(() => {
     el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   }, 250); // laisse le clavier virtuel finir d'apparaître avant de calculer la position
