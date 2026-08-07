@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.5</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.6</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1635,7 +1635,11 @@ async function removeScenario(id){
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(cardEl && !reduceMotion){
     cardEl.classList.add('card-leave');
-    cardEl.addEventListener('animationend', doRemove, { once:true });
+    // setTimeout plutôt que 'animationend' : si un autre render() survient
+    // dans l'intervalle (ex. changement de statut sur une autre carte), le
+    // nœud animé est détaché du DOM et 'animationend' ne se déclenche
+    // jamais — la suppression pourtant confirmée disparaissait en silence.
+    setTimeout(doRemove, 200);
   } else {
     doRemove();
   }
@@ -1969,7 +1973,14 @@ document.addEventListener('focusin', (e) => {
   const el = e.target;
   if(!el.matches || !el.matches('input, select, textarea')) return;
   setTimeout(() => {
-    el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+    // Ne recentre que si le champ n'est pas déjà entièrement visible —
+    // sinon un simple Tab ou clic sur un champ déjà à l'écran (le cas
+    // courant sur desktop, sans clavier virtuel) déclenchait un scroll
+    // recentrant inutile et perturbant à chaque focus.
+    const r = el.getBoundingClientRect();
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const fullyVisible = r.top >= 0 && r.bottom <= vh;
+    if(!fullyVisible) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
   }, 250); // laisse le clavier virtuel finir d'apparaître avant de calculer la position
 });
 
