@@ -124,7 +124,8 @@
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center; padding:20px;
     opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:1100;
-    overflow-y:auto;
+    overflow-y:auto; overscroll-behavior:contain;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
   .modal-overlay.show{opacity:1; pointer-events:auto;}
   .modal-overlay[hidden]{display:none;}
@@ -444,7 +445,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.2</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.3</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1667,7 +1668,27 @@ showToastImpl = function(msg){
 // erreur — dans une iframe sandboxée sans la permission allow-modals,
 // par ex. cette app intégrée en aperçu). ----------
 let modalState = null;
-let modalPrevBodyOverflow = '';
+let modalScrollY = 0;
+
+// overflow:hidden seul ne bloque pas toujours le scroll/rubber-band en
+// arrière-plan sur mobile Safari : on fige le body en position fixed à sa
+// position de scroll actuelle, et on la restaure à la fermeture.
+function lockBodyScroll(){
+  modalScrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${modalScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+}
+function unlockBodyScroll(){
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, modalScrollY);
+}
 
 function onModalKeydown(e){
   if(!modalState) return;
@@ -1689,7 +1710,7 @@ function closeModal(result){
   const { overlay, previousFocus, resolve } = modalState;
   overlay.classList.remove('show');
   document.removeEventListener('keydown', onModalKeydown, true);
-  document.body.style.overflow = modalPrevBodyOverflow;
+  unlockBodyScroll();
   modalState = null;
   setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
   if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
@@ -1714,8 +1735,7 @@ function openModal(bodyHtml, opts){
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
 
-  modalPrevBodyOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const previousFocus = document.activeElement;
   document.addEventListener('keydown', onModalKeydown, true);
 
