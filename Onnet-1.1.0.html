@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <style>
 /* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
@@ -124,14 +124,22 @@
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center; padding:20px;
     opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:1100;
+    overflow-y:auto;
   }
   .modal-overlay.show{opacity:1; pointer-events:auto;}
   .modal-overlay[hidden]{display:none;}
+  /* Sur mobile, un clavier virtuel peut couvrir la moitié basse de l'écran :
+     une modale centrée verticalement (et son champ de saisie) se retrouve
+     alors masquée derrière. Alignée en haut à la place, elle reste visible
+     quel que soit l'espace que prend le clavier. */
+  @media (max-width:640px){
+    .modal-overlay{align-items:flex-start; padding-top:max(24px, 6vh);}
+  }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
     transform:translateY(8px) scale(.98); transition:transform .18s ease;
-    font-family:'Inter',sans-serif;
+    font-family:'Inter',sans-serif; max-height:85vh; overflow-y:auto;
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
@@ -436,7 +444,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.0.4</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1832,9 +1840,16 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
-    <div class="field-row" style="margin:0 0 4px;">
+    <div class="field-row" style="margin:0 0 14px;">
       <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
+    </div>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label>Base horaire</label>
+      <div class="pill-toggle" id="modalOnboardingDuree">
+        <button type="button" data-duree="35" aria-pressed="true">35 h</button>
+        <button type="button" data-duree="39" aria-pressed="false">39 h</button>
+      </div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding', { collapsible: true })}
@@ -1848,10 +1863,19 @@ function showOnboardingModal(){
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
 
+  let dureeType = '35';
+  const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
+  dureeToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      dureeType = b.dataset.duree;
+      dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
-    const result = Object.assign({ brut: v }, readMutuelleTr());
+    const result = Object.assign({ brut: v, dureeType }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
