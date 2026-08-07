@@ -134,7 +134,7 @@
      alors masquée derrière. Alignée en haut à la place, elle reste visible
      quel que soit l'espace que prend le clavier. */
   @media (max-width:640px){
-    .modal-overlay{align-items:flex-start; padding-top:max(24px, 6vh);}
+    .modal-overlay{align-items:flex-start; padding-top:max(64px, 14vh);}
   }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
@@ -445,7 +445,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.3</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.4</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1841,6 +1841,9 @@ function bindMutuelleTrFields(overlay, idPrefix){
       trOui = b.dataset.tr === 'oui';
       trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       trFields.hidden = !trOui;
+      // Les nouveaux champs révélés peuvent tomber hors de la zone visible
+      // (surtout modale + clavier) sans qu'aucun focus ne les y ramène.
+      if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
 
@@ -1882,6 +1885,11 @@ function showOnboardingModal(){
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
+
+  const moreDetails = overlay.querySelector('#modalOnboardingMore');
+  moreDetails.addEventListener('toggle', () => {
+    if(moreDetails.open) setTimeout(() => moreDetails.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+  });
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
