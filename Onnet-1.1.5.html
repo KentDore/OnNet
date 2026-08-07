@@ -56,7 +56,7 @@
        bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
        constants dans les deux thèmes. */
     --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
-    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E;
+    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E; --toast-bg:#17241F;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark){
@@ -67,6 +67,10 @@
       --stack-tr:#E6D1A0;
       --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
       --scrollbar-thumb:#3A423D;
+      /* Ce rouge-ci n'a pas besoin de rester figé comme les autres --btn-* :
+         calibré séparément pour garder un bon contraste avec le texte blanc
+         du bouton dans les deux thèmes, tout en changeant de teinte. */
+      --btn-danger-bg:#9C4526;
     }
   }
   /* Ces surcharges explicites l'emportent sur la préférence système, dans les
@@ -79,6 +83,7 @@
     --stack-tr:#E6D1A0;
     --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
     --scrollbar-thumb:#3A423D;
+    --btn-danger-bg:#9C4526;
     color-scheme: dark;
   }
   :root[data-theme="light"]{
@@ -88,6 +93,7 @@
     --stack-tr:#D9BC85;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
+    --btn-danger-bg:#B2542E;
     color-scheme: light;
   }
   *{box-sizing:border-box;}
@@ -114,7 +120,7 @@
   .share-banner[hidden]{display:none;}
   .toast{
     position:fixed; left:50%; bottom:24px; transform:translate(-50%, 12px);
-    background:var(--ink); color:var(--bg); font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    background:var(--toast-bg); color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
     padding:10px 18px; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.28);
     opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:1000;
   }
@@ -134,7 +140,7 @@
      alors masquée derrière. Alignée en haut à la place, elle reste visible
      quel que soit l'espace que prend le clavier. */
   @media (max-width:640px){
-    .modal-overlay{align-items:flex-start; padding-top:max(64px, 14vh);}
+    .modal-overlay.modal-overlay-top{align-items:flex-start; padding-top:max(64px, 14vh);}
   }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
@@ -445,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.4</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.5</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1732,6 +1738,10 @@ function openModal(bodyHtml, opts){
     document.body.appendChild(overlay);
   }
   overlay.hidden = false;
+  // Aligné en haut seulement pour les modales avec un vrai champ de saisie
+  // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
+  // de confirmation (pas de champ) restent centrées, plus naturel.
+  overlay.classList.toggle('modal-overlay-top', !!o.topAligned);
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
 
@@ -1880,7 +1890,7 @@ function showOnboardingModal(){
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false, topAligned: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
@@ -1927,7 +1937,7 @@ function showAddScenarioModal(brutPrefill){
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true, topAligned: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
