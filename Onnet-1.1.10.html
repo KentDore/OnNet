@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.9</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.10</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -635,7 +635,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 30, mutuellePat: 45, joursResto: 18, valeurResto: 9,
+  mutuelle: 30, mutuellePat: 45, joursResto: 21, valeurResto: 8,
   partResto: 50, nbMois: 12
 };
 
@@ -1832,8 +1832,8 @@ function renderMutuelleTrFields(idPrefix, opts){
         </div>
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="18"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="9"></div>
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>${wrapClose}`;
