@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <style>
 /* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
@@ -56,7 +56,7 @@
        bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
        constants dans les deux thèmes. */
     --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
-    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E;
+    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E; --toast-bg:#17241F;
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark){
@@ -67,6 +67,10 @@
       --stack-tr:#E6D1A0;
       --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
       --scrollbar-thumb:#3A423D;
+      /* Ce rouge-ci n'a pas besoin de rester figé comme les autres --btn-* :
+         calibré séparément pour garder un bon contraste avec le texte blanc
+         du bouton dans les deux thèmes, tout en changeant de teinte. */
+      --btn-danger-bg:#9C4526;
     }
   }
   /* Ces surcharges explicites l'emportent sur la préférence système, dans les
@@ -79,6 +83,7 @@
     --stack-tr:#E6D1A0;
     --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
     --scrollbar-thumb:#3A423D;
+    --btn-danger-bg:#9C4526;
     color-scheme: dark;
   }
   :root[data-theme="light"]{
@@ -88,6 +93,7 @@
     --stack-tr:#D9BC85;
     --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
     --scrollbar-thumb:#A9B0A6;
+    --btn-danger-bg:#B2542E;
     color-scheme: light;
   }
   *{box-sizing:border-box;}
@@ -114,7 +120,7 @@
   .share-banner[hidden]{display:none;}
   .toast{
     position:fixed; left:50%; bottom:24px; transform:translate(-50%, 12px);
-    background:var(--ink); color:var(--bg); font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    background:var(--toast-bg); color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
     padding:10px 18px; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.28);
     opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:1000;
   }
@@ -124,14 +130,23 @@
     position:fixed; inset:0; background:rgba(0,0,0,.45);
     display:flex; align-items:center; justify-content:center; padding:20px;
     opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:1100;
+    overflow-y:auto; overscroll-behavior:contain;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
   }
   .modal-overlay.show{opacity:1; pointer-events:auto;}
   .modal-overlay[hidden]{display:none;}
+  /* Sur mobile, un clavier virtuel peut couvrir la moitié basse de l'écran :
+     une modale centrée verticalement (et son champ de saisie) se retrouve
+     alors masquée derrière. Alignée en haut à la place, elle reste visible
+     quel que soit l'espace que prend le clavier. */
+  @media (max-width:640px){
+    .modal-overlay.modal-overlay-top{align-items:flex-start; padding-top:max(64px, 14vh);}
+  }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
     transform:translateY(8px) scale(.98); transition:transform .18s ease;
-    font-family:'Inter',sans-serif;
+    font-family:'Inter',sans-serif; max-height:85vh; overflow-y:auto;
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
@@ -436,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.0.4</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.10</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -620,7 +635,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 30, mutuellePat: 45, joursResto: 18, valeurResto: 9,
+  mutuelle: 30, mutuellePat: 45, joursResto: 21, valeurResto: 8,
   partResto: 50, nbMois: 12
 };
 
@@ -1588,7 +1603,7 @@ function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé 
 
 async function addScenario(){
   const last = scenarios[scenarios.length-1];
-  const answers = await showAddScenarioModal(last.brut);
+  const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
   disableCardSnap();
   const created = mkScenario(Object.assign({
@@ -1620,7 +1635,11 @@ async function removeScenario(id){
   const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   if(cardEl && !reduceMotion){
     cardEl.classList.add('card-leave');
-    cardEl.addEventListener('animationend', doRemove, { once:true });
+    // setTimeout plutôt que 'animationend' : si un autre render() survient
+    // dans l'intervalle (ex. changement de statut sur une autre carte), le
+    // nœud animé est détaché du DOM et 'animationend' ne se déclenche
+    // jamais — la suppression pourtant confirmée disparaissait en silence.
+    setTimeout(doRemove, 200);
   } else {
     doRemove();
   }
@@ -1659,7 +1678,27 @@ showToastImpl = function(msg){
 // erreur — dans une iframe sandboxée sans la permission allow-modals,
 // par ex. cette app intégrée en aperçu). ----------
 let modalState = null;
-let modalPrevBodyOverflow = '';
+let modalScrollY = 0;
+
+// overflow:hidden seul ne bloque pas toujours le scroll/rubber-band en
+// arrière-plan sur mobile Safari : on fige le body en position fixed à sa
+// position de scroll actuelle, et on la restaure à la fermeture.
+function lockBodyScroll(){
+  modalScrollY = window.scrollY;
+  document.body.style.position = 'fixed';
+  document.body.style.top = `-${modalScrollY}px`;
+  document.body.style.left = '0';
+  document.body.style.right = '0';
+  document.body.style.width = '100%';
+}
+function unlockBodyScroll(){
+  document.body.style.position = '';
+  document.body.style.top = '';
+  document.body.style.left = '';
+  document.body.style.right = '';
+  document.body.style.width = '';
+  window.scrollTo(0, modalScrollY);
+}
 
 function onModalKeydown(e){
   if(!modalState) return;
@@ -1681,7 +1720,7 @@ function closeModal(result){
   const { overlay, previousFocus, resolve } = modalState;
   overlay.classList.remove('show');
   document.removeEventListener('keydown', onModalKeydown, true);
-  document.body.style.overflow = modalPrevBodyOverflow;
+  unlockBodyScroll();
   modalState = null;
   setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
   if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
@@ -1703,11 +1742,14 @@ function openModal(bodyHtml, opts){
     document.body.appendChild(overlay);
   }
   overlay.hidden = false;
+  // Aligné en haut seulement pour les modales avec un vrai champ de saisie
+  // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
+  // de confirmation (pas de champ) restent centrées, plus naturel.
+  overlay.classList.toggle('modal-overlay-top', !!o.topAligned);
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
 
-  modalPrevBodyOverflow = document.body.style.overflow;
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   const previousFocus = document.activeElement;
   document.addEventListener('keydown', onModalKeydown, true);
 
@@ -1790,8 +1832,8 @@ function renderMutuelleTrFields(idPrefix, opts){
         </div>
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="18"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="9"></div>
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>${wrapClose}`;
@@ -1813,6 +1855,9 @@ function bindMutuelleTrFields(overlay, idPrefix){
       trOui = b.dataset.tr === 'oui';
       trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       trFields.hidden = !trOui;
+      // Les nouveaux champs révélés peuvent tomber hors de la zone visible
+      // (surtout modale + clavier) sans qu'aucun focus ne les y ramène.
+      if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
 
@@ -1832,26 +1877,42 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
-    <div class="field-row" style="margin:0 0 4px;">
+    <div class="field-row" style="margin:0 0 14px;">
       <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
     </div>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label>Base horaire</label>
+      <div class="pill-toggle" id="modalOnboardingDuree">
+        <button type="button" data-duree="35" aria-pressed="true">35 h</button>
+        <button type="button" data-duree="39" aria-pressed="false">39 h</button>
+      </div>
+    </div>
 
-    ${renderMutuelleTrFields('modalOnboarding', { collapsible: true })}
+    ${renderMutuelleTrFields('modalOnboarding')}
 
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false, topAligned: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
 
+  let dureeType = '35';
+  const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
+  dureeToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      dureeType = b.dataset.duree;
+      dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
-    const result = Object.assign({ brut: v }, readMutuelleTr());
+    const result = Object.assign({ brut: v, dureeType }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
@@ -1863,28 +1924,46 @@ function showOnboardingModal(){
 // Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
-function showAddScenarioModal(brutPrefill){
+function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
-    <div class="field-row" style="margin:0 0 4px;">
+    <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" autocomplete="off">
     </div>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label>Base horaire</label>
+      <div class="pill-toggle" id="modalAddDuree">
+        <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
+        <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
+      </div>
+    </div>
+
     ${renderMutuelleTrFields('modalAdd')}
+
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true, topAligned: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
 
+  let dureeType = dureePrefill === '39' ? '39' : '35';
+  const dureeToggle = overlay.querySelector('#modalAddDuree');
+  dureeToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      dureeType = b.dataset.duree;
+      dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
-    closeModal(Object.assign({ brut: v }, readMutuelleTr()));
+    closeModal(Object.assign({ brut: v, dureeType }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -1896,6 +1975,27 @@ function showAddScenarioModal(brutPrefill){
 }
 
 document.getElementById('shareBtn').addEventListener('click', shareLink);
+
+// ---------- Champ focalisé toujours amené dans la vue ----------
+// Sur mobile, le clavier virtuel peut couvrir la partie basse de l'écran ;
+// délégué sur document car les champs sont recréés à chaque render(). Vaut
+// aussi à l'intérieur des modales (ex. TR dépliés dans l'onboarding) : les
+// aligner en haut de l'écran ne suffit pas si le champ visé est plus bas
+// que ce que le clavier laisse de place visible.
+document.addEventListener('focusin', (e) => {
+  const el = e.target;
+  if(!el.matches || !el.matches('input, select, textarea')) return;
+  setTimeout(() => {
+    // Ne recentre que si le champ n'est pas déjà entièrement visible —
+    // sinon un simple Tab ou clic sur un champ déjà à l'écran (le cas
+    // courant sur desktop, sans clavier virtuel) déclenchait un scroll
+    // recentrant inutile et perturbant à chaque focus.
+    const r = el.getBoundingClientRect();
+    const vh = (window.visualViewport && window.visualViewport.height) || window.innerHeight;
+    const fullyVisible = r.top >= 0 && r.bottom <= vh;
+    if(!fullyVisible) el.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'nearest' });
+  }, 250); // laisse le clavier virtuel finir d'apparaître avant de calculer la position
+});
 
 if(loadedFromShare){
   const banner = document.getElementById('shareBanner');
@@ -1961,8 +2061,8 @@ bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
-const RAISE_PCT_PRESETS = [2, 3, 5, 8, 10];
-const RAISE_EUR_PRESETS = [50, 100, 150, 250, 400];
+const RAISE_PCT_PRESETS = [2, 3, 5, 10];
+const RAISE_EUR_PRESETS = [50, 100, 150, 200];
 
 function renderRaiseChips(){
   document.getElementById('raiseChipsPct').innerHTML = RAISE_PCT_PRESETS
