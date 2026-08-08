@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.8</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.9</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1889,7 +1889,7 @@ function showOnboardingModal(){
       </div>
     </div>
 
-    ${renderMutuelleTrFields('modalOnboarding', { collapsible: true })}
+    ${renderMutuelleTrFields('modalOnboarding')}
 
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
@@ -1899,11 +1899,6 @@ function showOnboardingModal(){
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
-
-  const moreDetails = overlay.querySelector('#modalOnboardingMore');
-  moreDetails.addEventListener('toggle', () => {
-    if(moreDetails.open) setTimeout(() => moreDetails.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
-  });
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
@@ -1944,7 +1939,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       </div>
     </div>
 
-    ${renderMutuelleTrFields('modalAdd', { collapsible: true })}
+    ${renderMutuelleTrFields('modalAdd')}
 
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
@@ -1955,11 +1950,6 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const input = overlay.querySelector('#modalAddInput');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
-
-  const moreDetails = overlay.querySelector('#modalAddMore');
-  moreDetails.addEventListener('toggle', () => {
-    if(moreDetails.open) setTimeout(() => moreDetails.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
-  });
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
