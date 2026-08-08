@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.6</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.7</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1603,7 +1603,7 @@ function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé 
 
 async function addScenario(){
   const last = scenarios[scenarios.length-1];
-  const answers = await showAddScenarioModal(last.brut);
+  const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
   disableCardSnap();
   const created = mkScenario(Object.assign({
@@ -1929,14 +1929,23 @@ function showOnboardingModal(){
 // Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
-function showAddScenarioModal(brutPrefill){
+function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
-    <div class="field-row" style="margin:0 0 4px;">
+    <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" autocomplete="off">
     </div>
-    ${renderMutuelleTrFields('modalAdd')}
+    <div class="field-row" style="margin:0 0 4px;">
+      <label>Base horaire</label>
+      <div class="pill-toggle" id="modalAddDuree">
+        <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
+        <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
+      </div>
+    </div>
+
+    ${renderMutuelleTrFields('modalAdd', { collapsible: true })}
+
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
@@ -1947,10 +1956,24 @@ function showAddScenarioModal(brutPrefill){
   const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
 
+  const moreDetails = overlay.querySelector('#modalAddMore');
+  moreDetails.addEventListener('toggle', () => {
+    if(moreDetails.open) setTimeout(() => moreDetails.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+  });
+
+  let dureeType = dureePrefill === '39' ? '39' : '35';
+  const dureeToggle = overlay.querySelector('#modalAddDuree');
+  dureeToggle.querySelectorAll('button').forEach(b => {
+    b.addEventListener('click', () => {
+      dureeType = b.dataset.duree;
+      dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
-    closeModal(Object.assign({ brut: v }, readMutuelleTr()));
+    closeModal(Object.assign({ brut: v, dureeType }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -2048,8 +2071,8 @@ bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
-const RAISE_PCT_PRESETS = [2, 3, 5, 8, 10];
-const RAISE_EUR_PRESETS = [50, 100, 150, 250, 400];
+const RAISE_PCT_PRESETS = [2, 3, 5, 10];
+const RAISE_EUR_PRESETS = [50, 100, 200, 400];
 
 function renderRaiseChips(){
   document.getElementById('raiseChipsPct').innerHTML = RAISE_PCT_PRESETS
