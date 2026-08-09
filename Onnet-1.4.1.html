@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.4.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.4.1</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1155,6 +1155,12 @@ function heroLabel(){
 function heroPasValue(r){
   return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
 }
+// Un foyer déclaré en couple sans autres revenus applique 2 parts à un seul
+// salaire : l'impôt en ressort très sous-estimé, ce qui mérite un avertissement
+// actif plutôt qu'une simple mention dans l'aide.
+function foyerWarnShown(s){
+  return !!s.foyerCouple && !((s.autresRevenus || 0) > 0);
+}
 function heroPasShown(){
   // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
   return displayAmt === 'net';
@@ -1258,7 +1264,10 @@ function renderCard(s, r, showRemove){
           <span>Impôt estimé</span>
           <span class="val" id="c-ir-${uid}">${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)</span>
         </div>
-        <div class="sub-hint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. C'est le <em>supplément</em> d'impôt dû à ce salaire, pas l'impôt du foyer entier — en couple, renseignez les autres revenus, sinon le montant sera très sous-estimé. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
+        <div class="alert alert-warn" id="c-foyerwarn-${uid}" style="${foyerWarnShown(s) ? '' : 'display:none;'}">
+          <span>${ICON.warn}</span><span>Foyer en couple sans autres revenus renseignés : le barème s'applique à 2 parts pour un seul salaire, l'impôt affiché est donc très sous-estimé. Indiquez le net imposable annuel de votre conjoint, ou repassez sur « Seul(e) ».</span>
+        </div>
+        <div class="sub-hint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. C'est le <em>supplément</em> d'impôt dû à ce salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
         <div class="two-col" style="margin-top:14px;">
           <div class="field-row">
             <label for="f-nbmois-${uid}">Mensualités / an</label>
@@ -1616,6 +1625,7 @@ function updateComputed(){
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
     setShown(`c-heropas-${u}`, heroPasShown());
     setText(`c-ir-${u}`, `${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)`);
+    setShown(`c-foyerwarn-${u}`, foyerWarnShown(s));
     setText(`c-trTitre-${u}`, `${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)`);
 
     const hint = document.getElementById(`rate-hint-${u}`);
