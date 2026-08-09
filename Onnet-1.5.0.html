@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.4.1</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -530,9 +530,53 @@
   <section class="modules-section" aria-label="Modules complémentaires">
     <div class="modules-head">
       <h2 class="modules-title">Modules</h2>
-      <p class="modules-sub">Activez les outils dont vous avez besoin pour ce comparatif.</p>
+      <p class="modules-sub">Réglez votre foyer fiscal et activez les outils dont vous avez besoin pour ce comparatif.</p>
     </div>
     <div class="modules-grid">
+
+      <div class="module-card" id="foyerModule">
+        <button type="button" class="module-toggle-head" id="foyerModuleToggle" aria-expanded="false" aria-controls="foyerModuleBody">
+          <span class="module-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"></path><path d="M9 21v-7h6v7"></path></svg></span>
+          <span class="module-info">
+            <span class="module-name">Foyer fiscal</span>
+            <span class="module-desc" id="foyerModuleDesc">Seul(e), sans personne à charge</span>
+          </span>
+          <span class="module-switch" aria-hidden="true"></span>
+        </button>
+        <div class="module-body" id="foyerModuleBody" hidden>
+          <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
+
+          <div class="field-row">
+            <label>Situation</label>
+            <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
+              <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
+              <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+            </div>
+          </div>
+
+          <div class="two-col">
+            <div class="field-row">
+              <label for="foyerCharges">Personnes à charge</label>
+              <input type="text" inputmode="decimal" id="foyerCharges" value="0">
+            </div>
+            <div class="field-row" id="foyerConjointRow" style="display:none;">
+              <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
+              <input type="text" inputmode="decimal" id="foyerConjoint" value="0">
+              <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
+            </div>
+          </div>
+
+          <div class="alert alert-warn" id="foyerWarn" style="display:none;">
+            <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
+          </div>
+
+          <div class="subline" style="margin-top:14px;">
+            <span>Impôt estimé sur le salaire de référence</span>
+            <span class="val" id="foyerImpot">—</span>
+          </div>
+          <div class="sub-hint" style="margin-bottom:0;">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
+        </div>
+      </div>
 
       <div class="module-card" id="raiseModule">
         <button type="button" class="module-toggle-head" id="raiseModuleToggle" aria-expanded="false" aria-controls="raiseModuleBody">
@@ -868,7 +912,11 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
            netImposable, netImposableAvantExo, exoHS, pouvoirAchat };
 }
 
-function compute(s){
+// Le foyer fiscal ({ couple, personnesCharge, autresRevenus }) est global : il
+// décrit la personne, pas le salaire. Deux offres comparées ne changent pas le
+// nombre de parts ni les revenus du conjoint.
+function compute(s, foyer){
+  const f = foyer || {};
   const hasHS = s.dureeType === '39';
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
@@ -917,9 +965,9 @@ function compute(s){
   // du foyer avec et sans lui : c'est ce que le salaire coûte réellement en
   // impôt, à la différence d'un taux moyen qui sous-estimerait toujours l'effet
   // d'une augmentation (le taux réel monte avec le revenu).
-  const couple = !!s.foyerCouple;
-  const charges = Math.max(0, s.foyerEnfants || 0);
-  const autresRevenus = Math.max(0, s.autresRevenus || 0);
+  const couple = !!f.couple;
+  const charges = Math.max(0, f.personnesCharge || 0);
+  const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
   const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
   const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
   const impotAnnuel = Math.max(0,
@@ -949,7 +997,6 @@ function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuellePat,
-    foyerCouple:false, foyerEnfants:0, autresRevenus:0,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
@@ -967,7 +1014,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','foyerEnfants','autresRevenus','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -988,9 +1035,24 @@ function sanitizeScenario(raw){
   if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
   if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
   clean.carenceCouverte = !!clean.carenceCouverte;
-  clean.foyerCouple = !!clean.foyerCouple;
   if(!Number.isInteger(clean.id)) delete clean.id;
   return clean;
+}
+
+// Le foyer fiscal est un réglage global (une personne, pas un salaire) : il est
+// donc stocké à part des scénarios, et normalisé de la même façon qu'eux.
+const FOYER_DEFAUT = { couple:false, personnesCharge:0, autresRevenus:0 };
+function sanitizeFoyer(raw){
+  const f = (raw && typeof raw === 'object') ? raw : {};
+  const nb = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
+  const couple = !!f.couple;
+  return {
+    couple,
+    personnesCharge: Math.max(0, Math.min(12, Math.floor(nb(f.personnesCharge)))),
+    // Les revenus du conjoint n'ont pas de sens hors couple : on les neutralise
+    // pour que la valeur calculée corresponde toujours à ce qui est affiché.
+    autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0
+  };
 }
 
 function loadPersistedState(){
@@ -1003,7 +1065,7 @@ function loadPersistedState(){
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
-             openCardIds: data.openCardIds };
+             openCardIds: data.openCardIds, foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
 }
 
@@ -1011,7 +1073,7 @@ function saveState(){
   if(suppressAutosave) return;
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
-      v:1, scenarios, refId, metric, displayAmt, displayPeriod,
+      v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer,
       openCardIds:[...openCardIds]
     }));
   } catch(e){ /* stockage plein/indisponible — l'app continue de fonctionner en mémoire */ }
@@ -1047,12 +1109,13 @@ function loadShareState(){
     const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
-             displayAmt: data.displayAmt, displayPeriod: data.displayPeriod };
+             displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
+             foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
 }
 
 function buildShareUrl(){
-  const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod };
+  const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer };
   const encoded = toBase64Url(JSON.stringify(payload));
   return location.origin + location.pathname + location.search + '#share=' + encoded;
 }
@@ -1117,7 +1180,7 @@ if(loadedFromShare){
   history.replaceState(null, '', location.pathname + location.search);
 }
 
-let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod;
+let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod, foyer;
 if(initialSource){
   scenarios = initialSource.scenarios.map(sv => mkScenario(sv));
   idCounter = scenarios.reduce((max, s) => Math.max(max, s.id), -1) + 1;
@@ -1127,6 +1190,7 @@ if(initialSource){
   displayPeriod = initialSource.displayPeriod === 'an' ? 'an' : 'mois';
   const validIds = new Set(scenarios.map(s => s.id));
   openCardIds = new Set(Array.isArray(initialSource.openCardIds) ? initialSource.openCardIds.filter(id => validIds.has(id)) : []);
+  foyer = sanitizeFoyer(initialSource.foyer);
 } else {
   scenarios = defaultScenarios();
   refId = scenarios[0].id;
@@ -1134,6 +1198,7 @@ if(initialSource){
   openCardIds = new Set();
   displayAmt = 'net';
   displayPeriod = 'mois';
+  foyer = sanitizeFoyer(FOYER_DEFAUT);
 }
 
 const metricHints = {
@@ -1154,12 +1219,6 @@ function heroLabel(){
 }
 function heroPasValue(r){
   return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
-}
-// Un foyer déclaré en couple sans autres revenus applique 2 parts à un seul
-// salaire : l'impôt en ressort très sous-estimé, ce qui mérite un avertissement
-// actif plutôt qu'une simple mention dans l'aide.
-function foyerWarnShown(s){
-  return !!s.foyerCouple && !((s.autresRevenus || 0) > 0);
 }
 function heroPasShown(){
   // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
@@ -1228,12 +1287,14 @@ function renderCard(s, r, showRemove){
     </div>
 
     <details class="more">
-      <summary>Mutuelle, titres restaurant &amp; impôt</summary>
+      <summary>Mutuelle &amp; titres restaurant</summary>
       <div class="more-body">
+        <div class="section-tag">Mutuelle</div>
         <div class="field-row">
           <label for="f-mutuelle-${uid}">Mutuelle (€ / mois)</label>
           ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
         </div>
+        <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
           <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
@@ -1243,32 +1304,8 @@ function renderCard(s, r, showRemove){
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
           <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
         </div>
-        <div class="field-row" style="margin-top:14px; margin-bottom:0;">
-          <label>Foyer fiscal</label>
-          <div class="pill-toggle" data-foyer-group="${uid}" role="group" aria-label="Situation du foyer" style="width:100%;">
-            <button type="button" data-foyer="seul" data-id="${uid}" aria-pressed="${!s.foyerCouple}" style="flex:1;">Seul(e)</button>
-            <button type="button" data-foyer="couple" data-id="${uid}" aria-pressed="${!!s.foyerCouple}" style="flex:1;">En couple</button>
-          </div>
-        </div>
-        <div class="two-col" style="margin-top:14px;">
-          <div class="field-row">
-            <label for="f-charges-${uid}">Personnes à charge</label>
-            ${num(`f-charges-${uid}`,'foyerEnfants',uid,s.foyerEnfants,{min:0,max:12})}
-          </div>
-          <div class="field-row">
-            <label for="f-autres-${uid}">Autres revenus du foyer (€/an)</label>
-            ${num(`f-autres-${uid}`,'autresRevenus',uid,s.autresRevenus,{min:0})}
-          </div>
-        </div>
-        <div class="subline">
-          <span>Impôt estimé</span>
-          <span class="val" id="c-ir-${uid}">${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)</span>
-        </div>
-        <div class="alert alert-warn" id="c-foyerwarn-${uid}" style="${foyerWarnShown(s) ? '' : 'display:none;'}">
-          <span>${ICON.warn}</span><span>Foyer en couple sans autres revenus renseignés : le barème s'applique à 2 parts pour un seul salaire, l'impôt affiché est donc très sous-estimé. Indiquez le net imposable annuel de votre conjoint, ou repassez sur « Seul(e) ».</span>
-        </div>
-        <div class="sub-hint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. C'est le <em>supplément</em> d'impôt dû à ce salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
-        <div class="two-col" style="margin-top:14px;">
+        <div class="section-tag">Mensualités &amp; primes</div>
+        <div class="two-col">
           <div class="field-row">
             <label for="f-nbmois-${uid}">Mensualités / an</label>
             ${num(`f-nbmois-${uid}`,'nbMois',uid,s.nbMois,{min:1,max:24})}
@@ -1492,7 +1529,7 @@ function renderAlerts(computed){
 
 // ---------- Rendu ----------
 function render(){
-  const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
 
   updateRaiseBaseName();
@@ -1509,6 +1546,7 @@ function render(){
   document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  updateFoyerImpot(computed);
   document.getElementById('refSelect').innerHTML = scenarios
     .map(s => `<option value="${s.id}" ${s.id===refId?'selected':''}>${esc(s.name)}</option>`).join('');
   document.getElementById('cardsBody').innerHTML =
@@ -1571,18 +1609,6 @@ function bindScenarioInputs(){
       updateComputed();
     });
   });
-  document.querySelectorAll('[data-foyer]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const id = parseInt(btn.dataset.id, 10);
-      const s = findScenario(id);
-      if(!s) return;
-      s.foyerCouple = btn.dataset.foyer === 'couple';
-      document.querySelectorAll(`[data-foyer-group="${id}"] button`).forEach(b => {
-        b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === s.foyerCouple ? 'true' : 'false');
-      });
-      updateComputed();
-    });
-  });
 }
 
 function bindRefPickers(){
@@ -1602,12 +1628,70 @@ function bindRefPickers(){
 }
 
 // ---------- Mise à jour ciblée (ne touche jamais aux champs en cours de saisie) ----------
+// ---------- Module « Foyer fiscal » (réglage global, pas par salaire) ----------
+function foyerResume(){
+  const n = foyer.personnesCharge;
+  const bouts = [foyer.couple ? 'En couple' : 'Seul(e)'];
+  bouts.push(n === 0 ? 'sans personne à charge'
+                     : (n === 1 ? '1 personne à charge' : `${n} personnes à charge`));
+  if(foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
+  return bouts.join(', ');
+}
+
+// L'impôt affiché dans le module suit le salaire de référence.
+function updateFoyerImpot(computed){
+  const ref = computed.find(x => x.s.id === refId) || computed[0];
+  if(ref) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${ref.r.tauxImpot.toFixed(1)} %)`);
+}
+
+function syncFoyerUI(){
+  document.querySelectorAll('#foyerSituation button').forEach(b => {
+    b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === foyer.couple ? 'true' : 'false');
+  });
+  // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
+  // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
+  setShown('foyerConjointRow', foyer.couple);
+  setShown('foyerWarn', foyer.couple && !(foyer.autresRevenus > 0));
+  setText('foyerModuleDesc', foyerResume());
+}
+
+function bindFoyerModule(){
+  document.querySelectorAll('#foyerSituation button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      foyer.couple = btn.dataset.foyer === 'couple';
+      if(!foyer.couple){
+        foyer.autresRevenus = 0;
+        const champ = document.getElementById('foyerConjoint');
+        if(champ) champ.value = '0';
+      }
+      syncFoyerUI();
+      updateComputed();
+    });
+  });
+  const charges = document.getElementById('foyerCharges');
+  if(charges) charges.addEventListener('input', () => {
+    foyer.personnesCharge = Math.max(0, Math.min(12, Math.floor(parseNum(charges.value))));
+    syncFoyerUI();
+    updateComputed();
+  });
+  const conjoint = document.getElementById('foyerConjoint');
+  if(conjoint) conjoint.addEventListener('input', () => {
+    foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
+    syncFoyerUI();
+    updateComputed();
+  });
+  // Refléter l'état restauré (localStorage ou lien partagé) dans les champs.
+  if(charges) charges.value = String(foyer.personnesCharge);
+  if(conjoint) conjoint.value = String(foyer.autresRevenus);
+  syncFoyerUI();
+}
+
 function setText(id, txt){ const el = document.getElementById(id); if(el) el.textContent = txt; }
 function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
 function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
 
 function updateComputed(){
-  const computed = scenarios.map(s => ({ s, r: compute(s) }));
+  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
   const isSingle = computed.length === 1;
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
   const stackChartEl = document.getElementById('stackChart');
@@ -1617,6 +1701,7 @@ function updateComputed(){
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  updateFoyerImpot(computed);
 
   computed.forEach(({s, r}) => {
     const u = s.id;
@@ -1624,8 +1709,6 @@ function updateComputed(){
     setText(`c-herolabel-${u}`, heroLabel());
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
     setShown(`c-heropas-${u}`, heroPasShown());
-    setText(`c-ir-${u}`, `${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)`);
-    setShown(`c-foyerwarn-${u}`, foyerWarnShown(s));
     setText(`c-trTitre-${u}`, `${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)`);
 
     const hint = document.getElementById(`rate-hint-${u}`);
@@ -2203,6 +2286,8 @@ function bindModuleToggle(cardId, toggleId, bodyId){
     card.classList.toggle('is-open', willOpen);
   });
 }
+bindModuleToggle('foyerModule', 'foyerModuleToggle', 'foyerModuleBody');
+bindFoyerModule();
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
 bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
