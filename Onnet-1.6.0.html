@@ -221,7 +221,19 @@
   /* Le bloc est replié au chargement : l'avertissement doit remonter dans le
      bandeau, sinon le garde-fou reste invisible tant qu'on n'ouvre pas. */
   .module-desc.is-warn{color:var(--warn); font-weight:600;}
-  .module-body{padding:0 16px 18px;}
+  /* Dépliage animé. L'attribut hidden ne se transitionne pas (display:none) :
+     l'état est porté par la classe is-open, et visibility retire malgré tout le
+     contenu replié de l'arbre d'accessibilité et du parcours au clavier. */
+  .module-body{
+    padding:0 16px; max-height:0; overflow:hidden; opacity:0; visibility:hidden;
+    transition:max-height .3s cubic-bezier(.25,.8,.3,1), opacity .2s ease,
+               padding-bottom .3s ease, visibility 0s linear .3s;
+  }
+  .module-card.is-open .module-body{
+    max-height:1600px; opacity:1; visibility:visible; padding-bottom:18px;
+    transition:max-height .34s cubic-bezier(.25,.8,.3,1), opacity .26s ease .04s,
+               padding-bottom .34s ease, visibility 0s;
+  }
   .module-card .hint{margin-top:0;}
 
   .panel-nested{margin-top:18px; border-top:1px solid var(--line); padding-top:4px;}
@@ -388,6 +400,41 @@
   .cards.bounce-left{ animation:rail-bounce-left .34s cubic-bezier(.34,1.56,.64,1); }
   .cards.bounce-right{ animation:rail-bounce-right .34s cubic-bezier(.34,1.56,.64,1); }
   @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave, .cards.bounce-left, .cards.bounce-right{ animation:none; } }
+
+  /* ---------- Animations d'interface ----------
+     Règle suivie : rien ne s'anime sur un élément reconstruit à chaque frappe
+     (barres du graphique, montants), sous peine de scintillement permanent.
+     Seuls s'animent l'arrivée à l'écran, les survols et les retours au clic. */
+
+  @keyframes reveal-in{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+  .reveal{ animation:reveal-in .5s cubic-bezier(.25,.8,.3,1) both; }
+  #comparePanel{ animation-delay:.04s; }
+  .cards-bar{ animation-delay:.10s; }
+  .modules-section{ animation-delay:.16s; }
+  .disclaimer{ animation-delay:.22s; }
+
+  /* Retour au clic : le bouton s'enfonce légèrement. */
+  .btn{ transition:background-color .18s ease, transform .12s ease; }
+  .btn:active{ transform:scale(.975); }
+  .raise-chip{ transition:background-color .18s ease, color .18s ease, border-color .18s ease, transform .12s ease; }
+  .raise-chip:active{ transform:scale(.95); }
+  .pill-toggle button{ transition:background-color .2s ease, color .2s ease; }
+  .remove-btn{ transition:background-color .18s ease, color .18s ease, border-color .18s ease, transform .12s ease; }
+  .remove-btn:active{ transform:scale(.9); }
+
+  /* Survols : cartes, colonnes cliquables et modules. */
+  .card{ transition:border-color .2s ease, box-shadow .2s ease; }
+  .card-add{ transition:border-color .2s ease, color .2s ease, background-color .2s ease; }
+  .module-card{ transition:border-color .2s ease, box-shadow .2s ease; }
+  .module-card:hover{ border-color:var(--accent); }
+  .stack-col[data-setref]{ transition:transform .18s cubic-bezier(.25,.8,.3,1), box-shadow .18s ease; }
+  .stack-col[data-setref]:hover{ transform:translateY(-3px); box-shadow:0 6px 18px rgba(23,36,31,.10); }
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{ animation:none; }
+    .btn, .raise-chip, .remove-btn, .card, .card-add, .module-card, .stack-col[data-setref]{ transition:none; }
+    .btn:active, .raise-chip:active, .remove-btn:active, .stack-col[data-setref]:hover{ transform:none; }
+  }
   .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
   .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
   input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 0; width:100%; border-bottom:1px solid transparent;}
@@ -470,7 +517,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.4</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -496,7 +543,7 @@
     </div>
   </header>
 
-  <div class="panel" id="comparePanel">
+  <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
@@ -526,7 +573,7 @@
     </details>
   </div>
 
-  <div class="cards-bar">
+  <div class="cards-bar reveal">
     <div class="cards-bar-toggles">
       <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
         <button data-amt="net" aria-pressed="true">Net</button>
@@ -546,7 +593,7 @@
     <div class="cards" id="cardsBody"></div>
   </div>
 
-  <section class="modules-section" aria-label="Modules complémentaires">
+  <section class="modules-section reveal" aria-label="Modules complémentaires">
     <div class="modules-head">
       <h2 class="modules-title">Modules</h2>
       <p class="modules-sub">Réglez votre foyer fiscal et activez les outils dont vous avez besoin pour ce comparatif.</p>
@@ -562,7 +609,7 @@
           </span>
           <svg class="module-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
-        <div class="module-body" id="foyerModuleBody" hidden>
+        <div class="module-body" id="foyerModuleBody">
           <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
 
           <div class="field-row">
@@ -576,7 +623,13 @@
           <div class="two-col">
             <div class="field-row">
               <label for="foyerCharges">Personnes à charge</label>
-              <input type="text" inputmode="decimal" id="foyerCharges" value="0">
+              <select id="foyerCharges">
+                <option value="0">0</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4</option>
+              </select>
             </div>
             <div class="field-row" id="foyerConjointRow" style="display:none;">
               <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
@@ -606,7 +659,7 @@
           </span>
           <span class="module-switch" aria-hidden="true"></span>
         </button>
-        <div class="module-body" id="raiseModuleBody" hidden>
+        <div class="module-body" id="raiseModuleBody">
           <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Un clic crée un nouveau salaire à comparer.</div>
           <div class="raise-chips" id="raiseChipsPct"></div>
           <div class="raise-chips" id="raiseChipsEur"></div>
@@ -631,7 +684,7 @@
           </span>
           <span class="module-switch" aria-hidden="true"></span>
         </button>
-        <div class="module-body" id="absenceModuleBody" hidden>
+        <div class="module-body" id="absenceModuleBody">
           <div class="hint">Calculé à partir de <strong id="absenceBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas, sur la base d'un mois de 30 jours.</div>
 
           <div class="field-row">
@@ -680,7 +733,7 @@
     </div>
   </section>
 
-  <div class="disclaimer">
+  <div class="disclaimer reveal">
     <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. L'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
   </div>
 </div>
@@ -1081,7 +1134,7 @@ function sanitizeFoyer(raw){
   const couple = !!f.couple;
   return {
     couple,
-    personnesCharge: Math.max(0, Math.min(12, Math.floor(nb(f.personnesCharge)))),
+    personnesCharge: Math.max(0, Math.min(4, Math.floor(nb(f.personnesCharge)))),
     // Les revenus du conjoint n'ont pas de sens hors couple : on les neutralise
     // pour que la valeur calculée corresponde toujours à ce qui est affiché.
     autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0
@@ -1713,8 +1766,8 @@ function bindFoyerModule(){
     });
   });
   const charges = document.getElementById('foyerCharges');
-  if(charges) charges.addEventListener('input', () => {
-    foyer.personnesCharge = Math.max(0, Math.min(12, Math.floor(parseNum(charges.value))));
+  if(charges) charges.addEventListener('change', () => {
+    foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
     syncFoyerUI();
     updateComputed();
   });
@@ -1725,7 +1778,7 @@ function bindFoyerModule(){
     updateComputed();
   });
   // Refléter l'état restauré (localStorage ou lien partagé) dans les champs.
-  if(charges) charges.value = String(foyer.personnesCharge);
+  if(charges) charges.value = String(Math.min(4, foyer.personnesCharge));
   if(conjoint) conjoint.value = String(foyer.autresRevenus);
   syncFoyerUI();
 }
@@ -2340,8 +2393,7 @@ function bindModuleToggle(cardId, toggleId, bodyId){
   const body = document.getElementById(bodyId);
   if(!card || !toggle || !body) return;
   toggle.addEventListener('click', () => {
-    const willOpen = body.hasAttribute('hidden');
-    if(willOpen){ body.removeAttribute('hidden'); } else { body.setAttribute('hidden',''); }
+    const willOpen = !card.classList.contains('is-open');
     toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
     card.classList.toggle('is-open', willOpen);
   });
@@ -2447,6 +2499,15 @@ function scrollToNewCard(){
     const target = cards[cards.length - 1];
     if(!target){ restoreCardSnap(); return; }
     const scroller = document.getElementById('cardsScroll');
+    // Un ajout lancé depuis les modules d'augmentation ou d'absence, situés plus
+    // bas dans la page, faisait défiler le rail hors de vue : on ne voyait pas
+    // le salaire créé. On remonte d'abord sur la liste si elle n'est pas visible.
+    const rail = scroller.getBoundingClientRect();
+    const vh = window.innerHeight || document.documentElement.clientHeight;
+    if(rail.top < 0 || rail.bottom > vh){
+      const y = window.scrollY + rail.top - Math.max(16, (vh - rail.height) / 2);
+      window.scrollTo({ top: Math.max(0, y), behavior: 'smooth' });
+    }
     const targetRect = target.getBoundingClientRect();
     const scrollerRect = scroller.getBoundingClientRect();
     const delta = (targetRect.left + targetRect.width / 2) - (scrollerRect.left + scrollerRect.width / 2);
