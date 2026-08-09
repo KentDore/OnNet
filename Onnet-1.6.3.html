@@ -514,7 +514,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.2</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.3</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -705,7 +705,7 @@
                 <option value="50">Moins d'1 an — indemnités de la Sécu seules (≈ 50 %)</option>
                 <option value="custom">Je connais mon propre taux</option>
               </select>
-              <div class="sub-hint">Détermine le % du salaire maintenu. Votre convention collective peut prévoir mieux : vérifiez votre bulletin de paie ou votre service RH si vous en avez un.</div>
+              <div class="sub-hint">Pourcentage du salaire maintenu. Votre convention collective peut prévoir davantage — à vérifier sur votre bulletin de paie.</div>
             </div>
             <div class="field-row" id="arretPctRow" style="display:none;">
               <label for="arretPct">% du salaire maintenu (votre taux)</label>
@@ -2148,7 +2148,7 @@ function renderMutuelleTrFields(idPrefix){
         <div class="field-row">
           <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
           <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          <div class="sub-hint">Laissé vide, on part sur ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
+          <div class="sub-hint">Par défaut : ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
         </div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
