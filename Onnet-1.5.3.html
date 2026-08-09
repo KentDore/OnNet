@@ -218,6 +218,9 @@
      qu'un interrupteur, qui laisserait croire qu'on peut couper l'estimation. */
   .module-chevron{flex:none; width:20px; height:20px; color:var(--ink-soft); transition:transform .15s ease, color .15s ease;}
   .module-card.is-open .module-chevron{transform:rotate(180deg); color:var(--accent);}
+  /* Le bloc est replié au chargement : l'avertissement doit remonter dans le
+     bandeau, sinon le garde-fou reste invisible tant qu'on n'ouvre pas. */
+  .module-desc.is-warn{color:var(--warn); font-weight:600;}
   .module-body{padding:0 16px 18px;}
   .module-card .hint{margin-top:0;}
 
@@ -455,7 +458,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.2</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.3</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -707,7 +710,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 30, mutuellePat: 45, joursResto: 21, valeurResto: 8,
+  mutuelle: 30, joursResto: 21, valeurResto: 8,
   partResto: 50, nbMois: 12
 };
 
@@ -925,7 +928,11 @@ function compute(s, foyer){
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
 
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, s.mutuellePat, tr, P.plafondExoIR/12);
+  // Part patronale de mutuelle : réintégrée dans le net imposable. Faute d'un
+  // champ dédié, on retient le partage 50/50 — le minimum légal — plutôt qu'un
+  // forfait figé, qui gonflait l'imposable même sans mutuelle déclarée.
+  const mutuellePat = Math.max(0, s.mutuelle || 0);
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, mutuellePat, tr, P.plafondExoIR/12);
 
   // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
   // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
@@ -938,7 +945,7 @@ function compute(s, foyer){
   const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
   const aBase = split.brutBase * nbMois + (s.primes || 0);
   const aHS = split.brutHS * 12;
-  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, s.mutuellePat * 12, trAnnuel, P.plafondExoIR);
+  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
 
   // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
   // normalement et une portion d'absence, sur un mois de référence de 30 jours.
@@ -948,21 +955,31 @@ function compute(s, foyer){
     const netSansTR = m.netApres + tr.totalSalarie; // on retire la déduction des titres restaurant
     const netTravaille = ((30 - duree) / 30) * m.netApres;
 
-    let netAbsence;
+    let netAbsence, joursPayes;
     if(s.absenceType === 'conges'){
       netAbsence = (duree / 30) * netSansTR; // salaire de base maintenu, sans titres restaurant
+      joursPayes = duree;                    // intégralement rémunérés
     } else {
       const joursCarence = s.carenceCouverte ? 0 : Math.min(3, duree);
       const joursIndemnises = Math.max(0, duree - joursCarence);
       const pct = (s.maintienPct || 0) / 100;
       netAbsence = (joursIndemnises / 30) * netSansTR * pct;
+      joursPayes = joursIndemnises * pct;    // équivalent en jours pleins
     }
 
-    const netFinal = netTravaille + netAbsence;
-    const ratio = m.netApres > 0 ? netFinal / m.netApres : 0;
-    m.netApres = netFinal;
-    m.netImposable *= ratio;
-    a.netApres *= ratio; a.netImposable *= ratio;
+    const perteNet = m.netApres - (netTravaille + netAbsence);
+    // L'assiette imposable ne suit que la rémunération réellement versée : les
+    // titres restaurant n'en font pas partie, ne pas consommer les siens pendant
+    // des congés augmente le net encaissé sans toucher à l'imposable.
+    const ratioSalaire = ((30 - duree) + joursPayes) / 30;
+    const imposableAvant = m.netImposable;
+
+    m.netApres -= perteNet;
+    m.netImposable = imposableAvant * ratioSalaire;
+    // L'absence porte sur UN mois : l'annuel ne perd que ce mois-là. Le mettre
+    // à l'échelle du même ratio reviendrait à répéter l'absence douze fois.
+    a.netApres = Math.max(0, a.netApres - perteNet);
+    a.netImposable = Math.max(0, a.netImposable - (imposableAvant - m.netImposable));
   }
 
   // Impôt sur le revenu. L'impôt imputé à CE salaire est l'écart entre l'impôt
@@ -1000,7 +1017,7 @@ let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
-    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuellePat,
+    mutuelle:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
@@ -1018,7 +1035,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','rate','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -1121,7 +1138,9 @@ function loadShareState(){
 function buildShareUrl(){
   const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer };
   const encoded = toBase64Url(JSON.stringify(payload));
-  return location.origin + location.pathname + location.search + '#share=' + encoded;
+  // Pas location.origin : il vaut la chaîne « null » sur file:// (Firefox,
+  // Safari), or le README documente l'ouverture directe du fichier.
+  return location.href.split('#')[0] + '#share=' + encoded;
 }
 
 let showToastImpl = null;
@@ -1655,8 +1674,13 @@ function syncFoyerUI(){
   // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
   // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
   setShown('foyerConjointRow', foyer.couple);
-  setShown('foyerWarn', foyer.couple && !(foyer.autresRevenus > 0));
-  setText('foyerModuleDesc', foyerResume());
+  const alerte = foyer.couple && !(foyer.autresRevenus > 0);
+  setShown('foyerWarn', alerte);
+  // Le bloc étant replié au chargement, l'alerte doit aussi remonter dans le
+  // bandeau : autrement elle n'apparaît qu'à ceux qui l'ouvrent déjà.
+  setText('foyerModuleDesc', alerte ? 'En couple — revenus du conjoint à renseigner' : foyerResume());
+  const desc = document.getElementById('foyerModuleDesc');
+  if(desc) desc.classList.toggle('is-warn', alerte);
 }
 
 function bindFoyerModule(){
@@ -1941,7 +1965,14 @@ function onModalKeydown(e){
     return;
   }
   if(e.key === 'Tab'){
-    const focusables = modalState.box.querySelectorAll('button, input');
+    // Ne retenir que ce qui peut réellement recevoir le focus. Le DOM de la
+    // modale contient des éléments désactivés (le bouton « Continuer » de
+    // l'onboarding démarre ainsi) et des champs masqués (ceux des titres
+    // restaurant tant qu'on répond « Non »). Les compter ferait porter les
+    // bornes du piège sur un élément que le focus n'atteint jamais, et la
+    // tabulation sortirait d'une modale volontairement non refermable.
+    const focusables = [...modalState.box.querySelectorAll('button, input')]
+      .filter(el => !el.disabled && el.getClientRects().length > 0);
     if(!focusables.length) return;
     const first = focusables[0], last = focusables[focusables.length - 1];
     if(e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
@@ -2273,6 +2304,18 @@ document.querySelectorAll('#periodToggle button').forEach(b => {
     updateComputed();
   });
 });
+// L'état restauré (localStorage ou lien partagé) doit se voir sur les bascules :
+// sans ça, un comparatif rouvert en Brut/Annuel affiche bien des montants
+// annuels bruts mais surligne « Net » et « Mensuel ».
+function syncDisplayToggles(){
+  document.querySelectorAll('#amtToggle button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.amt === displayAmt ? 'true' : 'false');
+  });
+  document.querySelectorAll('#periodToggle button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.period === displayPeriod ? 'true' : 'false');
+  });
+}
+syncDisplayToggles();
 
 // ---------- Modules (compléments activables) ----------
 function bindModuleToggle(cardId, toggleId, bodyId){

@@ -2,7 +2,7 @@
 //
 // Tests de non-régression du moteur de calcul d'Onnet.
 //
-//   node --test test/
+//   node --test test/calc.test.js
 //
 // Aucune dépendance : le bloc de calcul est extrait du fichier HTML entre les
 // marqueurs ONNET_CALC_START / ONNET_CALC_END, puis évalué tel quel. On teste
@@ -55,7 +55,7 @@ const P = C.P;
 function scn(over){
   return Object.assign({
     id: 0, name: 'Test', brut: 3000, statut: 'non-cadre', rate: 22,
-    mutuelle: 0, mutuellePat: 0,
+    mutuelle: 0,
     joursResto: 0, valeurResto: 0, partResto: 50,
     dureeType: '35', nbMois: 12, primes: 0,
     maintienPct: 90, carenceCouverte: false,
@@ -357,11 +357,33 @@ describe('compute() — cas de référence (calculés à la main)', () => {
   });
 
   test('mutuelle : retirée du net, part patronale réintégrée à l’imposable', () => {
-    const base = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
-    const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 45 }));
+    const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+    const avec = C.compute(scn({ brut: 3000, mutuelle: 30 }));
     near(avec.netApres, base.netApres - 30, 0.01, 'net diminué de la part salariale');
-    near(avec.netImposable, base.netImposable - 30 + 45, 0.01,
-      'imposable : −part salariale +part patronale');
+    // Partage 50/50 : la part patronale réintégrée compense exactement la part
+    // salariale déduite, l'assiette imposable est donc inchangée.
+    near(avec.netImposable, base.netImposable, 0.01,
+      'imposable : −part salariale +part patronale à parts égales');
+  });
+
+  test('sans mutuelle déclarée, aucune part patronale fantôme', () => {
+    // Un forfait patronal figé gonflait l'imposable de 540 €/an même à 0 €
+    // de mutuelle, sans qu'aucun champ ne permette de le corriger.
+    const sans = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+    const nu = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+    near(sans.a.netImposable, nu.a.netImposable, 1e-9);
+    // Référence indépendante : brut annuel − cotisations déductibles annuelles.
+    near(sans.a.netImposable, sans.a.brutTotal - Math.max(0, sans.a.c.deductible - sans.a.reducHS),
+      0.01, 'imposable sans aucun élément de mutuelle');
+  });
+
+  test('la part patronale de mutuelle suit la part salariale', () => {
+    for(const mut of [0, 15, 30, 80]){
+      const r = C.compute(scn({ brut: 3000, mutuelle: mut }));
+      const nu = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+      near(r.netImposable, nu.netImposable, 0.01, `mutuelle ${mut} €`);
+      near(r.netApres, nu.netApres - mut, 0.01, `net avec mutuelle ${mut} €`);
+    }
   });
 
   test('titres restaurant conformes : part salariale déduite, cotisations inchangées', () => {
@@ -781,6 +803,38 @@ describe('compute() — absences', () => {
     const avec = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: 15 }));
     assert.ok(avec.annuelNet < sans.annuelNet, 'annuel réduit');
     assert.ok(avec.netImposable < sans.netImposable, 'imposable réduit');
+  });
+
+  test('une absence d’un mois ne coûte qu’un mois sur l’année', () => {
+    // L'annuel suivait le même ratio que le mensuel : une absence de 10 jours
+    // amputait douze mois au lieu d'un, soit douze fois trop.
+    for(const d of [5, 10, 20, 30]){
+      const sans = C.compute(scn({ brut: 3000 }));
+      const avec = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: d }));
+      near(sans.annuelNet - avec.annuelNet, sans.netApres - avec.netApres, 0.01,
+        `perte annuelle à ${d} jours`);
+    }
+  });
+
+  test('congés payés : l’assiette imposable ne bouge pas', () => {
+    // Le salaire est maintenu ; ne pas consommer ses titres restaurant augmente
+    // le net encaissé, mais les titres ne sont pas dans l'assiette imposable.
+    const ref = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8 }));
+    for(const d of [0, 10, 30]){
+      const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8,
+                                absenceType: 'conges', absenceDuree: d }));
+      near(r.netImposable, ref.netImposable, 0.01, `imposable à ${d} jours de congés`);
+      near(r.a.netImposable, ref.a.netImposable, 0.01, `imposable annuel à ${d} jours`);
+    }
+  });
+
+  test('arrêt de travail : l’imposable suit la rémunération versée, pas le net encaissé', () => {
+    const ref = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8 }));
+    // 10 jours, carence de 3 j non couverte, 90 % maintenus → 7 j × 0,9 = 6,3 j payés
+    const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8,
+                              absenceType: 'arret', absenceDuree: 10,
+                              maintienPct: 90, carenceCouverte: false }));
+    near(r.netImposable, ref.netImposable * ((20 + 6.3) / 30), 0.01);
   });
 });
 
