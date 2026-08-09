@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-1.5.2.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.5.3.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -33,10 +33,11 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 
 Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
 
-Trois approximations assumées méritent d'être connues :
+Quatre approximations assumées méritent d'être connues :
 
 - **Fonction publique** — un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS). Le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés.
 - **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
+- **Part patronale de mutuelle** — réintégrée dans le net imposable, elle est estimée égale à la part salariale (partage 50/50, le minimum légal), faute d'un champ dédié. Un forfait figé indépendant de la mutuelle déclarée gonflait auparavant l'assiette même sans mutuelle.
 - **Impôt sur le revenu** — le montant affiché est le *supplément* d'impôt imputable au salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui. C'est la bonne grandeur pour comparer deux salaires, mais ce n'est pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux mobiliers, pensions, taux neutre ou individualisé, acomptes, régularisations en cours d'année et contribution exceptionnelle sur les hauts revenus. En couple, les revenus du conjoint doivent être renseignés, sans quoi l'impôt est très sous-estimé — une alerte le signale dans le bloc Foyer fiscal tant qu'ils sont à zéro.
 
 Onnet ne calcule **que le côté salarié**. La métrique « Coût employeur » a été retirée en v1.3.0 : elle appliquait un forfait de +42 % sur le brut, en ignorant la réduction générale dégressive des cotisations patronales — laquelle s'applique jusqu'à 3 SMIC (5 469 €/mois en 2026) et ramène le coût réel au niveau du SMIC à environ +7 % au lieu de +42 %. La métrique était donc fausse pour la majorité des salaires, et l'écart entre deux salaires l'était aussi puisque la réduction est dégressive. Mieux valait la retirer que la laisser induire en erreur en négociation.
