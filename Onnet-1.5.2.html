@@ -455,7 +455,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.1</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.2</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1291,7 +1291,7 @@ function renderCard(s, r, showRemove){
     </div>
 
     <details class="more">
-      <summary>Mutuelle &amp; titres restaurant</summary>
+      <summary>Mutuelle, titres restaurant, mensualités &amp; primes</summary>
       <div class="more-body">
         <div class="section-tag">Mutuelle</div>
         <div class="field-row">
@@ -2047,11 +2047,8 @@ const ONBOARDING_MUTUELLE_DEFAUT = 30;
 
 // Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
 // nouveau salaire, pour ne jamais deviner silencieusement ces montants.
-function renderMutuelleTrFields(idPrefix, opts){
-  const o = opts || {};
-  const wrapOpen = o.collapsible ? `<details class="more" id="${idPrefix}More"><summary>Mutuelle &amp; titres restaurant</summary><div class="more-body">` : '';
-  const wrapClose = o.collapsible ? `</div></details>` : '';
-  return `${wrapOpen}
+function renderMutuelleTrFields(idPrefix){
+  return `
         <div class="field-row">
           <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
           <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
@@ -2070,7 +2067,7 @@ function renderMutuelleTrFields(idPrefix, opts){
             <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
-        </div>${wrapClose}`;
+        </div>`;
 }
 
 // Branche les interactions du bloc ci-dessus et renvoie une fonction de
