@@ -304,6 +304,8 @@
   .wf-val-out{position:absolute; left:100%; margin-left:8px; top:50%; transform:translateY(-50%); color:var(--ink) !important;}
   .wf-note{font-family:'Inter',sans-serif; font-size:11.5px; line-height:1.4; color:var(--ink-soft); margin:-2px 0 4px 142px;}
   .wf-note strong{color:var(--ink);}
+  .wf-note-row{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:2px 0;}
+  .wf-note-row .val{font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--ink); white-space:nowrap;}
   @media (max-width:480px){ .wf-row{grid-template-columns:104px 1fr; gap:8px;} .wf-label{font-size:11.5px;} .wf-val{font-size:10.5px;} }
 
   /* ---- Puces d'augmentation ---- */
@@ -423,6 +425,16 @@
   .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
   .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
   .two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  /* Aligner les champs quand les libellés n'occupent pas le même nombre de
+     lignes (« Personnes à charge » sur une, « Revenus du conjoint (€/an) » sur
+     deux, voire trois selon la largeur). Une hauteur minimale fixe ne suffit
+     pas puisque ce nombre varie : elle ne sert que de repli. */
+  .two-col .field-row > label{min-height:2.4em;}
+  @supports (grid-template-rows: subgrid){
+    .two-col{grid-template-rows:auto auto auto;}
+    .two-col > .field-row{display:grid; grid-template-rows:subgrid; grid-row:span 3;}
+    .two-col .field-row > label{min-height:0;}
+  }
   .section-tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold); margin:18px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--line);}
   .section-tag:first-child{margin-top:0;}
 
@@ -458,7 +470,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.3</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.4</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1481,7 +1493,11 @@ function renderWaterfall(computed){
   const net = m.netApres;
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  const trNote = tr > 0.5 ? `Sans titres restaurant, votre net serait de <strong>${fmt(netSansTR)}</strong> — mais vous n'auriez pas les <strong>${fmt(trValeurFaciale)}</strong> de titres restaurant que cela procure.` : '';
+  // Deux lignes chiffrées plutôt qu'une phrase : l'information est la même,
+  // mais elle se lit d'un coup d'œil au lieu de se déchiffrer.
+  const trNote = tr > 0.5 ? `
+      <div class="wf-note-row"><span>Net sans titres restaurant</span><span class="val">${fmt(netSansTR)}</span></div>
+      <div class="wf-note-row"><span>Titres restaurant perçus</span><span class="val">${fmt(trValeurFaciale)}</span></div>` : '';
 
   return `
   <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
@@ -1558,8 +1574,8 @@ function render(){
   updateRaiseBaseName();
   const isSingle = computed.length === 1;
   document.getElementById('stackHint').textContent = isSingle
-    ? "Votre salaire brut, étape par étape, jusqu'à ce qu'il vous reste vraiment. Ajoutez un salaire pour comparer plusieurs offres côte à côte."
-    : 'Chaque colonne, c\'est un salaire brut mensuel découpé : ce qui part en charges et en titres restaurant, et ce qu\'il vous reste vraiment. Cliquez sur une carte pour la définir comme référence de comparaison.';
+    ? 'Du brut au net, étape par étape.'
+    : 'Cliquez sur une carte pour la définir comme référence.';
   document.getElementById('insightBox').innerHTML = renderInsight(computed);
   const stackChartEl = document.getElementById('stackChart');
   stackChartEl.className = isSingle ? '' : 'stack-chart';
