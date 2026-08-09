@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-1.3.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.4.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -23,7 +23,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 - **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne selon le statut (non-cadre, cadre, fonction publique, taux forfaitaire)
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
 - **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
-- **Prélèvement à la source** — estimation du net après impôt à partir du taux personnel renseigné
+- **Impôt sur le revenu** — net après impôt calculé au barème 2026 (abattement de 10 %, quotient familial plafonné, décote), à partir du foyer fiscal renseigné : seul ou en couple, personnes à charge, autres revenus du foyer
 - **Salaire horaire** — comparaison du taux horaire brut et net, utile pour comparer des volumes horaires différents
 - **Modules d'augmentation et d'absence** — simulez une hausse de salaire (en % ou en €) ou une absence (congés payés, arrêt de travail) et ajoutez le résultat comme nouveau salaire à comparer
 - **Graphique de répartition** — visualisation en colonnes de la ventilation brut → cotisations → mutuelle/titres restaurant → net, avec sélection du salaire de référence en un clic
@@ -31,12 +31,13 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 
 ## Limites
 
-Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source utilisé est celui renseigné par l'utilisateur, il n'est pas recalculé). L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
+Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
 
-Deux approximations assumées méritent d'être connues :
+Trois approximations assumées méritent d'être connues :
 
 - **Fonction publique** — un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS). Le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés.
 - **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
+- **Impôt sur le revenu** — le montant affiché est le *supplément* d'impôt imputable au salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui. C'est la bonne grandeur pour comparer deux salaires, mais ce n'est pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux mobiliers, pensions, taux neutre ou individualisé, acomptes, régularisations en cours d'année et contribution exceptionnelle sur les hauts revenus. En couple, les autres revenus du foyer doivent être renseignés, sans quoi l'impôt est très sous-estimé.
 
 Onnet ne calcule **que le côté salarié**. La métrique « Coût employeur » a été retirée en v1.3.0 : elle appliquait un forfait de +42 % sur le brut, en ignorant la réduction générale dégressive des cotisations patronales — laquelle s'applique jusqu'à 3 SMIC (5 469 €/mois en 2026) et ramène le coût réel au niveau du SMIC à environ +7 % au lieu de +42 %. La métrique était donc fausse pour la majorité des salaires, et l'écart entre deux salaires l'était aussi puisque la réduction est dégressive. Mieux valait la retirer que la laisser induire en erreur en négociation.
 

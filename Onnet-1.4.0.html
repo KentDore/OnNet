@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.3.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.4.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -483,6 +483,9 @@
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
+    <!-- Alertes du graphique : il montre toujours du net mensuel, donc elles
+         doivent rester visibles sans déplier la section ci-dessous. -->
+    <div id="barsAlerts"></div>
 
     <details class="panel-nested" id="moreMetrics">
       <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
@@ -492,8 +495,7 @@
           <select id="refSelect"></select>
         </div>
         <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
-          <button data-metric="netApres" aria-pressed="true">Net</button>
-          <button data-metric="netHoraire" aria-pressed="false">Net horaire</button>
+          <button data-metric="netHoraire" aria-pressed="true">Net horaire</button>
           <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
           <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
           <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
@@ -501,7 +503,6 @@
         </div>
         <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
         <div id="barsBody" aria-live="polite"></div>
-        <div id="barsAlerts"></div>
       </div>
     </details>
   </div>
@@ -617,7 +618,7 @@
   </section>
 
   <div class="disclaimer">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. L'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
   </div>
 </div>
 
@@ -642,7 +643,19 @@ const P = {
   majoration: 25, reducHS: 11.31,
   // Exonération d'impôt sur le revenu des heures supplémentaires :
   // 7 500 € de net imposable par an et par salarié.
-  plafondExoIR: 7500
+  plafondExoIR: 7500,
+  // Impôt sur le revenu 2026. Les tranches sont exprimées par part de quotient
+  // familial : [plafond de la tranche, taux].
+  ir: {
+    tranches: [[11600, 0], [29579, 0.11], [84577, 0.30], [181917, 0.41], [Infinity, 0.45]],
+    // Abattement forfaitaire de 10 % pour frais professionnels, encadré.
+    abattementPct: 10, abattementMin: 495, abattementMax: 14171,
+    // Plafonnement des effets du quotient familial, par demi-part additionnelle.
+    plafondDemiPart: 1807,
+    // Décote sur les impôts modestes : base − taux × impôt brut, sous le seuil.
+    decote: { seuilSeul: 1982, seuilCouple: 3277,
+              baseSeul: 897, baseCouple: 1483, taux: 45.25 }
+  }
 };
 
 let scenarioDefaults = {
@@ -751,6 +764,59 @@ function titresResto(jours, valeur, partSalariePct){
   return { partEmployeurPct, parTitreEmployeur, totalEmployeur, totalSalarie, reintegre, motif };
 }
 
+// ---------- Impôt sur le revenu ----------
+
+// Barème progressif appliqué à un revenu ramené à UNE part de quotient familial.
+function baremeIR(revenuParPart){
+  if(revenuParPart <= 0) return 0;
+  let impot = 0, bas = 0;
+  for(const [haut, taux] of P.ir.tranches){
+    if(revenuParPart > bas) impot += (Math.min(revenuParPart, haut) - bas) * taux;
+    bas = haut;
+  }
+  return impot;
+}
+
+// Abattement de 10 % pour frais professionnels : plancher et plafond légaux,
+// le plancher ne pouvant évidemment pas dépasser le revenu lui-même.
+function abattementFraisPro(salaireAnnuel){
+  if(salaireAnnuel <= 0) return 0;
+  const brut = salaireAnnuel * P.ir.abattementPct/100;
+  const plancher = Math.min(P.ir.abattementMin, salaireAnnuel);
+  return Math.min(Math.max(brut, plancher), P.ir.abattementMax);
+}
+
+// Parts de quotient familial : 1 (ou 2 en couple), une demi-part pour chacune
+// des deux premières personnes à charge, une part entière à partir de la troisième.
+function partsFiscales(couple, personnesCharge){
+  const n = Math.max(0, Math.floor(personnesCharge || 0));
+  return (couple ? 2 : 1) + Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+}
+
+// Impôt d'un foyer, à partir de son revenu imposable global (déjà abattu).
+function impotFoyer(revenuImposable, couple, personnesCharge){
+  if(revenuImposable <= 0) return 0;
+  const parts = partsFiscales(couple, personnesCharge);
+  const partsBase = couple ? 2 : 1;
+  let impot = baremeIR(revenuImposable / parts) * parts;
+
+  // Plafonnement des effets du quotient familial : l'avantage tiré des
+  // demi-parts au-delà du foyer de base est limité.
+  if(parts > partsBase){
+    const sansCharges = baremeIR(revenuImposable / partsBase) * partsBase;
+    const plafond = P.ir.plafondDemiPart * (parts - partsBase) * 2;
+    if(sansCharges - impot > plafond) impot = sansCharges - plafond;
+  }
+
+  // Décote : atténue l'impôt des foyers modestes, jusqu'à l'annuler.
+  const d = P.ir.decote;
+  if(impot < (couple ? d.seuilCouple : d.seuilSeul)){
+    const decote = (couple ? d.baseCouple : d.baseSeul) - impot * d.taux/100;
+    impot -= Math.max(0, decote);
+  }
+  return Math.max(0, impot);
+}
+
 function splitHeures(s){
   const heuresSemaine = s.dureeType === '39' ? 39 : 35;
   const heuresSup = Math.max(0, heuresSemaine - 35) * 52 / 12;
@@ -847,17 +913,27 @@ function compute(s){
     a.netApres *= ratio; a.netImposable *= ratio;
   }
 
-  // Prélèvement à la source : estimation simple, taux personnel appliqué au net imposable.
-  const pasRate = clamp(s.pasRate || 0, 0, 100);
-  const netApresImpot = Math.max(0, m.netApres - m.netImposable * pasRate/100);
-  const annuelNetApresImpot = Math.max(0, a.netApres - a.netImposable * pasRate/100);
+  // Impôt sur le revenu. L'impôt imputé à CE salaire est l'écart entre l'impôt
+  // du foyer avec et sans lui : c'est ce que le salaire coûte réellement en
+  // impôt, à la différence d'un taux moyen qui sous-estimerait toujours l'effet
+  // d'une augmentation (le taux réel monte avec le revenu).
+  const couple = !!s.foyerCouple;
+  const charges = Math.max(0, s.foyerEnfants || 0);
+  const autresRevenus = Math.max(0, s.autresRevenus || 0);
+  const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
+  const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
+  const impotAnnuel = Math.max(0,
+    impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
+  const tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
+  const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);
+  const annuelNetApresImpot = Math.max(0, a.netApres - impotAnnuel);
 
   return {
     hasHS, heuresSup: split.heuresSup, brutHS: split.brutHS,
     tr, m, a,
     netApres: m.netApres, netImposable: m.netImposable,
     annuelNet: a.netApres,
-    netApresImpot, annuelNetApresImpot,
+    netApresImpot, annuelNetApresImpot, impotAnnuel, tauxImpot,
     brutHoraire, netHoraire,
     tauxEffectif: s.brut > 0 ? (m.cotisNettes / s.brut) * 100 : 0
   };
@@ -873,7 +949,7 @@ function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuellePat,
-    pasRate:0,
+    foyerCouple:false, foyerEnfants:0, autresRevenus:0,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
@@ -891,10 +967,13 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','pasRate','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','foyerEnfants','autresRevenus','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+// Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
+// figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
-// l'ancien « Coût employeur ») retombe automatiquement sur « Net ».
-const METRIC_KEYS = ['netApres','netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
+// l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
+const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
+const METRIC_DEFAUT = 'netHoraire';
 
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object') return null;
@@ -909,6 +988,7 @@ function sanitizeScenario(raw){
   if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
   if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
   clean.carenceCouverte = !!clean.carenceCouverte;
+  clean.foyerCouple = !!clean.foyerCouple;
   if(!Number.isInteger(clean.id)) delete clean.id;
   return clean;
 }
@@ -1042,7 +1122,7 @@ if(initialSource){
   scenarios = initialSource.scenarios.map(sv => mkScenario(sv));
   idCounter = scenarios.reduce((max, s) => Math.max(max, s.id), -1) + 1;
   refId = scenarios.some(s => s.id === initialSource.refId) ? initialSource.refId : scenarios[0].id;
-  metric = METRIC_KEYS.includes(initialSource.metric) ? initialSource.metric : 'netApres';
+  metric = METRIC_KEYS.includes(initialSource.metric) ? initialSource.metric : METRIC_DEFAUT;
   displayAmt = initialSource.displayAmt === 'brut' ? 'brut' : 'net';
   displayPeriod = initialSource.displayPeriod === 'an' ? 'an' : 'mois';
   const validIds = new Set(scenarios.map(s => s.id));
@@ -1050,22 +1130,16 @@ if(initialSource){
 } else {
   scenarios = defaultScenarios();
   refId = scenarios[0].id;
-  metric = 'netApres';
+  metric = METRIC_DEFAUT;
   openCardIds = new Set();
   displayAmt = 'net';
   displayPeriod = 'mois';
 }
 
-const metricLabels = {
-  netApres: 'Net', netImposable: 'Net imposable',
-  annuelNet: 'Net annuel', netApresImpot: 'Net après impôt',
-  netHoraire: 'Net horaire', brutHoraire: 'Brut horaire'
-};
 const metricHints = {
-  netApres: 'Ce qui arrive vraiment sur votre compte chaque mois — le chiffre à regarder pour votre budget.',
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois votre taux de prélèvement à la source appliqué — renseignez-le sur chaque salaire pour l\'activer.',
+  netApresImpot: 'Le net une fois l\'impôt sur le revenu estimé au barème 2026 — ajustez le foyer fiscal sur chaque salaire pour affiner.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -1081,8 +1155,9 @@ function heroLabel(){
 function heroPasValue(r){
   return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
 }
-function heroPasShown(s){
-  return displayAmt === 'net' && (s.pasRate || 0) > 0;
+function heroPasShown(){
+  // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
+  return displayAmt === 'net';
 }
 
 // ---------- Rendu des cartes ----------
@@ -1122,7 +1197,7 @@ function renderCard(s, r, showRemove){
     <div class="hero">
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${fmt(heroValue(r))}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown(s) ? '' : 'display:none;'}">Après impôt (${s.pasRate} %) : <strong>${fmt(heroPasValue(r))}</strong></div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">Après impôt : <strong>${fmt(heroPasValue(r))}</strong></div>
     </div>
     ${s.absenceType === 'arret' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j d'arrêt sur 30, ${s.maintienPct}% maintenus, ${s.carenceCouverte ? 'carence de 3 j couverte' : 'délai de carence de 3 j inclus'}. Ancienneté et convention collective non prises en compte.</span></div>` : ''}
     ${s.absenceType === 'conges' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j de congés payés sur 30 : salaire de base maintenu, sans titres restaurant sur ces jours.</span></div>` : ''}
@@ -1162,11 +1237,28 @@ function renderCard(s, r, showRemove){
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
           <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
         </div>
-        <div class="field-row" style="margin-top:14px;">
-          <label for="f-pasrate-${uid}">Taux de prélèvement à la source (%)</label>
-          ${num(`f-pasrate-${uid}`,'pasRate',uid,s.pasRate,{min:0,max:45})}
-          <div class="sub-hint">Indiqué sur votre avis d'imposition ou votre bulletin de paie. Laissez à 0 si vous ne le connaissez pas. Estimation appliquée au net imposable — voir le disclaimer en bas de page.</div>
+        <div class="field-row" style="margin-top:14px; margin-bottom:0;">
+          <label>Foyer fiscal</label>
+          <div class="pill-toggle" data-foyer-group="${uid}" role="group" aria-label="Situation du foyer" style="width:100%;">
+            <button type="button" data-foyer="seul" data-id="${uid}" aria-pressed="${!s.foyerCouple}" style="flex:1;">Seul(e)</button>
+            <button type="button" data-foyer="couple" data-id="${uid}" aria-pressed="${!!s.foyerCouple}" style="flex:1;">En couple</button>
+          </div>
         </div>
+        <div class="two-col" style="margin-top:14px;">
+          <div class="field-row">
+            <label for="f-charges-${uid}">Personnes à charge</label>
+            ${num(`f-charges-${uid}`,'foyerEnfants',uid,s.foyerEnfants,{min:0,max:12})}
+          </div>
+          <div class="field-row">
+            <label for="f-autres-${uid}">Autres revenus du foyer (€/an)</label>
+            ${num(`f-autres-${uid}`,'autresRevenus',uid,s.autresRevenus,{min:0})}
+          </div>
+        </div>
+        <div class="subline">
+          <span>Impôt estimé</span>
+          <span class="val" id="c-ir-${uid}">${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)</span>
+        </div>
+        <div class="sub-hint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. C'est le <em>supplément</em> d'impôt dû à ce salaire, pas l'impôt du foyer entier — en couple, renseignez les autres revenus, sinon le montant sera très sous-estimé. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
         <div class="two-col" style="margin-top:14px;">
           <div class="field-row">
             <label for="f-nbmois-${uid}">Mensualités / an</label>
@@ -1381,7 +1473,9 @@ function renderBars(computed){
 function renderAlerts(computed){
   const out = [];
   const nbMoisSet = new Set(computed.map(x => x.s.nbMois));
-  if(metric === 'netApres' && nbMoisSet.size > 1){
+  // Le graphique affiche toujours du net mensuel : l'écart est trompeur dès que
+  // les salaires comparés n'ont pas le même nombre de mensualités.
+  if(nbMoisSet.size > 1){
     out.push(`<div class="alert alert-info"><span>${ICON.info}</span><span>Ces salaires n'ont pas le même nombre de mois de paie. Comparez le <strong>net annuel</strong> pour un écart représentatif.</span></div>`);
   }
   return out.join('');
@@ -1468,6 +1562,18 @@ function bindScenarioInputs(){
       updateComputed();
     });
   });
+  document.querySelectorAll('[data-foyer]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = parseInt(btn.dataset.id, 10);
+      const s = findScenario(id);
+      if(!s) return;
+      s.foyerCouple = btn.dataset.foyer === 'couple';
+      document.querySelectorAll(`[data-foyer-group="${id}"] button`).forEach(b => {
+        b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === s.foyerCouple ? 'true' : 'false');
+      });
+      updateComputed();
+    });
+  });
 }
 
 function bindRefPickers(){
@@ -1507,8 +1613,9 @@ function updateComputed(){
     const u = s.id;
     setText(`c-hero-${u}`, fmt(heroValue(r)));
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, `Après impôt (${s.pasRate} %) : <strong>${fmt(heroPasValue(r))}</strong>`);
-    setShown(`c-heropas-${u}`, heroPasShown(s));
+    setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
+    setShown(`c-heropas-${u}`, heroPasShown());
+    setText(`c-ir-${u}`, `${fmt(r.impotAnnuel/12)} / mois (${r.tauxImpot.toFixed(1)} %)`);
     setText(`c-trTitre-${u}`, `${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)`);
 
     const hint = document.getElementById(`rate-hint-${u}`);
