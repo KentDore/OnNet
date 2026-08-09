@@ -56,12 +56,16 @@ function scn(over){
   return Object.assign({
     id: 0, name: 'Test', brut: 3000, statut: 'non-cadre', rate: 22,
     mutuelle: 0, mutuellePat: 0,
-    foyerCouple: false, foyerEnfants: 0, autresRevenus: 0,
     joursResto: 0, valeurResto: 0, partResto: 50,
     dureeType: '35', nbMois: 12, primes: 0,
     maintienPct: 90, carenceCouverte: false,
     absenceType: 'none', absenceDuree: 0
   }, over || {});
+}
+
+/** Foyer fiscal — réglage global, passé à compute() en second argument. */
+function foy(over){
+  return Object.assign({ couple: false, personnesCharge: 0, autresRevenus: 0 }, over || {});
 }
 
 function near(actual, expected, eps, label){
@@ -635,8 +639,8 @@ describe('compute() — impôt sur le revenu', () => {
 
   test('le couple et les personnes à charge réduisent l’impôt', () => {
     const seul = C.compute(scn({ brut: 3000 }));
-    const couple = C.compute(scn({ brut: 3000, foyerCouple: true }));
-    const famille = C.compute(scn({ brut: 3000, foyerCouple: true, foyerEnfants: 2 }));
+    const couple = C.compute(scn({ brut: 3000 }), foy({ couple:true }));
+    const famille = C.compute(scn({ brut: 3000 }), foy({ couple:true, personnesCharge:2 }));
     assert.ok(couple.impotAnnuel < seul.impotAnnuel, 'couple moins imposé');
     assert.ok(famille.impotAnnuel <= couple.impotAnnuel, 'enfants à charge');
   });
@@ -644,14 +648,14 @@ describe('compute() — impôt sur le revenu', () => {
   test('les autres revenus du foyer augmentent l’impôt imputé au salaire', () => {
     // Effet de tranche : à revenus du foyer plus élevés, le même salaire
     // supporte un supplément d'impôt plus lourd.
-    const seulRevenu = C.compute(scn({ brut: 3000, foyerCouple: true }));
-    const avecConjoint = C.compute(scn({ brut: 3000, foyerCouple: true, autresRevenus: 40000 }));
+    const seulRevenu = C.compute(scn({ brut: 3000 }), foy({ couple:true }));
+    const avecConjoint = C.compute(scn({ brut: 3000 }), foy({ couple:true, autresRevenus:40000 }));
     assert.ok(avecConjoint.impotAnnuel > seulRevenu.impotAnnuel,
       'le supplément d’impôt doit être plus élevé');
   });
 
   test('l’impôt imputé est bien un supplément, pas l’impôt du foyer entier', () => {
-    const r = C.compute(scn({ brut: 3000, foyerCouple: true, autresRevenus: 40000 }));
+    const r = C.compute(scn({ brut: 3000 }), foy({ couple:true, autresRevenus:40000 }));
     const base = Math.max(0, r.a.netImposable) - C.abattementFraisPro(Math.max(0, r.a.netImposable));
     const baseAutres = 40000 - C.abattementFraisPro(40000);
     const attendu = C.impotFoyer(baseAutres + base, true, 0) - C.impotFoyer(baseAutres, true, 0);
@@ -663,6 +667,29 @@ describe('compute() — impôt sur le revenu', () => {
     const h39 = C.compute(scn({ brut: 3000, dureeType: '39' }));
     assert.ok(h39.impotAnnuel < h35.impotAnnuel,
       'à brut égal, les heures sup exonérées doivent réduire l’impôt');
+  });
+
+  test('le foyer fiscal ne se lit plus sur le salaire', () => {
+    // Le foyer est un réglage global : des clés posées sur le scénario ne
+    // doivent avoir aucun effet, sinon deux salaires comparés pourraient
+    // porter des foyers différents — ce qui n'a aucun sens.
+    const neutre = C.compute(scn({ brut: 3000 }), foy());
+    const pollue = C.compute(
+      scn({ brut: 3000, foyerCouple: true, foyerEnfants: 3, autresRevenus: 50000 }), foy());
+    near(pollue.impotAnnuel, neutre.impotAnnuel, 1e-9);
+  });
+
+  test('foyer omis = célibataire sans personne à charge', () => {
+    near(C.compute(scn({ brut: 3000 })).impotAnnuel,
+         C.compute(scn({ brut: 3000 }), foy()).impotAnnuel, 1e-9);
+  });
+
+  test('les revenus du conjoint sont ignorés hors couple', () => {
+    // Le champ disparaît de l'interface quand on repasse sur « Seul(e) » :
+    // le calcul doit s'aligner, sinon une valeur invisible fausserait le résultat.
+    const avec = C.compute(scn({ brut: 3000 }), foy({ couple: false, autresRevenus: 50000 }));
+    const sans = C.compute(scn({ brut: 3000 }), foy({ couple: false, autresRevenus: 0 }));
+    near(avec.impotAnnuel, sans.impotAnnuel, 1e-9);
   });
 
   test('le net après impôt reste borné', () => {
@@ -688,8 +715,7 @@ describe('compute() — absences', () => {
   test('congés payés sans TR : salaire maintenu, net strictement inchangé', () => {
     const ref = C.compute(scn({ brut: 3000, joursResto: 0 })).netApres;
     for(const d of [0, 5, 15, 30]){
-      const r = C.compute(scn({ brut: 3000, joursResto: 0,
-                                absenceType: 'conges', absenceDuree: d }));
+      const r = C.compute(scn({ brut: 3000, joursResto: 0, absenceType: 'conges', absenceDuree: d }));
       near(r.netApres, ref, 0.01, `net à ${d} jours de congés`);
     }
   });
@@ -701,8 +727,7 @@ describe('compute() — absences', () => {
     const partSalarialeMensuelle = 21 * 8 * 0.5;
     let prec = -Infinity;
     for(const d of [0, 5, 10, 20, 30]){
-      const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8, partResto: 50,
-                                absenceType: 'conges', absenceDuree: d }));
+      const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8, partResto: 50, absenceType: 'conges', absenceDuree: d }));
       near(r.netApres, ref.netApres + (d / 30) * partSalarialeMensuelle, 0.01,
         `net à ${d} jours de congés`);
       assert.ok(r.netApres >= prec, 'progression monotone');
@@ -713,28 +738,22 @@ describe('compute() — absences', () => {
   test('arrêt de travail : le net baisse quand la durée augmente', () => {
     let prec = Infinity;
     for(const d of [0, 5, 10, 20, 30]){
-      const r = C.compute(scn({ brut: 3000, absenceType: 'arret',
-                                absenceDuree: d, maintienPct: 90 }));
+      const r = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: d, maintienPct: 90 }));
       assert.ok(r.netApres <= prec + 1e-9, `net non décroissant à ${d} jours`);
       prec = r.netApres;
     }
   });
 
   test('congés payés 30 jours : salaire maintenu, mais sans titres restaurant', () => {
-    const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8, partResto: 50,
-                              absenceType: 'conges', absenceDuree: 30 }));
+    const r = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8, partResto: 50, absenceType: 'conges', absenceDuree: 30 }));
     const ref = C.compute(scn({ brut: 3000, joursResto: 21, valeurResto: 8, partResto: 50 }));
     near(r.netApres, ref.netApres + 21 * 8 * 0.5, 0.01,
       'le net remonte de la part salariale des TR non consommés');
   });
 
   test('arrêt de travail : la carence pèse sur le net', () => {
-    const avecCarence = C.compute(scn({ brut: 3000, absenceType: 'arret',
-                                        absenceDuree: 10, maintienPct: 90,
-                                        carenceCouverte: false }));
-    const sansCarence = C.compute(scn({ brut: 3000, absenceType: 'arret',
-                                        absenceDuree: 10, maintienPct: 90,
-                                        carenceCouverte: true }));
+    const avecCarence = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: 10, maintienPct: 90, carenceCouverte: false }));
+    const sansCarence = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: 10, maintienPct: 90, carenceCouverte: true }));
     assert.ok(sansCarence.netApres > avecCarence.netApres,
       'la carence prise en charge doit améliorer le net');
   });
@@ -792,8 +811,9 @@ describe('invariants généraux', () => {
   });
 
   test('le net après impôt ne dépasse jamais le net à payer', () => {
-    for(const opts of [{}, { foyerCouple: true }, { foyerEnfants: 3 }, { autresRevenus: 60000 }]){
-      const r = C.compute(scn(Object.assign({ brut: 3000 }, opts)));
+    for(const f of [{}, { couple: true }, { personnesCharge: 3 },
+                    { couple: true, autresRevenus: 60000 }]){
+      const r = C.compute(scn({ brut: 3000 }), foy(f));
       assert.ok(r.netApresImpot <= r.netApres + 1e-9);
     }
   });
@@ -813,14 +833,7 @@ describe('invariants généraux', () => {
         for(const dureeType of ['35', '39']){
           for(const joursResto of [0, 21]){
             for(const absenceType of ['none', 'conges', 'arret']){
-              const r = C.compute(scn({
-                brut, statut, dureeType, joursResto,
-                valeurResto: 8, partResto: 50, rate: 22,
-                mutuelle: 30, mutuellePat: 45,
-                foyerCouple: absenceType === 'arret', foyerEnfants: 2, autresRevenus: 18000,
-                absenceType, absenceDuree: absenceType === 'none' ? 0 : 12,
-                primes: 1500, nbMois: 12
-              }));
+              const r = C.compute(scn({ brut, statut, dureeType, joursResto, valeurResto: 8, partResto: 50, rate: 22, mutuelle: 30, mutuellePat: 45, absenceType, absenceDuree: absenceType === 'none' ? 0 : 12, primes: 1500, nbMois: 12 }), foy({ couple:absenceType === 'arret', personnesCharge:2, autresRevenus:18000 }));
               allFinite(r, `compute(${statut},${brut},${dureeType})`);
               assert.ok(r.netApres >= -1e-9,
                 `net négatif : ${statut} ${brut} € ${dureeType} h → ${r.netApres}`);
