@@ -140,7 +140,7 @@
      alors masquée derrière. Alignée en haut à la place, elle reste visible
      quel que soit l'espace que prend le clavier. */
   @media (max-width:640px){
-    .modal-overlay.modal-overlay-top{align-items:flex-start; padding-top:max(64px, 14vh);}
+    .modal-overlay.modal-overlay-top{align-items:flex-start; padding-top:28px;}
   }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
@@ -517,7 +517,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.1</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -536,7 +536,7 @@
       </div>
     </div>
     <h1>Le brut promet. Le net décide.</h1>
-    <p>Poste actuel, offre reçue, augmentation en négociation : mettez vos salaires côte à côte et voyez en un coup d'œil ce qui atterrit vraiment sur votre compte.</p>
+    <p>Mettez vos salaires côte à côte et voyez ce qui reste vraiment.</p>
     <div class="share-banner" id="shareBanner" hidden>
       <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
       <span>Comparatif chargé depuis un lien partagé. Vos salaires enregistrés localement restent intacts tant que vous ne modifiez rien ici — dès que vous éditez quelque chose, ce comparatif remplace l'ancien.</span>
@@ -2207,7 +2207,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
 function showOnboardingModal(){
   const html = `
-    <p id="modalMsg" class="modal-msg">Pour commencer, indiquez votre salaire brut mensuel actuel. Vous pourrez ensuite ajouter d'autres salaires à comparer (offre reçue, augmentation en négociation...).</p>
+    <p id="modalMsg" class="modal-msg">Commencez par votre salaire actuel — vous pourrez en ajouter d'autres à comparer ensuite.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalOnboardingInput">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
