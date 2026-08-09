@@ -514,7 +514,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.3</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.4</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1385,7 +1385,6 @@ function renderCard(s, r, showRemove){
           <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
           <div class="field-row"><label for="f-part-${uid}">Part (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
         </div>
-        <div class="subline"><span>Part patronale par titre</span><span class="val" id="c-trTitre-${uid}">${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)</span></div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
           <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
         </div>
@@ -1803,7 +1802,6 @@ function updateComputed(){
     setText(`c-herolabel-${u}`, heroLabel());
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
     setShown(`c-heropas-${u}`, heroPasShown());
-    setText(`c-trTitre-${u}`, `${r.tr.parTitreEmployeur.toFixed(2)} € (${r.tr.partEmployeurPct.toFixed(0)} %)`);
 
     const hint = document.getElementById(`rate-hint-${u}`);
     if(hint) hint.innerHTML = `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut`;
