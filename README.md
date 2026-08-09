@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-1.2.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.3.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -31,12 +31,14 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 
 ## Limites
 
-Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales, et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source utilisé est celui renseigné par l'utilisateur, il n'est pas recalculé). L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
+Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source utilisé est celui renseigné par l'utilisateur, il n'est pas recalculé). L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
 
 Deux approximations assumées méritent d'être connues :
 
 - **Fonction publique** — un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS). Le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés.
 - **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
+
+Onnet ne calcule **que le côté salarié**. La métrique « Coût employeur » a été retirée en v1.3.0 : elle appliquait un forfait de +42 % sur le brut, en ignorant la réduction générale dégressive des cotisations patronales — laquelle s'applique jusqu'à 3 SMIC (5 469 €/mois en 2026) et ramène le coût réel au niveau du SMIC à environ +7 % au lieu de +42 %. La métrique était donc fausse pour la majorité des salaires, et l'écart entre deux salaires l'était aussi puisque la réduction est dégressive. Mieux valait la retirer que la laisser induire en erreur en négociation.
 
 Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptable / service RH.
 
