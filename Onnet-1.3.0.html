@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.2.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.3.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -498,7 +498,6 @@
           <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
           <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
           <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
-          <button data-metric="coutEmployeur" aria-pressed="false">Coût employeur</button>
         </div>
         <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
         <div id="barsBody" aria-live="polite"></div>
@@ -618,7 +617,7 @@
   </section>
 
   <div class="disclaimer">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
   </div>
 </div>
 
@@ -643,8 +642,7 @@ const P = {
   majoration: 25, reducHS: 11.31,
   // Exonération d'impôt sur le revenu des heures supplémentaires :
   // 7 500 € de net imposable par an et par salarié.
-  plafondExoIR: 7500,
-  patronal: 42
+  plafondExoIR: 7500
 };
 
 let scenarioDefaults = {
@@ -770,7 +768,7 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
     return { c: cotisations(0, s.statut, plafond, s.rate), assiette: 0, reducHS: 0,
              cotisNettes: 0, brutTotal: 0, netApres: 0, netSocial: 0,
              netImposable: 0, netImposableAvantExo: 0, exoHS: 0,
-             coutEmployeur: 0, pouvoirAchat: 0 };
+             pouvoirAchat: 0 };
   }
 
   const assiette = brutBase + brutHS + tr.reintegre;
@@ -798,11 +796,10 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
   const exoHS = Math.min(Math.max(0, partImposableHS), Math.max(0, plafondExoHS || 0));
   const netImposable = Math.max(0, netImposableAvantExo - exoHS);
 
-  const coutEmployeur = brutTotal * (1 + P.patronal/100) + mutPat + tr.totalEmployeur;
   const pouvoirAchat = netApres + tr.totalEmployeur;
 
   return { c, assiette, reducHS, cotisNettes, brutTotal, netApres, netSocial,
-           netImposable, netImposableAvantExo, exoHS, coutEmployeur, pouvoirAchat };
+           netImposable, netImposableAvantExo, exoHS, pouvoirAchat };
 }
 
 function compute(s){
@@ -846,8 +843,8 @@ function compute(s){
     const netFinal = netTravaille + netAbsence;
     const ratio = m.netApres > 0 ? netFinal / m.netApres : 0;
     m.netApres = netFinal;
-    m.netImposable *= ratio; m.coutEmployeur *= ratio;
-    a.netApres *= ratio; a.netImposable *= ratio; a.coutEmployeur *= ratio;
+    m.netImposable *= ratio;
+    a.netApres *= ratio; a.netImposable *= ratio;
   }
 
   // Prélèvement à la source : estimation simple, taux personnel appliqué au net imposable.
@@ -859,7 +856,7 @@ function compute(s){
     hasHS, heuresSup: split.heuresSup, brutHS: split.brutHS,
     tr, m, a,
     netApres: m.netApres, netImposable: m.netImposable,
-    coutEmployeur: m.coutEmployeur, annuelNet: a.netApres,
+    annuelNet: a.netApres,
     netApresImpot, annuelNetApresImpot,
     brutHoraire, netHoraire,
     tauxEffectif: s.brut > 0 ? (m.cotisNettes / s.brut) * 100 : 0
@@ -895,7 +892,9 @@ function defaultScenarios(){
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
 const NUMERIC_KEYS = ['brut','rate','mutuelle','mutuellePat','pasRate','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
-const METRIC_KEYS = ['netApres','netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire','coutEmployeur'];
+// Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
+// l'ancien « Coût employeur ») retombe automatiquement sur « Net ».
+const METRIC_KEYS = ['netApres','netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object') return null;
@@ -1060,8 +1059,7 @@ if(initialSource){
 const metricLabels = {
   netApres: 'Net', netImposable: 'Net imposable',
   annuelNet: 'Net annuel', netApresImpot: 'Net après impôt',
-  netHoraire: 'Net horaire', brutHoraire: 'Brut horaire',
-  coutEmployeur: 'Coût total employeur (mensuel)'
+  netHoraire: 'Net horaire', brutHoraire: 'Brut horaire'
 };
 const metricHints = {
   netApres: 'Ce qui arrive vraiment sur votre compte chaque mois — le chiffre à regarder pour votre budget.',
@@ -1069,8 +1067,7 @@ const metricHints = {
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
   netApresImpot: 'Le net une fois votre taux de prélèvement à la source appliqué — renseignez-le sur chaque salaire pour l\'activer.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
-  brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.',
-  coutEmployeur: 'Ce que vous coûtez réellement à l\'entreprise, charges patronales incluses — un repère utile en négociation.'
+  brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
 
 function findScenario(id){ return scenarios.find(s => s.id === id); }

@@ -340,7 +340,6 @@ describe('compute() — cas de référence (calculés à la main)', () => {
     const r = C.compute(scn({ brut: 3000, statut: 'non-cadre', dureeType: '35' }));
     near(r.netApres, 2374.7925, 0.01, 'net à payer');       // 3000 − 625,2075
     near(r.netImposable, 2460.27, 0.01, 'net imposable');    // 3000 − 539,73
-    near(r.coutEmployeur, 4260, 0.01, 'coût employeur');     // 3000 × 1,42
     near(r.m.exoHS, 0, 1e-9, 'pas d’exonération sans heures sup');
     near(r.tauxEffectif, 625.2075 / 3000 * 100, 0.001, 'taux de cotisation effectif');
   });
@@ -592,11 +591,11 @@ describe('compute() — absences', () => {
     near(neg.netApres, zero.netApres, 0.01);
   });
 
-  test('l’absence se répercute sur l’annuel et le coût employeur', () => {
+  test('l’absence se répercute sur l’annuel et l’imposable', () => {
     const sans = C.compute(scn({ brut: 3000 }));
     const avec = C.compute(scn({ brut: 3000, absenceType: 'arret', absenceDuree: 15 }));
     assert.ok(avec.annuelNet < sans.annuelNet, 'annuel réduit');
-    assert.ok(avec.coutEmployeur < sans.coutEmployeur, 'coût employeur réduit');
+    assert.ok(avec.netImposable < sans.netImposable, 'imposable réduit');
   });
 });
 
@@ -616,11 +615,14 @@ describe('invariants généraux', () => {
     }
   });
 
-  test('le coût employeur est toujours supérieur au brut', () => {
-    for(const brut of [1500, 3000, 8000]){
-      const r = C.compute(scn({ brut }));
-      assert.ok(r.coutEmployeur > brut);
-    }
+  test('aucune métrique de coût employeur n’est exposée', () => {
+    // Retirée en v1.3.0 : le forfait de 42 % ignorait la réduction générale
+    // dégressive, applicable jusqu'à 3 SMIC, ce qui faussait la métrique pour
+    // la majorité des salaires. Ce test empêche sa réintroduction par accident.
+    const r = C.compute(scn({ brut: 3000 }));
+    assert.equal(r.coutEmployeur, undefined, 'compute() ne doit plus renvoyer coutEmployeur');
+    assert.equal(r.m.coutEmployeur, undefined, 'periode() ne doit plus renvoyer coutEmployeur');
+    assert.equal(P.patronal, undefined, 'le forfait de charges patronales doit avoir disparu');
   });
 
   test('le net après impôt ne dépasse jamais le net à payer', () => {
