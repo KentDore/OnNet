@@ -214,6 +214,10 @@
   .module-card.is-open .module-switch{background:var(--accent);}
   .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
+  /* Le bloc « Foyer fiscal » se déplie, il ne s'active pas : un chevron plutôt
+     qu'un interrupteur, qui laisserait croire qu'on peut couper l'estimation. */
+  .module-chevron{flex:none; width:20px; height:20px; color:var(--ink-soft); transition:transform .15s ease, color .15s ease;}
+  .module-card.is-open .module-chevron{transform:rotate(180deg); color:var(--accent);}
   .module-body{padding:0 16px 18px;}
   .module-card .hint{margin-top:0;}
 
@@ -451,7 +455,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.5.1</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -541,7 +545,7 @@
             <span class="module-name">Foyer fiscal</span>
             <span class="module-desc" id="foyerModuleDesc">Seul(e), sans personne à charge</span>
           </span>
-          <span class="module-switch" aria-hidden="true"></span>
+          <svg class="module-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
         </button>
         <div class="module-body" id="foyerModuleBody" hidden>
           <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
