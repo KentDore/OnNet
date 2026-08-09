@@ -135,18 +135,15 @@
   }
   .modal-overlay.show{opacity:1; pointer-events:auto;}
   .modal-overlay[hidden]{display:none;}
-  /* Sur mobile, un clavier virtuel peut couvrir la moitié basse de l'écran :
-     une modale centrée verticalement (et son champ de saisie) se retrouve
-     alors masquée derrière. Alignée en haut à la place, elle reste visible
-     quel que soit l'espace que prend le clavier. */
-  @media (max-width:640px){
-    .modal-overlay.modal-overlay-top{align-items:flex-start; padding-top:28px;}
-  }
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
     transform:translateY(8px) scale(.98); transition:transform .18s ease;
     font-family:'Inter',sans-serif; max-height:85vh; overflow-y:auto;
+    /* Centrage par les marges automatiques plutôt que par align-items seul :
+       une modale plus haute que l'écran reste alors intégralement atteignable
+       au défilement, là où align-items:center en rognerait le haut. */
+    margin:auto;
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
@@ -517,7 +514,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.1</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.2</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -2079,7 +2076,6 @@ function openModal(bodyHtml, opts){
   // Aligné en haut seulement pour les modales avec un vrai champ de saisie
   // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
   // de confirmation (pas de champ) restent centrées, plus naturel.
-  overlay.classList.toggle('modal-overlay-top', !!o.topAligned);
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
 
@@ -2225,7 +2221,7 @@ function showOnboardingModal(){
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false, topAligned: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
@@ -2276,7 +2272,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true, topAligned: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
