@@ -451,7 +451,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.1.10</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.2.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -618,20 +618,33 @@
   </section>
 
   <div class="disclaimer">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Le prélèvement à la source est une estimation qui applique le taux que vous renseignez au net imposable mensuel ou annuel calculé par l'outil ; elle ne reproduit pas le calcul réel de votre administration fiscale et ignore le taux individualisé au sein d'un couple, le taux neutre, les acomptes sur revenus fonciers ou indépendants, et les régularisations en cours d'année. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source reste celui que vous indiquez, il n'est pas recalculé). Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie.
   </div>
 </div>
 
 <script>
 "use strict";
 
-// ---------- Paramètres légaux (modifiables dans le panneau avancé) ----------
+// ---------- Paramètres légaux (valeurs 2026, à revoir chaque année) ----------
+/* ONNET_CALC_START — bloc auto-suffisant, extrait et testé par test/calc.test.js */
 const P = {
+  // PMSS 2026 : 4 005 € (PASS 48 060 €). Plafond d'exonération par titre restaurant : 7,32 €.
   pmss: 4005, plafondTR: 7.32,
+  // CSG 9,20 % (6,80 déductible + 2,40 non déductible) et CRDS 0,50 %,
+  // sur 98,25 % du brut dans la limite de 4 PASS, sans abattement au-delà.
   csgDed: 6.80, csgNonDed: 2.40, crds: 0.50,
   vieillessePlaf: 6.90, vieillesseDeplaf: 0.40,
   rcT1: 3.15, cegT1: 0.86, rcT2: 8.64, cegT2: 1.08, cet: 0.14, apec: 0.024,
-  fpRate: 17, majoration: 25, reducHS: 11.31, plafondExoIR: 7500, patronal: 42
+  // fpRate : taux salarial global fonction publique, CSG/CRDS incluses —
+  // 11,10 (retenue pour pension CNRACL/SRE) + 9,20 × 0,9825 (CSG) + 0,50 × 0,9825 (CRDS).
+  // Le RAFP (5 % sur primes) et la distinction traitement indiciaire / primes
+  // ne sont pas modélisés.
+  fpRate: 20.63,
+  majoration: 25, reducHS: 11.31,
+  // Exonération d'impôt sur le revenu des heures supplémentaires :
+  // 7 500 € de net imposable par an et par salarié.
+  plafondExoIR: 7500,
+  patronal: 42
 };
 
 let scenarioDefaults = {
@@ -749,7 +762,17 @@ function splitHeures(s){
   return { heuresSup, brutBase, brutHS: Math.max(0, s.brut - brutBase), tauxHoraire };
 }
 
-function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr){
+function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS){
+  // Pas de rémunération = pas de bulletin de paie : ni cotisations, ni retenue
+  // mutuelle, ni titres restaurant. Sans ce garde-fou, un brut à 0 afficherait
+  // un net négatif égal aux seules retenues.
+  if(brutBase + brutHS <= 0){
+    return { c: cotisations(0, s.statut, plafond, s.rate), assiette: 0, reducHS: 0,
+             cotisNettes: 0, brutTotal: 0, netApres: 0, netSocial: 0,
+             netImposable: 0, netImposableAvantExo: 0, exoHS: 0,
+             coutEmployeur: 0, pouvoirAchat: 0 };
+  }
+
   const assiette = brutBase + brutHS + tr.reintegre;
   const c = cotisations(assiette, s.statut, plafond, s.rate);
 
@@ -764,13 +787,22 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr){
   const netSocial = brutTotal - cotisNettes - mutSal;
 
   const deductibleNet = Math.max(0, c.deductible - reducHS);
-  const netImposable = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+
+  // Heures supplémentaires : exonérées d'impôt sur le revenu dans la limite d'un
+  // plafond annuel de net imposable. La part de net imposable qui leur est
+  // attribuable est estimée au prorata du brut — approximation assumée, les
+  // cotisations déductibles n'étant pas ventilables exactement entre heures
+  // normales et heures supplémentaires (tranches, plafonds, réduction salariale).
+  const partImposableHS = brutTotal > 0 ? brutHS * (1 - deductibleNet / brutTotal) : 0;
+  const exoHS = Math.min(Math.max(0, partImposableHS), Math.max(0, plafondExoHS || 0));
+  const netImposable = Math.max(0, netImposableAvantExo - exoHS);
 
   const coutEmployeur = brutTotal * (1 + P.patronal/100) + mutPat + tr.totalEmployeur;
   const pouvoirAchat = netApres + tr.totalEmployeur;
 
   return { c, assiette, reducHS, cotisNettes, brutTotal, netApres, netSocial,
-           netImposable, coutEmployeur, pouvoirAchat };
+           netImposable, netImposableAvantExo, exoHS, coutEmployeur, pouvoirAchat };
 }
 
 function compute(s){
@@ -778,7 +810,7 @@ function compute(s){
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
 
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, s.mutuellePat, tr);
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, s.mutuellePat, tr, P.plafondExoIR/12);
 
   // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
   // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
@@ -791,7 +823,7 @@ function compute(s){
   const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
   const aBase = split.brutBase * nbMois + (s.primes || 0);
   const aHS = split.brutHS * 12;
-  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, s.mutuellePat * 12, trAnnuel);
+  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, s.mutuellePat * 12, trAnnuel, P.plafondExoIR);
 
   // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
   // normalement et une portion d'absence, sur un mois de référence de 30 jours.
@@ -833,6 +865,7 @@ function compute(s){
     tauxEffectif: s.brut > 0 ? (m.cotisNettes / s.brut) * 100 : 0
   };
 }
+/* ONNET_CALC_END */
 
 // ---------- État ----------
 let idCounter = 0;

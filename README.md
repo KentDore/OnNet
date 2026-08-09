@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-1.1.10.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-1.2.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -22,7 +22,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 - **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
 - **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne selon le statut (non-cadre, cadre, fonction publique, taux forfaitaire)
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
-- **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration et de la réduction de cotisations
+- **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
 - **Prélèvement à la source** — estimation du net après impôt à partir du taux personnel renseigné
 - **Salaire horaire** — comparaison du taux horaire brut et net, utile pour comparer des volumes horaires différents
 - **Modules d'augmentation et d'absence** — simulez une hausse de salaire (en % ou en €) ou une absence (congés payés, arrêt de travail) et ajoutez le résultat comme nouveau salaire à comparer
@@ -33,7 +33,24 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 
 Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance, les régimes Alsace-Moselle, la réduction générale de cotisations patronales, et le barème progressif de l'impôt sur le revenu (le taux de prélèvement à la source utilisé est celui renseigné par l'utilisateur, il n'est pas recalculé). L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
 
+Deux approximations assumées méritent d'être connues :
+
+- **Fonction publique** — un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS). Le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés.
+- **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
+
 Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptable / service RH.
+
+## Tests
+
+Le moteur de calcul est couvert par une suite de non-régression sans dépendance :
+
+```
+node --test test/calc.test.js
+```
+
+Les tests extraient le bloc de calcul directement du fichier HTML (entre les marqueurs `ONNET_CALC_START` / `ONNET_CALC_END`) et s'exécutent donc sur le code réellement livré, pas sur une copie. Ils reprennent automatiquement le fichier `Onnet-X.Y.Z.html` à la version la plus élevée.
+
+Les valeurs attendues signalées « calculé à la main » ont été posées indépendamment du programme, à partir des taux légaux. **Elles ne doivent pas être régénérées depuis la sortie du code** : elles n'ont de valeur que parce qu'elles en sont indépendantes.
 
 ## Stack technique
 
