@@ -201,15 +201,24 @@
   /* align-items:start (et non le stretch par défaut) : sans ça, déplier un
      module agrandit sa ligne de grille et les cartes fermées de la même ligne
      s'étirent pour l'égaler, laissant un grand vide sous leur bandeau. */
-  .modules-grid{display:grid; grid-template-columns:1fr; gap:12px; align-items:start;}
-  @media (min-width:720px){ .modules-grid{grid-template-columns:1fr 1fr 1fr;} }
+  /* auto-fit/minmax plutôt qu'un compte de colonnes fixé à 720px : ce seuil
+     supposait 3 cartes et donnait ~230px chacune pile à la limite — trop
+     étroit pour « Simuler une augmentation », qui repassait à la ligne mot
+     par mot. La grille s'adapte maintenant au nombre de cartes réellement
+     présentes (deux depuis que Foyer fiscal a sa propre section) et ne
+     descend jamais sous une largeur où le texte tient. */
+  .modules-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:12px; align-items:start;}
   .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
   .module-toggle-head{width:100%; display:flex; align-items:center; gap:12px; padding:16px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Inter',sans-serif;}
   .module-icon{flex:none; width:34px; height:34px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center;}
   .module-icon svg{width:18px; height:18px;}
   .module-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
   .module-name{font-weight:600; font-size:14px; color:var(--ink);}
-  .module-desc{font-size:12px; color:var(--ink-soft); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  /* Pas de troncature en ellipse : à une largeur de colonne intermédiaire,
+     elle coupait « Comparer une hausse en % ou en euros » en plein mot sans
+     rien apporter en échange. Une deuxième ligne occasionnelle coûte moins
+     qu'une information qui disparaît. */
+  .module-desc{font-size:12px; color:var(--ink-soft); line-height:1.35;}
   .module-switch{flex:none; width:34px; height:20px; border-radius:999px; background:var(--line); position:relative; transition:background .15s ease;}
   .module-switch::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.2);}
   .module-card.is-open .module-switch{background:var(--accent);}
@@ -524,7 +533,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.2</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.3</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
