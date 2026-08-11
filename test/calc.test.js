@@ -54,7 +54,7 @@ const P = C.P;
 /** Scénario neutre : tout ce qui n'est pas testé est mis à zéro. */
 function scn(over){
   return Object.assign({
-    id: 0, name: 'Test', brut: 3000, statut: 'non-cadre', rate: 22,
+    id: 0, name: 'Test', brut: 3000,
     mutuelle: 0,
     joursResto: 0, valeurResto: 0, partResto: 50,
     dureeType: '35', nbMois: 12, primes: 0,
@@ -104,19 +104,23 @@ describe('paramètres légaux 2026', () => {
     near(P.csgDed + P.csgNonDed, 9.20, 1e-9, 'CSG totale');
   });
 
-  test('taux fonction publique = pension + CSG/CRDS abattues', () => {
-    // 11,10 (retenue pour pension) + 9,20 × 0,9825 + 0,50 × 0,9825
-    const attendu = 11.10 + (P.csgDed + P.csgNonDed + P.crds) * 0.9825;
-    near(P.fpRate, attendu, 0.01, 'fpRate');
+  test('P n’a plus de trace des statuts retirés (cadre/FP/taux forfaitaire)', () => {
+    // Verrou anti-régression : seul le régime non-cadre est modélisé depuis
+    // v2.0.0, pour ne pas disperser la précision du moteur sur plusieurs
+    // régimes chacun approximé séparément.
+    assert.equal(P.fpRate, undefined, 'fpRate devrait avoir disparu de P');
+    assert.equal(P.apec, undefined, 'apec devrait avoir disparu de P');
   });
 });
 
 // ---------- cotisations() ----------
+// Signature cotisations(assiette, plafond) : plus de statut ni de taux
+// forfaitaire depuis v2.0.0, seul le régime non-cadre est modélisé.
 
 describe('cotisations()', () => {
   test('assiette nulle ou négative → tout à zéro', () => {
     for(const a of [0, -1, -5000]){
-      const c = C.cotisations(a, 'non-cadre', P.pmss, 0);
+      const c = C.cotisations(a, P.pmss);
       assert.equal(c.total, 0);
       assert.equal(c.deductible, 0);
       assert.equal(c.nonDeductible, 0);
@@ -124,8 +128,8 @@ describe('cotisations()', () => {
     }
   });
 
-  test('non-cadre 3000 € sous le PMSS — ligne à ligne (calculé à la main)', () => {
-    const c = C.cotisations(3000, 'non-cadre', P.pmss, 0);
+  test('3000 € sous le PMSS — ligne à ligne (calculé à la main)', () => {
+    const c = C.cotisations(3000, P.pmss);
     // baseCSG = 3000 × 0,9825 = 2947,50
     near(c.csgDed, 200.43, 0.005, 'CSG déductible');       // 2947,50 × 6,80 %
     near(c.csgNonDed, 70.74, 0.005, 'CSG non déductible');  // 2947,50 × 2,40 %
@@ -137,15 +141,14 @@ describe('cotisations()', () => {
     assert.equal(c.rcT2, 0, 'pas de tranche 2 sous le PMSS');
     assert.equal(c.cegT2, 0, 'pas de tranche 2 sous le PMSS');
     assert.equal(c.cet, 0, 'CET seulement au-dessus du PMSS');
-    assert.equal(c.apec, 0, 'APEC réservée aux cadres');
     near(c.retraite, 339.3, 0.005);
     near(c.total, 625.2075, 0.005);
     near(c.deductible, 539.73, 0.005);
     near(c.nonDeductible, 85.4775, 0.005);
   });
 
-  test('cadre 5000 € à cheval sur le PMSS — ligne à ligne (calculé à la main)', () => {
-    const c = C.cotisations(5000, 'cadre', P.pmss, 0);
+  test('5000 € à cheval sur le PMSS — ligne à ligne (calculé à la main)', () => {
+    const c = C.cotisations(5000, P.pmss);
     // T1 = 4005, T2 = 995, baseCSG = 5000 × 0,9825 = 4912,50
     near(c.csgDed, 334.05, 0.005);
     near(c.csgNonDed, 117.9, 0.005);
@@ -157,26 +160,22 @@ describe('cotisations()', () => {
     near(c.rcT2, 85.968, 0.005);              // 995 × 8,64 %
     near(c.cegT2, 10.746, 0.005);             // 995 × 1,08 %
     near(c.cet, 7, 0.005);                    // 5000 × 0,14 %
-    near(c.apec, 1.2, 0.005);                 // 5000 × 0,024 %
-    near(c.retraite, 560.6595, 0.005);
-    near(c.total, 1038.372, 0.005);
-    near(c.deductible, 895.9095, 0.005);
+    near(c.retraite, 560.6595, 0.005);        // apec n'a jamais fait partie de la retraite
+    near(c.total, 1037.172, 0.005);
+    near(c.deductible, 894.7095, 0.005);
     near(c.nonDeductible, 142.4625, 0.005);
   });
 
   test('invariant total = déductible + non déductible', () => {
-    for(const statut of ['non-cadre', 'cadre']){
-      for(const a of [500, 1500, 3000, 4005, 4006, 10000, 16020, 20000, 32040, 50000]){
-        const c = C.cotisations(a, statut, P.pmss, 0);
-        near(c.total, c.deductible + c.nonDeductible, 1e-6,
-          `total (${statut}, ${a} €)`);
-      }
+    for(const a of [500, 1500, 3000, 4005, 4006, 10000, 16020, 20000, 32040, 50000]){
+      const c = C.cotisations(a, P.pmss);
+      near(c.total, c.deductible + c.nonDeductible, 1e-6, `total (${a} €)`);
     }
   });
 
   test("l'abattement CSG de 1,75 % s'arrête à 4 PASS", () => {
     const seuil = 4 * P.pmss;                       // 16 020
-    const c = C.cotisations(20000, 'cadre', P.pmss, 0);
+    const c = C.cotisations(20000, P.pmss);
     // baseCSG = 16 020 × 0,9825 + 3 980 = 15 739,65 + 3 980 = 19 719,65
     const baseAttendue = seuil * 0.9825 + (20000 - seuil);
     near(c.csgDed, baseAttendue * P.csgDed / 100, 0.005, 'CSG déductible au-delà de 4 PASS');
@@ -184,8 +183,8 @@ describe('cotisations()', () => {
   });
 
   test('la tranche 2 est plafonnée à 8 PASS', () => {
-    const c8 = C.cotisations(8 * P.pmss, 'cadre', P.pmss, 0);
-    const c20 = C.cotisations(20 * P.pmss, 'cadre', P.pmss, 0);
+    const c8 = C.cotisations(8 * P.pmss, P.pmss);
+    const c20 = C.cotisations(20 * P.pmss, P.pmss);
     near(c20.rcT2, c8.rcT2, 1e-6, 'RC T2 plafonnée');
     near(c20.cegT2, c8.cegT2, 1e-6, 'CEG T2 plafonnée');
     near(c20.cet, c8.cet, 1e-6, 'CET plafonnée');
@@ -193,40 +192,15 @@ describe('cotisations()', () => {
     assert.ok(c20.vieillesseDeplaf > c8.vieillesseDeplaf);
   });
 
-  test("l'APEC ne concerne que les cadres et plafonne à 4 PASS", () => {
-    assert.equal(C.cotisations(5000, 'non-cadre', P.pmss, 0).apec, 0);
-    const cadre = C.cotisations(20000, 'cadre', P.pmss, 0);
-    near(cadre.apec, 4 * P.pmss * P.apec / 100, 0.005, 'APEC plafonnée');
-  });
-
   test('la CET ne se déclenche qu’au-dessus du PMSS', () => {
-    assert.equal(C.cotisations(P.pmss, 'cadre', P.pmss, 0).cet, 0);
-    assert.ok(C.cotisations(P.pmss + 1, 'cadre', P.pmss, 0).cet > 0);
-  });
-
-  test('fonction publique : total = fpRate × assiette', () => {
-    const c = C.cotisations(3000, 'fp', P.pmss, 0);
-    near(c.total, 3000 * P.fpRate / 100, 0.005, 'total FP');
-    // CSG non déductible + CRDS extraits du total, le reste est déductible
-    near(c.nonDeductible, 3000 * 0.9825 * (P.csgNonDed + P.crds) / 100, 0.005);
-    near(c.deductible, c.total - c.nonDeductible, 1e-6);
-    assert.ok(c.deductible > 0, 'la part déductible doit rester positive');
-  });
-
-  test('taux forfaitaire : total = rate × assiette', () => {
-    const c = C.cotisations(3000, 'custom', P.pmss, 22);
-    near(c.total, 660, 0.005, 'total forfaitaire 22 %');
-  });
-
-  test('taux forfaitaire très bas : la part déductible ne devient pas négative', () => {
-    const c = C.cotisations(3000, 'custom', P.pmss, 1);
-    assert.ok(c.deductible >= 0, 'deductible >= 0');
+    assert.equal(C.cotisations(P.pmss, P.pmss).cet, 0);
+    assert.ok(C.cotisations(P.pmss + 1, P.pmss).cet > 0);
   });
 
   test('les cotisations croissent avec l’assiette', () => {
     let prec = -1;
     for(const a of [1000, 2000, 3000, 4005, 6000, 10000, 20000, 40000]){
-      const c = C.cotisations(a, 'cadre', P.pmss, 0);
+      const c = C.cotisations(a, P.pmss);
       assert.ok(c.total > prec, `total non croissant à ${a} €`);
       prec = c.total;
     }
@@ -344,18 +318,18 @@ describe('splitHeures()', () => {
 // ---------- compute() : cas de référence ----------
 
 describe('compute() — cas de référence (calculés à la main)', () => {
-  test('non-cadre, 3000 €, 35 h, sans TR ni mutuelle', () => {
-    const r = C.compute(scn({ brut: 3000, statut: 'non-cadre', dureeType: '35' }));
+  test('3000 €, 35 h, sans TR ni mutuelle', () => {
+    const r = C.compute(scn({ brut: 3000, dureeType: '35' }));
     near(r.netApres, 2374.7925, 0.01, 'net à payer');       // 3000 − 625,2075
     near(r.netImposable, 2460.27, 0.01, 'net imposable');    // 3000 − 539,73
     near(r.m.exoHS, 0, 1e-9, 'pas d’exonération sans heures sup');
     near(r.tauxEffectif, 625.2075 / 3000 * 100, 0.001, 'taux de cotisation effectif');
   });
 
-  test('cadre, 5000 €, 35 h', () => {
-    const r = C.compute(scn({ brut: 5000, statut: 'cadre', dureeType: '35' }));
-    near(r.netApres, 5000 - 1038.372, 0.01, 'net à payer');
-    near(r.netImposable, 5000 - 895.9095, 0.01, 'net imposable');
+  test('5000 €, 35 h, au-dessus du PMSS', () => {
+    const r = C.compute(scn({ brut: 5000, dureeType: '35' }));
+    near(r.netApres, 5000 - 1037.172, 0.01, 'net à payer');
+    near(r.netImposable, 5000 - 894.7095, 0.01, 'net imposable');
   });
 
   test('mutuelle : retirée du net, part patronale réintégrée à l’imposable', () => {
@@ -418,13 +392,23 @@ describe('compute() — heures supplémentaires', () => {
   });
 
   test('la réduction est plafonnée aux cotisations retraite réellement dues', () => {
-    // Taux forfaitaire très bas : la retraite due est inférieure aux 11,31 %,
-    // la réduction doit suivre ce plancher et non le taux paramétré.
-    const r = C.compute(scn({ brut: 3000, dureeType: '39', statut: 'custom', rate: 5 }));
+    // Au-delà du PMSS, le taux moyen de retraite d'un non-cadre redescend sous
+    // 11,31 % (la tranche 2 pèse proportionnellement moins que la tranche 1) :
+    // la réduction doit suivre ce taux réel, pas le plafond paramétré.
+    const r = C.compute(scn({ brut: 15000, dureeType: '39' }));
+    const plafondReduc = r.brutHS * P.reducHS / 100;
+    assert.ok(r.m.reducHS < plafondReduc - 1e-6,
+      'à 15 000 €, le taux réel doit être inférieur au plafond de 11,31 %');
     assert.ok(r.m.reducHS >= 0);
-    assert.ok(r.m.reducHS <= r.brutHS * P.reducHS / 100 + 1e-9,
-      'la réduction ne peut pas dépasser le taux paramétré');
     assert.ok(r.m.cotisNettes >= 0, 'les cotisations nettes ne deviennent pas négatives');
+  });
+
+  test('sous le PMSS, la réduction atteint exactement le plafond de 11,31 %', () => {
+    // Pour un non-cadre entièrement en tranche 1, le taux moyen de retraite
+    // vaut très précisément 11,31 % (6,90 + 0,40 + 3,15 + 0,86) : la réduction
+    // colle donc au plafond paramétré plutôt que de rester en dessous.
+    const r = C.compute(scn({ brut: 3000, dureeType: '39' }));
+    near(r.m.reducHS, r.brutHS * P.reducHS / 100, 1e-6);
   });
 
   test('exonération d’IR appliquée sur les heures sup', () => {
@@ -437,7 +421,7 @@ describe('compute() — heures supplémentaires', () => {
 
   test('l’exonération d’IR ne dépasse jamais le plafond annuel', () => {
     for(const brut of [3000, 6000, 9000, 15000, 30000]){
-      const r = C.compute(scn({ brut, dureeType: '39', statut: 'cadre' }));
+      const r = C.compute(scn({ brut, dureeType: '39' }));
       assert.ok(r.m.exoHS <= P.plafondExoIR / 12 + 1e-9,
         `exonération mensuelle hors plafond à ${brut} € : ${r.m.exoHS}`);
       assert.ok(r.a.exoHS <= P.plafondExoIR + 1e-9,
@@ -447,7 +431,7 @@ describe('compute() — heures supplémentaires', () => {
 
   test('le plafond mord bien sur les hauts salaires', () => {
     const bas = C.compute(scn({ brut: 3000, dureeType: '39' }));
-    const haut = C.compute(scn({ brut: 30000, dureeType: '39', statut: 'cadre' }));
+    const haut = C.compute(scn({ brut: 30000, dureeType: '39' }));
     assert.ok(bas.a.exoHS < P.plafondExoIR, 'à 3000 € le plafond ne mord pas');
     near(haut.a.exoHS, P.plafondExoIR, 1e-6, 'à 30 000 € le plafond sature');
   });
@@ -491,7 +475,7 @@ describe('compute() — annuel', () => {
   test('l’annuel utilise bien les tranches annuelles (PASS)', () => {
     // Un brut juste sous le PMSS ne doit déclencher aucune tranche 2, ni mensuelle
     // ni annuelle : si l'annuel utilisait le plafond mensuel, T2 apparaîtrait.
-    const r = C.compute(scn({ brut: P.pmss - 5, statut: 'cadre' }));
+    const r = C.compute(scn({ brut: P.pmss - 5 }));
     near(r.a.c.rcT2, 0, 1e-6, 'pas de tranche 2 annuelle');
     near(r.a.c.cegT2, 0, 1e-6, 'pas de tranche 2 annuelle');
   });
@@ -923,14 +907,11 @@ describe('compute() — absences', () => {
 
 describe('invariants généraux', () => {
   test('le net est toujours strictement inférieur au brut', () => {
-    for(const statut of ['non-cadre', 'cadre', 'fp', 'custom']){
-      for(const brut of [1200, 2000, 3000, 5000, 12000, 40000]){
-        for(const duree of ['35', '39']){
-          const r = C.compute(scn({ brut, statut, dureeType: duree, rate: 22 }));
-          assert.ok(r.netApres < brut,
-            `net (${r.netApres}) ≥ brut (${brut}) — ${statut} ${duree} h`);
-          assert.ok(r.netApres > 0, `net négatif — ${statut} ${brut} € ${duree} h`);
-        }
+    for(const brut of [1200, 2000, 3000, 5000, 12000, 40000]){
+      for(const duree of ['35', '39']){
+        const r = C.compute(scn({ brut, dureeType: duree }));
+        assert.ok(r.netApres < brut, `net (${r.netApres}) ≥ brut (${brut}) — ${duree} h`);
+        assert.ok(r.netApres > 0, `net négatif — ${brut} € ${duree} h`);
       }
     }
   });
@@ -960,45 +941,40 @@ describe('invariants généraux', () => {
   });
 
   test('balayage large : aucune valeur non finie ni négative aberrante', () => {
-    const statuts = ['non-cadre', 'cadre', 'fp', 'custom'];
     const bruts = [0, 800, 1801.80, 3000, 4005, 4006, 16020, 32040, 60000];
     let cas = 0;
-    for(const statut of statuts){
-      for(const brut of bruts){
-        for(const dureeType of ['35', '39']){
-          for(const joursResto of [0, 21]){
-            for(const absenceType of ['none', 'conges', 'arret']){
-              const r = C.compute(scn({ brut, statut, dureeType, joursResto, valeurResto: 8, partResto: 50, rate: 22, mutuelle: 30, mutuellePat: 45, absenceType, absenceDuree: absenceType === 'none' ? 0 : 12, primes: 1500, nbMois: 12 }), foy({ couple:absenceType === 'arret', personnesCharge:2, autresRevenus:18000 }));
-              allFinite(r, `compute(${statut},${brut},${dureeType})`);
-              assert.ok(r.netApres >= -1e-9,
-                `net négatif : ${statut} ${brut} € ${dureeType} h → ${r.netApres}`);
-              assert.ok(r.netImposable >= 0, 'imposable négatif');
-              assert.ok(r.m.cotisNettes >= 0, 'cotisations négatives');
-              assert.ok(r.netApresImpot >= 0, 'net après impôt négatif');
-              cas++;
-            }
+    for(const brut of bruts){
+      for(const dureeType of ['35', '39']){
+        for(const joursResto of [0, 21]){
+          for(const absenceType of ['none', 'conges', 'arret']){
+            const r = C.compute(scn({ brut, dureeType, joursResto, valeurResto: 8, partResto: 50, mutuelle: 30, absenceType, absenceDuree: absenceType === 'none' ? 0 : 12, primes: 1500, nbMois: 12 }), foy({ couple:absenceType === 'arret', personnesCharge:2, autresRevenus:18000 }));
+            allFinite(r, `compute(${brut},${dureeType})`);
+            assert.ok(r.netApres >= -1e-9,
+              `net négatif : ${brut} € ${dureeType} h → ${r.netApres}`);
+            assert.ok(r.netImposable >= 0, 'imposable négatif');
+            assert.ok(r.m.cotisNettes >= 0, 'cotisations négatives');
+            assert.ok(r.netApresImpot >= 0, 'net après impôt négatif');
+            cas++;
           }
         }
       }
     }
-    assert.ok(cas >= 400, `balayage trop étroit : ${cas} cas`);
+    assert.ok(cas >= 100, `balayage trop étroit : ${cas} cas`);
   });
 
   test('monotonie : à paramètres égaux, un brut plus élevé donne un net plus élevé', () => {
-    for(const statut of ['non-cadre', 'cadre', 'fp']){
-      let prec = -Infinity;
-      for(const brut of [1500, 2000, 2500, 3000, 4000, 4005, 4500, 6000, 10000, 20000]){
-        const r = C.compute(scn({ brut, statut }));
-        assert.ok(r.netApres > prec,
-          `net non croissant à ${brut} € (${statut}) : ${r.netApres} ≤ ${prec}`);
-        prec = r.netApres;
-      }
+    let prec = -Infinity;
+    for(const brut of [1500, 2000, 2500, 3000, 4000, 4005, 4500, 6000, 10000, 20000]){
+      const r = C.compute(scn({ brut }));
+      assert.ok(r.netApres > prec,
+        `net non croissant à ${brut} € : ${r.netApres} ≤ ${prec}`);
+      prec = r.netApres;
     }
   });
 
   test('aucune discontinuité brutale au franchissement du PMSS', () => {
-    const avant = C.compute(scn({ brut: P.pmss - 1, statut: 'cadre' }));
-    const apres = C.compute(scn({ brut: P.pmss + 1, statut: 'cadre' }));
+    const avant = C.compute(scn({ brut: P.pmss - 1 }));
+    const apres = C.compute(scn({ brut: P.pmss + 1 }));
     const ecart = Math.abs(apres.netApres - avant.netApres);
     assert.ok(ecart < 20,
       `saut de ${ecart.toFixed(2)} € au passage du PMSS — vérifier les tranches`);
