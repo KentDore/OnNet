@@ -63,9 +63,11 @@ function scn(over){
   }, over || {});
 }
 
-/** Foyer fiscal — réglage global, passé à compute() en second argument. */
+/** Foyer fiscal — réglage global, passé à compute() en second argument.
+    mode 'bareme' par défaut ; mode 'taux' applique pasRate tel quel. */
 function foy(over){
-  return Object.assign({ couple: false, personnesCharge: 0, autresRevenus: 0 }, over || {});
+  return Object.assign({ mode: 'bareme', couple: false, personnesCharge: 0,
+                          autresRevenus: 0, pasRate: 0 }, over || {});
 }
 
 function near(actual, expected, eps, label){
@@ -721,6 +723,85 @@ describe('compute() — impôt sur le revenu', () => {
       assert.ok(r.netApresImpot <= r.netApres + 1e-9, 'net après impôt supérieur au net');
       assert.ok(r.annuelNetApresImpot >= 0);
       assert.ok(r.impotAnnuel >= 0, 'impôt négatif');
+    }
+  });
+});
+
+// ---------- compute() : mode « taux » (prélèvement à la source personnel) ----------
+
+describe('compute() — foyer en mode taux', () => {
+  test('le taux s’applique tel quel au net imposable annuel', () => {
+    const r = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 10 }));
+    near(r.impotAnnuel, r.a.netImposable * 0.10, 0.01);
+    near(r.tauxImpot, 10, 1e-9);
+  });
+
+  test('taux nul → aucun impôt', () => {
+    const r = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 0 }));
+    near(r.impotAnnuel, 0, 1e-9);
+    near(r.netApresImpot, r.netApres, 1e-9);
+  });
+
+  test('cohérence mensuel / annuel en mode taux', () => {
+    const r = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 12.5 }));
+    near(r.netApresImpot, r.netApres - r.impotAnnuel / 12, 0.01);
+    near(r.annuelNetApresImpot, r.annuelNet - r.impotAnnuel, 0.01);
+  });
+
+  test('le taux est borné à [0 ; 100], y compris hors bornes', () => {
+    const bas = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: -20 }));
+    near(bas.tauxImpot, 0, 1e-9, 'taux négatif ramené à 0');
+    near(bas.impotAnnuel, 0, 1e-9);
+
+    const haut = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 250 }));
+    const cent = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 100 }));
+    near(haut.tauxImpot, 100, 1e-9, 'taux > 100 ramené à 100');
+    near(haut.impotAnnuel, cent.impotAnnuel, 0.01);
+  });
+
+  test('en mode taux, la situation du foyer n’a plus d’effet', () => {
+    // C'est le but du mode : le taux saisi remplace entièrement le calcul au
+    // barème, y compris ses paramètres (couple, personnes à charge, conjoint).
+    const seul = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate: 10 }));
+    const famille = C.compute(scn({ brut: 3000 }),
+      foy({ mode: 'taux', pasRate: 10, couple: true, personnesCharge: 3, autresRevenus: 80000 }));
+    near(seul.impotAnnuel, famille.impotAnnuel, 1e-9);
+  });
+
+  test('le mode taux n’applique aucune progressivité entre deux salaires', () => {
+    // Contraste volontaire avec le mode barème : ici, à taux constant, le
+    // rapport entre les deux impôts est strictement celui des deux net
+    // imposables — c'est exactement l'approximation qu'un taux personnel
+    // saisi assume, et qu'on ne prétend pas corriger dans ce mode.
+    const f = foy({ mode: 'taux', pasRate: 10 });
+    const bas = C.compute(scn({ brut: 3000 }), f);
+    const haut = C.compute(scn({ brut: 3600 }), f);
+    near(haut.impotAnnuel / bas.impotAnnuel, haut.a.netImposable / bas.a.netImposable, 1e-6);
+  });
+
+  test('exonération d’heures sup toujours prise en compte en mode taux', () => {
+    // Le mode taux remplace le calcul de l'impôt lui-même, pas le net imposable
+    // dont il part : l'exonération d'IR sur les heures sup s'applique donc
+    // toujours en amont, exactement comme en mode barème.
+    const h35 = C.compute(scn({ brut: 3000, dureeType: '35' }), foy({ mode: 'taux', pasRate: 10 }));
+    const h39 = C.compute(scn({ brut: 3000, dureeType: '39' }), foy({ mode: 'taux', pasRate: 10 }));
+    near(h35.impotAnnuel, h35.a.netImposable * 0.10, 0.01);
+    near(h39.impotAnnuel, h39.a.netImposable * 0.10, 0.01);
+    assert.ok(h39.a.exoHS > 0, 'exonération HS toujours appliquée en amont');
+  });
+
+  test('foyer omis équivaut au mode barème, pas au mode taux', () => {
+    const sansFoyer = C.compute(scn({ brut: 3000 }));
+    const bareme = C.compute(scn({ brut: 3000 }), foy());
+    near(sansFoyer.impotAnnuel, bareme.impotAnnuel, 1e-9);
+  });
+
+  test('le net après impôt reste borné en mode taux', () => {
+    for(const pasRate of [0, 5, 25, 60, 100]){
+      const r = C.compute(scn({ brut: 3000 }), foy({ mode: 'taux', pasRate }));
+      assert.ok(r.netApresImpot >= 0, 'net après impôt négatif');
+      assert.ok(r.netApresImpot <= r.netApres + 1e-9, 'net après impôt supérieur au net');
+      assert.ok(r.annuelNetApresImpot >= 0);
     }
   });
 });
