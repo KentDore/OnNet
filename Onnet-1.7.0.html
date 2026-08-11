@@ -197,7 +197,10 @@
   .modules-head{margin-bottom:10px;}
   .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
   .modules-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
-  .modules-grid{display:grid; grid-template-columns:1fr; gap:12px;}
+  /* align-items:start (et non le stretch par défaut) : sans ça, déplier un
+     module agrandit sa ligne de grille et les cartes fermées de la même ligne
+     s'étirent pour l'égaler, laissant un grand vide sous leur bandeau. */
+  .modules-grid{display:grid; grid-template-columns:1fr; gap:12px; align-items:start;}
   @media (min-width:720px){ .modules-grid{grid-template-columns:1fr 1fr 1fr;} }
   .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
   .module-toggle-head{width:100%; display:flex; align-items:center; gap:12px; padding:16px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Inter',sans-serif;}
@@ -514,7 +517,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.6.4</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.7.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -610,40 +613,62 @@
           <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
 
           <div class="field-row">
-            <label>Situation</label>
-            <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
-              <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-              <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+            <label>Calcul de l'impôt</label>
+            <div class="pill-toggle" id="foyerMode" role="group" aria-label="Mode de calcul de l'impôt" style="width:100%;">
+              <button type="button" data-mode="bareme" aria-pressed="true" style="flex:1;">Estimer au barème</button>
+              <button type="button" data-mode="taux" aria-pressed="false" style="flex:1;">J'ai mon taux</button>
             </div>
           </div>
 
-          <div class="two-col">
+          <div id="foyerBaremeFields">
             <div class="field-row">
-              <label for="foyerCharges">Personnes à charge</label>
-              <select id="foyerCharges">
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
-                <option value="4">4</option>
-              </select>
+              <label>Situation</label>
+              <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
+                <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
+                <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+              </div>
             </div>
-            <div class="field-row" id="foyerConjointRow" style="display:none;">
-              <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
-              <input type="text" inputmode="decimal" id="foyerConjoint" value="0">
-              <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
+
+            <div class="two-col">
+              <div class="field-row">
+                <label for="foyerCharges">Personnes à charge</label>
+                <select id="foyerCharges">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                  <option value="3">3</option>
+                  <option value="4">4</option>
+                </select>
+              </div>
+              <div class="field-row" id="foyerConjointRow" style="display:none;">
+                <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
+                <input type="text" inputmode="decimal" id="foyerConjoint" value="0">
+                <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
+              </div>
+            </div>
+
+            <div class="alert alert-warn" id="foyerWarn" style="display:none;">
+              <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
             </div>
           </div>
 
-          <div class="alert alert-warn" id="foyerWarn" style="display:none;">
-            <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
+          <div id="foyerTauxFields" style="display:none;">
+            <div class="field-row">
+              <label for="foyerPasRate">Taux de prélèvement à la source (%)</label>
+              <input type="text" inputmode="decimal" id="foyerPasRate" value="0">
+              <div class="sub-hint" style="margin-bottom:0;">Indiqué sur votre avis d'imposition ou votre bulletin de paie.</div>
+            </div>
+
+            <div class="alert alert-warn" id="foyerPasWarn" style="display:none;">
+              <span><svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Ce taux correspond à votre situation actuelle. Appliqué tel quel à un salaire plus élevé, il sous-estime l'impôt réel — car le taux véritable augmente avec le revenu — et donc surestime l'écart entre les salaires comparés.</span>
+            </div>
           </div>
 
           <div class="subline" style="margin-top:14px;">
             <span>Impôt estimé sur le salaire de référence</span>
             <span class="val" id="foyerImpot">—</span>
           </div>
-          <div class="sub-hint" style="margin-bottom:0;">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
+          <div class="sub-hint" style="margin-bottom:0;" id="foyerImpotHint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
         </div>
       </div>
 
@@ -731,7 +756,7 @@
   </section>
 
   <div class="disclaimer reveal">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. L'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Par défaut, l'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
   </div>
 </div>
 
@@ -1044,18 +1069,29 @@ function compute(s, foyer){
     a.netImposable = Math.max(0, a.netImposable - (imposableAvant - m.netImposable));
   }
 
-  // Impôt sur le revenu. L'impôt imputé à CE salaire est l'écart entre l'impôt
-  // du foyer avec et sans lui : c'est ce que le salaire coûte réellement en
-  // impôt, à la différence d'un taux moyen qui sous-estimerait toujours l'effet
-  // d'une augmentation (le taux réel monte avec le revenu).
-  const couple = !!f.couple;
-  const charges = Math.max(0, f.personnesCharge || 0);
-  const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
-  const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
-  const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
-  const impotAnnuel = Math.max(0,
-    impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
-  const tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
+  // Impôt sur le revenu. Deux modes :
+  // - 'taux' : le taux de prélèvement à la source réel, saisi par l'utilisateur,
+  //   s'applique tel quel au net imposable annuel — exact pour SA situation
+  //   actuelle, mais un taux constant ne rend pas compte de la progressivité :
+  //   comparé à un autre salaire, l'écart affiché est optimiste.
+  // - 'bareme' (par défaut) : l'impôt imputé à CE salaire est l'écart entre
+  //   l'impôt du foyer avec et sans lui — ce que le salaire coûte réellement en
+  //   impôt, à la différence d'un taux moyen qui sous-estimerait toujours
+  //   l'effet d'une augmentation (le taux réel monte avec le revenu).
+  let impotAnnuel, tauxImpot;
+  if(f.mode === 'taux'){
+    tauxImpot = clamp(f.pasRate || 0, 0, 100);
+    impotAnnuel = Math.max(0, a.netImposable) * tauxImpot/100;
+  } else {
+    const couple = !!f.couple;
+    const charges = Math.max(0, f.personnesCharge || 0);
+    const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
+    const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
+    const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
+    impotAnnuel = Math.max(0,
+      impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
+    tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
+  }
   const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);
   const annuelNetApresImpot = Math.max(0, a.netApres - impotAnnuel);
 
@@ -1124,17 +1160,23 @@ function sanitizeScenario(raw){
 
 // Le foyer fiscal est un réglage global (une personne, pas un salaire) : il est
 // donc stocké à part des scénarios, et normalisé de la même façon qu'eux.
-const FOYER_DEFAUT = { couple:false, personnesCharge:0, autresRevenus:0 };
+// mode 'bareme' : impôt reconstitué au barème à partir de la situation du foyer.
+// mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
+//                 s'applique tel quel — les champs de situation n'ont alors
+//                 plus de rôle dans le calcul et disparaissent de l'UI.
+const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
   const f = (raw && typeof raw === 'object') ? raw : {};
   const nb = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
   const couple = !!f.couple;
   return {
+    mode: f.mode === 'taux' ? 'taux' : 'bareme',
     couple,
     personnesCharge: Math.max(0, Math.min(4, Math.floor(nb(f.personnesCharge)))),
     // Les revenus du conjoint n'ont pas de sens hors couple : on les neutralise
     // pour que la valeur calculée corresponde toujours à ce qui est affiché.
-    autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0
+    autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0,
+    pasRate: clamp(nb(f.pasRate), 0, 100)
   };
 }
 
@@ -1635,6 +1677,7 @@ function render(){
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   updateFoyerImpot(computed);
+  syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
     .map(s => `<option value="${s.id}" ${s.id===refId?'selected':''}>${esc(s.name)}</option>`).join('');
   document.getElementById('cardsBody').innerHTML =
@@ -1718,6 +1761,7 @@ function bindRefPickers(){
 // ---------- Mise à jour ciblée (ne touche jamais aux champs en cours de saisie) ----------
 // ---------- Module « Foyer fiscal » (réglage global, pas par salaire) ----------
 function foyerResume(){
+  if(foyer.mode === 'taux') return `Taux personnel : ${foyer.pasRate.toFixed(1)} %`;
   const n = foyer.personnesCharge;
   const bouts = [foyer.couple ? 'En couple' : 'Seul(e)'];
   bouts.push(n === 0 ? 'sans personne à charge'
@@ -1733,22 +1777,54 @@ function updateFoyerImpot(computed){
 }
 
 function syncFoyerUI(){
+  document.querySelectorAll('#foyerMode button').forEach(b => {
+    b.setAttribute('aria-pressed', b.dataset.mode === foyer.mode ? 'true' : 'false');
+  });
+  setShown('foyerBaremeFields', foyer.mode !== 'taux');
+  setShown('foyerTauxFields', foyer.mode === 'taux');
+
   document.querySelectorAll('#foyerSituation button').forEach(b => {
     b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === foyer.couple ? 'true' : 'false');
   });
   // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
   // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
   setShown('foyerConjointRow', foyer.couple);
-  const alerte = foyer.couple && !(foyer.autresRevenus > 0);
-  setShown('foyerWarn', alerte);
+  const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
+  setShown('foyerWarn', alerteBareme);
+
+  // Le taux saisi vaut pour la situation actuelle : il devient trompeur dès
+  // qu'on compare des salaires de brut différent (le taux réel monte avec le
+  // revenu, un taux constant ne peut pas en rendre compte).
+  const brutsDistincts = new Set(scenarios.map(s => s.brut)).size > 1;
+  const alerteTaux = foyer.mode === 'taux' && brutsDistincts;
+  setShown('foyerPasWarn', alerteTaux);
+
+  const alerte = foyer.mode === 'taux' ? alerteTaux : alerteBareme;
   // Le bloc étant replié au chargement, l'alerte doit aussi remonter dans le
   // bandeau : autrement elle n'apparaît qu'à ceux qui l'ouvrent déjà.
-  setText('foyerModuleDesc', alerte ? 'En couple — revenus du conjoint à renseigner' : foyerResume());
+  let resume = foyerResume();
+  if(alerte){
+    resume = foyer.mode === 'taux'
+      ? 'Taux personnel — écart entre salaires optimiste'
+      : 'En couple — revenus du conjoint à renseigner';
+  }
+  setText('foyerModuleDesc', resume);
   const desc = document.getElementById('foyerModuleDesc');
   if(desc) desc.classList.toggle('is-warn', alerte);
+
+  setHTML('foyerImpotHint', foyer.mode === 'taux'
+    ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
+    : `Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
 }
 
 function bindFoyerModule(){
+  document.querySelectorAll('#foyerMode button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      foyer.mode = btn.dataset.mode === 'taux' ? 'taux' : 'bareme';
+      syncFoyerUI();
+      updateComputed();
+    });
+  });
   document.querySelectorAll('#foyerSituation button').forEach(btn => {
     btn.addEventListener('click', () => {
       foyer.couple = btn.dataset.foyer === 'couple';
@@ -1773,9 +1849,16 @@ function bindFoyerModule(){
     syncFoyerUI();
     updateComputed();
   });
+  const pasRate = document.getElementById('foyerPasRate');
+  if(pasRate) pasRate.addEventListener('input', () => {
+    foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
+    syncFoyerUI();
+    updateComputed();
+  });
   // Refléter l'état restauré (localStorage ou lien partagé) dans les champs.
   if(charges) charges.value = String(Math.min(4, foyer.personnesCharge));
   if(conjoint) conjoint.value = String(foyer.autresRevenus);
+  if(pasRate) pasRate.value = String(foyer.pasRate);
   syncFoyerUI();
 }
 
@@ -1795,6 +1878,7 @@ function updateComputed(){
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   updateFoyerImpot(computed);
+  syncFoyerUI();
 
   computed.forEach(({s, r}) => {
     const u = s.id;
