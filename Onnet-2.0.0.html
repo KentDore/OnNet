@@ -517,7 +517,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v1.7.0</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.0</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -756,7 +756,7 @@
   </section>
 
   <div class="disclaimer reveal">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Pour la fonction publique, un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS) : le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Par défaut, l'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
+    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Seul le régime non-cadre du secteur privé est modélisé : cadres, fonction publique et taux forfaitaire ne le sont plus, pour ne pas disperser la précision du calcul sur plusieurs régimes chacun approximé séparément. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Par défaut, l'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
   </div>
 </div>
 
@@ -772,12 +772,7 @@ const P = {
   // sur 98,25 % du brut dans la limite de 4 PASS, sans abattement au-delà.
   csgDed: 6.80, csgNonDed: 2.40, crds: 0.50,
   vieillessePlaf: 6.90, vieillesseDeplaf: 0.40,
-  rcT1: 3.15, cegT1: 0.86, rcT2: 8.64, cegT2: 1.08, cet: 0.14, apec: 0.024,
-  // fpRate : taux salarial global fonction publique, CSG/CRDS incluses —
-  // 11,10 (retenue pour pension CNRACL/SRE) + 9,20 × 0,9825 (CSG) + 0,50 × 0,9825 (CRDS).
-  // Le RAFP (5 % sur primes) et la distinction traitement indiciaire / primes
-  // ne sont pas modélisés.
-  fpRate: 20.63,
+  rcT1: 3.15, cegT1: 0.86, rcT2: 8.64, cegT2: 1.08, cet: 0.14,
   majoration: 25, reducHS: 11.31,
   // Exonération d'impôt sur le revenu des heures supplémentaires :
   // 7 500 € de net imposable par an et par salarié.
@@ -807,7 +802,6 @@ const ICON = {
   plus: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>'
 };
 
-const rateNames = { 'non-cadre':'Non-cadre', 'cadre':'Cadre', 'fp':'Fonction publique', 'custom':'Taux forfaitaire' };
 const HEURES_BASE = 151.67;
 
 // ---------- Fonctions utilitaires ----------
@@ -837,22 +831,15 @@ function esc(s){
 }
 
 // ---------- Moteur de calcul des cotisations ----------
-function cotisations(assiette, statut, plafond, tauxForfaitaire){
+// Cotisations salariales non-cadre. Seul statut modélisé — voir le disclaimer
+// et le README pour la justification (cadre/fonction publique/taux forfaitaire
+// retirés pour ne pas disperser la précision du moteur sur plusieurs régimes
+// approximés séparément).
+function cotisations(assiette, plafond){
   const l = { csgDed:0, csgNonDed:0, crds:0, vieillessePlaf:0, vieillesseDeplaf:0,
-              rcT1:0, cegT1:0, rcT2:0, cegT2:0, cet:0, apec:0,
+              rcT1:0, cegT1:0, rcT2:0, cegT2:0, cet:0,
               retraite:0, total:0, deductible:0, nonDeductible:0 };
   if(assiette <= 0) return l;
-
-  if(statut === 'fp' || statut === 'custom'){
-    const rate = statut === 'fp' ? P.fpRate : (tauxForfaitaire || 0);
-    l.total = assiette * rate/100;
-    const baseCSG = Math.min(assiette, 4*plafond) * 0.9825 + Math.max(0, assiette - 4*plafond);
-    l.csgNonDed = baseCSG * P.csgNonDed/100;
-    l.crds = baseCSG * P.crds/100;
-    l.nonDeductible = l.csgNonDed + l.crds;
-    l.deductible = Math.max(0, l.total - l.nonDeductible);
-    return l;
-  }
 
   const T1 = Math.min(assiette, plafond);
   const T2 = Math.max(0, Math.min(assiette, 8*plafond) - plafond);
@@ -868,12 +855,11 @@ function cotisations(assiette, statut, plafond, tauxForfaitaire){
   l.rcT2 = T2 * P.rcT2/100;
   l.cegT2 = T2 * P.cegT2/100;
   l.cet = assiette > plafond ? Math.min(assiette, 8*plafond) * P.cet/100 : 0;
-  l.apec = statut === 'cadre' ? Math.min(assiette, 4*plafond) * P.apec/100 : 0;
 
   l.retraite = l.vieillessePlaf + l.vieillesseDeplaf + l.rcT1 + l.cegT1 + l.rcT2 + l.cegT2 + l.cet;
-  l.total = l.retraite + l.csgDed + l.csgNonDed + l.crds + l.apec;
+  l.total = l.retraite + l.csgDed + l.csgNonDed + l.crds;
   l.nonDeductible = l.csgNonDed + l.crds;
-  l.deductible = l.retraite + l.csgDed + l.apec;
+  l.deductible = l.retraite + l.csgDed;
   return l;
 }
 
@@ -969,14 +955,14 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
   // mutuelle, ni titres restaurant. Sans ce garde-fou, un brut à 0 afficherait
   // un net négatif égal aux seules retenues.
   if(brutBase + brutHS <= 0){
-    return { c: cotisations(0, s.statut, plafond, s.rate), assiette: 0, reducHS: 0,
+    return { c: cotisations(0, plafond), assiette: 0, reducHS: 0,
              cotisNettes: 0, brutTotal: 0, netApres: 0, netSocial: 0,
              netImposable: 0, netImposableAvantExo: 0, exoHS: 0,
              pouvoirAchat: 0 };
   }
 
   const assiette = brutBase + brutHS + tr.reintegre;
-  const c = cotisations(assiette, s.statut, plafond, s.rate);
+  const c = cotisations(assiette, plafond);
 
   const tauxMoyenRetraite = assiette > 0 ? (c.retraite / assiette) * 100 : 0;
   const tauxReduc = Math.min(P.reducHS, tauxMoyenRetraite);
@@ -1114,7 +1100,7 @@ let idCounter = 0;
 let justAddedId = null;
 function mkScenario(over){
   const base = {
-    id: idCounter++, name:'Salaire', brut:2800, statut:'non-cadre', rate:22,
+    id: idCounter++, name:'Salaire', brut:2800,
     mutuelle:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
@@ -1133,7 +1119,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','rate','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -1150,7 +1136,10 @@ function sanitizeScenario(raw){
     if(Number.isFinite(n)) clean[k] = n; else delete clean[k];
   });
   if(typeof clean.name !== 'string' || !clean.name.trim()) delete clean.name;
-  if(!Object.keys(rateNames).includes(clean.statut)) delete clean.statut;
+  // Statut et taux forfaitaire retirés (v2.0.0) : purger toute trace d'un
+  // état enregistré par une version antérieure plutôt que la porter sans effet.
+  delete clean.statut;
+  delete clean.rate;
   if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
   if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
   clean.carenceCouverte = !!clean.carenceCouverte;
@@ -1363,12 +1352,7 @@ function num(id, key, uid, value, opts){
 
 function renderCard(s, r, showRemove){
   const uid = s.id;
-  const statutOptions = Object.keys(rateNames).map(k => `<option value="${k}" ${s.statut===k?'selected':''}>${rateNames[k]}</option>`).join('');
   const isRef = s.id === refId;
-
-  const rateField = s.statut === 'custom'
-    ? `<div class="field-row"><label for="f-rate-${uid}">Taux forfaitaire de cotisations (%)</label>${num(`f-rate-${uid}`,'rate',uid,s.rate,{min:0,max:60})}</div>`
-    : `<div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>`;
 
   const trWarn = r.tr.reintegre > 0.005;
   const trMotifs = {
@@ -1399,11 +1383,7 @@ function renderCard(s, r, showRemove){
       ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
     </div>
 
-    <div class="field-row">
-      <label for="f-statut-${uid}">Statut</label>
-      <select id="f-statut-${uid}" data-id="${uid}" data-key="statut">${statutOptions}</select>
-    </div>
-    ${rateField}
+    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>
 
     <div class="field-row">
       <label>Base horaire</label>
@@ -2014,7 +1994,7 @@ async function addScenario(){
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    statut:last.statut, rate:last.rate, dureeType:last.dureeType
+    dureeType:last.dureeType
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
@@ -2042,7 +2022,7 @@ async function removeScenario(id){
   if(cardEl && !reduceMotion){
     cardEl.classList.add('card-leave');
     // setTimeout plutôt que 'animationend' : si un autre render() survient
-    // dans l'intervalle (ex. changement de statut sur une autre carte), le
+    // dans l'intervalle (ex. modification d'un champ sur une autre carte), le
     // nœud animé est détaché du DOM et 'animationend' ne se déclenche
     // jamais — la suppression pourtant confirmée disparaissait en silence.
     setTimeout(doRemove, 200);

@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-1.7.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-2.0.0.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -20,7 +20,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 ## Fonctionnalités
 
 - **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
-- **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne selon le statut (non-cadre, cadre, fonction publique, taux forfaitaire)
+- **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne pour le régime non-cadre du secteur privé
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
 - **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
 - **Impôt sur le revenu** — net après impôt calculé au barème 2026 (abattement de 10 %, quotient familial plafonné, décote), à partir d'un bloc **Foyer fiscal** unique : seul ou en couple, personnes à charge, revenus du conjoint. Ce réglage est global et s'applique à tous les salaires comparés — votre foyer ne change pas d'une offre à l'autre. Le bloc permet aussi de basculer sur un taux de prélèvement à la source personnel, saisi directement plutôt qu'estimé au barème
@@ -31,11 +31,10 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 
 ## Limites
 
-Cet outil reste une estimation. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
+Cet outil reste une estimation. Seul le régime non-cadre du secteur privé est modélisé — cadre, fonction publique et taux forfaitaire ont été retirés en v2.0.0 pour ne pas disperser la précision du moteur sur plusieurs régimes chacun approximé séparément. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
 
-Quatre approximations assumées méritent d'être connues :
+Trois approximations assumées méritent d'être connues :
 
-- **Fonction publique** — un taux salarial global de 20,63 % est appliqué (retenue pour pension 11,10 % + CSG/CRDS). Le RAFP et la distinction entre traitement indiciaire et primes ne sont pas modélisés.
 - **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
 - **Part patronale de mutuelle** — réintégrée dans le net imposable, elle est estimée égale à la part salariale (partage 50/50, le minimum légal), faute d'un champ dédié. Un forfait figé indépendant de la mutuelle déclarée gonflait auparavant l'assiette même sans mutuelle.
 - **Impôt sur le revenu** — le montant affiché est le *supplément* d'impôt imputable au salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui. C'est la bonne grandeur pour comparer deux salaires, mais ce n'est pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux mobiliers, pensions, taux neutre ou individualisé, acomptes, régularisations en cours d'année et contribution exceptionnelle sur les hauts revenus. En couple, les revenus du conjoint doivent être renseignés, sans quoi l'impôt est très sous-estimé — une alerte le signale dans le bloc Foyer fiscal tant qu'ils sont à zéro. Le mode « J'ai mon taux » applique tel quel le pourcentage saisi au net imposable annuel : exact pour la situation actuelle, mais constant d'un salaire à l'autre alors que le taux réel progresse avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas.
