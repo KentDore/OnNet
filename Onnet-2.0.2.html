@@ -193,6 +193,7 @@
   .panel-advanced > summary::after{color:var(--ink-soft);}
 
   /* ---- Modules (panneaux complémentaires : augmentation, absence, ...) ---- */
+  .situation-section{margin-bottom:16px;}
   .modules-section{margin-bottom:16px;}
   .modules-head{margin-bottom:10px;}
   .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
@@ -408,7 +409,8 @@
   .reveal{ animation:reveal-in .5s cubic-bezier(.25,.8,.3,1) both; }
   #comparePanel{ animation-delay:.04s; }
   .cards-bar{ animation-delay:.10s; }
-  .modules-section{ animation-delay:.16s; }
+  .situation-section{ animation-delay:.13s; }
+  .modules-section{ animation-delay:.18s; }
   .disclaimer{ animation-delay:.22s; }
 
   /* Retour au clic : le bouton s'enfonce légèrement. */
@@ -494,11 +496,18 @@
   .subline .val{font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap;}
 
   .disclaimer{margin-top:24px; font-size:12px; line-height:1.6; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; max-width:82ch;}
+  /* Les 2-3 phrases qui comptent vraiment (pas un bulletin de paie, un seul
+     régime modélisé, le mode taux est optimiste) se distinguent du reste par
+     la couleur : sans ça, tout le bloc lit au même niveau et rien n'en
+     ressort avant d'avoir tout lu. */
+  .disclaimer-summary{color:var(--ink); margin:0;}
+  .disclaimer details.more{margin-top:10px;}
+  .disclaimer .more-body p{margin:0 0 2px;}
   .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
 
   @media print{
     body{background:#fff;}
-    .header-top .print-btn, .header-actions, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
     .cards-scroll{overflow:visible; margin:0; padding:0;}
     .cards{flex-wrap:wrap;}
     .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
@@ -515,7 +524,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.1</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.2</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -591,12 +600,11 @@
     <div class="cards" id="cardsBody"></div>
   </div>
 
-  <section class="modules-section reveal" aria-label="Modules complémentaires">
+  <section class="situation-section reveal" aria-label="Votre situation">
     <div class="modules-head">
-      <h2 class="modules-title">Modules</h2>
-      <p class="modules-sub">Réglez votre foyer fiscal et activez les outils dont vous avez besoin pour ce comparatif.</p>
+      <h2 class="modules-title">Votre situation</h2>
+      <p class="modules-sub">Un réglage de profil, pas un outil par comparatif : il s'applique à tous les salaires, tant que vous ne le changez pas.</p>
     </div>
-    <div class="modules-grid">
 
       <div class="module-card" id="foyerModule">
         <button type="button" class="module-toggle-head" id="foyerModuleToggle" aria-expanded="false" aria-controls="foyerModuleBody">
@@ -669,6 +677,14 @@
           <div class="sub-hint" style="margin-bottom:0;" id="foyerImpotHint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
         </div>
       </div>
+  </section>
+
+  <section class="modules-section reveal" aria-label="Modules complémentaires">
+    <div class="modules-head">
+      <h2 class="modules-title">Modules</h2>
+      <p class="modules-sub">Activez les outils dont vous avez besoin pour ce comparatif.</p>
+    </div>
+    <div class="modules-grid">
 
       <div class="module-card" id="raiseModule">
         <button type="button" class="module-toggle-head" id="raiseModuleToggle" aria-expanded="false" aria-controls="raiseModuleBody">
@@ -754,7 +770,29 @@
   </section>
 
   <div class="disclaimer reveal">
-    <strong>Méthode et limites.</strong> Les cotisations salariales sont calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. La réduction sur heures supplémentaires est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires. Seul le régime non-cadre du secteur privé est modélisé : cadres, fonction publique et taux forfaitaire ne le sont plus, pour ne pas disperser la précision du calcul sur plusieurs régimes chacun approximé séparément. Pour les titres restaurant, la part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations. Le calcul annuel utilise les tranches annuelles (PASS). L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective. Par défaut, l'impôt sur le revenu est calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus. <strong>Ne sont pas modélisés :</strong> la régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. Cet outil reste une estimation : pour un chiffre exact, référez-vous au bulletin de paie et à votre avis d'imposition.
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Pour un chiffre exact, référez-vous à votre bulletin de paie et à votre avis d'imposition. Seul le régime non-cadre du secteur privé est modélisé. En mode « J'ai mon taux », le taux personnel reste constant d'un salaire à l'autre : l'écart entre deux salaires de montants différents y est optimiste.</p>
+    <details class="more">
+      <summary>Méthode et limites détaillées</summary>
+      <div class="more-body">
+        <div class="section-tag">Cotisations</div>
+        <p>Calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. Le calcul annuel utilise les tranches annuelles (PASS). Seul le régime non-cadre du secteur privé est modélisé : cadres, fonction publique et taux forfaitaire ne le sont plus, pour ne pas disperser la précision du calcul sur plusieurs régimes chacun approximé séparément.</p>
+
+        <div class="section-tag">Heures supplémentaires</div>
+        <p>La réduction de cotisations salariales est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.</p>
+
+        <div class="section-tag">Titres restaurant</div>
+        <p>La part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations.</p>
+
+        <div class="section-tag">Absences</div>
+        <p>L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective.</p>
+
+        <div class="section-tag">Impôt sur le revenu</div>
+        <p>Par défaut, calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
+
+        <div class="section-tag">Ce qui n'est pas modélisé</div>
+        <p>La régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle.</p>
+      </div>
+    </details>
   </div>
 </div>
 
@@ -1392,7 +1430,7 @@ function renderCard(s, r, showRemove){
     </div>
 
     <details class="more">
-      <summary>Mutuelle, titres restaurant, mensualités &amp; primes</summary>
+      <summary>Détails avancés</summary>
       <div class="more-body">
         <div class="section-tag">Mutuelle</div>
         <div class="field-row">
