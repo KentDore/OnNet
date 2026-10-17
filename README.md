@@ -20,6 +20,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 ## Fonctionnalités
 
 - **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
+- **Réorganisation des salaires** — faites glisser les tuiles par leur poignée, ou utilisez les flèches gauche/droite au clavier
 - **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne pour le régime non-cadre du secteur privé
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
 - **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
@@ -43,12 +44,23 @@ Onnet ne calcule **que le côté salarié**. La métrique « Coût employeur » 
 
 Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptable / service RH.
 
+## Développement
+
+Après modification des sources, générez un nouveau fichier autonome en lui donnant sa version :
+
+```
+node scripts/build.js 2.0.10
+```
+
+Les fichiers de développement restent séparés ; le résultat livré contient toujours le CSS et le JavaScript intégrés.
+
 ## Tests
 
-Le moteur de calcul est couvert par une suite de non-régression sans dépendance :
+Les tests de calcul et de génération ne nécessitent aucune dépendance supplémentaire :
 
 ```
 node --test test/calc.test.js
+node --test test/build.test.js
 ```
 
 Les tests extraient le bloc de calcul directement du fichier HTML (entre les marqueurs `ONNET_CALC_START` / `ONNET_CALC_END`) et s'exécutent donc sur le code réellement livré, pas sur une copie. Ils reprennent automatiquement le fichier `Onnet-X.Y.Z.html` à la version la plus élevée.
@@ -57,8 +69,9 @@ Les valeurs attendues signalées « calculé à la main » ont été posées ind
 
 ## Stack technique
 
-- HTML / CSS / JavaScript vanilla — aucune dépendance externe hormis les polices Google Fonts (Fraunces, Inter, IBM Plex Mono)
-- Aucun build, aucun framework — un seul fichier, ouvrable directement dans n'importe quel navigateur
+- HTML / CSS / JavaScript vanilla, sans framework ni dépendance à l'exécution
+- Sources de développement séparées dans `src/` (template HTML, CSS, moteur de calcul et interface)
+- Le script Node sans dépendance génère un HTML autonome, ouvrable directement dans un navigateur
 
 ## Paramètres légaux
 
