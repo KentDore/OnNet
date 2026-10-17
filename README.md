@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-2.0.4.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-2.0.11.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -20,6 +20,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 ## Fonctionnalités
 
 - **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
+- **Choix mensuel ou annuel à la saisie** — disponible au premier lancement comme lors de l'ajout d'un salaire, avec conversion en brut mensuel pour le calcul
 - **Réorganisation des salaires** — faites glisser les tuiles par leur poignée, ou utilisez les flèches gauche/droite au clavier
 - **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne pour le régime non-cadre du secteur privé
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
@@ -49,7 +50,7 @@ Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptabl
 Après modification des sources, générez un nouveau fichier autonome en lui donnant sa version :
 
 ```
-node scripts/build.js 2.0.10
+node scripts/build.js 2.0.11
 ```
 
 Les fichiers de développement restent séparés ; le résultat livré contient toujours le CSS et le JavaScript intégrés.

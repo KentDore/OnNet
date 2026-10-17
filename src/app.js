@@ -1330,8 +1330,16 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
     <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddInput">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" autocomplete="off">
+      <label>Votre salaire est indiqué en</label>
+      <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="Période du salaire">
+        <button type="button" data-period="mois" aria-pressed="true">Mensuel</button>
+        <button type="button" data-period="an" aria-pressed="false">Annuel</button>
+      </div>
+    </div>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (€)</label>
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" placeholder="Ex. 2500" autocomplete="off">
+      <small id="modalAddPeriodHint" hidden>L’équivalent mensuel sera calculé en divisant le montant annuel par 12.</small>
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -1352,6 +1360,29 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const input = overlay.querySelector('#modalAddInput');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
+  const periodToggle = overlay.querySelector('#modalAddPeriod');
+  const periodLabel = overlay.querySelector('#modalAddLabel');
+  const periodHint = overlay.querySelector('#modalAddPeriodHint');
+  let salaryPeriod = 'mois';
+  periodToggle.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', () => {
+      if(button.dataset.period === salaryPeriod) return;
+      const current = parseNum(input.value);
+      if(current > 0){
+        const converted = salaryPeriod === 'mois' ? current * 12 : current / 12;
+        input.value = String(Math.round(converted * 100) / 100).replace('.', ',');
+      }
+      salaryPeriod = button.dataset.period;
+      periodToggle.querySelectorAll('button').forEach(x => {
+        x.setAttribute('aria-pressed', x === button ? 'true' : 'false');
+      });
+      const annual = salaryPeriod === 'an';
+      periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
+      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2500';
+      periodHint.hidden = !annual;
+      updateSubmitState();
+    });
+  });
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
@@ -1365,7 +1396,8 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
-    closeModal(Object.assign({ brut: v, dureeType }, readMutuelleTr()));
+    const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
