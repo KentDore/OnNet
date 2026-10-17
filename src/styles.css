@@ -532,7 +532,7 @@
 
   @media print{
     body{background:#fff;}
-    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
     .cards-scroll{overflow:visible; margin:0; padding:0;}
     .cards{flex-wrap:wrap;}
     .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
