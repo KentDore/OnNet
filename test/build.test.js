@@ -22,6 +22,7 @@ test('le build assemble les sources en HTML autonome', t => {
   assert.ok(html.includes(styles));
   assert.ok(html.includes(calc));
   assert.ok(html.includes(app));
+  assert.ok(html.includes('brand-version">v9.9.9</span>'));
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal((html.match(/<script>/g) || []).length, 2);
 });
