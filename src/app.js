@@ -272,7 +272,7 @@ function renderCard(s, r, showRemove){
   return `
   <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
     <div class="card-top">
-      <button type="button" class="drag-handle" draggable="true" data-drag-handle="${uid}" aria-label="Déplacer la tuile ${esc(s.name)}" title="Cliquer et glisser pour réorganiser">⠿</button>
+      <button type="button" class="drag-handle" draggable="true" data-drag-handle="${uid}" aria-label="Déplacer la tuile ${esc(s.name)}. Utilisez les flèches gauche et droite pour la réordonner au clavier." aria-keyshortcuts="ArrowLeft ArrowRight" title="Cliquer et glisser pour réorganiser">⠿</button>
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
       <input class="name-input" id="f-name-${uid}" value="${esc(s.name)}" data-id="${uid}" data-key="name">
       ${isRef ? '<span class="ref-badge">référence</span>' : ''}
@@ -661,6 +661,24 @@ function bindCardDragAndDrop(){
     const card = e.target.closest('.card[data-card]');
     if(card) card.classList.remove('is-dragging');
     clearDropTargets();
+  });
+
+  cardsBody.addEventListener('keydown', e => {
+    const handle = e.target.closest('[data-drag-handle]');
+    if(!handle || (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight')) return;
+    e.preventDefault();
+
+    const id = Number(handle.dataset.dragHandle);
+    const from = scenarios.findIndex(s => s.id === id);
+    const to = from + (e.key === 'ArrowLeft' ? -1 : 1);
+    if(from < 0 || to < 0 || to >= scenarios.length) return;
+
+    const [moved] = scenarios.splice(from, 1);
+    scenarios.splice(to, 0, moved);
+    render();
+    const nextHandle = cardsBody.querySelector(`[data-drag-handle="${id}"]`);
+    if(nextHandle) nextHandle.focus();
+    showToastImpl(`${moved.name} déplacé à la position ${to + 1} sur ${scenarios.length}.`);
   });
 }
 
