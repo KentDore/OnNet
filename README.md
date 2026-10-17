@@ -20,6 +20,7 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 ## Fonctionnalités
 
 - **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
+- **Réorganisation des salaires** — faites glisser les tuiles par leur poignée pour les remettre dans l’ordre souhaité
 - **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne pour le régime non-cadre du secteur privé
 - **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
 - **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
