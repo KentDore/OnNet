@@ -14,6 +14,7 @@ async function main(){
   const app = await fs.readFile(path.join(root, 'src', 'app.js'), 'utf8');
   let html = template;
   for(const [token, value] of [
+    ['@@ONNET_VERSION@@', version],
     ['@@ONNET_STYLES@@', styles],
     ['@@ONNET_CALC@@', calc],
     ['@@ONNET_APP@@', app]
