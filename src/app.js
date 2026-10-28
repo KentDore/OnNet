@@ -91,6 +91,9 @@ function loadPersistedState(){
   } catch(e){ return null; }
 }
 
+let showToastImpl = null;
+let storageWarningShown = false;
+
 function saveState(){
   if(suppressAutosave) return;
   try{
@@ -98,7 +101,16 @@ function saveState(){
       v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer,
       openCardIds:[...openCardIds]
     }));
-  } catch(e){ /* stockage plein/indisponible — l'app continue de fonctionner en mémoire */ }
+  } catch(e){
+    // Une seule alerte par session : les saisies restent utilisables, mais
+    // l'utilisateur doit savoir qu'elles ne seront pas restaurées au prochain lancement.
+    if(!storageWarningShown){
+      storageWarningShown = true;
+      if(typeof showToastImpl === 'function'){
+        showToastImpl('Sauvegarde indisponible : vos modifications ne seront pas conservées après fermeture.');
+      }
+    }
+  }
 }
 
 function clearPersistedState(){
@@ -143,8 +155,6 @@ function buildShareUrl(){
   // Safari), or le README documente l'ouverture directe du fichier.
   return location.href.split('#')[0] + '#share=' + encoded;
 }
-
-let showToastImpl = null;
 
 // Repli historique : fonctionne même là où l'API Clipboard moderne est
 // bloquée par une Permissions Policy (ex. Artifact affiché dans un iframe
@@ -1695,6 +1705,12 @@ document.getElementById('addAbsenceScenario').addEventListener('click', addAbsen
 updateAbsenceUI();
 
 render();
+// Un hash contenant explicitement un partage mais non restauré doit être signalé.
+// Le repli vers la sauvegarde locale ou l'onboarding reste inchangé.
+if(!loadedFromShare && location.hash &&
+   new URLSearchParams(location.hash.slice(1)).has('share')){
+  showToastImpl('Lien de partage invalide ou incomplet : les données n’ont pas pu être chargées.');
+}
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
