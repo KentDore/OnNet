@@ -542,3 +542,8 @@
     details.more > summary, .panel-nested > summary{display:none;}
     details.more .more-body{padding-top:0;}
   }
+
+
+/* Saisie numérique invalide : conserver la valeur visible et expliquer l'erreur. */
+.input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
+input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
