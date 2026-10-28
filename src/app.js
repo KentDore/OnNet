@@ -813,12 +813,14 @@ function bindFoyerModule(){
   });
   const conjoint = document.getElementById('foyerConjoint');
   if(conjoint) conjoint.addEventListener('input', () => {
+    if(!validateNumericInput(conjoint, false)) return;
     foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
     syncFoyerUI();
     updateComputed();
   });
   const pasRate = document.getElementById('foyerPasRate');
   if(pasRate) pasRate.addEventListener('input', () => {
+    if(!validateNumericInput(pasRate, false)) return;
     foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
     syncFoyerUI();
     updateComputed();
@@ -934,6 +936,36 @@ window.addEventListener('resize', updateNavButtons);
 })();
 
 // ---------- Événements ----------
+function numericEntryValid(value){
+  const normalized = String(value ?? '').replace(/\s/g, '').replace(',', '.');
+  return /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized) && Number.isFinite(Number(normalized));
+}
+function setNumericInputError(el, message){
+  let hint = el.parentElement && el.parentElement.querySelector(':scope > .input-error');
+  if(!hint && el.parentElement){
+    hint = document.createElement('div');
+    hint.className = 'input-error';
+    hint.setAttribute('role', 'alert');
+    el.insertAdjacentElement('afterend', hint);
+  }
+  if(hint) hint.textContent = message || '';
+  el.classList.toggle('is-invalid', !!message);
+  el.setAttribute('aria-invalid', message ? 'true' : 'false');
+}
+function validateNumericInput(el, finalCheck){
+  const value = el.value.trim();
+  if(!value){
+    setNumericInputError(el, finalCheck ? 'Saisissez une valeur numérique.' : '');
+    return false;
+  }
+  if(!numericEntryValid(value)){
+    setNumericInputError(el, 'Saisie invalide. Utilisez un nombre, par exemple 3000 ou 12,5.');
+    return false;
+  }
+  setNumericInputError(el, '');
+  return true;
+}
+
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
@@ -947,6 +979,7 @@ function onInput(e){
       .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
     return;
   }
+  if(!validateNumericInput(e.target, false)) return;
   s[key] = parseNum(e.target.value);
   updateComputed();
 }
@@ -957,6 +990,7 @@ function onBlurClamp(e){
   const id = parseInt(e.target.dataset.id, 10);
   const s = findScenario(id);
   if(!s) return;
+  if(!validateNumericInput(e.target, true)) return;
   const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
   const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
   const v = clamp(parseNum(e.target.value), min, max);
@@ -1555,7 +1589,9 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
   });
 });
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
-  const val = parseNum(document.getElementById('raiseAmount').value);
+  const amountInput = document.getElementById('raiseAmount');
+  if(!validateNumericInput(amountInput, true)) return;
+  const val = parseNum(amountInput.value);
   addRaiseScenario(raiseType, val);
 });
 renderRaiseChips();
@@ -1640,7 +1676,9 @@ function updateAbsenceUI(){
 document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
   btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
 });
-document.getElementById('absenceDuree').addEventListener('input', updateAbsenceUI);
+document.getElementById('absenceDuree').addEventListener('input', (e) => {
+  if(validateNumericInput(e.target, false)) updateAbsenceUI();
+});
 
 document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
   const v = e.target.value;
@@ -1653,7 +1691,9 @@ document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
   }
   updateAbsenceUI();
 });
-document.getElementById('arretPct').addEventListener('input', updateAbsenceUI);
+document.getElementById('arretPct').addEventListener('input', (e) => {
+  if(validateNumericInput(e.target, false)) updateAbsenceUI();
+});
 
 document.querySelectorAll('#carenceToggle button').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -1666,14 +1706,17 @@ document.querySelectorAll('#carenceToggle button').forEach(btn => {
 function addAbsenceScenario(){
   const base = findScenario(refId);
   if(!base) return;
-  const duree = clamp(parseNum(document.getElementById('absenceDuree').value) || 0, 0, 30);
+  const dureeInput = document.getElementById('absenceDuree');
+  if(!validateNumericInput(dureeInput, true)) return;
+  if(absenceType === 'arret' && !validateNumericInput(document.getElementById('arretPct'), true)) return;
+  const duree = clamp(parseNum(dureeInput.value), 0, 30);
   const clone = Object.assign({}, base);
   delete clone.id;
   disableCardSnap();
 
   let created;
   if(absenceType === 'arret'){
-    const pct = clamp(parseNum(document.getElementById('arretPct').value) || 90, 0, 100);
+    const pct = clamp(parseNum(document.getElementById('arretPct').value), 0, 100);
     created = mkScenario(Object.assign(clone, {
       name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
       absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
