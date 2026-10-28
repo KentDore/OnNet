@@ -1,0 +1,28 @@
+name: Vérifications
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Vérifier la syntaxe JavaScript
+        run: |
+          node --check src/calc.js
+          node --check src/app.js
+          node --check scripts/build.js
+      - name: Construire le HTML autonome
+        run: node scripts/build.js 999.999.999 Onnet-999.999.999.html
+      - name: Tester les calculs
+        run: node --test test/calc.test.js
+      - name: Tester le build
+        run: node --test test/build.test.js
