@@ -370,7 +370,7 @@
   .cards-bar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
   .cards-bar-toggles{display:flex; gap:8px; flex-wrap:wrap;}
   .cards-bar-nav{display:flex; gap:6px;}
-  .nav-btn{width:36px; height:36px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
+  .nav-btn{width:44px; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
   .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
   .nav-btn:disabled{opacity:.3; cursor:default;}
 
@@ -527,6 +527,13 @@
   /* Révélé uniquement au focus clavier : masqué visuellement (via .sr-only)
      tant qu'il n'est pas atteint, sinon un premier onglet visible sur une
      page sans navigation répétée n'apporterait rien qu'un onglet en plus. */
+  /* Repère de focus uniforme pour les commandes clavier, y compris celles
+     qui n'avaient pas encore de style dédié. */
+  :where(button, input, select, textarea, summary, a, [tabindex]):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+  }
+
   .skip-link{position:absolute; top:-40px; left:8px; z-index:1300; background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; text-decoration:none; transition:top .15s ease;}
   .skip-link:focus{top:8px; width:auto; height:auto; padding:10px 16px; margin:0; overflow:visible; clip:auto; white-space:normal;}
 
