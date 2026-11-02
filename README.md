@@ -8,7 +8,7 @@ Application 100 % autonome : un seul fichier HTML, aucune dépendance à install
 
 ## Utilisation
 
-Ouvrir `Onnet-2.0.11.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+Ouvrir `Onnet-2.0.12.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
 
 ## Versions
 
@@ -16,6 +16,13 @@ Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/)
 - **MAJEUR** — refonte ou changement important dans la façon d'utiliser l'outil
 - **MINEUR** — nouvelle fonctionnalité (rétrocompatible)
 - **CORRECTIF** — correction de bug ou ajustement visuel/ergonomique sur l'existant
+
+## Version 2.0.12
+
+- Validation des saisies numériques invalides sans écraser les calculs précédents.
+- Nettoyage et normalisation des données restaurées et des liens partagés.
+- Alerte en cas d’échec de sauvegarde ou de lien de partage incorrect.
+- Amélioration du focus clavier et agrandissement des commandes mobiles.
 
 ## Fonctionnalités
 
