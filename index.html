@@ -377,7 +377,7 @@
   .cards-bar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
   .cards-bar-toggles{display:flex; gap:8px; flex-wrap:wrap;}
   .cards-bar-nav{display:flex; gap:6px;}
-  .nav-btn{width:36px; height:36px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
+  .nav-btn{width:44px; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
   .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
   .nav-btn:disabled{opacity:.3; cursor:default;}
 
@@ -534,6 +534,13 @@
   /* Révélé uniquement au focus clavier : masqué visuellement (via .sr-only)
      tant qu'il n'est pas atteint, sinon un premier onglet visible sur une
      page sans navigation répétée n'apporterait rien qu'un onglet en plus. */
+  /* Repère de focus uniforme pour les commandes clavier, y compris celles
+     qui n'avaient pas encore de style dédié. */
+  :where(button, input, select, textarea, summary, a, [tabindex]):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+  }
+
   .skip-link{position:absolute; top:-40px; left:8px; z-index:1300; background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; text-decoration:none; transition:top .15s ease;}
   .skip-link:focus{top:8px; width:auto; height:auto; padding:10px 16px; margin:0; overflow:visible; clip:auto; white-space:normal;}
 
@@ -550,6 +557,11 @@
     details.more .more-body{padding-top:0;}
   }
 
+
+/* Saisie numérique invalide : conserver la valeur visible et expliquer l'erreur. */
+.input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
+input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
+
 </style>
 </head>
 <body>
@@ -558,7 +570,7 @@
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.11</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.12</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -1208,22 +1220,28 @@ const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','br
 const METRIC_DEFAUT = 'netHoraire';
 
 function sanitizeScenario(raw){
-  if(!raw || typeof raw !== 'object') return null;
+  if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
-  NUMERIC_KEYS.forEach(k => {
-    if(clean[k] === undefined) return;
-    const n = Number(clean[k]);
-    if(Number.isFinite(n)) clean[k] = n; else delete clean[k];
-  });
-  if(typeof clean.name !== 'string' || !clean.name.trim()) delete clean.name;
-  // Statut et taux forfaitaire retirés (v2.0.0) : purger toute trace d'un
-  // état enregistré par une version antérieure plutôt que la porter sans effet.
+  const limits = {
+    brut:[0,1000000], mutuelle:[0,100000], joursResto:[0,31],
+    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
+    primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
+  };
+  for(const [key, range] of Object.entries(limits)){
+    if(clean[key] === undefined) continue;
+    const n = Number(clean[key]);
+    if(!Number.isFinite(n) || n < range[0] || n > range[1]) return null;
+    clean[key] = n;
+  }
+  if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
+  clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
   delete clean.rate;
-  if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
-  if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
-  clean.carenceCouverte = !!clean.carenceCouverte;
-  if(!Number.isInteger(clean.id)) delete clean.id;
+  if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
+  if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
+  clean.carenceCouverte = clean.carenceCouverte === true;
+  if(!Number.isInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
 
@@ -1235,18 +1253,33 @@ function sanitizeScenario(raw){
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
 const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
-  const f = (raw && typeof raw === 'object') ? raw : {};
-  const nb = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-  const couple = !!f.couple;
+  const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const nb = (v, min, max) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? clamp(n, min, max) : 0;
+  };
+  const couple = f.couple === true;
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
     couple,
-    personnesCharge: Math.max(0, Math.min(4, Math.floor(nb(f.personnesCharge)))),
-    // Les revenus du conjoint n'ont pas de sens hors couple : on les neutralise
-    // pour que la valeur calculée corresponde toujours à ce qui est affiché.
-    autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0,
-    pasRate: clamp(nb(f.pasRate), 0, 100)
+    personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
+    autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
+    pasRate: nb(f.pasRate, 0, 100)
   };
+}
+
+function normalizeScenarioIds(scenarios){
+  const used = new Set();
+  let nextId = 0;
+  return scenarios.map(s => {
+    let id = Number.isInteger(s.id) && s.id >= 0 ? s.id : null;
+    if(id === null || used.has(id)){
+      while(used.has(nextId)) nextId++;
+      id = nextId++;
+    }
+    used.add(id);
+    return Object.assign({}, s, { id });
+  });
 }
 
 function loadPersistedState(){
@@ -1255,13 +1288,16 @@ function loadPersistedState(){
     if(!raw) return null;
     const data = JSON.parse(raw);
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
+    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
              openCardIds: data.openCardIds, foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
 }
+
+let showToastImpl = null;
+let storageWarningShown = false;
 
 function saveState(){
   if(suppressAutosave) return;
@@ -1270,7 +1306,16 @@ function saveState(){
       v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer,
       openCardIds:[...openCardIds]
     }));
-  } catch(e){ /* stockage plein/indisponible — l'app continue de fonctionner en mémoire */ }
+  } catch(e){
+    // Une seule alerte par session : les saisies restent utilisables, mais
+    // l'utilisateur doit savoir qu'elles ne seront pas restaurées au prochain lancement.
+    if(!storageWarningShown){
+      storageWarningShown = true;
+      if(typeof showToastImpl === 'function'){
+        showToastImpl('Sauvegarde indisponible : vos modifications ne seront pas conservées après fermeture.');
+      }
+    }
+  }
 }
 
 function clearPersistedState(){
@@ -1300,7 +1345,7 @@ function loadShareState(){
     if(!encoded) return null;
     const data = JSON.parse(fromBase64Url(encoded));
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
+    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
@@ -1315,8 +1360,6 @@ function buildShareUrl(){
   // Safari), or le README documente l'ouverture directe du fichier.
   return location.href.split('#')[0] + '#share=' + encoded;
 }
-
-let showToastImpl = null;
 
 // Repli historique : fonctionne même là où l'API Clipboard moderne est
 // bloquée par une Permissions Policy (ex. Artifact affiché dans un iframe
@@ -1985,12 +2028,14 @@ function bindFoyerModule(){
   });
   const conjoint = document.getElementById('foyerConjoint');
   if(conjoint) conjoint.addEventListener('input', () => {
+    if(!validateNumericInput(conjoint, false)) return;
     foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
     syncFoyerUI();
     updateComputed();
   });
   const pasRate = document.getElementById('foyerPasRate');
   if(pasRate) pasRate.addEventListener('input', () => {
+    if(!validateNumericInput(pasRate, false)) return;
     foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
     syncFoyerUI();
     updateComputed();
@@ -2106,6 +2151,36 @@ window.addEventListener('resize', updateNavButtons);
 })();
 
 // ---------- Événements ----------
+function numericEntryValid(value){
+  const normalized = String(value ?? '').replace(/\s/g, '').replace(',', '.');
+  return /^(?:\d+(?:\.\d*)?|\.\d+)$/.test(normalized) && Number.isFinite(Number(normalized));
+}
+function setNumericInputError(el, message){
+  let hint = el.parentElement && el.parentElement.querySelector(':scope > .input-error');
+  if(!hint && el.parentElement){
+    hint = document.createElement('div');
+    hint.className = 'input-error';
+    hint.setAttribute('role', 'alert');
+    el.insertAdjacentElement('afterend', hint);
+  }
+  if(hint) hint.textContent = message || '';
+  el.classList.toggle('is-invalid', !!message);
+  el.setAttribute('aria-invalid', message ? 'true' : 'false');
+}
+function validateNumericInput(el, finalCheck){
+  const value = el.value.trim();
+  if(!value){
+    setNumericInputError(el, finalCheck ? 'Saisissez une valeur numérique.' : '');
+    return false;
+  }
+  if(!numericEntryValid(value)){
+    setNumericInputError(el, 'Saisie invalide. Utilisez un nombre, par exemple 3000 ou 12,5.');
+    return false;
+  }
+  setNumericInputError(el, '');
+  return true;
+}
+
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
@@ -2119,6 +2194,7 @@ function onInput(e){
       .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
     return;
   }
+  if(!validateNumericInput(e.target, false)) return;
   s[key] = parseNum(e.target.value);
   updateComputed();
 }
@@ -2129,6 +2205,7 @@ function onBlurClamp(e){
   const id = parseInt(e.target.dataset.id, 10);
   const s = findScenario(id);
   if(!s) return;
+  if(!validateNumericInput(e.target, true)) return;
   const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
   const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
   const v = clamp(parseNum(e.target.value), min, max);
@@ -2727,7 +2804,9 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
   });
 });
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
-  const val = parseNum(document.getElementById('raiseAmount').value);
+  const amountInput = document.getElementById('raiseAmount');
+  if(!validateNumericInput(amountInput, true)) return;
+  const val = parseNum(amountInput.value);
   addRaiseScenario(raiseType, val);
 });
 renderRaiseChips();
@@ -2812,7 +2891,9 @@ function updateAbsenceUI(){
 document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
   btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
 });
-document.getElementById('absenceDuree').addEventListener('input', updateAbsenceUI);
+document.getElementById('absenceDuree').addEventListener('input', (e) => {
+  if(validateNumericInput(e.target, false)) updateAbsenceUI();
+});
 
 document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
   const v = e.target.value;
@@ -2825,7 +2906,9 @@ document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
   }
   updateAbsenceUI();
 });
-document.getElementById('arretPct').addEventListener('input', updateAbsenceUI);
+document.getElementById('arretPct').addEventListener('input', (e) => {
+  if(validateNumericInput(e.target, false)) updateAbsenceUI();
+});
 
 document.querySelectorAll('#carenceToggle button').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -2838,14 +2921,17 @@ document.querySelectorAll('#carenceToggle button').forEach(btn => {
 function addAbsenceScenario(){
   const base = findScenario(refId);
   if(!base) return;
-  const duree = clamp(parseNum(document.getElementById('absenceDuree').value) || 0, 0, 30);
+  const dureeInput = document.getElementById('absenceDuree');
+  if(!validateNumericInput(dureeInput, true)) return;
+  if(absenceType === 'arret' && !validateNumericInput(document.getElementById('arretPct'), true)) return;
+  const duree = clamp(parseNum(dureeInput.value), 0, 30);
   const clone = Object.assign({}, base);
   delete clone.id;
   disableCardSnap();
 
   let created;
   if(absenceType === 'arret'){
-    const pct = clamp(parseNum(document.getElementById('arretPct').value) || 90, 0, 100);
+    const pct = clamp(parseNum(document.getElementById('arretPct').value), 0, 100);
     created = mkScenario(Object.assign(clone, {
       name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
       absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
@@ -2867,6 +2953,12 @@ document.getElementById('addAbsenceScenario').addEventListener('click', addAbsen
 updateAbsenceUI();
 
 render();
+// Un hash contenant explicitement un partage mais non restauré doit être signalé.
+// Le repli vers la sauvegarde locale ou l'onboarding reste inchangé.
+if(!loadedFromShare && location.hash &&
+   new URLSearchParams(location.hash.slice(1)).has('share')){
+  showToastImpl('Lien de partage invalide ou incomplet : les données n’ont pas pu être chargées.');
+}
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
