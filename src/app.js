@@ -36,22 +36,28 @@ const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','br
 const METRIC_DEFAUT = 'netHoraire';
 
 function sanitizeScenario(raw){
-  if(!raw || typeof raw !== 'object') return null;
+  if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
-  NUMERIC_KEYS.forEach(k => {
-    if(clean[k] === undefined) return;
-    const n = Number(clean[k]);
-    if(Number.isFinite(n)) clean[k] = n; else delete clean[k];
-  });
-  if(typeof clean.name !== 'string' || !clean.name.trim()) delete clean.name;
-  // Statut et taux forfaitaire retirés (v2.0.0) : purger toute trace d'un
-  // état enregistré par une version antérieure plutôt que la porter sans effet.
+  const limits = {
+    brut:[0,1000000], mutuelle:[0,100000], joursResto:[0,31],
+    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
+    primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
+  };
+  for(const [key, range] of Object.entries(limits)){
+    if(clean[key] === undefined) continue;
+    const n = Number(clean[key]);
+    if(!Number.isFinite(n) || n < range[0] || n > range[1]) return null;
+    clean[key] = n;
+  }
+  if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
+  clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
   delete clean.rate;
-  if(clean.dureeType !== '35' && clean.dureeType !== '39') delete clean.dureeType;
-  if(!['none','conges','arret'].includes(clean.absenceType)) delete clean.absenceType;
-  clean.carenceCouverte = !!clean.carenceCouverte;
-  if(!Number.isInteger(clean.id)) delete clean.id;
+  if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
+  if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
+  clean.carenceCouverte = clean.carenceCouverte === true;
+  if(!Number.isInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
 
@@ -63,18 +69,33 @@ function sanitizeScenario(raw){
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
 const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
-  const f = (raw && typeof raw === 'object') ? raw : {};
-  const nb = v => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-  const couple = !!f.couple;
+  const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
+  const nb = (v, min, max) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? clamp(n, min, max) : 0;
+  };
+  const couple = f.couple === true;
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
     couple,
-    personnesCharge: Math.max(0, Math.min(4, Math.floor(nb(f.personnesCharge)))),
-    // Les revenus du conjoint n'ont pas de sens hors couple : on les neutralise
-    // pour que la valeur calculée corresponde toujours à ce qui est affiché.
-    autresRevenus: couple ? Math.max(0, nb(f.autresRevenus)) : 0,
-    pasRate: clamp(nb(f.pasRate), 0, 100)
+    personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
+    autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
+    pasRate: nb(f.pasRate, 0, 100)
   };
+}
+
+function normalizeScenarioIds(scenarios){
+  const used = new Set();
+  let nextId = 0;
+  return scenarios.map(s => {
+    let id = Number.isInteger(s.id) && s.id >= 0 ? s.id : null;
+    if(id === null || used.has(id)){
+      while(used.has(nextId)) nextId++;
+      id = nextId++;
+    }
+    used.add(id);
+    return Object.assign({}, s, { id });
+  });
 }
 
 function loadPersistedState(){
@@ -83,7 +104,7 @@ function loadPersistedState(){
     if(!raw) return null;
     const data = JSON.parse(raw);
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
+    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
@@ -128,7 +149,7 @@ function loadShareState(){
     if(!encoded) return null;
     const data = JSON.parse(fromBase64Url(encoded));
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = data.scenarios.map(sanitizeScenario).filter(Boolean);
+    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
     if(!cleaned.length) return null;
     return { scenarios: cleaned, refId: data.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
