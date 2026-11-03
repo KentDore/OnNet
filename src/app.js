@@ -57,7 +57,7 @@ function sanitizeScenario(raw){
   if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
   if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
   clean.carenceCouverte = clean.carenceCouverte === true;
-  if(!Number.isInteger(clean.id) || clean.id < 0) delete clean.id;
+  if(!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
 
@@ -84,18 +84,26 @@ function sanitizeFoyer(raw){
   };
 }
 
-function normalizeScenarioIds(scenarios){
-  const used = new Set();
-  let nextId = 0;
-  return scenarios.map(s => {
-    let id = Number.isInteger(s.id) && s.id >= 0 ? s.id : null;
-    if(id === null || used.has(id)){
-      while(used.has(nextId)) nextId++;
-      id = nextId++;
+function normalizeScenarioIds(scenarios, refId, openCardIds){
+  // Les identifiants restaurés ne sont jamais conservés : une suite compacte
+  // évite les dépassements de précision et garantit un prochain id exploitable.
+  const oldToIndex = new Map();
+  const normalized = scenarios.map((scenario, index) => {
+    if(Number.isSafeInteger(scenario.id) && scenario.id >= 0 && !oldToIndex.has(scenario.id)){
+      oldToIndex.set(scenario.id, index);
     }
-    used.add(id);
-    return Object.assign({}, s, { id });
+    return Object.assign({}, scenario, { id: index });
   });
+  const refIndex = Number.isSafeInteger(refId) ? oldToIndex.get(refId) : undefined;
+  const normalizedRefId = refIndex === undefined
+    ? (normalized.length ? normalized[0].id : null)
+    : normalized[refIndex].id;
+  const normalizedOpenCardIds = Array.isArray(openCardIds)
+    ? [...new Set(openCardIds
+        .filter(id => Number.isSafeInteger(id) && oldToIndex.has(id))
+        .map(id => normalized[oldToIndex.get(id)].id))]
+    : [];
+  return { scenarios: normalized, refId: normalizedRefId, openCardIds: normalizedOpenCardIds };
 }
 
 function loadPersistedState(){
@@ -104,11 +112,12 @@ function loadPersistedState(){
     if(!raw) return null;
     const data = JSON.parse(raw);
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
-    if(!cleaned.length) return null;
-    return { scenarios: cleaned, refId: data.refId, metric: data.metric,
+    const restored = normalizeScenarioIds(
+      data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId, data.openCardIds);
+    if(!restored.scenarios.length) return null;
+    return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
-             openCardIds: data.openCardIds, foyer: sanitizeFoyer(data.foyer) };
+             openCardIds: restored.openCardIds, foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
 }
 
@@ -161,9 +170,10 @@ function loadShareState(){
     if(!encoded) return null;
     const data = JSON.parse(fromBase64Url(encoded));
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
-    if(!cleaned.length) return null;
-    return { scenarios: cleaned, refId: data.refId, metric: data.metric,
+    const restored = normalizeScenarioIds(
+      data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId);
+    if(!restored.scenarios.length) return null;
+    return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
              foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
@@ -238,7 +248,7 @@ if(loadedFromShare){
 let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod, foyer;
 if(initialSource){
   scenarios = initialSource.scenarios.map(sv => mkScenario(sv));
-  idCounter = scenarios.reduce((max, s) => Math.max(max, s.id), -1) + 1;
+  idCounter = scenarios.length;
   refId = scenarios.some(s => s.id === initialSource.refId) ? initialSource.refId : scenarios[0].id;
   metric = METRIC_KEYS.includes(initialSource.metric) ? initialSource.metric : METRIC_DEFAUT;
   displayAmt = initialSource.displayAmt === 'brut' ? 'brut' : 'net';
