@@ -31,11 +31,11 @@ test('la restauration renumérote les scénarios et conserve les références va
   const appPath = path.join(__dirname, '..', 'src', 'app.js');
   const app = fs.readFileSync(appPath, 'utf8');
   const start = app.indexOf('function sanitizeScenario(raw){');
-  const end = app.indexOf('\\nfunction loadPersistedState(){', start);
+  const end = app.indexOf('\nfunction loadPersistedState(){', start);
   assert.notEqual(start, -1, 'sanitizeScenario doit être présent');
   assert.notEqual(end, -1, 'le bloc de normalisation doit être délimité');
   const factory = new Function(app.slice(start, end) +
-    '\\nreturn { sanitizeScenario, normalizeScenarioIds };');
+    '\nreturn { sanitizeScenario, normalizeScenarioIds };');
   const { sanitizeScenario, normalizeScenarioIds } = factory();
 
   const restored = [
@@ -58,9 +58,9 @@ test('la restauration utilise le premier scénario si la référence est invalid
   const appPath = path.join(__dirname, '..', 'src', 'app.js');
   const app = fs.readFileSync(appPath, 'utf8');
   const start = app.indexOf('function sanitizeScenario(raw){');
-  const end = app.indexOf('\\nfunction loadPersistedState(){', start);
+  const end = app.indexOf('\nfunction loadPersistedState(){', start);
   const factory = new Function(app.slice(start, end) +
-    '\\nreturn { sanitizeScenario, normalizeScenarioIds };');
+    '\nreturn { sanitizeScenario, normalizeScenarioIds };');
   const { sanitizeScenario, normalizeScenarioIds } = factory();
 
   const restored = [
