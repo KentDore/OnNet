@@ -26,3 +26,50 @@ test('le build assemble les sources en HTML autonome', t => {
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal((html.match(/<script>/g) || []).length, 2);
 });
+
+test('la restauration renumérote les scénarios et conserve les références valides', () => {
+  const appPath = path.join(__dirname, '..', 'src', 'app.js');
+  const app = fs.readFileSync(appPath, 'utf8');
+  const start = app.indexOf('function sanitizeScenario(raw){');
+  const end = app.indexOf('\\nfunction loadPersistedState(){', start);
+  assert.notEqual(start, -1, 'sanitizeScenario doit être présent');
+  assert.notEqual(end, -1, 'le bloc de normalisation doit être délimité');
+  const factory = new Function(app.slice(start, end) +
+    '\\nreturn { sanitizeScenario, normalizeScenarioIds };');
+  const { sanitizeScenario, normalizeScenarioIds } = factory();
+
+  const restored = [
+    { id: 9007199254740992, name: 'Identifiant non sûr', brut: 2800 },
+    { id: 42, name: 'Premier doublon', brut: 3000 },
+    { id: 42, name: 'Second doublon', brut: 3200 },
+    { id: -1, name: 'Identifiant négatif', brut: 3400 }
+  ].map(sanitizeScenario).filter(Boolean);
+
+  const result = normalizeScenarioIds(restored, 42, [42, 42, -1, 9007199254740992, 999]);
+  assert.deepEqual(result.scenarios.map(s => s.id), [0, 1, 2, 3]);
+  assert.deepEqual(result.scenarios.map(s => s.name), [
+    'Identifiant non sûr', 'Premier doublon', 'Second doublon', 'Identifiant négatif'
+  ]);
+  assert.equal(result.refId, 1, 'la référence conserve le premier scénario portant cet ancien id');
+  assert.deepEqual(result.openCardIds, [1], 'les cartes ouvertes sont remappées sans doublon');
+});
+
+test('la restauration utilise le premier scénario si la référence est invalide', () => {
+  const appPath = path.join(__dirname, '..', 'src', 'app.js');
+  const app = fs.readFileSync(appPath, 'utf8');
+  const start = app.indexOf('function sanitizeScenario(raw){');
+  const end = app.indexOf('\\nfunction loadPersistedState(){', start);
+  const factory = new Function(app.slice(start, end) +
+    '\\nreturn { sanitizeScenario, normalizeScenarioIds };');
+  const { sanitizeScenario, normalizeScenarioIds } = factory();
+
+  const restored = [
+    { id: Number.MAX_SAFE_INTEGER, name: 'A', brut: 2800 },
+    { id: 8, name: 'B', brut: 3000 }
+  ].map(sanitizeScenario).filter(Boolean);
+  const result = normalizeScenarioIds(restored, Number.MAX_SAFE_INTEGER + 1, [8, 123]);
+
+  assert.equal(result.refId, 0);
+  assert.deepEqual(result.openCardIds, [1]);
+  assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
+});
