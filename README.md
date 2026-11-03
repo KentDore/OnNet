@@ -57,7 +57,7 @@ Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptabl
 Après modification des sources, générez un nouveau fichier autonome en lui donnant sa version :
 
 ```
-node scripts/build.js 2.0.11
+node scripts/build.js 2.0.12
 ```
 
 Les fichiers de développement restent séparés ; le résultat livré contient toujours le CSS et le JavaScript intégrés.
