@@ -47,6 +47,16 @@ async function openApp() {
   const context = await browser.newContext();
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseUrl });
   const page = await context.newPage();
+  await page.addInitScript(() => {
+    localStorage.setItem('onnet.state.v1', JSON.stringify({
+      v: 1,
+      scenarios: [{ id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39' }],
+      refId: 0,
+      metric: 'netHoraire',
+      displayAmt: 'net',
+      displayPeriod: 'mensuel'
+    }));
+  });
   await page.goto(baseUrl);
   return { context, page };
 }
