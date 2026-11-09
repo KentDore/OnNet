@@ -1565,7 +1565,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
   return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, joursResto: 0 };
+    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
