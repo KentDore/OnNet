@@ -555,68 +555,48 @@
 .input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
 input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
 
-/* Repères salariaux : deux comparaisons lisibles, sans tableau de bord superflu */
-.benchmark-panel{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:var(--radius-lg,18px);background:var(--panel,rgba(255,255,255,.58))}
-.benchmark-heading{margin-bottom:14px}.benchmark-heading .bars-title{margin:0 0 5px}.benchmark-heading .hint{margin:0}
-.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.benchmark-item{min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface,rgba(255,255,255,.5))}
-.benchmark-label{font-size:.84rem;color:var(--muted);font-weight:650}
-.benchmark-comparison{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:8px 0 12px}
-.benchmark-value{font-size:1.55rem;font-weight:750;letter-spacing:-.04em}
-.benchmark-meta,.benchmark-context{font-size:.78rem;line-height:1.45;color:var(--muted)}
-.benchmark-result{flex:none;text-align:right;font-size:1rem;font-weight:750}.benchmark-result small{display:block;font-size:.76rem;font-weight:600}
-.benchmark-positive{color:var(--success,#24764b)}.benchmark-negative{color:var(--warn,#b42318)}
-.benchmark-context strong{color:var(--ink);font-weight:650}
-.benchmark-contract{margin-top:10px;font-size:.78rem;color:var(--muted)}.benchmark-contract summary{cursor:pointer}.benchmark-contract p{margin:7px 0 0}.benchmark-contract strong{color:var(--ink)}
-.benchmark-settings{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}.benchmark-settings>summary{font-size:.88rem;font-weight:650;cursor:pointer}
-.benchmark-settings-body{padding-top:12px}.benchmark-settings-body>p{font-size:.82rem;color:var(--muted);line-height:1.5;margin:0 0 12px}
-.benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.benchmark-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.benchmark-source{margin-top:12px!important}.benchmark-source a{color:var(--accent)}
-.benchmark-disclaimer{font-size:.76rem;line-height:1.5;color:var(--muted);margin:14px 0 0}
-@media(max-width:600px){.benchmark-panel{padding:15px}.benchmark-grid{grid-template-columns:1fr}.benchmark-fields{grid-template-columns:1fr}.benchmark-value{font-size:1.45rem}}
-@media print{.benchmark-settings{display:none}}
-
-
-/* Repères salariaux — présentation sombre cohérente avec OnNet */
+/* Repères salariaux — thème OnNet, contraste cohérent et styles uniques */
 .benchmark-panel{
-  margin-top:22px;
-  padding:clamp(18px,3vw,28px);
-  color:var(--text);
-  background:var(--surface, #1b211f);
-  border:1px solid var(--line);
-  border-radius:24px;
+  margin-top:22px;padding:clamp(18px,3vw,28px);
+  color:var(--ink);background:var(--surface);
+  border:1px solid var(--line);border-radius:24px;
 }
-.benchmark-panel .benchmark-heading{margin-bottom:20px}
-.benchmark-panel .benchmark-heading .hint{margin:7px 0 0;color:var(--muted)}
+.benchmark-heading{margin-bottom:20px}
+.benchmark-heading .bars-title{margin:0 0 5px}
+.benchmark-heading .hint{margin:7px 0 0;color:var(--ink-soft)}
 .benchmark-your-salary{
   display:flex;align-items:center;justify-content:space-between;gap:14px;
   padding:16px 18px;margin-bottom:14px;
-  background:var(--bg, #121715);border:1px solid var(--line);border-radius:16px;
+  color:var(--ink);background:var(--bg);
+  border:1px solid var(--line);border-radius:16px;
 }
-.benchmark-your-salary>span{font-size:.92rem;color:var(--muted)}
+.benchmark-your-salary>span{font-size:.92rem;color:var(--ink-soft)}
 .benchmark-your-salary>strong{font-size:clamp(1.35rem,3vw,1.8rem);font-weight:750;white-space:nowrap}
-.benchmark-your-salary small{font-size:.78rem;color:var(--muted);font-weight:500}
+.benchmark-your-salary small{font-size:.78rem;color:var(--ink-soft);font-weight:500}
 .benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .benchmark-item{
-  min-width:0;padding:20px;
-  background:var(--bg, #121715);border:1px solid var(--line);border-radius:18px;
+  min-width:0;padding:20px;color:var(--ink);
+  background:var(--bg);border:1px solid var(--line);border-radius:18px;
 }
-.benchmark-label{font-size:.94rem;font-weight:650;color:var(--text);margin-bottom:12px}
-.benchmark-value{font-size:clamp(1.7rem,4vw,2.25rem);font-weight:800;letter-spacing:-.04em;color:var(--text);line-height:1.15}
-.benchmark-meta{margin-top:8px;font-size:.8rem;line-height:1.5;color:var(--muted)}
+.benchmark-label{font-size:.94rem;font-weight:650;color:var(--ink);margin-bottom:12px}
+.benchmark-value{font-size:clamp(1.7rem,4vw,2.25rem);font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1.15}
+.benchmark-meta{margin-top:8px;font-size:.8rem;line-height:1.5;color:var(--ink-soft)}
 .benchmark-result{display:flex;align-items:baseline;gap:7px;margin-top:20px;font-size:1.35rem;font-weight:750}
 .benchmark-result small{font-size:.9rem;font-weight:650}
-.benchmark-positive{color:var(--success, #48c78e)}
-.benchmark-negative{color:var(--warning, #e99a70)}
-.benchmark-context{margin-top:10px;font-size:.83rem;line-height:1.5;color:var(--muted)}
-.benchmark-contract{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
-.benchmark-contract summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--text)}
-.benchmark-contract p{margin:10px 0 0;color:var(--muted);font-size:.88rem}
+.benchmark-positive{color:var(--accent)}
+.benchmark-negative{color:var(--warn)}
+.benchmark-context{margin-top:10px;font-size:.83rem;line-height:1.5;color:var(--ink-soft)}
+.benchmark-context strong{color:var(--ink)}
+.benchmark-contract{margin-top:16px;padding-top:12px;border-top:1px solid var(--line);font-size:.88rem}
+.benchmark-contract summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--ink)}
+.benchmark-contract p{margin:10px 0 0;color:var(--ink-soft);font-size:.88rem}
 .benchmark-settings{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
 .benchmark-settings-body{padding-top:14px}
-.benchmark-settings-body>p,.benchmark-disclaimer{font-size:.82rem;line-height:1.6;color:var(--muted)}
+.benchmark-settings-body>p,.benchmark-disclaimer{font-size:.82rem;line-height:1.6;color:var(--ink-soft)}
 .benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .benchmark-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.benchmark-source{margin-top:12px!important}
+.benchmark-source a{color:var(--accent)}
 .benchmark-disclaimer{margin:16px 0 0}
 @media(max-width:600px){
   .benchmark-panel{padding:18px;border-radius:20px}
@@ -625,3 +605,4 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .benchmark-item{padding:18px}
   .benchmark-result{margin-top:16px}
 }
+@media print{.benchmark-settings{display:none}}
