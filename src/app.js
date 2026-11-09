@@ -97,16 +97,20 @@ function sanitizeScenario(raw){
 // mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
 //                 s'applique tel quel — les champs de situation n'ont alors
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
-const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
+const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
   const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
   const nb = (v, min, max) => {
     const n = Number(v);
     return Number.isFinite(n) ? clamp(n, min, max) : 0;
   };
-  const couple = f.couple === true;
+  // Rétrocompatibilité : les anciens états ne connaissent que couple=true/false.
+  const situation = ['seul','commun','concubinage'].includes(f.situation)
+    ? f.situation : (f.couple === true ? 'commun' : 'seul');
+  const couple = situation === 'commun';
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
+    situation,
     couple,
     personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
     autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
@@ -919,7 +923,9 @@ function bindRefPickers(){
 function foyerResume(){
   if(foyer.mode === 'taux') return `Taux personnel : ${foyer.pasRate.toFixed(1)} %`;
   const n = foyer.personnesCharge;
-  const bouts = [foyer.couple ? 'En couple' : 'Seul(e)'];
+  const situationLabel = foyer.situation === 'commun' ? 'Marié(e) / PACS'
+    : foyer.situation === 'concubinage' ? 'Concubinage (imposition séparée)' : 'Seul(e)';
+  const bouts = [situationLabel];
   bouts.push(n === 0 ? 'sans personne à charge'
                      : (n === 1 ? '1 personne à charge' : `${n} personnes à charge`));
   if(foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
@@ -940,10 +946,11 @@ function syncFoyerUI(){
   setShown('foyerTauxFields', foyer.mode === 'taux');
 
   document.querySelectorAll('#foyerSituation button').forEach(b => {
-    b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === foyer.couple ? 'true' : 'false');
+    b.setAttribute('aria-pressed', b.dataset.foyer === foyer.situation ? 'true' : 'false');
   });
-  // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
-  // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
+  // Les revenus du conjoint ne sont inclus que pour un foyer fiscal commun.
+  // En concubinage, les deux déclarations restent séparées.
+  setShown('foyerConcubinageInfo', foyer.situation === 'concubinage');
   setShown('foyerConjointRow', foyer.couple);
   const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
   setShown('foyerWarn', alerteBareme);
@@ -983,7 +990,9 @@ function bindFoyerModule(){
   });
   document.querySelectorAll('#foyerSituation button').forEach(btn => {
     btn.addEventListener('click', () => {
-      foyer.couple = btn.dataset.foyer === 'couple';
+      foyer.situation = ['seul','commun','concubinage'].includes(btn.dataset.foyer)
+        ? btn.dataset.foyer : 'seul';
+      foyer.couple = foyer.situation === 'commun';
       if(!foyer.couple){
         foyer.autresRevenus = 0;
         const champ = document.getElementById('foyerConjoint');
