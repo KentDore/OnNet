@@ -377,10 +377,17 @@ function renderCard(s, r, showRemove){
       <summary>Détails avancés</summary>
       <div class="more-body">
         <div class="section-tag">Mutuelle</div>
-        <div class="field-row">
-          <label for="f-mutuelle-${uid}">Mutuelle (€ / mois)</label>
-          ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+        <div class="two-col">
+          <div class="field-row">
+            <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
+            ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+          </div>
+          <div class="field-row">
+            <label for="f-mutuelle-pat-${uid}">Part employeur (€ / mois)</label>
+            ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
+          </div>
         </div>
+        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
