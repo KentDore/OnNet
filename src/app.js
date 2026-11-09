@@ -618,9 +618,7 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
   const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
-  // Recalculer le net sur le seul brut de base : une simple règle de trois
-  // sur le net 39 h serait fausse (cotisations, réduction HS et plafonds).
-  // On conserve les paramètres personnels du scénario, mais on retire les HS.
+  // Le net est recalculé à 35 h : une règle de trois depuis 39 h serait inexacte.
   const base35 = compute({ ...s, brut: brut35, dureeType: '35' }, foyer);
   const net35 = Math.max(0, base35.m.netSocial);
   const smic = benchmarkDelta(brut35, benchmarks.smicBrut);
@@ -628,39 +626,28 @@ function renderBenchmarks(computed){
   const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
   return `
     <div class="benchmark-heading">
-      <div><h2 class="bars-title">Votre salaire face aux repères</h2><p class="hint">Référence sélectionnée : <strong>${esc(s.name)}</strong>. Montants normalisés sur 35 h, avant impôt.</p></div>
-      <span class="benchmark-tag">Repères nationaux</span>
+      <div><h2 class="bars-title">Votre salaire face aux repères</h2><p class="hint">Comparaison du salaire sélectionné, ramené à 35 h.</p></div>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC brut mensuel · 35 h</div>
-        <div class="benchmark-value">${fmt(benchmarks.smicBrut)}</div>
-        <div class="benchmark-meta">Repère en vigueur depuis le ${esc(benchmarks.smicDate)}</div>
-        <div class="benchmark-delta ${signedClass(smic)}">${smic.amount} (${smic.pct})</div>
-        <div class="benchmark-context">Votre brut de base équivalent : ${fmt(brut35)} / mois</div>
+        <div class="benchmark-comparison"><div><div class="benchmark-value">${fmt(benchmarks.smicBrut)}</div><div class="benchmark-meta">Repère officiel · depuis le ${esc(benchmarks.smicDate)}</div></div><div class="benchmark-result ${signedClass(smic)}">${smic.amount}<small>(${smic.pct})</small></div></div>
+        <div class="benchmark-context">Votre brut de base : <strong>${fmt(brut35)}</strong> / mois à 35 h</div>
       </article>
       <article class="benchmark-item">
         <div class="benchmark-label">Salaire médian du privé · net</div>
-        <div class="benchmark-value">2 190 €</div>
-        <div class="benchmark-meta">Équivalent temps plein · INSEE, 2024</div>
-        <div class="benchmark-delta ${signedClass(median)}">${median.amount} (${median.pct})</div>
-        <div class="benchmark-context">Votre net social recalculé à 35 h : ${fmt(net35)} / mois</div>
-        <div class="benchmark-context">À ${s.dureeType} h, net social estimé réel : ${fmt(r.m.netSocial)} / mois</div>
+        <div class="benchmark-comparison"><div><div class="benchmark-value">2 190 €</div><div class="benchmark-meta">INSEE · 2024 · équivalent temps plein</div></div><div class="benchmark-result ${signedClass(median)}">${median.amount}<small>(${median.pct})</small></div></div>
+        <div class="benchmark-context">Votre net social recalculé à 35 h : <strong>${fmt(net35)}</strong> / mois</div>
+        <details class="benchmark-contract"><summary>Voir votre estimation au contrat actuel</summary><p>À ${s.dureeType} h : <strong>${fmt(r.m.netSocial)}</strong> net social estimé / mois.</p></details>
       </article>
     </div>
-    <details class="benchmark-settings">
-      <summary>Actualiser le montant du SMIC</summary>
-      <div class="benchmark-settings-body">
-        <p>Modifiez le repère brut si le SMIC évolue. Cette valeur est enregistrée uniquement dans ce navigateur ; elle ne met pas à jour les règles de paie du simulateur.</p>
-        <div class="benchmark-fields">
-          <div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div>
-          <div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div>
-        </div>
-        <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-        <p class="benchmark-source">Source officielle : <a href="https://code.travail.gouv.fr/fiche-ministere-travail/le-smic" target="_blank" rel="noopener noreferrer">Code du travail numérique</a>. Vérifiez le montant et la date d’effet avant de les modifier.</p>
-      </div>
-    </details>
-    <p class="benchmark-disclaimer">Comparaison indicative, pas un contrôle juridique du respect du SMIC. Le net social est une estimation issue du simulateur ; le salaire médian est une donnée INSEE 2024, pas une référence propre à votre métier ou région.</p>`;
+    <details class="benchmark-settings"><summary>Modifier le montant du SMIC</summary><div class="benchmark-settings-body">
+      <p>Cette valeur est enregistrée uniquement dans ce navigateur. Elle ne modifie pas les règles de paie du simulateur.</p>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
+      <p class="benchmark-source">Source officielle : <a href="https://code.travail.gouv.fr/fiche-ministere-travail/le-smic" target="_blank" rel="noopener noreferrer">Code du travail numérique</a>. Vérifiez le montant et la date d’effet avant modification.</p>
+    </div></details>
+    <p class="benchmark-disclaimer">Les deux repères ne sont pas directement comparables entre eux : le SMIC est exprimé en brut, le salaire médian en net. Votre net social est une estimation ; le médian INSEE 2024 n’est pas spécifique à votre métier ou région.</p>`;
 }
 function bindBenchmarkSettings(){
   const save = document.getElementById('saveBenchmarkSettings');
