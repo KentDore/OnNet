@@ -332,22 +332,20 @@ describe('compute() — cas de référence (calculés à la main)', () => {
     near(r.netImposable, 5000 - 894.7095, 0.01, 'net imposable');
   });
 
-  test('mutuelle : retirée du net, part patronale réintégrée à l’imposable', () => {
-    const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
-    const avec = C.compute(scn({ brut: 3000, mutuelle: 30 }));
+  test('mutuelle : part salarié retenue sur le net, part employeur imposable', () => {
+    const base = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
+    const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 30 }));
     near(avec.netApres, base.netApres - 30, 0.01, 'net diminué de la part salariale');
-    // Partage 50/50 : la part patronale réintégrée compense exactement la part
-    // salariale déduite, l'assiette imposable est donc inchangée.
-    near(avec.netImposable, base.netImposable, 0.01,
-      'imposable : −part salariale +part patronale à parts égales');
+    near(avec.netImposable, base.netImposable + 30, 0.01,
+      'la contribution employeur augmente le net imposable');
   });
 
   test('mutuelle : les parts salarié et employeur sont indépendantes', () => {
     const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
     const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 45 }));
     near(avec.netApres, base.netApres - 30, 0.01, 'part salarié déduite du net payé');
-    near(avec.netImposable, base.netImposable + 15, 0.01,
-      'net imposable : part employeur moins part salarié');
+    near(avec.netImposable, base.netImposable + 45, 0.01,
+      'net imposable : seule la part employeur est réintégrée');
   });
 
   test('sans mutuelle déclarée, aucune part patronale fantôme', () => {
@@ -361,11 +359,11 @@ describe('compute() — cas de référence (calculés à la main)', () => {
       0.01, 'imposable sans aucun élément de mutuelle');
   });
 
-  test('la part patronale de mutuelle suit la part salariale', () => {
+  test('une part salariale seule réduit le net payé sans réduire le net imposable', () => {
     for(const mut of [0, 15, 30, 80]){
-      const r = C.compute(scn({ brut: 3000, mutuelle: mut }));
-      const nu = C.compute(scn({ brut: 3000, mutuelle: 0 }));
-      near(r.netImposable, nu.netImposable, 0.01, `mutuelle ${mut} €`);
+      const r = C.compute(scn({ brut: 3000, mutuelle: mut, mutuellePat: 0 }));
+      const nu = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
+      near(r.netImposable, nu.netImposable, 0.01, `imposable avec part salarié ${mut} €`);
       near(r.netApres, nu.netApres - mut, 0.01, `net avec mutuelle ${mut} €`);
     }
   });
