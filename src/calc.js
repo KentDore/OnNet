@@ -242,11 +242,13 @@ function compute(s, foyer){
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
 
-  // Part patronale de mutuelle : réintégrée dans le net imposable. Faute d'un
-  // champ dédié, on retient le partage 50/50 — le minimum légal — plutôt qu'un
-  // forfait figé, qui gonflait l'imposable même sans mutuelle déclarée.
-  const mutuellePat = Math.max(0, s.mutuelle || 0);
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, mutuellePat, tr, P.plafondExoIR/12);
+  // La part salariale est retenue sur le net payé ; la part patronale est
+  // réintégrée au net imposable. L'ancien modèle supposait les deux parts égales.
+  // On conserve ce comportement pour les scénarios historiques sans mutuellePat.
+  const mutuellePat = Math.max(0, s.mutuellePat === undefined
+    ? (s.mutuelle || 0) : (s.mutuellePat || 0));
+  const mutuelleSal = Math.max(0, s.mutuelle || 0);
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, mutuelleSal, mutuellePat, tr, P.plafondExoIR/12);
 
   // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
   // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
@@ -258,8 +260,11 @@ function compute(s, foyer){
   const nbMois = s.nbMois || 12;
   const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
   const aBase = split.brutBase * nbMois + (s.primes || 0);
-  const aHS = split.brutHS * 12;
-  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
+  // Par défaut, les heures supplémentaires sont annualisées sur 12 mois.
+  // Certains contrats incluent toutefois ces heures dans le 13e/14e mois :
+  // l'option 'ensemble' les annualise alors sur le même nombre de mensualités.
+  const aHS = split.brutHS * (s.treiziemeMoisBase === 'ensemble' ? nbMois : 12);
+  const a = periode(aBase, aHS, s, P.pmss * 12, mutuelleSal * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
 
   // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
   // normalement et une portion d'absence, sur un mois de référence de 30 jours.
