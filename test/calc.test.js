@@ -342,6 +342,14 @@ describe('compute() — cas de référence (calculés à la main)', () => {
       'imposable : −part salariale +part patronale à parts égales');
   });
 
+  test('mutuelle : les parts salarié et employeur sont indépendantes', () => {
+    const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+    const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 45 }));
+    near(avec.netApres, base.netApres - 30, 0.01, 'part salarié déduite du net payé');
+    near(avec.netImposable, base.netImposable + 15, 0.01,
+      'net imposable : part employeur moins part salarié');
+  });
+
   test('sans mutuelle déclarée, aucune part patronale fantôme', () => {
     // Un forfait patronal figé gonflait l'imposable de 540 €/an même à 0 €
     // de mutuelle, sans qu'aucun champ ne permette de le corriger.
@@ -463,6 +471,19 @@ describe('compute() — annuel', () => {
     const treize = C.compute(scn({ brut: 3000, nbMois: 13 }));
     near(treize.netApres, douze.netApres, 1e-9, 'mensuel inchangé');
     assert.ok(treize.annuelNet > douze.annuelNet, 'annuel augmenté');
+  });
+
+  test('13e mois à 39 h : le traitement des heures sup est réglable', () => {
+    const scenario = scn({ brut: 3000, dureeType: '39', nbMois: 13 });
+    const split = C.splitHeures(scenario);
+    const baseSeule = C.compute(Object.assign({}, scenario, { treiziemeMoisBase: 'base' }));
+    const toutCompris = C.compute(Object.assign({}, scenario, { treiziemeMoisBase: 'ensemble' }));
+    near(baseSeule.a.brutTotal, split.brutBase * 13 + split.brutHS * 12, 0.01,
+      '13e mois limité au salaire de base');
+    near(toutCompris.a.brutTotal, split.brutBase * 13 + split.brutHS * 13, 0.01,
+      '13e mois incluant les heures supplémentaires');
+    near(toutCompris.a.brutTotal - baseSeule.a.brutTotal, split.brutHS, 0.01,
+      'écart égal à une mensualité d’heures supplémentaires');
   });
 
   test('les primes n’affectent que l’annuel', () => {
