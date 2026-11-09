@@ -39,7 +39,7 @@ const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06
 function loadBenchmarks(){
   try{
     const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    const smicBrut = Number(saved && saved.smicBrut);
+    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
     const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
     return {
       smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
