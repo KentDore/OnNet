@@ -123,9 +123,10 @@
           <div id="foyerBaremeFields">
             <div class="field-row">
               <label>Situation</label>
-              <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
+              <div class="pill-toggle foyer-situation-toggle" id="foyerSituation" role="group" aria-label="Situation fiscale" style="width:100%;">
                 <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-                <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+                <button type="button" data-foyer="commun" aria-pressed="false" style="flex:1;">Marié / PACS</button>
+                <button type="button" data-foyer="concubinage" aria-pressed="false" style="flex:1;">Concubinage</button>
               </div>
             </div>
 
@@ -149,6 +150,9 @@
 
             <div class="alert alert-warn" id="foyerWarn" style="display:none;">
               <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
+            </div>
+            <div class="alert alert-info" id="foyerConcubinageInfo" style="display:none;">
+              <span>ⓘ</span><span>En concubinage, chacun fait sa propre déclaration. Les revenus de votre partenaire ne sont pas ajoutés à votre foyer fiscal. Indiquez uniquement les personnes à charge rattachées à votre déclaration.</span>
             </div>
           </div>
 
