@@ -985,6 +985,8 @@ function updateComputed(){
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
 
