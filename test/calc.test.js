@@ -67,7 +67,7 @@ function scn(over){
     mode 'bareme' par défaut ; mode 'taux' applique pasRate tel quel. */
 function foy(over){
   return Object.assign({ mode: 'bareme', couple: false, personnesCharge: 0,
-                          autresRevenus: 0, pasRate: 0 }, over || {});
+                          parentIsole: false, autresRevenus: 0, pasRate: 0 }, over || {});
 }
 
 function near(actual, expected, eps, label){
@@ -570,6 +570,23 @@ describe('barème de l’impôt sur le revenu', () => {
     assert.equal(C.partsFiscales(false, -2), 1, 'valeur négative ignorée');
   });
 
+  test('parent isolé : majoration des parts et plafonnement spécifique', () => {
+    assert.equal(C.partsFiscales(false, 0, true), 1,
+      'sans personne à charge, pas de majoration case T');
+    assert.equal(C.partsFiscales(false, 1, true), 2,
+      'parent isolé avec un enfant : 2 parts');
+    assert.equal(C.partsFiscales(false, 2, true), 2.5,
+      'parent isolé avec deux enfants : 2,5 parts');
+    assert.equal(C.partsFiscales(true, 1, true), 2.5,
+      'la majoration parent isolé ne s’applique pas à un foyer commun');
+    near(C.impotFoyer(60000, false, 1, true), 6841.99, 0.01,
+      'avantage du premier enfant plafonné à 4 262 €');
+    near(C.impotFoyer(60000, false, 2, true), 5034.99, 0.01,
+      'les demi-parts suivantes conservent leur plafond ordinaire');
+    near(C.impotFoyer(60000, false, 0, true), C.impotFoyer(60000, false, 0, false),
+      1e-9, 'aucun effet sans personne à charge');
+  });
+
   test('impôt d’un célibataire avec décote — calculé à la main', () => {
     // Revenu 27 000 → impôt brut 1 694 ; décote = 897 − 45,25 % × 1 694 = 130,465
     near(C.impotFoyer(27000, false, 0), 1563.535, 0.01);
@@ -681,6 +698,13 @@ describe('compute() — impôt sur le revenu', () => {
     const avecConjoint = C.compute(scn({ brut: 3000 }), foy({ couple:true, autresRevenus:40000 }));
     assert.ok(avecConjoint.impotAnnuel > seulRevenu.impotAnnuel,
       'le supplément d’impôt doit être plus élevé');
+  });
+
+  test('le statut parent isolé modifie le supplément d’impôt du salaire', () => {
+    const standard = C.compute(scn({ brut: 3000 }), foy({ personnesCharge: 1 }));
+    const parent = C.compute(scn({ brut: 3000 }), foy({ personnesCharge: 1, parentIsole: true }));
+    assert.ok(parent.impotAnnuel < standard.impotAnnuel,
+      'la majoration case T doit réduire l’impôt estimé');
   });
 
   test('l’impôt imputé est bien un supplément, pas l’impôt du foyer entier', () => {
