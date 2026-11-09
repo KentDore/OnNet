@@ -603,3 +603,28 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .benchmark-item{padding:18px}
   .benchmark-result{margin-top:16px}
 }
+
+
+/* Choix des données de partage : lisible et utilisable sur mobile. */
+.share-options-group{
+  min-width:0;margin:0 0 12px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+}
+.share-options-group legend{padding:0 5px;font-size:.82rem;font-weight:700;color:var(--ink)}
+.share-scenario-option,.share-extra-option{
+  display:flex;align-items:flex-start;gap:10px;padding:9px 2px;
+  color:var(--ink);font-size:.86rem;line-height:1.4;cursor:pointer;
+}
+.share-scenario-option+ .share-scenario-option,
+.share-extra-option+ .share-extra-option{border-top:1px solid var(--line)}
+.share-scenario-option input,.share-extra-option input{
+  width:17px;height:17px;flex:none;margin:2px 0 0;accent-color:var(--accent);
+}
+.share-scenario-option span,.share-extra-option span{min-width:0;display:block}
+.share-scenario-option small,.share-extra-option small{
+  display:block;margin-top:2px;color:var(--ink-soft);font-size:.76rem;line-height:1.4;
+}
+.share-scenario-option strong,.share-extra-option strong{font-weight:650}
+#shareCreateBtn:disabled{opacity:.45;cursor:not-allowed}
+.foyer-situation-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.foyer-situation-toggle button{padding-left:5px;padding-right:5px;white-space:normal}
