@@ -490,16 +490,14 @@ function renderCard(s, r, showRemove){
           </div>
         </div>
         <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
-        ${s.dureeType === '39' && s.nbMois > 12 ? `
-          <div class="field-row" style="margin-top:12px;">
-            <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
-            <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
-              <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
-              <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
-            </select>
-            <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
-          </div>
-        ` : ''}
+        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
+          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
+          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
+            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
+            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
+          </select>
+          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
+        </div>
       </div>
     </details>
   </div>`;
@@ -1078,14 +1076,10 @@ function bindFoyerModule(){
       foyer.couple = foyer.situation === 'commun';
       if(!foyer.couple){
         foyer.autresRevenus = 0;
-      }
-      if(foyer.situation !== 'seul'){
-        foyer.parentIsole = false;
-      }
-      if(!foyer.couple){
         const champ = document.getElementById('foyerConjoint');
         if(champ) champ.value = '0';
       }
+      if(foyer.situation !== 'seul') foyer.parentIsole = false;
       syncFoyerUI();
       updateComputed();
     });
@@ -1146,6 +1140,8 @@ function updateComputed(){
 
   computed.forEach(({s, r}) => {
     const u = s.id;
+    const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
+    if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
     setText(`c-hero-${u}`, fmt(heroValue(r)));
     setText(`c-herolabel-${u}`, heroLabel());
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
