@@ -34,6 +34,23 @@ const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
+const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
+const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06-01' });
+function loadBenchmarks(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
+    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
+    const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
+    return {
+      smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
+      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
+    };
+  }catch(_){
+    return { ...BENCHMARK_DEFAULTS };
+  }
+}
+let benchmarks = loadBenchmarks();
+
 
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -589,6 +606,71 @@ function renderAlerts(computed){
   return out.join('');
 }
 
+
+function benchmarkDelta(value, reference){
+  const delta = value - reference;
+  const pct = reference > 0 ? delta / reference * 100 : 0;
+  const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
+  return { amount: sign + fmt(Math.abs(delta)), pct: (delta > 0 ? '+' : '') + pct.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1}) + ' %', positive: delta >= 0 };
+}
+function renderBenchmarks(computed){
+  const item = computed.find(x => x.s.id === refId);
+  if(!item) return '';
+  const { s, r } = item;
+  const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
+  // Le net est recalculé à 35 h : une règle de trois depuis 39 h serait inexacte.
+  const base35 = compute({ ...s, brut: brut35, dureeType: '35' }, foyer);
+  const net35 = Math.max(0, base35.m.netSocial);
+  const smic = benchmarkDelta(brut35, benchmarks.smicBrut);
+  const median = benchmarkDelta(net35, 2190);
+  const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
+  return `
+    <div class="benchmark-heading">
+      <div><h2 class="bars-title">Votre salaire face aux repères</h2><p class="hint">Comparaison du salaire sélectionné, ramené à 35 h.</p></div>
+    </div>
+    <div class="benchmark-grid">
+      <article class="benchmark-item">
+        <div class="benchmark-label">SMIC brut mensuel · 35 h</div>
+        <div class="benchmark-comparison"><div><div class="benchmark-value">${fmt(benchmarks.smicBrut)}</div><div class="benchmark-meta">Repère officiel · depuis le ${esc(benchmarks.smicDate)}</div></div><div class="benchmark-result ${signedClass(smic)}">${smic.amount}<small>(${smic.pct})</small></div></div>
+        <div class="benchmark-context">Votre brut de base : <strong>${fmt(brut35)}</strong> / mois à 35 h</div>
+      </article>
+      <article class="benchmark-item">
+        <div class="benchmark-label">Salaire médian du privé · net</div>
+        <div class="benchmark-comparison"><div><div class="benchmark-value">2 190 €</div><div class="benchmark-meta">INSEE · 2024 · équivalent temps plein</div></div><div class="benchmark-result ${signedClass(median)}">${median.amount}<small>(${median.pct})</small></div></div>
+        <div class="benchmark-context">Votre net social recalculé à 35 h : <strong>${fmt(net35)}</strong> / mois</div>
+        <details class="benchmark-contract"><summary>Voir votre estimation au contrat actuel</summary><p>À ${s.dureeType} h : <strong>${fmt(r.m.netSocial)}</strong> net social estimé / mois.</p></details>
+      </article>
+    </div>
+    <details class="benchmark-settings"><summary>Modifier le montant du SMIC</summary><div class="benchmark-settings-body">
+      <p>Cette valeur est enregistrée uniquement dans ce navigateur. Elle ne modifie pas les règles de paie du simulateur.</p>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
+      <p class="benchmark-source">Source officielle : <a href="https://code.travail.gouv.fr/fiche-ministere-travail/le-smic" target="_blank" rel="noopener noreferrer">Code du travail numérique</a>. Vérifiez le montant et la date d’effet avant modification.</p>
+    </div></details>
+    <p class="benchmark-disclaimer">Les deux repères ne sont pas directement comparables entre eux : le SMIC est exprimé en brut, le salaire médian en net. Votre net social est une estimation ; le médian INSEE 2024 n’est pas spécifique à votre métier ou région.</p>`;
+}
+function bindBenchmarkSettings(){
+  const save = document.getElementById('saveBenchmarkSettings');
+  const reset = document.getElementById('resetBenchmarkSettings');
+  if(save) save.addEventListener('click', () => {
+    const amount = Number(document.getElementById('benchmarkSmicBrut').value);
+    const date = document.getElementById('benchmarkSmicDate').value;
+    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
+      showToastImpl('Montant ou date du SMIC invalide.');
+      return;
+    }
+    benchmarks = { smicBrut: amount, smicDate: date };
+    try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
+    render();
+    showToastImpl('Repère SMIC actualisé.');
+  });
+  if(reset) reset.addEventListener('click', () => {
+    benchmarks = { ...BENCHMARK_DEFAULTS };
+    try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
+    render();
+  });
+}
+
 // ---------- Rendu ----------
 function render(){
   const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
@@ -608,6 +690,8 @@ function render(){
   document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
@@ -888,6 +972,8 @@ function updateComputed(){
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
 

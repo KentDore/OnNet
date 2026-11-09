@@ -562,6 +562,32 @@
 .input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
 input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
 
+/* Repères salariaux */
+.benchmark-panel{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:var(--radius-lg,18px);background:var(--panel,rgba(255,255,255,.58))}
+.benchmark-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
+.benchmark-heading .bars-title{margin:0 0 5px}
+.benchmark-heading .hint{margin:0}
+.benchmark-tag{font-size:.72rem;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.benchmark-item{min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface,rgba(255,255,255,.5))}
+.benchmark-label{font-size:.84rem;color:var(--muted);font-weight:600}
+.benchmark-value{font-size:1.65rem;font-weight:750;letter-spacing:-.04em;margin:7px 0 2px}
+.benchmark-meta,.benchmark-context{font-size:.78rem;line-height:1.45;color:var(--muted)}
+.benchmark-delta{font-size:1rem;font-weight:700;margin:13px 0 5px}
+.benchmark-positive{color:var(--success,#24764b)}
+.benchmark-negative{color:var(--warn,#b42318)}
+.benchmark-settings{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}
+.benchmark-settings>summary{font-size:.88rem;font-weight:650;cursor:pointer}
+.benchmark-settings-body{padding-top:12px}
+.benchmark-settings-body>p{font-size:.82rem;color:var(--muted);line-height:1.5;margin:0 0 12px}
+.benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.benchmark-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.benchmark-source{margin-top:12px!important}
+.benchmark-source a{color:var(--accent)}
+.benchmark-disclaimer{font-size:.76rem;line-height:1.5;color:var(--muted);margin:14px 0 0}
+@media(max-width:600px){.benchmark-panel{padding:15px}.benchmark-grid{grid-template-columns:1fr}.benchmark-heading{display:block}.benchmark-tag{display:inline-block;margin-top:8px}.benchmark-fields{grid-template-columns:1fr}.benchmark-value{font-size:1.5rem}}
+@media print{.benchmark-settings{display:none}}
+
 </style>
 </head>
 <body>
@@ -570,7 +596,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.12</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.13</span></div>
         <div class="eyebrow">Simulateur de paie · règles 2026</div>
       </div>
       <div class="header-actions">
@@ -606,6 +632,9 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
     <!-- Alertes du graphique : il montre toujours du net mensuel, donc elles
          doivent rester visibles sans déplier la section ci-dessous. -->
     <div id="barsAlerts"></div>
+    <section class="benchmark-panel" aria-label="Comparaison avec les repères salariaux">
+      <div id="benchmarkBody" aria-live="polite"></div>
+    </section>
 
     <details class="panel-nested" id="moreMetrics">
       <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
@@ -1218,6 +1247,23 @@ const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
+const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
+const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06-01' });
+function loadBenchmarks(){
+  try{
+    const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
+    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
+    const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
+    return {
+      smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
+      smicDate: /^\\d{4}-\\d{2}-\\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
+    };
+  }catch(_){
+    return { ...BENCHMARK_DEFAULTS };
+  }
+}
+let benchmarks = loadBenchmarks();
+
 
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -1241,7 +1287,7 @@ function sanitizeScenario(raw){
   if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
   if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
   clean.carenceCouverte = clean.carenceCouverte === true;
-  if(!Number.isInteger(clean.id) || clean.id < 0) delete clean.id;
+  if(!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
 
@@ -1268,18 +1314,26 @@ function sanitizeFoyer(raw){
   };
 }
 
-function normalizeScenarioIds(scenarios){
-  const used = new Set();
-  let nextId = 0;
-  return scenarios.map(s => {
-    let id = Number.isInteger(s.id) && s.id >= 0 ? s.id : null;
-    if(id === null || used.has(id)){
-      while(used.has(nextId)) nextId++;
-      id = nextId++;
+function normalizeScenarioIds(scenarios, refId, openCardIds){
+  // Les identifiants restaurés ne sont jamais conservés : une suite compacte
+  // évite les dépassements de précision et garantit un prochain id exploitable.
+  const oldToIndex = new Map();
+  const normalized = scenarios.map((scenario, index) => {
+    if(Number.isSafeInteger(scenario.id) && scenario.id >= 0 && !oldToIndex.has(scenario.id)){
+      oldToIndex.set(scenario.id, index);
     }
-    used.add(id);
-    return Object.assign({}, s, { id });
+    return Object.assign({}, scenario, { id: index });
   });
+  const refIndex = Number.isSafeInteger(refId) ? oldToIndex.get(refId) : undefined;
+  const normalizedRefId = refIndex === undefined
+    ? (normalized.length ? normalized[0].id : null)
+    : normalized[refIndex].id;
+  const normalizedOpenCardIds = Array.isArray(openCardIds)
+    ? [...new Set(openCardIds
+        .filter(id => Number.isSafeInteger(id) && oldToIndex.has(id))
+        .map(id => normalized[oldToIndex.get(id)].id))]
+    : [];
+  return { scenarios: normalized, refId: normalizedRefId, openCardIds: normalizedOpenCardIds };
 }
 
 function loadPersistedState(){
@@ -1288,11 +1342,12 @@ function loadPersistedState(){
     if(!raw) return null;
     const data = JSON.parse(raw);
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
-    if(!cleaned.length) return null;
-    return { scenarios: cleaned, refId: data.refId, metric: data.metric,
+    const restored = normalizeScenarioIds(
+      data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId, data.openCardIds);
+    if(!restored.scenarios.length) return null;
+    return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
-             openCardIds: data.openCardIds, foyer: sanitizeFoyer(data.foyer) };
+             openCardIds: restored.openCardIds, foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
 }
 
@@ -1345,9 +1400,10 @@ function loadShareState(){
     if(!encoded) return null;
     const data = JSON.parse(fromBase64Url(encoded));
     if(!data || !Array.isArray(data.scenarios)) return null;
-    const cleaned = normalizeScenarioIds(data.scenarios.map(sanitizeScenario).filter(Boolean));
-    if(!cleaned.length) return null;
-    return { scenarios: cleaned, refId: data.refId, metric: data.metric,
+    const restored = normalizeScenarioIds(
+      data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId);
+    if(!restored.scenarios.length) return null;
+    return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
              foyer: sanitizeFoyer(data.foyer) };
   } catch(e){ return null; }
@@ -1422,7 +1478,7 @@ if(loadedFromShare){
 let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod, foyer;
 if(initialSource){
   scenarios = initialSource.scenarios.map(sv => mkScenario(sv));
-  idCounter = scenarios.reduce((max, s) => Math.max(max, s.id), -1) + 1;
+  idCounter = scenarios.length;
   refId = scenarios.some(s => s.id === initialSource.refId) ? initialSource.refId : scenarios[0].id;
   metric = METRIC_KEYS.includes(initialSource.metric) ? initialSource.metric : METRIC_DEFAUT;
   displayAmt = initialSource.displayAmt === 'brut' ? 'brut' : 'net';
@@ -1763,6 +1819,80 @@ function renderAlerts(computed){
   return out.join('');
 }
 
+
+function benchmarkDelta(value, reference){
+  const delta = value - reference;
+  const pct = reference > 0 ? delta / reference * 100 : 0;
+  const sign = delta > 0 ? '+' : delta < 0 ? '−' : '';
+  return { amount: sign + fmt(Math.abs(delta)), pct: (delta > 0 ? '+' : '') + pct.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1}) + ' %', positive: delta >= 0 };
+}
+function renderBenchmarks(computed){
+  const item = computed.find(x => x.s.id === refId);
+  if(!item) return '';
+  const { s, r } = item;
+  const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
+  const heures = HEURES_BASE + r.heuresSup;
+  const net35 = heures > 0 ? Math.max(0, r.m.netSocial) / heures * HEURES_BASE : 0;
+  const smic = benchmarkDelta(brut35, benchmarks.smicBrut);
+  const median = benchmarkDelta(net35, 2190);
+  const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
+  return `
+    <div class="benchmark-heading">
+      <div><h2 class="bars-title">Votre salaire face aux repères</h2><p class="hint">Référence sélectionnée : <strong>${esc(s.name)}</strong>. Montants normalisés sur 35 h, avant impôt.</p></div>
+      <span class="benchmark-tag">Repères nationaux</span>
+    </div>
+    <div class="benchmark-grid">
+      <article class="benchmark-item">
+        <div class="benchmark-label">SMIC brut mensuel · 35 h</div>
+        <div class="benchmark-value">${fmt(benchmarks.smicBrut)}</div>
+        <div class="benchmark-meta">Repère en vigueur depuis le ${esc(benchmarks.smicDate)}</div>
+        <div class="benchmark-delta ${signedClass(smic)}">${smic.amount} (${smic.pct})</div>
+        <div class="benchmark-context">Votre brut de base équivalent : ${fmt(brut35)} / mois</div>
+      </article>
+      <article class="benchmark-item">
+        <div class="benchmark-label">Salaire médian du privé · net</div>
+        <div class="benchmark-value">2 190 €</div>
+        <div class="benchmark-meta">Équivalent temps plein · INSEE, 2024</div>
+        <div class="benchmark-delta ${signedClass(median)}">${median.amount} (${median.pct})</div>
+        <div class="benchmark-context">Votre net social estimé équivalent 35 h : ${fmt(net35)} / mois</div>
+      </article>
+    </div>
+    <details class="benchmark-settings">
+      <summary>Actualiser le montant du SMIC</summary>
+      <div class="benchmark-settings-body">
+        <p>Modifiez le repère brut si le SMIC évolue. Cette valeur est enregistrée uniquement dans ce navigateur ; elle ne met pas à jour les règles de paie du simulateur.</p>
+        <div class="benchmark-fields">
+          <div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div>
+          <div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div>
+        </div>
+        <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
+        <p class="benchmark-source">Source officielle : <a href="https://code.travail.gouv.fr/fiche-ministere-travail/le-smic" target="_blank" rel="noopener noreferrer">Code du travail numérique</a>. Vérifiez le montant et la date d’effet avant de les modifier.</p>
+      </div>
+    </details>
+    <p class="benchmark-disclaimer">Comparaison indicative, pas un contrôle juridique du respect du SMIC. Le net social est une estimation issue du simulateur ; le salaire médian est une donnée INSEE 2024, pas une référence propre à votre métier ou région.</p>`;
+}
+function bindBenchmarkSettings(){
+  const save = document.getElementById('saveBenchmarkSettings');
+  const reset = document.getElementById('resetBenchmarkSettings');
+  if(save) save.addEventListener('click', () => {
+    const amount = Number(document.getElementById('benchmarkSmicBrut').value);
+    const date = document.getElementById('benchmarkSmicDate').value;
+    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){
+      showToastImpl('Montant ou date du SMIC invalide.');
+      return;
+    }
+    benchmarks = { smicBrut: amount, smicDate: date };
+    try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
+    render();
+    showToastImpl('Repère SMIC actualisé.');
+  });
+  if(reset) reset.addEventListener('click', () => {
+    benchmarks = { ...BENCHMARK_DEFAULTS };
+    try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
+    render();
+  });
+}
+
 // ---------- Rendu ----------
 function render(){
   const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
@@ -1782,6 +1912,8 @@ function render(){
   document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
