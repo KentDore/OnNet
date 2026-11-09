@@ -168,6 +168,7 @@ test('le calcul du 13e mois affiche le choix selon la durée et les mensualités
 test('le statut fiscal distingue seul, concubinage et foyer commun', async () => {
   const { context, page } = await openApp();
   try {
+    await page.locator('#foyerModuleToggle').click();
     await page.locator('#foyerCharges').selectOption('1');
     await page.locator('#foyerParentIsoleRow').waitFor({ state: 'visible' });
     await page.locator('#foyerParentIsole').check();
