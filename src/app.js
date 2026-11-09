@@ -409,6 +409,16 @@ function renderCard(s, r, showRemove){
           </div>
         </div>
         <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
+        ${s.dureeType === '39' && s.nbMois > 12 ? `
+          <div class="field-row" style="margin-top:12px;">
+            <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
+            <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
+              <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
+              <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
+            </select>
+            <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
+          </div>
+        ` : ''}
       </div>
     </details>
   </div>`;
