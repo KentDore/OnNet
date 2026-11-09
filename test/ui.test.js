@@ -117,6 +117,26 @@ test('recrée les scénarios à partir du lien de partage', async () => {
   }
 });
 
+test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', async () => {
+  const { context, page } = await openApp();
+  try {
+    const expected = await page.evaluate(() => {
+      const scenario = scenarios[0];
+      const result = compute(scenario, foyer);
+      const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
+      return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).m.netSocial;
+    });
+    const displayed = await page.locator('.benchmark-item').nth(1).locator('.benchmark-context').first().innerText();
+    const actual39 = await page.locator('.benchmark-item').nth(1).locator('.benchmark-context').nth(1).innerText();
+    const amount = Number(displayed.match(/[0-9][0-9\s]*,[0-9]{2}/)?.[0].replace(/\s/g, '').replace(',', '.') || displayed.match(/[0-9][0-9\s]*/)?.[0].replace(/\s/g, ''));
+    assert.ok(Number.isFinite(amount), displayed);
+    assert.ok(Math.abs(amount - expected) < 1, `net 35 h affiché ${amount}, attendu ${expected}`);
+    assert.match(actual39, /À 39 h/);
+  } finally {
+    await context.close();
+  }
+});
+
 test('affiche les repères salariaux et permet d’actualiser le SMIC localement', async () => {
   const { context, page } = await openApp();
   try {
