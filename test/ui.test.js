@@ -122,7 +122,7 @@ test('affiche les repères salariaux et permet d’actualiser le SMIC localement
   try {
     assert.equal(await page.locator('.benchmark-item').count(), 2);
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
-    await page.locator('#benchmarkSettings summary').click().catch(() => {});
+    await page.locator('#benchmarkBody .benchmark-settings summary').click().catch(() => {});
     await page.locator('#benchmarkSmicBrut').fill('1900');
     await page.locator('#benchmarkSmicDate').fill('2027-01-01');
     await page.locator('#saveBenchmarkSettings').click();
