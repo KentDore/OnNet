@@ -216,8 +216,29 @@ function loadShareState(){
   } catch(e){ return null; }
 }
 
-function buildShareUrl(){
-  const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer };
+function buildShareUrl(options){
+  const opts = options || {};
+  const selectedIds = Array.isArray(opts.scenarioIds) ? new Set(opts.scenarioIds) : null;
+  const sharedScenarios = scenarios.filter(s => !selectedIds || selectedIds.has(s.id));
+  if(!sharedScenarios.length) throw new Error('Sélectionnez au moins un salaire à partager.');
+
+  const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
+    // Données essentielles à la comparaison salariale.
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
+    // Sans option « détails », neutraliser explicitement ces valeurs plutôt
+    // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
+    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
+  }));
+
+  const payload = {
+    v:2,
+    scenarios:sharedData,
+    refId:sharedScenarios.some(s => s.id === refId) ? refId : sharedScenarios[0].id,
+    metric, displayAmt, displayPeriod,
+    foyer:opts.includeFoyer ? { ...foyer } : { ...FOYER_DEFAUT }
+  };
   const encoded = toBase64Url(JSON.stringify(payload));
   // Pas location.origin : il vaut la chaîne « null » sur file:// (Firefox,
   // Safari), or le README documente l'ouverture directe du fichier.
@@ -242,12 +263,65 @@ function legacyCopy(text){
   return ok;
 }
 
+function showShareOptionsModal(){
+  const scenarioChoices = scenarios.map(s => `
+    <label class="share-scenario-option" for="shareScenario-${s.id}">
+      <input type="checkbox" id="shareScenario-${s.id}" value="${s.id}" checked>
+      <span><strong>${esc(s.name)}</strong><small>${fmt(s.brut)} brut/mois · ${s.dureeType} h</small></span>
+    </label>`).join('');
+  const html = `
+    <p id="modalMsg" class="modal-msg">Choisissez les informations à inclure dans le lien.</p>
+    <fieldset class="share-options-group">
+      <legend>Salaires à partager</legend>
+      ${scenarioChoices}
+    </fieldset>
+    <fieldset class="share-options-group">
+      <legend>Informations facultatives</legend>
+      <label class="share-extra-option" for="shareIncludeDetails">
+        <input type="checkbox" id="shareIncludeDetails">
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+      </label>
+      <label class="share-extra-option" for="shareIncludeFoyer">
+        <input type="checkbox" id="shareIncludeFoyer">
+        <span><strong>Situation fiscale</strong><small>Situation du foyer, personnes à charge, revenus du conjoint et taux de prélèvement.</small></span>
+      </label>
+    </fieldset>
+    <div class="alert alert-warn" style="margin-top:12px;">
+      <span>${ICON.warn}</span><span>Les salaires sélectionnés sont toujours inclus. Le lien n'est pas chiffré ni protégé par mot de passe : toute personne qui le reçoit peut lire les données qu'il contient.</span>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
+      <button type="button" class="btn btn-primary" id="shareCreateBtn">Créer le lien</button>
+    </div>`;
+  const pending = openModal(html);
+  const overlay = document.getElementById('modalOverlay');
+  const confirm = overlay.querySelector('#shareCreateBtn');
+  const updateAvailability = () => {
+    confirm.disabled = overlay.querySelectorAll('.share-scenario-option input:checked').length === 0;
+  };
+  overlay.querySelectorAll('.share-scenario-option input').forEach(input => {
+    input.addEventListener('change', updateAvailability);
+  });
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => closeModal(null));
+  confirm.addEventListener('click', () => {
+    const scenarioIds = [...overlay.querySelectorAll('.share-scenario-option input:checked')]
+      .map(input => Number(input.value));
+    closeModal({
+      scenarioIds,
+      includeDetails: overlay.querySelector('#shareIncludeDetails').checked,
+      includeFoyer: overlay.querySelector('#shareIncludeFoyer').checked
+    });
+  });
+  updateAvailability();
+  return pending;
+}
+
 async function shareLink(){
-  const url = buildShareUrl();
-  // Cas normal : copie directe sur ce clic (un vrai geste utilisateur récent)
-  // et simple affichage du toast — pas de fenêtre en plus. La modale n'est
-  // qu'un dernier repli, affiché seulement si les deux méthodes de copie
-  // échouent vraiment, pour ne jamais perdre le lien pour autant.
+  const options = await showShareOptionsModal();
+  if(!options) return;
+  const url = buildShareUrl(options);
+  // Copie directe après le choix explicite des données à partager. Si le
+  // presse-papiers est refusé, le lien reste accessible dans la modale de repli.
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
       await navigator.clipboard.writeText(url);
