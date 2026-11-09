@@ -228,7 +228,9 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
   const netSocial = brutTotal - cotisNettes - mutSal;
 
   const deductibleNet = Math.max(0, c.deductible - reducHS);
-  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+  // La mutuelle santé n'est pas une cotisation salariale déductible de l'impôt.
+  // Seule la contribution employeur est réintégrée au net imposable.
+  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet + mutPat);
 
   // Heures supplémentaires : exonérées d'impôt sur le revenu dans la limite d'un
   // plafond annuel de net imposable. La part de net imposable qui leur est
