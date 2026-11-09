@@ -43,7 +43,7 @@ function loadBenchmarks(){
     const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
     return {
       smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
-      smicDate: /^\\d{4}-\\d{2}-\\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
+      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
     };
   }catch(_){
     return { ...BENCHMARK_DEFAULTS };
@@ -655,7 +655,7 @@ function bindBenchmarkSettings(){
   if(save) save.addEventListener('click', () => {
     const amount = Number(document.getElementById('benchmarkSmicBrut').value);
     const date = document.getElementById('benchmarkSmicDate').value;
-    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){
+    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
       showToastImpl('Montant ou date du SMIC invalide.');
       return;
     }
