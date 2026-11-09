@@ -126,7 +126,7 @@ test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', asy
       const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
       return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).m.netSocial;
     });
-    const displayed = await page.locator('.benchmark-item').nth(1).locator('.benchmark-context strong').innerText();
+    const displayed = await page.locator('.benchmark-your-salary strong').innerText();
     const contractDetails = page.locator('.benchmark-item').nth(1).locator('.benchmark-contract');
     await contractDetails.locator('summary').click();
     const actual39 = await contractDetails.locator('p').innerText();
@@ -144,6 +144,9 @@ test('affiche les repères salariaux et permet d’actualiser le SMIC localement
   try {
     assert.equal(await page.locator('.benchmark-item').count(), 2);
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
+    assert.match(await page.locator('.benchmark-grid').innerText(), /SMIC · net estimé/);
+    assert.match(await page.locator('.benchmark-grid').innerText(), /Salaire médian du privé · net/);
+    assert.doesNotMatch(await page.locator('.benchmark-grid').innerText(), /SMIC brut mensuel/);
     await page.locator('#benchmarkBody .benchmark-settings summary').click().catch(() => {});
     await page.locator('#benchmarkSmicBrut').fill('1900');
     await page.locator('#benchmarkSmicDate').fill('2027-01-01');
