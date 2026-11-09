@@ -380,7 +380,7 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt sur le revenu estimé au barème 2026 — ajustez le foyer fiscal sur chaque salaire pour affiner.',
+  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -1058,7 +1058,7 @@ function syncFoyerUI(){
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
     ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
 }
 
 function bindFoyerModule(){
