@@ -618,8 +618,11 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
   const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
-  const heures = HEURES_BASE + r.heuresSup;
-  const net35 = heures > 0 ? Math.max(0, r.m.netSocial) / heures * HEURES_BASE : 0;
+  // Recalculer le net sur le seul brut de base : une simple règle de trois
+  // sur le net 39 h serait fausse (cotisations, réduction HS et plafonds).
+  // On conserve les paramètres personnels du scénario, mais on retire les HS.
+  const base35 = compute({ ...s, brut: brut35, dureeType: '35' }, foyer);
+  const net35 = Math.max(0, base35.m.netSocial);
   const smic = benchmarkDelta(brut35, benchmarks.smicBrut);
   const median = benchmarkDelta(net35, 2190);
   const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
@@ -641,7 +644,8 @@ function renderBenchmarks(computed){
         <div class="benchmark-value">2 190 €</div>
         <div class="benchmark-meta">Équivalent temps plein · INSEE, 2024</div>
         <div class="benchmark-delta ${signedClass(median)}">${median.amount} (${median.pct})</div>
-        <div class="benchmark-context">Votre net social estimé équivalent 35 h : ${fmt(net35)} / mois</div>
+        <div class="benchmark-context">Votre net social recalculé à 35 h : ${fmt(net35)} / mois</div>
+        <div class="benchmark-context">À ${s.dureeType} h, net social estimé réel : ${fmt(r.m.netSocial)} / mois</div>
       </article>
     </div>
     <details class="benchmark-settings">
