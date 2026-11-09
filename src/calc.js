@@ -23,6 +23,9 @@ const P = {
     abattementPct: 10, abattementMin: 495, abattementMax: 14171,
     // Plafonnement des effets du quotient familial, par demi-part additionnelle.
     plafondDemiPart: 1807,
+    // Plafond spécifique de l'avantage lié au premier enfant à charge d'un
+    // parent isolé (case T), barème 2026 sur revenus 2025.
+    plafondParentIsole: 4262,
     // Décote sur les impôts modestes : base − taux × impôt brut, sous le seuil.
     decote: { seuilSeul: 1982, seuilCouple: 3277,
               baseSeul: 897, baseCouple: 1483, taux: 45.25 }
@@ -151,25 +154,34 @@ function abattementFraisPro(salaireAnnuel){
   return Math.min(Math.max(brut, plancher), P.ir.abattementMax);
 }
 
-// Parts de quotient familial : 1 (ou 2 en couple), une demi-part pour chacune
-// des deux premières personnes à charge, une part entière à partir de la troisième.
-function partsFiscales(couple, personnesCharge){
+// Parts de quotient familial. Pour un parent isolé (case T) avec au moins un
+// enfant à charge, la majoration totale liée au premier enfant est d'une part.
+function partsFiscales(couple, personnesCharge, parentIsole){
   const n = Math.max(0, Math.floor(personnesCharge || 0));
-  return (couple ? 2 : 1) + Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const base = couple ? 2 : 1;
+  const partsEnfants = Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const majorationParentIsole = !couple && parentIsole && n > 0 ? 0.5 : 0;
+  return base + partsEnfants + majorationParentIsole;
 }
 
 // Impôt d'un foyer, à partir de son revenu imposable global (déjà abattu).
-function impotFoyer(revenuImposable, couple, personnesCharge){
+function impotFoyer(revenuImposable, couple, personnesCharge, parentIsole){
   if(revenuImposable <= 0) return 0;
-  const parts = partsFiscales(couple, personnesCharge);
+  const n = Math.max(0, Math.floor(personnesCharge || 0));
+  const parentIsoleActif = !couple && parentIsole === true && n > 0;
+  const parts = partsFiscales(couple, n, parentIsoleActif);
   const partsBase = couple ? 2 : 1;
   let impot = baremeIR(revenuImposable / parts) * parts;
 
-  // Plafonnement des effets du quotient familial : l'avantage tiré des
-  // demi-parts au-delà du foyer de base est limité.
+  // Plafonnement : le premier enfant d'un parent isolé ouvre une majoration
+  // totale d'une part, plafonnée spécifiquement. Les parts suivantes gardent
+  // le plafond ordinaire par demi-part.
   if(parts > partsBase){
     const sansCharges = baremeIR(revenuImposable / partsBase) * partsBase;
-    const plafond = P.ir.plafondDemiPart * (parts - partsBase) * 2;
+    const partsSupplementaires = parts - partsBase;
+    const plafond = parentIsoleActif
+      ? P.ir.plafondParentIsole + Math.max(0, partsSupplementaires - 1) * 2 * P.ir.plafondDemiPart
+      : P.ir.plafondDemiPart * partsSupplementaires * 2;
     if(sansCharges - impot > plafond) impot = sansCharges - plafond;
   }
 
@@ -317,11 +329,13 @@ function compute(s, foyer){
   } else {
     const couple = !!f.couple;
     const charges = Math.max(0, f.personnesCharge || 0);
+    const parentIsole = !couple && f.parentIsole === true && charges > 0;
     const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
     const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
     const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
     impotAnnuel = Math.max(0,
-      impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
+      impotFoyer(baseAutres + baseSalaire, couple, charges, parentIsole)
+      - impotFoyer(baseAutres, couple, charges, parentIsole));
     tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
   }
   const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);
