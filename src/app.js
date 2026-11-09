@@ -97,7 +97,7 @@ function sanitizeScenario(raw){
 // mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
 //                 s'applique tel quel — les champs de situation n'ont alors
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
-const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
+const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, parentIsole:false, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
   const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
   const nb = (v, min, max) => {
@@ -108,11 +108,14 @@ function sanitizeFoyer(raw){
   const situation = ['seul','commun','concubinage'].includes(f.situation)
     ? f.situation : (f.couple === true ? 'commun' : 'seul');
   const couple = situation === 'commun';
+  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
+  const parentIsole = situation === 'seul' && personnesCharge > 0 && f.parentIsole === true;
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
     situation,
     couple,
-    personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
+    personnesCharge,
+    parentIsole,
     autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
     pasRate: nb(f.pasRate, 0, 100)
   };
@@ -928,6 +931,7 @@ function foyerResume(){
   const bouts = [situationLabel];
   bouts.push(n === 0 ? 'sans personne à charge'
                      : (n === 1 ? '1 personne à charge' : `${n} personnes à charge`));
+  if(foyer.parentIsole) bouts.push('parent isolé (case T)');
   if(foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
   return bouts.join(', ');
 }
@@ -951,6 +955,11 @@ function syncFoyerUI(){
   // Les revenus du conjoint ne sont inclus que pour un foyer fiscal commun.
   // En concubinage, les deux déclarations restent séparées.
   setShown('foyerConcubinageInfo', foyer.situation === 'concubinage');
+  const parentIsolePossible = foyer.situation === 'seul' && foyer.personnesCharge > 0;
+  setShown('foyerParentIsoleRow', parentIsolePossible);
+  const parentIsoleInput = document.getElementById('foyerParentIsole');
+  if(parentIsoleInput) parentIsoleInput.checked = parentIsolePossible && foyer.parentIsole;
+  if(!parentIsolePossible) foyer.parentIsole = false;
   setShown('foyerConjointRow', foyer.couple);
   const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
   setShown('foyerWarn', alerteBareme);
@@ -969,7 +978,7 @@ function syncFoyerUI(){
   if(alerte){
     resume = foyer.mode === 'taux'
       ? 'Taux personnel — écart entre salaires optimiste'
-      : 'En couple — revenus du conjoint à renseigner';
+      : 'Marié/PACS — revenus du conjoint à renseigner';
   }
   setText('foyerModuleDesc', resume);
   const desc = document.getElementById('foyerModuleDesc');
@@ -995,6 +1004,11 @@ function bindFoyerModule(){
       foyer.couple = foyer.situation === 'commun';
       if(!foyer.couple){
         foyer.autresRevenus = 0;
+      }
+      if(foyer.situation !== 'seul'){
+        foyer.parentIsole = false;
+      }
+      if(!foyer.couple){
         const champ = document.getElementById('foyerConjoint');
         if(champ) champ.value = '0';
       }
@@ -1005,6 +1019,13 @@ function bindFoyerModule(){
   const charges = document.getElementById('foyerCharges');
   if(charges) charges.addEventListener('change', () => {
     foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
+    if(foyer.personnesCharge === 0) foyer.parentIsole = false;
+    syncFoyerUI();
+    updateComputed();
+  });
+  const parentIsole = document.getElementById('foyerParentIsole');
+  if(parentIsole) parentIsole.addEventListener('change', () => {
+    foyer.parentIsole = parentIsole.checked;
     syncFoyerUI();
     updateComputed();
   });
