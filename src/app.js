@@ -9,14 +9,21 @@ let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800,
-    mutuelle:scenarioDefaults.mutuelle,
+    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
+    treiziemeMoisBase:'base',
     maintienPct:90, carenceCouverte:false,
     absenceType:'none', absenceDuree:0
   };
-  return Object.assign(base, over || {});
+  const scenario = Object.assign(base, over || {});
+  // Compatibilité avec les créations historiques : la part employeur suit
+  // la part salarié, sauf lorsqu'une valeur distincte est fournie.
+  if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
+    scenario.mutuellePat = scenario.mutuelle;
+  }
+  return scenario;
 }
 
 function defaultScenarios(){
@@ -27,7 +34,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -56,7 +63,7 @@ function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
   const limits = {
-    brut:[0,1000000], mutuelle:[0,100000], joursResto:[0,31],
+    brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
     valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
     primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
   };
@@ -67,6 +74,12 @@ function sanitizeScenario(raw){
     clean[key] = n;
   }
   if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  // Compatibilité avec les états antérieurs : l'ancien modèle supposait une
+  // part employeur égale à la part salarié.
+  if(clean.mutuellePat === undefined){
+    clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
+  }
+  if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
