@@ -126,7 +126,7 @@ test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', asy
       const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
       return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).m.netSocial;
     });
-    const displayed = await page.locator('.benchmark-item').nth(1).locator('.benchmark-context').first().innerText();
+    const displayed = await page.locator('.benchmark-item').nth(1).locator('.benchmark-context strong').innerText();
     const contractDetails = page.locator('.benchmark-item').nth(1).locator('.benchmark-contract');
     await contractDetails.locator('summary').click();
     const actual39 = await contractDetails.locator('p').innerText();
