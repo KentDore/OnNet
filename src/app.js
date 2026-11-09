@@ -554,20 +554,21 @@ function renderInsight(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
   const others = computed.filter(x => x.s.id !== refId);
   if(!others.length) return '';
-  const best = others.reduce((a,b) => b.r.m.netApres > a.r.m.netApres ? b : a);
-  const delta = best.r.m.netApres - ref.r.m.netApres;
-  if(Math.abs(delta) < 1){
-    return `<div class="insight neutral">Ces salaires donnent à peu près le même net.</div>`;
+  const isHourly = HOURLY_METRICS.has(metric);
+  const valueOf = x => Number(x.r[metric]) || 0;
+  const best = others.reduce((a,b) => valueOf(b) > valueOf(a) ? b : a);
+  const delta = valueOf(best) - valueOf(ref);
+  const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
+  const metricLabel = {
+    netImposable:'net imposable', annuelNet:'net annuel',
+    netApresImpot:'net après impôt', netHoraire:'net horaire',
+    brutHoraire:'brut horaire'
+  }[metric] || 'valeur sélectionnée';
+  const format = isHourly ? fmtHoraire : fmt;
+  if(Math.abs(delta) < (isHourly ? 0.01 : 1)){
+    return `<div class="insight neutral">Ces salaires donnent à peu près le même ${metricLabel}.</div>`;
   }
-  const diffBrut = best.r.m.brutTotal - ref.r.m.brutTotal;
-  let convNote = '';
-  if(diffBrut > 1 && delta > 0){
-    const convPct = (delta/diffBrut)*100;
-    convNote = ` — vous gardez ${convPct.toFixed(0)} % de l'augmentation en net`;
-  }
-  const verb = delta > 0 ? 'donne' : 'donne';
-  const sign = delta > 0 ? 'de plus' : 'de moins';
-  return `<div class="insight"><strong>${esc(best.s.name)}</strong> ${verb} ${fmt(Math.abs(delta))} ${sign} par mois que <strong>${esc(ref.s.name)}</strong>${convNote}.</div>`;
+  return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
 const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
@@ -732,7 +733,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  document.getElementById('addScenario').addEventListener('click', addScenario);
   // Nettoie la classe d'animation une fois jouée : les mises à jour légères
   // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
   // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
@@ -1748,6 +1748,7 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
     document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
   });
 });
+document.getElementById('addScenario').addEventListener('click', addScenario);
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
   const amountInput = document.getElementById('raiseAmount');
   if(!validateNumericInput(amountInput, true)) return;
