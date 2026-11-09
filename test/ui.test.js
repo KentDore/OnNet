@@ -116,3 +116,25 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     await context.close();
   }
 });
+
+test('affiche les repères salariaux et permet d’actualiser le SMIC localement', async () => {
+  const { context, page } = await openApp();
+  try {
+    assert.equal(await page.locator('.benchmark-item').count(), 2);
+    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
+    await page.locator('#benchmarkSettings summary').click().catch(() => {});
+    await page.locator('#benchmarkSmicBrut').fill('1900');
+    await page.locator('#benchmarkSmicDate').fill('2027-01-01');
+    await page.locator('#saveBenchmarkSettings').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.benchmarks.v1') || 'null');
+      return state && state.smicBrut === 1900 && state.smicDate === '2027-01-01';
+    });
+    assert.match(await page.locator('#benchmarkBody').innerText(), /1\s?900/);
+    await page.reload();
+    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1900.00');
+  } finally {
+    await context.close();
+  }
+});
+
