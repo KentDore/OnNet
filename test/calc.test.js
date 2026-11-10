@@ -344,6 +344,30 @@ describe('compute() — cas de référence (calculés à la main)', () => {
     near(r.netImposable, 5000 - 894.7095, 0.01, 'net imposable');
   });
 
+  test('2 300 € à 35 h avec 30 € de mutuelle : net social de référence indépendant', () => {
+    // Cotisations recalculées à la main :
+    // assiette CSG = 2 300 × 0,9825 = 2 260,75 € ;
+    // CSG déductible = 153,663 € ; CSG non déductible = 54,234 € ;
+    // CRDS = 11,29875 € ; retraite = 260,13 € ;
+    // total cotisations = 479,32575 € ; retenue mutuelle = 30 €.
+    const r = C.compute(scn({ brut: 2300, dureeType: '35', mutuelle: 30 }));
+    near(r.m.cotisNettes, 479.32575, 0.001, 'cotisations salariales');
+    near(r.m.netSocial, 1790.67425, 0.001, 'net après retenue mutuelle');
+  });
+
+  test('39 h à 2 300 € : repère recalculé sur le brut de base équivalent 35 h', () => {
+    // Le brut de base indépendant est 2 012,50552874 € (test splitHeures).
+    // Recalcul complet à 35 h : cotisations = 419,41118345 €,
+    // puis retenue de mutuelle salarié de 30 €.
+    const brutBase35 = 2012.50552874;
+    const r = C.compute(scn({
+      brut: brutBase35, dureeType: '35', mutuelle: 30,
+      joursResto: 0, valeurResto: 0, primes: 0, absenceType: 'none'
+    }));
+    near(r.m.cotisNettes, 419.41118345, 0.001, 'cotisations recalculées à 35 h');
+    near(r.m.netSocial, 1563.09434529, 0.001, 'net estimé à 35 h');
+  });
+
   test('mutuelle : part salarié retenue sur le net, part employeur imposable', () => {
     const base = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
     const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 30 }));
