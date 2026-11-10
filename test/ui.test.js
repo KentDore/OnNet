@@ -243,19 +243,34 @@ test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', asy
   }
 });
 
-test('affiche les repères salariaux et permet d’actualiser le SMIC localement', async () => {
+test('compare les repères sur le net estimé après impôt et retire le texte redondant', async () => {
   const { context, page } = await openApp();
   try {
     assert.equal(await page.locator('.benchmark-item').count(), 2);
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
-    assert.match(await page.locator('.benchmark-grid').innerText(), /SMIC net estimé/);
-    assert.equal(await page.locator('.benchmark-details summary').innerText(), 'Comprendre le calcul');
-    assert.equal(await page.locator('.benchmark-details').evaluate(el => el.open), false);
+    assert.match(await page.locator('.benchmark-heading').innerText(), /après impôt/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /reçu à 35 h/);
+    assert.equal(await page.locator('.benchmark-details summary').nth(0).innerText(), 'Méthode de calcul');
+    assert.equal(await page.locator('.benchmark-details summary').nth(1).innerText(), 'Estimation à votre durée de travail');
+    assert.equal(await page.locator('.benchmark-details').first().evaluate(el => el.open), false);
+    assert.equal(await page.locator('.benchmark-details').nth(1).evaluate(el => el.open), false);
+    assert.equal(await page.locator('.benchmark-disclaimer').count(), 0);
     const gridColumns = await page.locator('.benchmark-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns);
-    assert.equal(gridColumns.trim().split(/\s+/).length, 2);
-    assert.match(await page.locator('.benchmark-grid').innerText(), /Salaire médian du privé · net/);
-    assert.doesNotMatch(await page.locator('.benchmark-grid').innerText(), /SMIC brut mensuel/);
-    await page.locator('#benchmarkBody .benchmark-settings summary').click().catch(() => {});
+    assert.equal(gridColumns.trim().split(/\\s+/).length, 2);
+
+    const expectedSmic = await page.evaluate(() => {
+      const item = scenarios[0];
+      const neutral = { ...item, brut: 1867.02, dureeType: '35', mutuelle: 0, mutuellePat: 0,
+        joursResto: 0, valeurResto: 0, partResto: 0, nbMois: 12, primes: 0,
+        absenceType: 'none', absenceDuree: 0 };
+      return compute(neutral, foyer).netApresImpot;
+    });
+    const smicDisplayed = await page.locator('.benchmark-item').nth(0).locator('.benchmark-value').innerText();
+    assert.match(smicDisplayed, /\\d/);
+    const amount = Number(smicDisplayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
+    assert.ok(Math.abs(amount - expectedSmic) < 1, `SMIC après impôt affiché ${amount}, attendu ${expectedSmic}`);
+
+    await page.locator('#benchmarkBody .benchmark-settings summary').click();
     await page.locator('#benchmarkSmicBrut').fill('1900');
     await page.locator('#benchmarkSmicDate').fill('2027-01-01');
     await page.locator('#saveBenchmarkSettings').click();
@@ -263,9 +278,29 @@ test('affiche les repères salariaux et permet d’actualiser le SMIC localement
       const state = JSON.parse(localStorage.getItem('onnet.benchmarks.v1') || 'null');
       return state && state.smicBrut === 1900 && state.smicDate === '2027-01-01';
     });
-    assert.match(await page.locator('#benchmarkBody').innerText(), /1\s?900/);
+    assert.match(await page.locator('#benchmarkBody').innerText(), /1\\s?900/);
     await page.reload();
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1900.00');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le comparatif reste dans la largeur sur petits écrans', async () => {
+  const { context, page } = await openApp();
+  try {
+    for (const width of [320, 375, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const sizes = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        scroll: document.documentElement.scrollWidth,
+        panel: document.querySelector('.benchmark-panel').getBoundingClientRect().width,
+        cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width)
+      }));
+      assert.ok(sizes.scroll <= sizes.viewport + 1, `débordement à ${width}px : ${JSON.stringify(sizes)}`);
+      assert.equal(sizes.cards.length, 2);
+      assert.ok(sizes.cards.every(card => card > 0 && card < sizes.panel));
+    }
   } finally {
     await context.close();
   }
