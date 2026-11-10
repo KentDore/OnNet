@@ -1878,7 +1878,11 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
     document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
   });
 });
-document.getElementById('addScenario').addEventListener('click', addScenario);
+// Le bouton est recréé par render() : déléguer au conteneur permanent
+// évite de chercher un élément inexistant au démarrage et n'attache qu'un écouteur.
+document.getElementById('cardsBody').addEventListener('click', e => {
+  if(e.target.closest && e.target.closest('#addScenario')) addScenario();
+});
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
   const amountInput = document.getElementById('raiseAmount');
   if(!validateNumericInput(amountInput, true)) return;
