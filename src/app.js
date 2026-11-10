@@ -1427,7 +1427,13 @@ function closeModal(result){
   document.removeEventListener('keydown', onModalKeydown, true);
   unlockBodyScroll();
   modalState = null;
-  setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
+  setTimeout(() => {
+    // Une nouvelle modale peut réutiliser l'overlay avant la fin de cette
+    // animation de fermeture : ne jamais effacer son contenu entre-temps.
+    if(modalState) return;
+    overlay.hidden = true;
+    overlay.innerHTML = '';
+  }, 200);
   if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
   if(resolve) resolve(result);
 }
