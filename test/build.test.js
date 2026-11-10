@@ -84,6 +84,7 @@ test('la page publiée et le fichier versionné correspondent exactement aux sou
   const match = index.match(/class="brand-version">v(\d+\.\d+\.\d+)<\/span>/);
   assert.ok(match, 'la version doit être présente dans index.html');
   const version = match[1];
+  assert.notEqual(version, '999.999.999', 'la page publiée ne doit pas utiliser la version synthétique de CI');
   const artifactPath = path.join(root, 'Onnet-' + version + '.html');
   assert.ok(fs.existsSync(artifactPath), 'le fichier autonome de la version publiée doit exister');
 
