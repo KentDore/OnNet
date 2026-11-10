@@ -252,7 +252,7 @@ test('affiche les repères salariaux et permet d’actualiser le SMIC localement
     assert.equal(await page.locator('.benchmark-details summary').innerText(), 'Comprendre le calcul');
     assert.equal(await page.locator('.benchmark-details').evaluate(el => el.open), false);
     const gridColumns = await page.locator('.benchmark-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns);
-    assert.equal(gridColumns.trim().split(/\\s+/).length, 2);
+    assert.equal(gridColumns.trim().split(/\s+/).length, 2);
     assert.match(await page.locator('.benchmark-grid').innerText(), /Salaire médian du privé · net/);
     assert.doesNotMatch(await page.locator('.benchmark-grid').innerText(), /SMIC brut mensuel/);
     await page.locator('#benchmarkBody .benchmark-settings summary').click().catch(() => {});
