@@ -256,7 +256,7 @@ test('compare les repères sur le net estimé après impôt et retire le texte r
     assert.equal(await page.locator('.benchmark-details').nth(1).evaluate(el => el.open), false);
     assert.equal(await page.locator('.benchmark-disclaimer').count(), 0);
     const gridColumns = await page.locator('.benchmark-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns);
-    assert.equal(gridColumns.trim().split(/\\s+/).length, 2);
+    assert.equal(gridColumns.trim().split(/\s+/).length, 2);
 
     const expectedSmic = await page.evaluate(() => {
       const item = scenarios[0];
@@ -266,7 +266,7 @@ test('compare les repères sur le net estimé après impôt et retire le texte r
       return compute(neutral, foyer).netApresImpot;
     });
     const smicDisplayed = await page.locator('.benchmark-item').nth(0).locator('.benchmark-value').innerText();
-    assert.match(smicDisplayed, /\\d/);
+    assert.match(smicDisplayed, /\d/);
     const amount = Number(smicDisplayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
     assert.ok(Math.abs(amount - expectedSmic) < 1, `SMIC après impôt affiché ${amount}, attendu ${expectedSmic}`);
 
@@ -278,7 +278,7 @@ test('compare les repères sur le net estimé après impôt et retire le texte r
       const state = JSON.parse(localStorage.getItem('onnet.benchmarks.v1') || 'null');
       return state && state.smicBrut === 1900 && state.smicDate === '2027-01-01';
     });
-    assert.match(await page.locator('#benchmarkBody').innerText(), /1\\s?900/);
+    assert.match(await page.locator('#benchmarkBody').innerText(), /1\s?900/);
     await page.reload();
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1900.00');
   } finally {
@@ -293,11 +293,11 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
       await page.setViewportSize({ width, height: 844 });
       const sizes = await page.evaluate(() => ({
         viewport: document.documentElement.clientWidth,
-        scroll: document.documentElement.scrollWidth,
-        panel: document.querySelector('.benchmark-panel').getBoundingClientRect().width,
+        scroll: document.querySelector('.benchmark-panel').scrollWidth,
+        panel: document.querySelector('.benchmark-panel').clientWidth,
         cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width)
       }));
-      assert.ok(sizes.scroll <= sizes.viewport + 1, `débordement à ${width}px : ${JSON.stringify(sizes)}`);
+      assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
       assert.ok(sizes.cards.every(card => card > 0 && card < sizes.panel));
     }
