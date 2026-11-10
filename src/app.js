@@ -770,11 +770,16 @@ function renderBenchmarks(computed){
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC · net estimé · 35 h</div>
+        <div class="benchmark-label">SMIC net estimé · 35 h</div>
         <div class="benchmark-value">${fmt(smicNet)}</div>
-        <div class="benchmark-meta">Calcul indicatif à partir du SMIC brut de ${fmt(benchmarks.smicBrut)} · depuis le ${esc(benchmarks.smicDate)}</div>
+        <div class="benchmark-meta">Brut de référence : ${fmt(benchmarks.smicBrut)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${smic.amount} <small>(${smic.pct})</small></div>
-        <div class="benchmark-context">Écart entre votre net estimé et le SMIC net estimé.</div>
+        <details class="benchmark-details">
+          <summary>Comprendre le calcul</summary>
+          <p>Estimation du net social à partir du SMIC brut mensuel de ${fmt(benchmarks.smicBrut)}, sur 35 h, sans mutuelle ni titres-restaurant. Date d’effet : ${esc(benchmarks.smicDate)}.</p>
+          <p>Le net affiché est une estimation du simulateur, pas un montant officiel.</p>
+          <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source : Urssaf — montant du SMIC</a></p>
+        </details>
       </article>
       <article class="benchmark-item">
         <div class="benchmark-label">Salaire médian du privé · net</div>
