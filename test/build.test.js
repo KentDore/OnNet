@@ -76,3 +76,27 @@ test('la restauration utilise le premier scénario si la référence est invalid
   assert.deepEqual(result.openCardIds, [1]);
   assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
 });
+
+test('la page publiée et le fichier versionné correspondent exactement aux sources', t => {
+  const root = path.resolve(__dirname, '..');
+  const indexPath = path.join(root, 'index.html');
+  const index = fs.readFileSync(indexPath, 'utf8');
+  const match = index.match(/class="brand-version">v(\\d+\\.\\d+\\.\\d+)<\\/span>/);
+  assert.ok(match, 'la version doit être présente dans index.html');
+  const version = match[1];
+  const artifactPath = path.join(root, 'Onnet-' + version + '.html');
+  assert.ok(fs.existsSync(artifactPath), 'le fichier autonome de la version publiée doit exister');
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnet-release-sync-'));
+  t.after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+  const output = path.join(tempDir, 'Onnet-release-check.html');
+  const run = spawnSync(process.execPath, [
+    path.join(root, 'scripts', 'build.js'), version, output
+  ], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const generated = fs.readFileSync(output, 'utf8');
+  assert.equal(fs.readFileSync(artifactPath, 'utf8'), generated,
+    'le fichier autonome versionné doit correspondre aux sources');
+  assert.equal(index, generated,
+    'index.html doit correspondre au fichier autonome versionné');
+});

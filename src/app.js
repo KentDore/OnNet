@@ -267,10 +267,11 @@ function showShareOptionsModal(){
   const scenarioChoices = scenarios.map(s => `
     <label class="share-scenario-option" for="shareScenario-${s.id}">
       <input type="checkbox" id="shareScenario-${s.id}" value="${s.id}" checked>
-      <span><strong>${esc(s.name)}</strong><small>${fmt(s.brut)} brut/mois · ${s.dureeType} h</small></span>
+      <span><strong>${esc(s.name)}</strong><small>${fmt(s.brut)} brut/mois · ${s.dureeType} h · ${s.nbMois} mensualités${s.primes ? ` · primes ${fmt(s.primes)}/an` : ''}</small></span>
     </label>`).join('');
   const html = `
     <p id="modalMsg" class="modal-msg">Choisissez les informations à inclure dans le lien.</p>
+    <p class="sub-hint">Toujours inclus : brut mensuel, durée hebdomadaire, nombre de mensualités, primes et réglage du 13ᵉ/14ᵉ mois.</p>
     <fieldset class="share-options-group">
       <legend>Salaires à partager</legend>
       ${scenarioChoices}

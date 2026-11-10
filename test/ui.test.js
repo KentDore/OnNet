@@ -122,6 +122,15 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     await page.locator('#shareCreateBtn').click();
     const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
     assert.match(shareUrl, /#share=/);
+    const payload = await page.evaluate(url => {
+      const encoded = new URL(url).hash.slice('#share='.length).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
+    }, shareUrl);
+    assert.equal(payload.scenarios.length, 2);
+    assert.equal(payload.scenarios[0].mutuelle, 0);
+    assert.equal(payload.scenarios[0].mutuellePat, 0);
+    assert.equal(payload.foyer.situation, 'seul');
 
     const sharedPage = await context.newPage();
     await sharedPage.goto(shareUrl);
@@ -136,6 +145,14 @@ test('le partage permet de sélectionner les salaires et les données sensibles'
   const { context, page } = await openApp();
   try {
     await addSecondScenario(page, '3450');
+    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
+    await secondCard.locator('details.more summary').click();
+    await secondCard.locator('[data-key="mutuelle"]').fill('35');
+    await secondCard.locator('[data-key="mutuellePat"]').fill('65');
+    await page.locator('#foyerModuleToggle').click();
+    await page.locator('#foyerSituation [data-foyer="commun"]').click();
+    await page.locator('#foyerConjoint').fill('45000');
+
     await page.locator('#shareBtn').click();
     await page.locator('#shareScenario-0').uncheck();
     await page.locator('#shareIncludeDetails').check();
@@ -149,8 +166,11 @@ test('le partage permet de sélectionner les salaires et les données sensibles'
     }, shareUrl);
     assert.equal(payload.scenarios.length, 1);
     assert.equal(payload.scenarios[0].brut, 3450);
+    assert.equal(payload.scenarios[0].mutuelle, 35);
+    assert.equal(payload.scenarios[0].mutuellePat, 65);
     assert.equal(payload.v, 2);
-    assert.equal(payload.foyer.situation, 'seul');
+    assert.equal(payload.foyer.situation, 'commun');
+    assert.equal(payload.foyer.autresRevenus, 45000);
   } finally {
     await context.close();
   }

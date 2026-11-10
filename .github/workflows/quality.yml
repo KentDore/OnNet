@@ -25,7 +25,7 @@ jobs:
           node --check src/app.js
           node --check scripts/build.js
       - name: Construire le HTML autonome
-        run: node scripts/build.js 999.999.999 Onnet-999.999.999.html
+        run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
       - name: Tester les calculs
         run: node --test test/calc.test.js
       - name: Tester le build

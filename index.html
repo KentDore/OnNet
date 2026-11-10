@@ -562,31 +562,79 @@
 .input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
 input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
 
-/* Repères salariaux */
-.benchmark-panel{margin-top:18px;padding:20px;border:1px solid var(--line);border-radius:var(--radius-lg,18px);background:var(--panel,rgba(255,255,255,.58))}
-.benchmark-heading{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:16px}
-.benchmark-heading .bars-title{margin:0 0 5px}
-.benchmark-heading .hint{margin:0}
-.benchmark-tag{font-size:.72rem;font-weight:650;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
-.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.benchmark-item{min-width:0;padding:16px;border:1px solid var(--line);border-radius:14px;background:var(--surface,rgba(255,255,255,.5))}
-.benchmark-label{font-size:.84rem;color:var(--muted);font-weight:600}
-.benchmark-value{font-size:1.65rem;font-weight:750;letter-spacing:-.04em;margin:7px 0 2px}
-.benchmark-meta,.benchmark-context{font-size:.78rem;line-height:1.45;color:var(--muted)}
-.benchmark-delta{font-size:1rem;font-weight:700;margin:13px 0 5px}
-.benchmark-positive{color:var(--success,#24764b)}
-.benchmark-negative{color:var(--warn,#b42318)}
-.benchmark-settings{margin-top:16px;border-top:1px solid var(--line);padding-top:13px}
-.benchmark-settings>summary{font-size:.88rem;font-weight:650;cursor:pointer}
-.benchmark-settings-body{padding-top:12px}
-.benchmark-settings-body>p{font-size:.82rem;color:var(--muted);line-height:1.5;margin:0 0 12px}
-.benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.benchmark-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.benchmark-source{margin-top:12px!important}
-.benchmark-source a{color:var(--accent)}
-.benchmark-disclaimer{font-size:.76rem;line-height:1.5;color:var(--muted);margin:14px 0 0}
-@media(max-width:600px){.benchmark-panel{padding:15px}.benchmark-grid{grid-template-columns:1fr}.benchmark-heading{display:block}.benchmark-tag{display:inline-block;margin-top:8px}.benchmark-fields{grid-template-columns:1fr}.benchmark-value{font-size:1.5rem}}
-@media print{.benchmark-settings{display:none}}
+/* Repères salariaux — présentation sombre cohérente avec OnNet */
+.benchmark-panel{
+  margin-top:22px;
+  padding:clamp(18px,3vw,28px);
+  color:var(--ink);
+  background:var(--surface, #1b211f);
+  border:1px solid var(--line);
+  border-radius:24px;
+}
+.benchmark-panel .benchmark-heading{margin-bottom:20px}
+.benchmark-panel .benchmark-heading .hint{margin:7px 0 0;color:var(--ink-soft)}
+.benchmark-your-salary{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 18px;margin-bottom:14px;
+  background:var(--bg, #121715);border:1px solid var(--line);border-radius:16px;
+}
+.benchmark-your-salary>span{font-size:.92rem;color:var(--ink-soft)}
+.benchmark-your-salary>strong{font-size:clamp(1.35rem,3vw,1.8rem);font-weight:750;white-space:nowrap}
+.benchmark-your-salary small{font-size:.78rem;color:var(--ink-soft);font-weight:500}
+.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.benchmark-item{
+  min-width:0;padding:20px;
+  background:var(--bg, #121715);border:1px solid var(--line);border-radius:18px;
+}
+.benchmark-label{font-size:.94rem;font-weight:650;color:var(--ink);margin-bottom:12px}
+.benchmark-value{font-size:clamp(1.7rem,4vw,2.25rem);font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1.15}
+.benchmark-meta{margin-top:8px;font-size:.8rem;line-height:1.5;color:var(--ink-soft)}
+.benchmark-result{display:flex;align-items:baseline;gap:7px;margin-top:20px;font-size:1.35rem;font-weight:750}
+.benchmark-result small{font-size:.9rem;font-weight:650}
+.benchmark-positive{color:var(--success, #48c78e)}
+.benchmark-negative{color:var(--warning, #e99a70)}
+.benchmark-context{margin-top:10px;font-size:.83rem;line-height:1.5;color:var(--ink-soft)}
+.benchmark-contract{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
+.benchmark-contract summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--ink)}
+.benchmark-contract p{margin:10px 0 0;color:var(--ink-soft);font-size:.88rem}
+.benchmark-settings{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.benchmark-settings-body{padding-top:14px}
+.benchmark-settings-body>p,.benchmark-disclaimer{font-size:.82rem;line-height:1.6;color:var(--ink-soft)}
+.benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.benchmark-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+.benchmark-disclaimer{margin:16px 0 0}
+@media(max-width:600px){
+  .benchmark-panel{padding:18px;border-radius:20px}
+  .benchmark-your-salary{align-items:flex-start;flex-direction:column;gap:6px}
+  .benchmark-grid,.benchmark-fields{grid-template-columns:1fr}
+  .benchmark-item{padding:18px}
+  .benchmark-result{margin-top:16px}
+}
+
+
+/* Choix des données de partage : lisible et utilisable sur mobile. */
+.share-options-group{
+  min-width:0;margin:0 0 12px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+}
+.share-options-group legend{padding:0 5px;font-size:.82rem;font-weight:700;color:var(--ink)}
+.share-scenario-option,.share-extra-option{
+  display:flex;align-items:flex-start;gap:10px;padding:9px 2px;
+  color:var(--ink);font-size:.86rem;line-height:1.4;cursor:pointer;
+}
+.share-scenario-option+ .share-scenario-option,
+.share-extra-option+ .share-extra-option{border-top:1px solid var(--line)}
+.share-scenario-option input,.share-extra-option input{
+  width:17px;height:17px;flex:none;margin:2px 0 0;accent-color:var(--accent);
+}
+.share-scenario-option span,.share-extra-option span{min-width:0;display:block}
+.share-scenario-option small,.share-extra-option small{
+  display:block;margin-top:2px;color:var(--ink-soft);font-size:.76rem;line-height:1.4;
+}
+.share-scenario-option strong,.share-extra-option strong{font-weight:650}
+#shareCreateBtn:disabled{opacity:.45;cursor:not-allowed}
+.foyer-situation-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.foyer-situation-toggle button{padding-left:5px;padding-right:5px;white-space:normal}
 
 </style>
 </head>
@@ -596,8 +644,8 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.0.13</span></div>
-        <div class="eyebrow">Simulateur de paie · règles 2026</div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.0</span></div>
+        <div class="eyebrow">Simulateur de paie · cotisations 2026</div>
       </div>
       <div class="header-actions">
         <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
@@ -705,9 +753,10 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
           <div id="foyerBaremeFields">
             <div class="field-row">
               <label>Situation</label>
-              <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
+              <div class="pill-toggle foyer-situation-toggle" id="foyerSituation" role="group" aria-label="Situation fiscale" style="width:100%;">
                 <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-                <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+                <button type="button" data-foyer="commun" aria-pressed="false" style="flex:1;">Marié / PACS</button>
+                <button type="button" data-foyer="concubinage" aria-pressed="false" style="flex:1;">Concubinage</button>
               </div>
             </div>
 
@@ -728,9 +777,19 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
                 <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
               </div>
             </div>
+            <div class="field-row" id="foyerParentIsoleRow" style="display:none;">
+              <label for="foyerParentIsole" style="display:flex;align-items:center;gap:9px;">
+                <input type="checkbox" id="foyerParentIsole" style="width:auto;margin:0;">
+                Parent isolé (case T)
+              </label>
+              <div class="sub-hint">À cocher uniquement si vous vivez seul(e), sans concubin, et assumez la charge principale ou exclusive d'au moins un enfant. La résidence alternée n'est pas modélisée ici.</div>
+            </div>
 
             <div class="alert alert-warn" id="foyerWarn" style="display:none;">
               <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
+            </div>
+            <div class="alert alert-info" id="foyerConcubinageInfo" style="display:none;">
+              <span>ⓘ</span><span>En concubinage, chacun fait sa propre déclaration. Les revenus de votre partenaire ne sont pas ajoutés à votre foyer fiscal. Indiquez uniquement les personnes à charge rattachées à votre déclaration.</span>
             </div>
           </div>
 
@@ -860,10 +919,10 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
         <p>La part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations.</p>
 
         <div class="section-tag">Absences</div>
-        <p>L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective.</p>
+        <p>Les congés payés sont estimés par maintien du net habituel au prorata des jours, sans comparer la méthode du dixième au maintien de salaire. L'arrêt de travail est estimé par un pourcentage forfaitaire du net, avec un délai de carence de 3 jours par défaut, sur un mois de 30 jours. Ce n'est pas un calcul d'IJSS : le montant réel dépend notamment des salaires de référence, des plafonds, de la durée de l'arrêt, de l'ancienneté et de la convention collective. Ces deux résultats sont indicatifs et ne remplacent pas un bulletin de paie.</p>
 
         <div class="section-tag">Impôt sur le revenu</div>
-        <p>Par défaut, calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
+        <p>Par défaut, calculé au barème IR 2026 applicable aux revenus 2025 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
 
         <div class="section-tag">Ce qui n'est pas modélisé</div>
         <p>La régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle.</p>
@@ -899,6 +958,9 @@ const P = {
     abattementPct: 10, abattementMin: 495, abattementMax: 14171,
     // Plafonnement des effets du quotient familial, par demi-part additionnelle.
     plafondDemiPart: 1807,
+    // Plafond spécifique de l'avantage lié au premier enfant à charge d'un
+    // parent isolé (case T), barème 2026 sur revenus 2025.
+    plafondParentIsole: 4262,
     // Décote sur les impôts modestes : base − taux × impôt brut, sous le seuil.
     decote: { seuilSeul: 1982, seuilCouple: 3277,
               baseSeul: 897, baseCouple: 1483, taux: 45.25 }
@@ -1027,25 +1089,34 @@ function abattementFraisPro(salaireAnnuel){
   return Math.min(Math.max(brut, plancher), P.ir.abattementMax);
 }
 
-// Parts de quotient familial : 1 (ou 2 en couple), une demi-part pour chacune
-// des deux premières personnes à charge, une part entière à partir de la troisième.
-function partsFiscales(couple, personnesCharge){
+// Parts de quotient familial. Pour un parent isolé (case T) avec au moins un
+// enfant à charge, la majoration totale liée au premier enfant est d'une part.
+function partsFiscales(couple, personnesCharge, parentIsole){
   const n = Math.max(0, Math.floor(personnesCharge || 0));
-  return (couple ? 2 : 1) + Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const base = couple ? 2 : 1;
+  const partsEnfants = Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const majorationParentIsole = !couple && parentIsole && n > 0 ? 0.5 : 0;
+  return base + partsEnfants + majorationParentIsole;
 }
 
 // Impôt d'un foyer, à partir de son revenu imposable global (déjà abattu).
-function impotFoyer(revenuImposable, couple, personnesCharge){
+function impotFoyer(revenuImposable, couple, personnesCharge, parentIsole){
   if(revenuImposable <= 0) return 0;
-  const parts = partsFiscales(couple, personnesCharge);
+  const n = Math.max(0, Math.floor(personnesCharge || 0));
+  const parentIsoleActif = !couple && parentIsole === true && n > 0;
+  const parts = partsFiscales(couple, n, parentIsoleActif);
   const partsBase = couple ? 2 : 1;
   let impot = baremeIR(revenuImposable / parts) * parts;
 
-  // Plafonnement des effets du quotient familial : l'avantage tiré des
-  // demi-parts au-delà du foyer de base est limité.
+  // Plafonnement : le premier enfant d'un parent isolé ouvre une majoration
+  // totale d'une part, plafonnée spécifiquement. Les parts suivantes gardent
+  // le plafond ordinaire par demi-part.
   if(parts > partsBase){
     const sansCharges = baremeIR(revenuImposable / partsBase) * partsBase;
-    const plafond = P.ir.plafondDemiPart * (parts - partsBase) * 2;
+    const partsSupplementaires = parts - partsBase;
+    const plafond = parentIsoleActif
+      ? P.ir.plafondParentIsole + Math.max(0, partsSupplementaires - 1) * 2 * P.ir.plafondDemiPart
+      : P.ir.plafondDemiPart * partsSupplementaires * 2;
     if(sansCharges - impot > plafond) impot = sansCharges - plafond;
   }
 
@@ -1092,7 +1163,9 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
   const netSocial = brutTotal - cotisNettes - mutSal;
 
   const deductibleNet = Math.max(0, c.deductible - reducHS);
-  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+  // La mutuelle santé n'est pas une cotisation salariale déductible de l'impôt.
+  // Seule la contribution employeur est réintégrée au net imposable.
+  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet + mutPat);
 
   // Heures supplémentaires : exonérées d'impôt sur le revenu dans la limite d'un
   // plafond annuel de net imposable. La part de net imposable qui leur est
@@ -1118,11 +1191,13 @@ function compute(s, foyer){
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
 
-  // Part patronale de mutuelle : réintégrée dans le net imposable. Faute d'un
-  // champ dédié, on retient le partage 50/50 — le minimum légal — plutôt qu'un
-  // forfait figé, qui gonflait l'imposable même sans mutuelle déclarée.
-  const mutuellePat = Math.max(0, s.mutuelle || 0);
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, mutuellePat, tr, P.plafondExoIR/12);
+  // La part salariale est retenue sur le net payé ; la part patronale est
+  // réintégrée au net imposable. L'ancien modèle supposait les deux parts égales.
+  // On conserve ce comportement pour les scénarios historiques sans mutuellePat.
+  const mutuellePat = Math.max(0, s.mutuellePat === undefined
+    ? (s.mutuelle || 0) : (s.mutuellePat || 0));
+  const mutuelleSal = Math.max(0, s.mutuelle || 0);
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, mutuelleSal, mutuellePat, tr, P.plafondExoIR/12);
 
   // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
   // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
@@ -1134,8 +1209,11 @@ function compute(s, foyer){
   const nbMois = s.nbMois || 12;
   const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
   const aBase = split.brutBase * nbMois + (s.primes || 0);
-  const aHS = split.brutHS * 12;
-  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
+  // Par défaut, les heures supplémentaires sont annualisées sur 12 mois.
+  // Certains contrats incluent toutefois ces heures dans le 13e/14e mois :
+  // l'option 'ensemble' les annualise alors sur le même nombre de mensualités.
+  const aHS = split.brutHS * (s.treiziemeMoisBase === 'ensemble' ? nbMois : 12);
+  const a = periode(aBase, aHS, s, P.pmss * 12, mutuelleSal * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
 
   // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
   // normalement et une portion d'absence, sur un mois de référence de 30 jours.
@@ -1188,11 +1266,13 @@ function compute(s, foyer){
   } else {
     const couple = !!f.couple;
     const charges = Math.max(0, f.personnesCharge || 0);
+    const parentIsole = !couple && f.parentIsole === true && charges > 0;
     const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
     const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
     const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
     impotAnnuel = Math.max(0,
-      impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
+      impotFoyer(baseAutres + baseSalaire, couple, charges, parentIsole)
+      - impotFoyer(baseAutres, couple, charges, parentIsole));
     tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
   }
   const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);
@@ -1222,14 +1302,21 @@ let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800,
-    mutuelle:scenarioDefaults.mutuelle,
+    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
+    treiziemeMoisBase:'base',
     maintienPct:90, carenceCouverte:false,
     absenceType:'none', absenceDuree:0
   };
-  return Object.assign(base, over || {});
+  const scenario = Object.assign(base, over || {});
+  // Compatibilité avec les créations historiques : la part employeur suit
+  // la part salarié, sauf lorsqu'une valeur distincte est fournie.
+  if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
+    scenario.mutuellePat = scenario.mutuelle;
+  }
+  return scenario;
 }
 
 function defaultScenarios(){
@@ -1240,7 +1327,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -1256,7 +1343,7 @@ function loadBenchmarks(){
     const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
     return {
       smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
-      smicDate: /^\\d{4}-\\d{2}-\\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
+      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
     };
   }catch(_){
     return { ...BENCHMARK_DEFAULTS };
@@ -1269,7 +1356,7 @@ function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
   const limits = {
-    brut:[0,1000000], mutuelle:[0,100000], joursResto:[0,31],
+    brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
     valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
     primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
   };
@@ -1280,6 +1367,12 @@ function sanitizeScenario(raw){
     clean[key] = n;
   }
   if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  // Compatibilité avec les états antérieurs : l'ancien modèle supposait une
+  // part employeur égale à la part salarié.
+  if(clean.mutuellePat === undefined){
+    clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
+  }
+  if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
@@ -1297,18 +1390,25 @@ function sanitizeScenario(raw){
 // mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
 //                 s'applique tel quel — les champs de situation n'ont alors
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
-const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
+const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, parentIsole:false, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
   const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
   const nb = (v, min, max) => {
     const n = Number(v);
     return Number.isFinite(n) ? clamp(n, min, max) : 0;
   };
-  const couple = f.couple === true;
+  // Rétrocompatibilité : les anciens états ne connaissent que couple=true/false.
+  const situation = ['seul','commun','concubinage'].includes(f.situation)
+    ? f.situation : (f.couple === true ? 'commun' : 'seul');
+  const couple = situation === 'commun';
+  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
+  const parentIsole = situation === 'seul' && personnesCharge > 0 && f.parentIsole === true;
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
+    situation,
     couple,
-    personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
+    personnesCharge,
+    parentIsole,
     autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
     pasRate: nb(f.pasRate, 0, 100)
   };
@@ -1409,8 +1509,29 @@ function loadShareState(){
   } catch(e){ return null; }
 }
 
-function buildShareUrl(){
-  const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer };
+function buildShareUrl(options){
+  const opts = options || {};
+  const selectedIds = Array.isArray(opts.scenarioIds) ? new Set(opts.scenarioIds) : null;
+  const sharedScenarios = scenarios.filter(s => !selectedIds || selectedIds.has(s.id));
+  if(!sharedScenarios.length) throw new Error('Sélectionnez au moins un salaire à partager.');
+
+  const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
+    // Données essentielles à la comparaison salariale.
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
+    // Sans option « détails », neutraliser explicitement ces valeurs plutôt
+    // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
+    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
+  }));
+
+  const payload = {
+    v:2,
+    scenarios:sharedData,
+    refId:sharedScenarios.some(s => s.id === refId) ? refId : sharedScenarios[0].id,
+    metric, displayAmt, displayPeriod,
+    foyer:opts.includeFoyer ? { ...foyer } : { ...FOYER_DEFAUT }
+  };
   const encoded = toBase64Url(JSON.stringify(payload));
   // Pas location.origin : il vaut la chaîne « null » sur file:// (Firefox,
   // Safari), or le README documente l'ouverture directe du fichier.
@@ -1435,12 +1556,66 @@ function legacyCopy(text){
   return ok;
 }
 
+function showShareOptionsModal(){
+  const scenarioChoices = scenarios.map(s => `
+    <label class="share-scenario-option" for="shareScenario-${s.id}">
+      <input type="checkbox" id="shareScenario-${s.id}" value="${s.id}" checked>
+      <span><strong>${esc(s.name)}</strong><small>${fmt(s.brut)} brut/mois · ${s.dureeType} h · ${s.nbMois} mensualités${s.primes ? ` · primes ${fmt(s.primes)}/an` : ''}</small></span>
+    </label>`).join('');
+  const html = `
+    <p id="modalMsg" class="modal-msg">Choisissez les informations à inclure dans le lien.</p>
+    <p class="sub-hint">Toujours inclus : brut mensuel, durée hebdomadaire, nombre de mensualités, primes et réglage du 13ᵉ/14ᵉ mois.</p>
+    <fieldset class="share-options-group">
+      <legend>Salaires à partager</legend>
+      ${scenarioChoices}
+    </fieldset>
+    <fieldset class="share-options-group">
+      <legend>Informations facultatives</legend>
+      <label class="share-extra-option" for="shareIncludeDetails">
+        <input type="checkbox" id="shareIncludeDetails">
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+      </label>
+      <label class="share-extra-option" for="shareIncludeFoyer">
+        <input type="checkbox" id="shareIncludeFoyer">
+        <span><strong>Situation fiscale</strong><small>Situation du foyer, personnes à charge, revenus du conjoint et taux de prélèvement.</small></span>
+      </label>
+    </fieldset>
+    <div class="alert alert-warn" style="margin-top:12px;">
+      <span>${ICON.warn}</span><span>Les salaires sélectionnés sont toujours inclus. Le lien n'est pas chiffré ni protégé par mot de passe : toute personne qui le reçoit peut lire les données qu'il contient.</span>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
+      <button type="button" class="btn btn-primary" id="shareCreateBtn">Créer le lien</button>
+    </div>`;
+  const pending = openModal(html);
+  const overlay = document.getElementById('modalOverlay');
+  const confirm = overlay.querySelector('#shareCreateBtn');
+  const updateAvailability = () => {
+    confirm.disabled = overlay.querySelectorAll('.share-scenario-option input:checked').length === 0;
+  };
+  overlay.querySelectorAll('.share-scenario-option input').forEach(input => {
+    input.addEventListener('change', updateAvailability);
+  });
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => closeModal(null));
+  confirm.addEventListener('click', () => {
+    const scenarioIds = [...overlay.querySelectorAll('.share-scenario-option input:checked')]
+      .map(input => Number(input.value));
+    closeModal({
+      scenarioIds,
+      includeDetails: overlay.querySelector('#shareIncludeDetails').checked,
+      includeFoyer: overlay.querySelector('#shareIncludeFoyer').checked
+    });
+  });
+  updateAvailability();
+  return pending;
+}
+
 async function shareLink(){
-  const url = buildShareUrl();
-  // Cas normal : copie directe sur ce clic (un vrai geste utilisateur récent)
-  // et simple affichage du toast — pas de fenêtre en plus. La modale n'est
-  // qu'un dernier repli, affiché seulement si les deux méthodes de copie
-  // échouent vraiment, pour ne jamais perdre le lien pour autant.
+  const options = await showShareOptionsModal();
+  if(!options) return;
+  const url = buildShareUrl(options);
+  // Copie directe après le choix explicite des données à partager. Si le
+  // presse-papiers est refusé, le lien reste accessible dans la modale de repli.
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
       await navigator.clipboard.writeText(url);
@@ -1499,7 +1674,7 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt sur le revenu estimé au barème 2026 — ajustez le foyer fiscal sur chaque salaire pour affiner.',
+  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -1577,10 +1752,17 @@ function renderCard(s, r, showRemove){
       <summary>Détails avancés</summary>
       <div class="more-body">
         <div class="section-tag">Mutuelle</div>
-        <div class="field-row">
-          <label for="f-mutuelle-${uid}">Mutuelle (€ / mois)</label>
-          ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+        <div class="two-col">
+          <div class="field-row">
+            <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
+            ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+          </div>
+          <div class="field-row">
+            <label for="f-mutuelle-pat-${uid}">Part employeur (€ / mois)</label>
+            ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
+          </div>
         </div>
+        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
@@ -1602,6 +1784,14 @@ function renderCard(s, r, showRemove){
           </div>
         </div>
         <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
+        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
+          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
+          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
+            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
+            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
+          </select>
+          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
+        </div>
       </div>
     </details>
   </div>`;
@@ -1767,20 +1957,21 @@ function renderInsight(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
   const others = computed.filter(x => x.s.id !== refId);
   if(!others.length) return '';
-  const best = others.reduce((a,b) => b.r.m.netApres > a.r.m.netApres ? b : a);
-  const delta = best.r.m.netApres - ref.r.m.netApres;
-  if(Math.abs(delta) < 1){
-    return `<div class="insight neutral">Ces salaires donnent à peu près le même net.</div>`;
+  const isHourly = HOURLY_METRICS.has(metric);
+  const valueOf = x => Number(x.r[metric]) || 0;
+  const best = others.reduce((a,b) => valueOf(b) > valueOf(a) ? b : a);
+  const delta = valueOf(best) - valueOf(ref);
+  const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
+  const metricLabel = {
+    netImposable:'net imposable', annuelNet:'net annuel',
+    netApresImpot:'net après impôt', netHoraire:'net horaire',
+    brutHoraire:'brut horaire'
+  }[metric] || 'valeur sélectionnée';
+  const format = isHourly ? fmtHoraire : fmt;
+  if(Math.abs(delta) < (isHourly ? 0.01 : 1)){
+    return `<div class="insight neutral">Ces salaires donnent à peu près le même ${metricLabel}.</div>`;
   }
-  const diffBrut = best.r.m.brutTotal - ref.r.m.brutTotal;
-  let convNote = '';
-  if(diffBrut > 1 && delta > 0){
-    const convPct = (delta/diffBrut)*100;
-    convNote = ` — vous gardez ${convPct.toFixed(0)} % de l'augmentation en net`;
-  }
-  const verb = delta > 0 ? 'donne' : 'donne';
-  const sign = delta > 0 ? 'de plus' : 'de moins';
-  return `<div class="insight"><strong>${esc(best.s.name)}</strong> ${verb} ${fmt(Math.abs(delta))} ${sign} par mois que <strong>${esc(ref.s.name)}</strong>${convNote}.</div>`;
+  return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
 const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
@@ -1830,46 +2021,70 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
+
+  // Tous les repères sont calculés en net social mensuel, avant prélèvement à la source.
+  // Le SMIC est simulé sans mutuelle ni titres-restaurant : ces éléments dépendent
+  // d'un employeur et ne constituent pas une caractéristique du SMIC.
+  const neutralSmicScenario = {
+    ...s,
+    brut: benchmarks.smicBrut,
+    dureeType: '35',
+    mutuelle: 0,
+    joursResto: 0,
+    valeurResto: 0,
+    partResto: 0,
+    nbMois: 12,
+    primes: 0,
+    absenceType: 'none',
+    absenceDuree: 0
+  };
+  const smicNet = Math.max(0, compute(neutralSmicScenario, foyer).m.netSocial);
   const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
-  const heures = HEURES_BASE + r.heuresSup;
-  const net35 = heures > 0 ? Math.max(0, r.m.netSocial) / heures * HEURES_BASE : 0;
-  const smic = benchmarkDelta(brut35, benchmarks.smicBrut);
-  const median = benchmarkDelta(net35, 2190);
+  // Recalcul complet à 35 h : ne pas proratiser un net calculé sur 39 h.
+  const base35 = compute({
+    ...s, brut: brut35, dureeType: '35',
+    absenceType: 'none', absenceDuree: 0
+  }, foyer);
+  const userNet35 = Math.max(0, base35.m.netSocial);
+  const medianNet = 2190;
+  const smic = benchmarkDelta(userNet35, smicNet);
+  const median = benchmarkDelta(userNet35, medianNet);
   const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
   return `
     <div class="benchmark-heading">
-      <div><h2 class="bars-title">Votre salaire face aux repères</h2><p class="hint">Référence sélectionnée : <strong>${esc(s.name)}</strong>. Montants normalisés sur 35 h, avant impôt.</p></div>
-      <span class="benchmark-tag">Repères nationaux</span>
+      <div>
+        <h2 class="bars-title">Votre salaire face aux repères</h2>
+        <p class="hint">Comparaison en net social mensuel, avant impôt, sur une base de 35 h.</p>
+      </div>
+    </div>
+    <div class="benchmark-your-salary">
+      <span>Votre net estimé à 35 h</span>
+      <strong>${fmt(userNet35)} <small>/ mois</small></strong>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC brut mensuel · 35 h</div>
-        <div class="benchmark-value">${fmt(benchmarks.smicBrut)}</div>
-        <div class="benchmark-meta">Repère en vigueur depuis le ${esc(benchmarks.smicDate)}</div>
-        <div class="benchmark-delta ${signedClass(smic)}">${smic.amount} (${smic.pct})</div>
-        <div class="benchmark-context">Votre brut de base équivalent : ${fmt(brut35)} / mois</div>
+        <div class="benchmark-label">SMIC · net estimé · 35 h</div>
+        <div class="benchmark-value">${fmt(smicNet)}</div>
+        <div class="benchmark-meta">Calcul indicatif à partir du SMIC brut de ${fmt(benchmarks.smicBrut)} · depuis le ${esc(benchmarks.smicDate)}</div>
+        <div class="benchmark-result ${signedClass(smic)}">${smic.amount} <small>(${smic.pct})</small></div>
+        <div class="benchmark-context">Écart entre votre net estimé et le SMIC net estimé.</div>
       </article>
       <article class="benchmark-item">
         <div class="benchmark-label">Salaire médian du privé · net</div>
-        <div class="benchmark-value">2 190 €</div>
-        <div class="benchmark-meta">Équivalent temps plein · INSEE, 2024</div>
-        <div class="benchmark-delta ${signedClass(median)}">${median.amount} (${median.pct})</div>
-        <div class="benchmark-context">Votre net social estimé équivalent 35 h : ${fmt(net35)} / mois</div>
+        <div class="benchmark-value">${fmt(medianNet)}</div>
+        <div class="benchmark-meta">INSEE · 2024 · équivalent temps plein</div>
+        <div class="benchmark-result ${signedClass(median)}">${median.amount} <small>(${median.pct})</small></div>
+        <div class="benchmark-context">Écart entre votre net estimé et le salaire médian.</div>
+        <details class="benchmark-contract"><summary>Voir votre estimation au contrat actuel</summary><p>À ${s.dureeType} h : <strong>${fmt(r.m.netSocial)}</strong> net social estimé / mois.</p></details>
       </article>
     </div>
-    <details class="benchmark-settings">
-      <summary>Actualiser le montant du SMIC</summary>
-      <div class="benchmark-settings-body">
-        <p>Modifiez le repère brut si le SMIC évolue. Cette valeur est enregistrée uniquement dans ce navigateur ; elle ne met pas à jour les règles de paie du simulateur.</p>
-        <div class="benchmark-fields">
-          <div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div>
-          <div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div>
-        </div>
-        <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-        <p class="benchmark-source">Source officielle : <a href="https://code.travail.gouv.fr/fiche-ministere-travail/le-smic" target="_blank" rel="noopener noreferrer">Code du travail numérique</a>. Vérifiez le montant et la date d’effet avant de les modifier.</p>
-      </div>
-    </details>
-    <p class="benchmark-disclaimer">Comparaison indicative, pas un contrôle juridique du respect du SMIC. Le net social est une estimation issue du simulateur ; le salaire médian est une donnée INSEE 2024, pas une référence propre à votre métier ou région.</p>`;
+    <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
+      <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net du SMIC est une estimation du simulateur, pas un montant officiel.</p>
+    </div></details>
+    <p class="benchmark-disclaimer">Les montants nets sont des estimations avant prélèvement à la source. Le calcul du SMIC exclut mutuelle et titres-restaurant. Le salaire médian INSEE 2024 est une référence nationale du privé, non spécifique à votre métier ou à votre région.</p>`;
 }
 function bindBenchmarkSettings(){
   const save = document.getElementById('saveBenchmarkSettings');
@@ -1877,7 +2092,7 @@ function bindBenchmarkSettings(){
   if(save) save.addEventListener('click', () => {
     const amount = Number(document.getElementById('benchmarkSmicBrut').value);
     const date = document.getElementById('benchmarkSmicDate').value;
-    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\\d{4}-\\d{2}-\\d{2}$/.test(date)){
+    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
       showToastImpl('Montant ou date du SMIC invalide.');
       return;
     }
@@ -1921,7 +2136,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  document.getElementById('addScenario').addEventListener('click', addScenario);
   // Nettoie la classe d'animation une fois jouée : les mises à jour légères
   // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
   // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
@@ -2078,9 +2292,12 @@ function bindRefPickers(){
 function foyerResume(){
   if(foyer.mode === 'taux') return `Taux personnel : ${foyer.pasRate.toFixed(1)} %`;
   const n = foyer.personnesCharge;
-  const bouts = [foyer.couple ? 'En couple' : 'Seul(e)'];
+  const situationLabel = foyer.situation === 'commun' ? 'Marié(e) / PACS'
+    : foyer.situation === 'concubinage' ? 'Concubinage (imposition séparée)' : 'Seul(e)';
+  const bouts = [situationLabel];
   bouts.push(n === 0 ? 'sans personne à charge'
                      : (n === 1 ? '1 personne à charge' : `${n} personnes à charge`));
+  if(foyer.parentIsole) bouts.push('parent isolé (case T)');
   if(foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
   return bouts.join(', ');
 }
@@ -2099,10 +2316,16 @@ function syncFoyerUI(){
   setShown('foyerTauxFields', foyer.mode === 'taux');
 
   document.querySelectorAll('#foyerSituation button').forEach(b => {
-    b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === foyer.couple ? 'true' : 'false');
+    b.setAttribute('aria-pressed', b.dataset.foyer === foyer.situation ? 'true' : 'false');
   });
-  // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
-  // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
+  // Les revenus du conjoint ne sont inclus que pour un foyer fiscal commun.
+  // En concubinage, les deux déclarations restent séparées.
+  setShown('foyerConcubinageInfo', foyer.situation === 'concubinage');
+  const parentIsolePossible = foyer.situation === 'seul' && foyer.personnesCharge > 0;
+  setShown('foyerParentIsoleRow', parentIsolePossible);
+  const parentIsoleInput = document.getElementById('foyerParentIsole');
+  if(parentIsoleInput) parentIsoleInput.checked = parentIsolePossible && foyer.parentIsole;
+  if(!parentIsolePossible) foyer.parentIsole = false;
   setShown('foyerConjointRow', foyer.couple);
   const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
   setShown('foyerWarn', alerteBareme);
@@ -2121,7 +2344,7 @@ function syncFoyerUI(){
   if(alerte){
     resume = foyer.mode === 'taux'
       ? 'Taux personnel — écart entre salaires optimiste'
-      : 'En couple — revenus du conjoint à renseigner';
+      : 'Marié/PACS — revenus du conjoint à renseigner';
   }
   setText('foyerModuleDesc', resume);
   const desc = document.getElementById('foyerModuleDesc');
@@ -2129,7 +2352,7 @@ function syncFoyerUI(){
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
     ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
 }
 
 function bindFoyerModule(){
@@ -2142,12 +2365,15 @@ function bindFoyerModule(){
   });
   document.querySelectorAll('#foyerSituation button').forEach(btn => {
     btn.addEventListener('click', () => {
-      foyer.couple = btn.dataset.foyer === 'couple';
+      foyer.situation = ['seul','commun','concubinage'].includes(btn.dataset.foyer)
+        ? btn.dataset.foyer : 'seul';
+      foyer.couple = foyer.situation === 'commun';
       if(!foyer.couple){
         foyer.autresRevenus = 0;
         const champ = document.getElementById('foyerConjoint');
         if(champ) champ.value = '0';
       }
+      if(foyer.situation !== 'seul') foyer.parentIsole = false;
       syncFoyerUI();
       updateComputed();
     });
@@ -2155,6 +2381,13 @@ function bindFoyerModule(){
   const charges = document.getElementById('foyerCharges');
   if(charges) charges.addEventListener('change', () => {
     foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
+    if(foyer.personnesCharge === 0) foyer.parentIsole = false;
+    syncFoyerUI();
+    updateComputed();
+  });
+  const parentIsole = document.getElementById('foyerParentIsole');
+  if(parentIsole) parentIsole.addEventListener('change', () => {
+    foyer.parentIsole = parentIsole.checked;
     syncFoyerUI();
     updateComputed();
   });
@@ -2194,11 +2427,15 @@ function updateComputed(){
   bindRefPickers();
   document.getElementById('barsBody').innerHTML = renderBars(computed);
   document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
 
   computed.forEach(({s, r}) => {
     const u = s.id;
+    const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
+    if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
     setText(`c-hero-${u}`, fmt(heroValue(r)));
     setText(`c-herolabel-${u}`, heroLabel());
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
@@ -2484,7 +2721,13 @@ function closeModal(result){
   document.removeEventListener('keydown', onModalKeydown, true);
   unlockBodyScroll();
   modalState = null;
-  setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
+  setTimeout(() => {
+    // Une nouvelle modale peut réutiliser l'overlay avant la fin de cette
+    // animation de fermeture : ne jamais effacer son contenu entre-temps.
+    if(modalState) return;
+    overlay.hidden = true;
+    overlay.innerHTML = '';
+  }, 200);
   if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
   if(resolve) resolve(result);
 }
@@ -2622,7 +2865,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
   return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, joursResto: 0 };
+    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
@@ -2934,6 +3177,11 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
     document.querySelectorAll('.raise-type-toggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
     document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
   });
+});
+// Le bouton est recréé par render() : déléguer au conteneur permanent
+// évite de chercher un élément inexistant au démarrage et n'attache qu'un écouteur.
+document.getElementById('cardsBody').addEventListener('click', e => {
+  if(e.target.closest && e.target.closest('#addScenario')) addScenario();
 });
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
   const amountInput = document.getElementById('raiseAmount');
