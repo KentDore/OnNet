@@ -26,7 +26,7 @@ L'application fonctionne dans le navigateur, sans compte ni serveur de calcul. L
 ## Fonctionnalités
 
 - Comparaison multi-salaires et réorganisation des cartes par glisser-déposer ou au clavier.
-- Saisie mensuelle ou annuelle, primes, 12 à 24 mensualités et choix de base pour le 13ᵉ/14ᵉ mois.
+- Saisie mensuelle ou annuelle, primes, nombre de mensualités (1 à 24, avec 12/13/14 comme cas usuels) et choix de base pour le 13ᵉ/14ᵉ mois.
 - Calcul estimatif des cotisations du régime non-cadre du secteur privé : CSG/CRDS, vieillesse, retraite complémentaire, réduction sur les heures supplémentaires.
 - Titres-restaurant avec vérification des limites de participation employeur et du plafond d'exonération.
 - Impôt sur le revenu estimé au barème 2026 applicable aux revenus 2025, ou calcul au taux de prélèvement à la source saisi par l'utilisateur.
