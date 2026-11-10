@@ -309,6 +309,18 @@ describe('splitHeures()', () => {
     near(s.brutBase, s.tauxHoraire * C.HEURES_BASE, 1e-6, 'brut de base');
   });
 
+  test('39 h à 2 300 € : ventilation indépendante du brut de base et des heures sup', () => {
+    // Référence arithmétique indépendante :
+    // heures sup = 4 × 52 / 12 = 17,3333 h/mois ;
+    // équivalent payé = 151,67 + (17,3333 × 1,25) = 173,3367 h ;
+    // taux = 2 300 / 173,3367 = 13,26898 €/h.
+    const s = C.splitHeures(scn({ dureeType: '39', brut: 2300 }));
+    near(s.heuresSup, 17.3333333333, 1e-8, 'heures sup mensuelles');
+    near(s.tauxHoraire, 13.2689755966, 1e-8, 'taux horaire de base');
+    near(s.brutBase, 2012.50552874, 0.001, 'brut de base équivalent 35 h');
+    near(s.brutHS, 287.49447126, 0.001, 'brut des heures sup majorées');
+  });
+
   test('brut nul → aucune division par zéro', () => {
     const s = C.splitHeures(scn({ dureeType: '39', brut: 0 }));
     allFinite(s, 'splitHeures(0)');
