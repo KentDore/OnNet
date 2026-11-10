@@ -51,7 +51,13 @@ async function openApp() {
     if (!localStorage.getItem('onnet.state.v1')) {
       localStorage.setItem('onnet.state.v1', JSON.stringify({
         v: 1,
-        scenarios: [{ id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39' }],
+        scenarios: [{
+          id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
+          mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
+          partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
+          maintienPct: 90, carenceCouverte: false,
+          absenceType: 'none', absenceDuree: 0
+        }],
         refId: 0,
         metric: 'netHoraire',
         displayAmt: 'net',
