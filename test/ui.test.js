@@ -47,6 +47,8 @@ async function openApp() {
   const context = await browser.newContext();
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseUrl });
   const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
   await page.addInitScript(() => {
     if (!localStorage.getItem('onnet.state.v1')) {
       localStorage.setItem('onnet.state.v1', JSON.stringify({
@@ -66,6 +68,10 @@ async function openApp() {
     }
   });
   await page.goto(baseUrl);
+  if(pageErrors.length){
+    await context.close();
+    throw new Error('Erreur JavaScript au chargement :\\n' + pageErrors.join('\\n'));
+  }
   return { context, page };
 }
 
