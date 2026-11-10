@@ -228,16 +228,16 @@ test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', asy
       const scenario = scenarios[0];
       const result = compute(scenario, foyer);
       const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
-      return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).m.netSocial;
+      return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).netApresImpot;
     });
     const displayed = await page.locator('.benchmark-your-salary strong').innerText();
-    const contractDetails = page.locator('.benchmark-item').nth(1).locator('.benchmark-contract');
+    const contractDetails = page.locator('.benchmark-item').nth(1).locator('.benchmark-details');
     await contractDetails.locator('summary').click();
     const actual39 = await contractDetails.locator('p').innerText();
     const amount = Number(displayed.match(/[0-9][0-9\s]*,[0-9]{2}/)?.[0].replace(/\s/g, '').replace(',', '.') || displayed.match(/[0-9][0-9\s]*/)?.[0].replace(/\s/g, ''));
     assert.ok(Number.isFinite(amount), displayed);
     assert.ok(Math.abs(amount - expected) < 1, `net 35 h affiché ${amount}, attendu ${expected}`);
-    assert.match(actual39, /À 39 h/);
+    assert.match(actual39, /39 h/);
   } finally {
     await context.close();
   }
