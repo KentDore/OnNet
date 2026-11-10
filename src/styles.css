@@ -587,15 +587,14 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .benchmark-positive{color:var(--success, #48c78e)}
 .benchmark-negative{color:var(--warning, #e99a70)}
 .benchmark-context{margin-top:10px;font-size:.83rem;line-height:1.5;color:var(--ink-soft)}
-.benchmark-contract{margin-top:16px;padding-top:12px;border-top:1px solid var(--line)}
-.benchmark-contract summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--ink)}
-.benchmark-contract p{margin:10px 0 0;color:var(--ink-soft);font-size:.88rem}
+.benchmark-details{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.benchmark-details summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--ink);font-size:.88rem;line-height:1.4}
+.benchmark-details p{margin:9px 0 0;color:var(--ink-soft);font-size:.82rem;line-height:1.5}
 .benchmark-settings{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
 .benchmark-settings-body{padding-top:14px}
-.benchmark-settings-body>p,.benchmark-disclaimer{font-size:.82rem;line-height:1.6;color:var(--ink-soft)}
+.benchmark-settings-body>p{font-size:.82rem;line-height:1.6;color:var(--ink-soft)}
 .benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
 .benchmark-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
-.benchmark-disclaimer{margin:16px 0 0}
 @media(max-width:600px){
   .benchmark-panel{padding:18px;border-radius:20px}
   .benchmark-your-salary{align-items:flex-start;flex-direction:column;gap:6px}
@@ -659,7 +658,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .benchmark-result small{font-size:.7rem}
   .benchmark-details summary{font-size:.72rem}
   .benchmark-details p{font-size:.7rem}
-  .benchmark-contract{margin-top:9px;padding-top:8px}
+  .benchmark-details{margin-top:9px;padding-top:8px}
   .benchmark-settings{margin-top:12px;padding-top:10px}
   .benchmark-disclaimer{margin-top:10px;font-size:.72rem;line-height:1.45}
 }
