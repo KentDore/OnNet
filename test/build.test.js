@@ -81,7 +81,7 @@ test('la page publiée et le fichier versionné correspondent exactement aux sou
   const root = path.resolve(__dirname, '..');
   const indexPath = path.join(root, 'index.html');
   const index = fs.readFileSync(indexPath, 'utf8');
-  const match = index.match(/class="brand-version">v(\\d+\\.\\d+\\.\\d+)<\\/span>/);
+  const match = index.match(/class="brand-version">v(\d+\.\d+\.\d+)<\/span>/);
   assert.ok(match, 'la version doit être présente dans index.html');
   const version = match[1];
   const artifactPath = path.join(root, 'Onnet-' + version + '.html');
