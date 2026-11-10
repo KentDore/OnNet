@@ -38,11 +38,14 @@ test('la restauration renumérote les scénarios et conserve les références va
     '\nreturn { sanitizeScenario, normalizeScenarioIds };');
   const { sanitizeScenario, normalizeScenarioIds } = factory();
 
+  // Ce test isole la normalisation des identifiants : fournir les champs
+  // historiques requis évite de dépendre de scenarioDefaults (déclaré dans
+  // calc.js, hors du bloc de fonctions extrait ici).
   const restored = [
-    { id: 9007199254740992, name: 'Identifiant non sûr', brut: 2800 },
-    { id: 42, name: 'Premier doublon', brut: 3000 },
-    { id: 42, name: 'Second doublon', brut: 3200 },
-    { id: -1, name: 'Identifiant négatif', brut: 3400 }
+    { id: 9007199254740992, name: 'Identifiant non sûr', brut: 2800, mutuelle: 30 },
+    { id: 42, name: 'Premier doublon', brut: 3000, mutuelle: 30 },
+    { id: 42, name: 'Second doublon', brut: 3200, mutuelle: 30 },
+    { id: -1, name: 'Identifiant négatif', brut: 3400, mutuelle: 30 }
   ].map(sanitizeScenario).filter(Boolean);
 
   const result = normalizeScenarioIds(restored, 42, [42, 42, -1, 9007199254740992, 999]);
@@ -64,12 +67,37 @@ test('la restauration utilise le premier scénario si la référence est invalid
   const { sanitizeScenario, normalizeScenarioIds } = factory();
 
   const restored = [
-    { id: Number.MAX_SAFE_INTEGER, name: 'A', brut: 2800 },
-    { id: 8, name: 'B', brut: 3000 }
+    { id: Number.MAX_SAFE_INTEGER, name: 'A', brut: 2800, mutuelle: 30 },
+    { id: 8, name: 'B', brut: 3000, mutuelle: 30 }
   ].map(sanitizeScenario).filter(Boolean);
   const result = normalizeScenarioIds(restored, Number.MAX_SAFE_INTEGER + 1, [8, 123]);
 
   assert.equal(result.refId, 0);
   assert.deepEqual(result.openCardIds, [1]);
   assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
+});
+
+test('la page publiée et le fichier versionné correspondent exactement aux sources', t => {
+  const root = path.resolve(__dirname, '..');
+  const indexPath = path.join(root, 'index.html');
+  const index = fs.readFileSync(indexPath, 'utf8');
+  const match = index.match(/class="brand-version">v(\d+\.\d+\.\d+)<\/span>/);
+  assert.ok(match, 'la version doit être présente dans index.html');
+  const version = match[1];
+  assert.notEqual(version, '999.999.999', 'la page publiée ne doit pas utiliser la version synthétique de CI');
+  const artifactPath = path.join(root, 'Onnet-' + version + '.html');
+  assert.ok(fs.existsSync(artifactPath), 'le fichier autonome de la version publiée doit exister');
+
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnet-release-sync-'));
+  t.after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
+  const output = path.join(tempDir, 'Onnet-release-check.html');
+  const run = spawnSync(process.execPath, [
+    path.join(root, 'scripts', 'build.js'), version, output
+  ], { encoding: 'utf8' });
+  assert.equal(run.status, 0, run.stderr);
+  const generated = fs.readFileSync(output, 'utf8');
+  assert.equal(fs.readFileSync(artifactPath, 'utf8'), generated,
+    'le fichier autonome versionné doit correspondre aux sources');
+  assert.equal(index, generated,
+    'index.html doit correspondre au fichier autonome versionné');
 });

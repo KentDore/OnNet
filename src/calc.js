@@ -23,6 +23,9 @@ const P = {
     abattementPct: 10, abattementMin: 495, abattementMax: 14171,
     // Plafonnement des effets du quotient familial, par demi-part additionnelle.
     plafondDemiPart: 1807,
+    // Plafond spécifique de l'avantage lié au premier enfant à charge d'un
+    // parent isolé (case T), barème 2026 sur revenus 2025.
+    plafondParentIsole: 4262,
     // Décote sur les impôts modestes : base − taux × impôt brut, sous le seuil.
     decote: { seuilSeul: 1982, seuilCouple: 3277,
               baseSeul: 897, baseCouple: 1483, taux: 45.25 }
@@ -151,25 +154,34 @@ function abattementFraisPro(salaireAnnuel){
   return Math.min(Math.max(brut, plancher), P.ir.abattementMax);
 }
 
-// Parts de quotient familial : 1 (ou 2 en couple), une demi-part pour chacune
-// des deux premières personnes à charge, une part entière à partir de la troisième.
-function partsFiscales(couple, personnesCharge){
+// Parts de quotient familial. Pour un parent isolé (case T) avec au moins un
+// enfant à charge, la majoration totale liée au premier enfant est d'une part.
+function partsFiscales(couple, personnesCharge, parentIsole){
   const n = Math.max(0, Math.floor(personnesCharge || 0));
-  return (couple ? 2 : 1) + Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const base = couple ? 2 : 1;
+  const partsEnfants = Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
+  const majorationParentIsole = !couple && parentIsole && n > 0 ? 0.5 : 0;
+  return base + partsEnfants + majorationParentIsole;
 }
 
 // Impôt d'un foyer, à partir de son revenu imposable global (déjà abattu).
-function impotFoyer(revenuImposable, couple, personnesCharge){
+function impotFoyer(revenuImposable, couple, personnesCharge, parentIsole){
   if(revenuImposable <= 0) return 0;
-  const parts = partsFiscales(couple, personnesCharge);
+  const n = Math.max(0, Math.floor(personnesCharge || 0));
+  const parentIsoleActif = !couple && parentIsole === true && n > 0;
+  const parts = partsFiscales(couple, n, parentIsoleActif);
   const partsBase = couple ? 2 : 1;
   let impot = baremeIR(revenuImposable / parts) * parts;
 
-  // Plafonnement des effets du quotient familial : l'avantage tiré des
-  // demi-parts au-delà du foyer de base est limité.
+  // Plafonnement : le premier enfant d'un parent isolé ouvre une majoration
+  // totale d'une part, plafonnée spécifiquement. Les parts suivantes gardent
+  // le plafond ordinaire par demi-part.
   if(parts > partsBase){
     const sansCharges = baremeIR(revenuImposable / partsBase) * partsBase;
-    const plafond = P.ir.plafondDemiPart * (parts - partsBase) * 2;
+    const partsSupplementaires = parts - partsBase;
+    const plafond = parentIsoleActif
+      ? P.ir.plafondParentIsole + Math.max(0, partsSupplementaires - 1) * 2 * P.ir.plafondDemiPart
+      : P.ir.plafondDemiPart * partsSupplementaires * 2;
     if(sansCharges - impot > plafond) impot = sansCharges - plafond;
   }
 
@@ -216,7 +228,9 @@ function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS)
   const netSocial = brutTotal - cotisNettes - mutSal;
 
   const deductibleNet = Math.max(0, c.deductible - reducHS);
-  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet - mutSal + mutPat);
+  // La mutuelle santé n'est pas une cotisation salariale déductible de l'impôt.
+  // Seule la contribution employeur est réintégrée au net imposable.
+  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet + mutPat);
 
   // Heures supplémentaires : exonérées d'impôt sur le revenu dans la limite d'un
   // plafond annuel de net imposable. La part de net imposable qui leur est
@@ -242,11 +256,13 @@ function compute(s, foyer){
   const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
   const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
 
-  // Part patronale de mutuelle : réintégrée dans le net imposable. Faute d'un
-  // champ dédié, on retient le partage 50/50 — le minimum légal — plutôt qu'un
-  // forfait figé, qui gonflait l'imposable même sans mutuelle déclarée.
-  const mutuellePat = Math.max(0, s.mutuelle || 0);
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, s.mutuelle, mutuellePat, tr, P.plafondExoIR/12);
+  // La part salariale est retenue sur le net payé ; la part patronale est
+  // réintégrée au net imposable. L'ancien modèle supposait les deux parts égales.
+  // On conserve ce comportement pour les scénarios historiques sans mutuellePat.
+  const mutuellePat = Math.max(0, s.mutuellePat === undefined
+    ? (s.mutuelle || 0) : (s.mutuellePat || 0));
+  const mutuelleSal = Math.max(0, s.mutuelle || 0);
+  const m = periode(split.brutBase, split.brutHS, s, P.pmss, mutuelleSal, mutuellePat, tr, P.plafondExoIR/12);
 
   // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
   // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
@@ -258,8 +274,11 @@ function compute(s, foyer){
   const nbMois = s.nbMois || 12;
   const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
   const aBase = split.brutBase * nbMois + (s.primes || 0);
-  const aHS = split.brutHS * 12;
-  const a = periode(aBase, aHS, s, P.pmss * 12, s.mutuelle * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
+  // Par défaut, les heures supplémentaires sont annualisées sur 12 mois.
+  // Certains contrats incluent toutefois ces heures dans le 13e/14e mois :
+  // l'option 'ensemble' les annualise alors sur le même nombre de mensualités.
+  const aHS = split.brutHS * (s.treiziemeMoisBase === 'ensemble' ? nbMois : 12);
+  const a = periode(aBase, aHS, s, P.pmss * 12, mutuelleSal * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
 
   // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
   // normalement et une portion d'absence, sur un mois de référence de 30 jours.
@@ -312,11 +331,13 @@ function compute(s, foyer){
   } else {
     const couple = !!f.couple;
     const charges = Math.max(0, f.personnesCharge || 0);
+    const parentIsole = !couple && f.parentIsole === true && charges > 0;
     const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
     const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
     const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
     impotAnnuel = Math.max(0,
-      impotFoyer(baseAutres + baseSalaire, couple, charges) - impotFoyer(baseAutres, couple, charges));
+      impotFoyer(baseAutres + baseSalaire, couple, charges, parentIsole)
+      - impotFoyer(baseAutres, couple, charges, parentIsole));
     tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
   }
   const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);

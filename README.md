@@ -1,86 +1,72 @@
-# Onnet
+# OnNet
 
 **Le brut promet. Le net décide.**
 
-Onnet est un simulateur brut → net pour salaires français. Il permet de comparer plusieurs salaires côte à côte — poste actuel, offre reçue, augmentation en négociation — et de voir immédiatement ce qui atterrit vraiment sur le compte en banque.
+OnNet est un simulateur de salaire brut → net pour le secteur privé français. Il compare plusieurs offres ou scénarios, y compris les différences d'horaires, de primes et de mensualités.
 
-Application 100 % autonome : un seul fichier HTML, aucune dépendance à installer, aucun serveur, aucune donnée envoyée où que ce soit.
+L'application fonctionne dans le navigateur, sans compte ni serveur de calcul. Les scénarios sont enregistrés localement dans le navigateur. Elle n'envoie pas automatiquement les données à un serveur.
+
+**Attention aux liens de partage :** les données choisies sont encodées dans le fragment de l'URL. Ce n'est ni chiffré ni protégé par mot de passe ; toute personne qui reçoit le lien peut lire les données incluses. N'incluez les détails de paie et la situation fiscale que si nécessaire.
 
 ## Utilisation
 
-Ouvrir `Onnet-2.0.12.html` (ou le fichier `.html` à la version la plus récente) directement dans un navigateur. Aucune installation n'est nécessaire.
+- Ouvrir `Onnet-2.1.0.html` pour utiliser la version autonome hors ligne.
+- `index.html` correspond à la version publiée sur GitHub Pages.
+- Aucune installation n'est nécessaire pour utiliser l'application.
 
-## Versions
+## Version 2.1.0
 
-Le nom de fichier suit le [versionnage sémantique](https://semver.org/lang/fr/) `MAJEUR.MINEUR.CORRECTIF` :
-- **MAJEUR** — refonte ou changement important dans la façon d'utiliser l'outil
-- **MINEUR** — nouvelle fonctionnalité (rétrocompatible)
-- **CORRECTIF** — correction de bug ou ajustement visuel/ergonomique sur l'existant
-
-## Version 2.0.12
-
-- Validation des saisies numériques invalides sans écraser les calculs précédents.
-- Nettoyage et normalisation des données restaurées et des liens partagés.
-- Alerte en cas d’échec de sauvegarde ou de lien de partage incorrect.
-- Amélioration du focus clavier et agrandissement des commandes mobiles.
+- **Mutuelle distincte** : saisie de la part salariale et de la part employeur. La part employeur est réintégrée au net imposable ; la part salariale réduit le net payé, mais n'est pas déduite du revenu imposable.
+- **13ᵉ/14ᵉ mois** : option pour préciser si les heures supplémentaires sont incluses dans la mensualité supplémentaire d'un contrat à 39 h.
+- **Foyer fiscal** : distinction entre personne seule, imposition commune des personnes mariées/pacsées et concubinage avec déclarations séparées ; ajout du cas parent isolé (case T). La résidence alternée n'est pas modélisée.
+- **Partage maîtrisé** : sélection des salaires à inclure, avec options séparées pour les détails de paie et la situation fiscale.
+- **Comparaison et ergonomie** : l'insight suit la métrique sélectionnée, le panneau des repères salariaux utilise les couleurs du thème, et les événements du bouton d'ajout et des modales sont sécurisés contre les erreurs de démarrage et les courses d'animation.
+- Synchronisation de `index.html` et du fichier autonome versionné avec les sources de développement.
 
 ## Fonctionnalités
 
-- **Comparaison multi-salaires** — ajoutez autant de salaires que nécessaire et comparez-les côte à côte
-- **Choix mensuel ou annuel à la saisie** — disponible au premier lancement comme lors de l'ajout d'un salaire, avec conversion en brut mensuel pour le calcul
-- **Réorganisation des salaires** — faites glisser les tuiles par leur poignée, ou utilisez les flèches gauche/droite au clavier
-- **Calcul détaillé des cotisations** — tranche 1 / tranche 2, CSG/CRDS, retraite complémentaire, calculées ligne par ligne pour le régime non-cadre du secteur privé
-- **Titres restaurant** — avec vérification des seuils (part patronale 50–60 %, plafond par titre) et alerte en cas de réintégration dans l'assiette de cotisations
-- **Heures supplémentaires** — bascule 35h / 39h avec calcul de la majoration, de la réduction de cotisations salariales et de l'exonération d'impôt sur le revenu (plafonnée à 7 500 € de net imposable par an)
-- **Impôt sur le revenu** — net après impôt calculé au barème 2026 (abattement de 10 %, quotient familial plafonné, décote), à partir d'un bloc **Foyer fiscal** unique : seul ou en couple, personnes à charge, revenus du conjoint. Ce réglage est global et s'applique à tous les salaires comparés — votre foyer ne change pas d'une offre à l'autre. Le bloc permet aussi de basculer sur un taux de prélèvement à la source personnel, saisi directement plutôt qu'estimé au barème
-- **Salaire horaire** — comparaison du taux horaire brut et net, utile pour comparer des volumes horaires différents
-- **Modules d'augmentation et d'absence** — simulez une hausse de salaire (en % ou en €) ou une absence (congés payés, arrêt de travail) et ajoutez le résultat comme nouveau salaire à comparer
-- **Graphique de répartition** — visualisation en colonnes de la ventilation brut → cotisations → mutuelle/titres restaurant → net, avec sélection du salaire de référence en un clic
-- **Impression / export PDF** — mise en page dédiée pour imprimer ou exporter le comparatif
+- Comparaison multi-salaires et réorganisation des cartes par glisser-déposer ou au clavier.
+- Saisie mensuelle ou annuelle, primes, nombre de mensualités (1 à 24, avec 12/13/14 comme cas usuels) et choix de base pour le 13ᵉ/14ᵉ mois.
+- Calcul estimatif des cotisations du régime non-cadre du secteur privé : CSG/CRDS, vieillesse, retraite complémentaire, réduction sur les heures supplémentaires.
+- Titres-restaurant avec vérification des limites de participation employeur et du plafond d'exonération.
+- Impôt sur le revenu estimé au barème 2026 applicable aux revenus 2025, ou calcul au taux de prélèvement à la source saisi par l'utilisateur.
+- Net horaire, net annuel, net après impôt, graphique de répartition, comparaison au SMIC estimé et à un repère national de salaire médian.
+- Modules d'augmentation et d'absence, impression et export PDF via le navigateur.
 
-## Limites
+## Limites à connaître
 
-Cet outil reste une estimation. Seul le régime non-cadre du secteur privé est modélisé — cadre, fonction publique et taux forfaitaire ont été retirés en v2.0.0 pour ne pas disperser la précision du moteur sur plusieurs régimes chacun approximé séparément. Ne sont pas modélisés : la régularisation progressive du plafond de sécurité sociale en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle. L'estimation d'arrêt de travail est une simplification qui ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS).
+OnNet fournit une **estimation**, pas un bulletin de paie. Le moteur modélise uniquement un salarié non-cadre du secteur privé. Il ne couvre pas notamment le temps partiel, la régularisation progressive des plafonds en cours d'année, la prévoyance et les régimes Alsace-Moselle.
 
-Trois approximations assumées méritent d'être connues :
+- **Mutuelle** : les valeurs par défaut sont des exemples de 30 € côté salarié et 30 € côté employeur ; remplacez-les par les montants du bulletin de paie. Les anciennes sauvegardes sans part employeur distincte conservent une hypothèse d'égalité avec la part salariale.
+- **Absences** : congés et arrêts sont simplifiés ; l'arrêt ne reproduit pas le calcul réel des IJSS, de l'ancienneté et de la convention collective.
+- **Heures supplémentaires** : la part de net imposable qui leur est attribuable est estimée au prorata du brut.
+- **Impôt** : le montant affiché est le supplément d'impôt imputable au salaire comparé, pas l'impôt total du foyer. Ne sont pas intégrés les crédits/réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé, acomptes, régularisations et contribution exceptionnelle sur les hauts revenus. Le barème 2027 applicable aux revenus 2026 n'étant pas encore connu, l'estimation de ces revenus restera approximative.
+- **Parent isolé** : le cas de la résidence alternée et les situations fiscales particulières non décrites dans l'interface ne sont pas modélisés.
+- **Repères salariaux** : le salaire médian est une référence nationale du privé (INSEE 2024), pas un repère spécifique au métier ou à la région. Le net du SMIC est estimé par le simulateur.
 
-- **Exonération d'IR sur les heures supplémentaires** — la part de net imposable attribuable aux heures supplémentaires est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.
-- **Part patronale de mutuelle** — réintégrée dans le net imposable, elle est estimée égale à la part salariale (partage 50/50, le minimum légal), faute d'un champ dédié. Un forfait figé indépendant de la mutuelle déclarée gonflait auparavant l'assiette même sans mutuelle.
-- **Impôt sur le revenu** — le montant affiché est le *supplément* d'impôt imputable au salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui. C'est la bonne grandeur pour comparer deux salaires, mais ce n'est pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux mobiliers, pensions, taux neutre ou individualisé, acomptes, régularisations en cours d'année et contribution exceptionnelle sur les hauts revenus. En couple, les revenus du conjoint doivent être renseignés, sans quoi l'impôt est très sous-estimé — une alerte le signale dans le bloc Foyer fiscal tant qu'ils sont à zéro. Le mode « J'ai mon taux » applique tel quel le pourcentage saisi au net imposable annuel : exact pour la situation actuelle, mais constant d'un salaire à l'autre alors que le taux réel progresse avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas.
+Le coût employeur n'est pas calculé : une majoration forfaitaire du brut donnerait une estimation trompeuse, notamment autour du SMIC.
 
-Onnet ne calcule **que le côté salarié**. La métrique « Coût employeur » a été retirée en v1.3.0 : elle appliquait un forfait de +42 % sur le brut, en ignorant la réduction générale dégressive des cotisations patronales — laquelle s'applique jusqu'à 3 SMIC (5 469 €/mois en 2026) et ramène le coût réel au niveau du SMIC à environ +7 % au lieu de +42 %. La métrique était donc fausse pour la majorité des salaires, et l'écart entre deux salaires l'était aussi puisque la réduction est dégressive. Mieux valait la retirer que la laisser induire en erreur en négociation.
+## Développement et versionnage
 
-Pour un chiffre exact, se référer au bulletin de paie ou à un expert-comptable / service RH.
+Les sources de développement sont dans `src/`. Le script génère un fichier HTML autonome contenant les styles et les scripts :
 
-## Développement
-
-Après modification des sources, générez un nouveau fichier autonome en lui donnant sa version :
-
-```
-node scripts/build.js 2.0.12
+```sh
+node scripts/build.js 2.1.0
+node scripts/build.js 2.1.0 index.html
 ```
 
-Les fichiers de développement restent séparés ; le résultat livré contient toujours le CSS et le JavaScript intégrés.
+La première commande génère `Onnet-2.1.0.html` ; la seconde reconstruit la page `index.html` publiée. Les deux fichiers doivent rester identiques.
+
+Le versionnage suit [SemVer](https://semver.org/lang/fr/) : majeur pour une rupture importante, mineur pour une nouvelle fonctionnalité rétrocompatible, correctif pour une correction ou un ajustement visuel.
 
 ## Tests
 
-Les tests de calcul et de génération ne nécessitent aucune dépendance supplémentaire :
-
-```
+```sh
 node --test test/calc.test.js
 node --test test/build.test.js
+node --test test/ui.test.js
 ```
 
-Les tests extraient le bloc de calcul directement du fichier HTML (entre les marqueurs `ONNET_CALC_START` / `ONNET_CALC_END`) et s'exécutent donc sur le code réellement livré, pas sur une copie. Ils reprennent automatiquement le fichier `Onnet-X.Y.Z.html` à la version la plus élevée.
+Les tests navigateur nécessitent Playwright et Chromium. La CI les installe automatiquement. Les tests vérifient aussi que `index.html` et le fichier autonome versionné correspondent exactement aux sources.
 
-Les valeurs attendues signalées « calculé à la main » ont été posées indépendamment du programme, à partir des taux légaux. **Elles ne doivent pas être régénérées depuis la sortie du code** : elles n'ont de valeur que parce qu'elles en sont indépendantes.
-
-## Stack technique
-
-- HTML / CSS / JavaScript vanilla, sans framework ni dépendance à l'exécution
-- Sources de développement séparées dans `src/` (template HTML, CSS, moteur de calcul et interface)
-- Le script Node sans dépendance génère un HTML autonome, ouvrable directement dans un navigateur
-
-## Paramètres légaux
-
-Les taux de cotisations, plafonds (PMSS/PASS) et paramètres légaux sont définis en début de script (objet `P`) et correspondent aux règles 2026. Ils devront être mis à jour chaque année.
+Les paramètres légaux sont regroupés au début de `src/calc.js` et doivent être revalidés chaque année.

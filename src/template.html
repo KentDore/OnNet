@@ -15,7 +15,7 @@
     <div class="header-top">
       <div class="brand-block">
         <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v@@ONNET_VERSION@@</span></div>
-        <div class="eyebrow">Simulateur de paie · règles 2026</div>
+        <div class="eyebrow">Simulateur de paie · cotisations 2026</div>
       </div>
       <div class="header-actions">
         <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
@@ -123,9 +123,10 @@
           <div id="foyerBaremeFields">
             <div class="field-row">
               <label>Situation</label>
-              <div class="pill-toggle" id="foyerSituation" role="group" aria-label="Situation du foyer" style="width:100%;">
+              <div class="pill-toggle foyer-situation-toggle" id="foyerSituation" role="group" aria-label="Situation fiscale" style="width:100%;">
                 <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-                <button type="button" data-foyer="couple" aria-pressed="false" style="flex:1;">En couple</button>
+                <button type="button" data-foyer="commun" aria-pressed="false" style="flex:1;">Marié / PACS</button>
+                <button type="button" data-foyer="concubinage" aria-pressed="false" style="flex:1;">Concubinage</button>
               </div>
             </div>
 
@@ -146,9 +147,19 @@
                 <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
               </div>
             </div>
+            <div class="field-row" id="foyerParentIsoleRow" style="display:none;">
+              <label for="foyerParentIsole" style="display:flex;align-items:center;gap:9px;">
+                <input type="checkbox" id="foyerParentIsole" style="width:auto;margin:0;">
+                Parent isolé (case T)
+              </label>
+              <div class="sub-hint">À cocher uniquement si vous vivez seul(e), sans concubin, et assumez la charge principale ou exclusive d'au moins un enfant. La résidence alternée n'est pas modélisée ici.</div>
+            </div>
 
             <div class="alert alert-warn" id="foyerWarn" style="display:none;">
               <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
+            </div>
+            <div class="alert alert-info" id="foyerConcubinageInfo" style="display:none;">
+              <span>ⓘ</span><span>En concubinage, chacun fait sa propre déclaration. Les revenus de votre partenaire ne sont pas ajoutés à votre foyer fiscal. Indiquez uniquement les personnes à charge rattachées à votre déclaration.</span>
             </div>
           </div>
 
@@ -278,10 +289,10 @@
         <p>La part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations.</p>
 
         <div class="section-tag">Absences</div>
-        <p>L'estimation d'arrêt de travail est une simplification (pourcentage forfaitaire sur le net, délai de carence de 3 jours inclus par défaut sur la base d'un mois de 30 jours) et ne reproduit pas le calcul réel des indemnités journalières de sécurité sociale (IJSS), qui dépend du salaire de référence sur 3 ou 12 mois, d'un plafond, et du complément employeur selon l'ancienneté et la convention collective.</p>
+        <p>Les congés payés sont estimés par maintien du net habituel au prorata des jours, sans comparer la méthode du dixième au maintien de salaire. L'arrêt de travail est estimé par un pourcentage forfaitaire du net, avec un délai de carence de 3 jours par défaut, sur un mois de 30 jours. Ce n'est pas un calcul d'IJSS : le montant réel dépend notamment des salaires de référence, des plafonds, de la durée de l'arrêt, de l'ancienneté et de la convention collective. Ces deux résultats sont indicatifs et ne remplacent pas un bulletin de paie.</p>
 
         <div class="section-tag">Impôt sur le revenu</div>
-        <p>Par défaut, calculé au barème 2026 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
+        <p>Par défaut, calculé au barème IR 2026 applicable aux revenus 2025 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
 
         <div class="section-tag">Ce qui n'est pas modélisé</div>
         <p>La régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle.</p>

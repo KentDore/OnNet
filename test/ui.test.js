@@ -47,11 +47,19 @@ async function openApp() {
   const context = await browser.newContext();
   await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseUrl });
   const page = await context.newPage();
+  const pageErrors = [];
+  page.on('pageerror', error => pageErrors.push(error.stack || error.message));
   await page.addInitScript(() => {
     if (!localStorage.getItem('onnet.state.v1')) {
       localStorage.setItem('onnet.state.v1', JSON.stringify({
         v: 1,
-        scenarios: [{ id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39' }],
+        scenarios: [{
+          id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
+          mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
+          partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
+          maintienPct: 90, carenceCouverte: false,
+          absenceType: 'none', absenceDuree: 0
+        }],
         refId: 0,
         metric: 'netHoraire',
         displayAmt: 'net',
@@ -60,6 +68,10 @@ async function openApp() {
     }
   });
   await page.goto(baseUrl);
+  if(pageErrors.length){
+    await context.close();
+    throw new Error('Erreur JavaScript au chargement :\\n' + pageErrors.join('\\n'));
+  }
   return { context, page };
 }
 
@@ -105,13 +117,105 @@ test('recrée les scénarios à partir du lien de partage', async () => {
   try {
     await addSecondScenario(page, '3450');
     await page.locator('#shareBtn').click();
+    assert.equal(await page.locator('#shareIncludeDetails').isChecked(), false);
+    assert.equal(await page.locator('#shareIncludeFoyer').isChecked(), false);
+    await page.locator('#shareCreateBtn').click();
     const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
     assert.match(shareUrl, /#share=/);
+    const payload = await page.evaluate(url => {
+      const encoded = new URL(url).hash.slice('#share='.length).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
+    }, shareUrl);
+    assert.equal(payload.scenarios.length, 2);
+    assert.equal(payload.scenarios[0].mutuelle, 0);
+    assert.equal(payload.scenarios[0].mutuellePat, 0);
+    assert.equal(payload.foyer.situation, 'seul');
 
     const sharedPage = await context.newPage();
     await sharedPage.goto(shareUrl);
     assert.equal(await sharedPage.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await sharedPage.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3450');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le partage permet de sélectionner les salaires et les données sensibles', async () => {
+  const { context, page } = await openApp();
+  try {
+    await addSecondScenario(page, '3450');
+    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
+    await secondCard.locator('details.more summary').click();
+    await secondCard.locator('[data-key="mutuelle"]').fill('35');
+    await secondCard.locator('[data-key="mutuellePat"]').fill('65');
+    await page.locator('#foyerModuleToggle').click();
+    await page.locator('#foyerSituation [data-foyer="commun"]').click();
+    await page.locator('#foyerConjoint').fill('45000');
+
+    await page.locator('#shareBtn').click();
+    await page.locator('#shareScenario-0').uncheck();
+    await page.locator('#shareIncludeDetails').check();
+    await page.locator('#shareIncludeFoyer').check();
+    await page.locator('#shareCreateBtn').click();
+    const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const payload = await page.evaluate(url => {
+      const encoded = new URL(url).hash.slice('#share='.length).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
+    }, shareUrl);
+    assert.equal(payload.scenarios.length, 1);
+    assert.equal(payload.scenarios[0].brut, 3450);
+    assert.equal(payload.scenarios[0].mutuelle, 35);
+    assert.equal(payload.scenarios[0].mutuellePat, 65);
+    assert.equal(payload.v, 2);
+    assert.equal(payload.foyer.situation, 'commun');
+    assert.equal(payload.foyer.autresRevenus, 45000);
+  } finally {
+    await context.close();
+  }
+});
+
+test('le calcul du 13e mois affiche le choix selon la durée et les mensualités', async () => {
+  const { context, page } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    const nbMois = card.locator('[data-key="nbMois"]');
+    await nbMois.fill('13');
+    const basisRow = card.locator('[id^="c-13m-basis-row-"]');
+    await page.waitForFunction(() => {
+      const row = document.querySelector('[id^="c-13m-basis-row-"]');
+      return row && row.style.display !== 'none';
+    });
+    await card.locator('[data-duree="35"]').click();
+    assert.equal(await basisRow.evaluate(el => el.style.display), 'none');
+    await card.locator('[data-duree="39"]').click();
+    assert.notEqual(await basisRow.evaluate(el => el.style.display), 'none');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le statut fiscal distingue seul, concubinage et foyer commun', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#foyerModuleToggle').click();
+    await page.locator('#foyerCharges').selectOption('1');
+    await page.locator('#foyerParentIsoleRow').waitFor({ state: 'visible' });
+    await page.locator('#foyerParentIsole').check();
+    let state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.foyer.parentIsole, true);
+    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
+    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
+    assert.equal(await page.locator('#foyerParentIsoleRow').isVisible(), false);
+    state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.foyer.situation, 'concubinage');
+    assert.equal(state.foyer.couple, false);
+    assert.equal(state.foyer.parentIsole, false);
+    await page.locator('#foyerSituation [data-foyer="commun"]').click();
+    state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.foyer.couple, true);
   } finally {
     await context.close();
   }

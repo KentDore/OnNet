@@ -67,7 +67,7 @@ function scn(over){
     mode 'bareme' par défaut ; mode 'taux' applique pasRate tel quel. */
 function foy(over){
   return Object.assign({ mode: 'bareme', couple: false, personnesCharge: 0,
-                          autresRevenus: 0, pasRate: 0 }, over || {});
+                          parentIsole: false, autresRevenus: 0, pasRate: 0 }, over || {});
 }
 
 function near(actual, expected, eps, label){
@@ -332,14 +332,20 @@ describe('compute() — cas de référence (calculés à la main)', () => {
     near(r.netImposable, 5000 - 894.7095, 0.01, 'net imposable');
   });
 
-  test('mutuelle : retirée du net, part patronale réintégrée à l’imposable', () => {
-    const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
-    const avec = C.compute(scn({ brut: 3000, mutuelle: 30 }));
+  test('mutuelle : part salarié retenue sur le net, part employeur imposable', () => {
+    const base = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
+    const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 30 }));
     near(avec.netApres, base.netApres - 30, 0.01, 'net diminué de la part salariale');
-    // Partage 50/50 : la part patronale réintégrée compense exactement la part
-    // salariale déduite, l'assiette imposable est donc inchangée.
-    near(avec.netImposable, base.netImposable, 0.01,
-      'imposable : −part salariale +part patronale à parts égales');
+    near(avec.netImposable, base.netImposable + 30, 0.01,
+      'la contribution employeur augmente le net imposable');
+  });
+
+  test('mutuelle : les parts salarié et employeur sont indépendantes', () => {
+    const base = C.compute(scn({ brut: 3000, mutuelle: 0 }));
+    const avec = C.compute(scn({ brut: 3000, mutuelle: 30, mutuellePat: 45 }));
+    near(avec.netApres, base.netApres - 30, 0.01, 'part salarié déduite du net payé');
+    near(avec.netImposable, base.netImposable + 45, 0.01,
+      'net imposable : seule la part employeur est réintégrée');
   });
 
   test('sans mutuelle déclarée, aucune part patronale fantôme', () => {
@@ -353,11 +359,11 @@ describe('compute() — cas de référence (calculés à la main)', () => {
       0.01, 'imposable sans aucun élément de mutuelle');
   });
 
-  test('la part patronale de mutuelle suit la part salariale', () => {
+  test('une part salariale seule réduit le net payé sans réduire le net imposable', () => {
     for(const mut of [0, 15, 30, 80]){
-      const r = C.compute(scn({ brut: 3000, mutuelle: mut }));
-      const nu = C.compute(scn({ brut: 3000, mutuelle: 0 }));
-      near(r.netImposable, nu.netImposable, 0.01, `mutuelle ${mut} €`);
+      const r = C.compute(scn({ brut: 3000, mutuelle: mut, mutuellePat: 0 }));
+      const nu = C.compute(scn({ brut: 3000, mutuelle: 0, mutuellePat: 0 }));
+      near(r.netImposable, nu.netImposable, 0.01, `imposable avec part salarié ${mut} €`);
       near(r.netApres, nu.netApres - mut, 0.01, `net avec mutuelle ${mut} €`);
     }
   });
@@ -465,6 +471,19 @@ describe('compute() — annuel', () => {
     assert.ok(treize.annuelNet > douze.annuelNet, 'annuel augmenté');
   });
 
+  test('13e mois à 39 h : le traitement des heures sup est réglable', () => {
+    const scenario = scn({ brut: 3000, dureeType: '39', nbMois: 13 });
+    const split = C.splitHeures(scenario);
+    const baseSeule = C.compute(Object.assign({}, scenario, { treiziemeMoisBase: 'base' }));
+    const toutCompris = C.compute(Object.assign({}, scenario, { treiziemeMoisBase: 'ensemble' }));
+    near(baseSeule.a.brutTotal, split.brutBase * 13 + split.brutHS * 12, 0.01,
+      '13e mois limité au salaire de base');
+    near(toutCompris.a.brutTotal, split.brutBase * 13 + split.brutHS * 13, 0.01,
+      '13e mois incluant les heures supplémentaires');
+    near(toutCompris.a.brutTotal - baseSeule.a.brutTotal, split.brutHS, 0.01,
+      'écart égal à une mensualité d’heures supplémentaires');
+  });
+
   test('les primes n’affectent que l’annuel', () => {
     const sans = C.compute(scn({ brut: 3000, primes: 0 }));
     const avec = C.compute(scn({ brut: 3000, primes: 3000 }));
@@ -547,6 +566,23 @@ describe('barème de l’impôt sur le revenu', () => {
     assert.equal(C.partsFiscales(true, 3), 4);
     assert.equal(C.partsFiscales(true, 4), 5);
     assert.equal(C.partsFiscales(false, -2), 1, 'valeur négative ignorée');
+  });
+
+  test('parent isolé : majoration des parts et plafonnement spécifique', () => {
+    assert.equal(C.partsFiscales(false, 0, true), 1,
+      'sans personne à charge, pas de majoration case T');
+    assert.equal(C.partsFiscales(false, 1, true), 2,
+      'parent isolé avec un enfant : 2 parts');
+    assert.equal(C.partsFiscales(false, 2, true), 2.5,
+      'parent isolé avec deux enfants : 2,5 parts');
+    assert.equal(C.partsFiscales(true, 1, true), 2.5,
+      'la majoration parent isolé ne s’applique pas à un foyer commun');
+    near(C.impotFoyer(60000, false, 1, true), 6841.99, 0.01,
+      'avantage du premier enfant plafonné à 4 262 €');
+    near(C.impotFoyer(60000, false, 2, true), 5034.99, 0.01,
+      'les demi-parts suivantes conservent leur plafond ordinaire');
+    near(C.impotFoyer(60000, false, 0, true), C.impotFoyer(60000, false, 0, false),
+      1e-9, 'aucun effet sans personne à charge');
   });
 
   test('impôt d’un célibataire avec décote — calculé à la main', () => {
@@ -660,6 +696,13 @@ describe('compute() — impôt sur le revenu', () => {
     const avecConjoint = C.compute(scn({ brut: 3000 }), foy({ couple:true, autresRevenus:40000 }));
     assert.ok(avecConjoint.impotAnnuel > seulRevenu.impotAnnuel,
       'le supplément d’impôt doit être plus élevé');
+  });
+
+  test('le statut parent isolé modifie le supplément d’impôt du salaire', () => {
+    const standard = C.compute(scn({ brut: 3000 }), foy({ personnesCharge: 1 }));
+    const parent = C.compute(scn({ brut: 3000 }), foy({ personnesCharge: 1, parentIsole: true }));
+    assert.ok(parent.impotAnnuel < standard.impotAnnuel,
+      'la majoration case T doit réduire l’impôt estimé');
   });
 
   test('l’impôt imputé est bien un supplément, pas l’impôt du foyer entier', () => {

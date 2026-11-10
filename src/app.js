@@ -9,14 +9,21 @@ let justAddedId = null;
 function mkScenario(over){
   const base = {
     id: idCounter++, name:'Salaire', brut:2800,
-    mutuelle:scenarioDefaults.mutuelle,
+    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
+    treiziemeMoisBase:'base',
     maintienPct:90, carenceCouverte:false,
     absenceType:'none', absenceDuree:0
   };
-  return Object.assign(base, over || {});
+  const scenario = Object.assign(base, over || {});
+  // Compatibilité avec les créations historiques : la part employeur suit
+  // la part salarié, sauf lorsqu'une valeur distincte est fournie.
+  if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
+    scenario.mutuellePat = scenario.mutuelle;
+  }
+  return scenario;
 }
 
 function defaultScenarios(){
@@ -27,7 +34,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -56,7 +63,7 @@ function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
   const limits = {
-    brut:[0,1000000], mutuelle:[0,100000], joursResto:[0,31],
+    brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
     valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
     primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
   };
@@ -67,6 +74,12 @@ function sanitizeScenario(raw){
     clean[key] = n;
   }
   if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  // Compatibilité avec les états antérieurs : l'ancien modèle supposait une
+  // part employeur égale à la part salarié.
+  if(clean.mutuellePat === undefined){
+    clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
+  }
+  if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
@@ -84,18 +97,25 @@ function sanitizeScenario(raw){
 // mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
 //                 s'applique tel quel — les champs de situation n'ont alors
 //                 plus de rôle dans le calcul et disparaissent de l'UI.
-const FOYER_DEFAUT = { mode:'bareme', couple:false, personnesCharge:0, autresRevenus:0, pasRate:0 };
+const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, parentIsole:false, autresRevenus:0, pasRate:0 };
 function sanitizeFoyer(raw){
   const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
   const nb = (v, min, max) => {
     const n = Number(v);
     return Number.isFinite(n) ? clamp(n, min, max) : 0;
   };
-  const couple = f.couple === true;
+  // Rétrocompatibilité : les anciens états ne connaissent que couple=true/false.
+  const situation = ['seul','commun','concubinage'].includes(f.situation)
+    ? f.situation : (f.couple === true ? 'commun' : 'seul');
+  const couple = situation === 'commun';
+  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
+  const parentIsole = situation === 'seul' && personnesCharge > 0 && f.parentIsole === true;
   return {
     mode: f.mode === 'taux' ? 'taux' : 'bareme',
+    situation,
     couple,
-    personnesCharge: Math.floor(nb(f.personnesCharge, 0, 4)),
+    personnesCharge,
+    parentIsole,
     autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
     pasRate: nb(f.pasRate, 0, 100)
   };
@@ -196,8 +216,29 @@ function loadShareState(){
   } catch(e){ return null; }
 }
 
-function buildShareUrl(){
-  const payload = { v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer };
+function buildShareUrl(options){
+  const opts = options || {};
+  const selectedIds = Array.isArray(opts.scenarioIds) ? new Set(opts.scenarioIds) : null;
+  const sharedScenarios = scenarios.filter(s => !selectedIds || selectedIds.has(s.id));
+  if(!sharedScenarios.length) throw new Error('Sélectionnez au moins un salaire à partager.');
+
+  const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
+    // Données essentielles à la comparaison salariale.
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
+    // Sans option « détails », neutraliser explicitement ces valeurs plutôt
+    // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
+    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
+  }));
+
+  const payload = {
+    v:2,
+    scenarios:sharedData,
+    refId:sharedScenarios.some(s => s.id === refId) ? refId : sharedScenarios[0].id,
+    metric, displayAmt, displayPeriod,
+    foyer:opts.includeFoyer ? { ...foyer } : { ...FOYER_DEFAUT }
+  };
   const encoded = toBase64Url(JSON.stringify(payload));
   // Pas location.origin : il vaut la chaîne « null » sur file:// (Firefox,
   // Safari), or le README documente l'ouverture directe du fichier.
@@ -222,12 +263,66 @@ function legacyCopy(text){
   return ok;
 }
 
+function showShareOptionsModal(){
+  const scenarioChoices = scenarios.map(s => `
+    <label class="share-scenario-option" for="shareScenario-${s.id}">
+      <input type="checkbox" id="shareScenario-${s.id}" value="${s.id}" checked>
+      <span><strong>${esc(s.name)}</strong><small>${fmt(s.brut)} brut/mois · ${s.dureeType} h · ${s.nbMois} mensualités${s.primes ? ` · primes ${fmt(s.primes)}/an` : ''}</small></span>
+    </label>`).join('');
+  const html = `
+    <p id="modalMsg" class="modal-msg">Choisissez les informations à inclure dans le lien.</p>
+    <p class="sub-hint">Toujours inclus : brut mensuel, durée hebdomadaire, nombre de mensualités, primes et réglage du 13ᵉ/14ᵉ mois.</p>
+    <fieldset class="share-options-group">
+      <legend>Salaires à partager</legend>
+      ${scenarioChoices}
+    </fieldset>
+    <fieldset class="share-options-group">
+      <legend>Informations facultatives</legend>
+      <label class="share-extra-option" for="shareIncludeDetails">
+        <input type="checkbox" id="shareIncludeDetails">
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+      </label>
+      <label class="share-extra-option" for="shareIncludeFoyer">
+        <input type="checkbox" id="shareIncludeFoyer">
+        <span><strong>Situation fiscale</strong><small>Situation du foyer, personnes à charge, revenus du conjoint et taux de prélèvement.</small></span>
+      </label>
+    </fieldset>
+    <div class="alert alert-warn" style="margin-top:12px;">
+      <span>${ICON.warn}</span><span>Les salaires sélectionnés sont toujours inclus. Le lien n'est pas chiffré ni protégé par mot de passe : toute personne qui le reçoit peut lire les données qu'il contient.</span>
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
+      <button type="button" class="btn btn-primary" id="shareCreateBtn">Créer le lien</button>
+    </div>`;
+  const pending = openModal(html);
+  const overlay = document.getElementById('modalOverlay');
+  const confirm = overlay.querySelector('#shareCreateBtn');
+  const updateAvailability = () => {
+    confirm.disabled = overlay.querySelectorAll('.share-scenario-option input:checked').length === 0;
+  };
+  overlay.querySelectorAll('.share-scenario-option input').forEach(input => {
+    input.addEventListener('change', updateAvailability);
+  });
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click', () => closeModal(null));
+  confirm.addEventListener('click', () => {
+    const scenarioIds = [...overlay.querySelectorAll('.share-scenario-option input:checked')]
+      .map(input => Number(input.value));
+    closeModal({
+      scenarioIds,
+      includeDetails: overlay.querySelector('#shareIncludeDetails').checked,
+      includeFoyer: overlay.querySelector('#shareIncludeFoyer').checked
+    });
+  });
+  updateAvailability();
+  return pending;
+}
+
 async function shareLink(){
-  const url = buildShareUrl();
-  // Cas normal : copie directe sur ce clic (un vrai geste utilisateur récent)
-  // et simple affichage du toast — pas de fenêtre en plus. La modale n'est
-  // qu'un dernier repli, affiché seulement si les deux méthodes de copie
-  // échouent vraiment, pour ne jamais perdre le lien pour autant.
+  const options = await showShareOptionsModal();
+  if(!options) return;
+  const url = buildShareUrl(options);
+  // Copie directe après le choix explicite des données à partager. Si le
+  // presse-papiers est refusé, le lien reste accessible dans la modale de repli.
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{
       await navigator.clipboard.writeText(url);
@@ -286,7 +381,7 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt sur le revenu estimé au barème 2026 — ajustez le foyer fiscal sur chaque salaire pour affiner.',
+  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -364,10 +459,17 @@ function renderCard(s, r, showRemove){
       <summary>Détails avancés</summary>
       <div class="more-body">
         <div class="section-tag">Mutuelle</div>
-        <div class="field-row">
-          <label for="f-mutuelle-${uid}">Mutuelle (€ / mois)</label>
-          ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+        <div class="two-col">
+          <div class="field-row">
+            <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
+            ${num(`f-mutuelle-${uid}`,'mutuelle',uid,s.mutuelle,{min:0})}
+          </div>
+          <div class="field-row">
+            <label for="f-mutuelle-pat-${uid}">Part employeur (€ / mois)</label>
+            ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
+          </div>
         </div>
+        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
@@ -389,6 +491,14 @@ function renderCard(s, r, showRemove){
           </div>
         </div>
         <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
+        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
+          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
+          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
+            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
+            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
+          </select>
+          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
+        </div>
       </div>
     </details>
   </div>`;
@@ -554,20 +664,21 @@ function renderInsight(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
   const others = computed.filter(x => x.s.id !== refId);
   if(!others.length) return '';
-  const best = others.reduce((a,b) => b.r.m.netApres > a.r.m.netApres ? b : a);
-  const delta = best.r.m.netApres - ref.r.m.netApres;
-  if(Math.abs(delta) < 1){
-    return `<div class="insight neutral">Ces salaires donnent à peu près le même net.</div>`;
+  const isHourly = HOURLY_METRICS.has(metric);
+  const valueOf = x => Number(x.r[metric]) || 0;
+  const best = others.reduce((a,b) => valueOf(b) > valueOf(a) ? b : a);
+  const delta = valueOf(best) - valueOf(ref);
+  const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
+  const metricLabel = {
+    netImposable:'net imposable', annuelNet:'net annuel',
+    netApresImpot:'net après impôt', netHoraire:'net horaire',
+    brutHoraire:'brut horaire'
+  }[metric] || 'valeur sélectionnée';
+  const format = isHourly ? fmtHoraire : fmt;
+  if(Math.abs(delta) < (isHourly ? 0.01 : 1)){
+    return `<div class="insight neutral">Ces salaires donnent à peu près le même ${metricLabel}.</div>`;
   }
-  const diffBrut = best.r.m.brutTotal - ref.r.m.brutTotal;
-  let convNote = '';
-  if(diffBrut > 1 && delta > 0){
-    const convPct = (delta/diffBrut)*100;
-    convNote = ` — vous gardez ${convPct.toFixed(0)} % de l'augmentation en net`;
-  }
-  const verb = delta > 0 ? 'donne' : 'donne';
-  const sign = delta > 0 ? 'de plus' : 'de moins';
-  return `<div class="insight"><strong>${esc(best.s.name)}</strong> ${verb} ${fmt(Math.abs(delta))} ${sign} par mois que <strong>${esc(ref.s.name)}</strong>${convNote}.</div>`;
+  return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
 const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
@@ -732,7 +843,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  document.getElementById('addScenario').addEventListener('click', addScenario);
   // Nettoie la classe d'animation une fois jouée : les mises à jour légères
   // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
   // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
@@ -889,9 +999,12 @@ function bindRefPickers(){
 function foyerResume(){
   if(foyer.mode === 'taux') return `Taux personnel : ${foyer.pasRate.toFixed(1)} %`;
   const n = foyer.personnesCharge;
-  const bouts = [foyer.couple ? 'En couple' : 'Seul(e)'];
+  const situationLabel = foyer.situation === 'commun' ? 'Marié(e) / PACS'
+    : foyer.situation === 'concubinage' ? 'Concubinage (imposition séparée)' : 'Seul(e)';
+  const bouts = [situationLabel];
   bouts.push(n === 0 ? 'sans personne à charge'
                      : (n === 1 ? '1 personne à charge' : `${n} personnes à charge`));
+  if(foyer.parentIsole) bouts.push('parent isolé (case T)');
   if(foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
   return bouts.join(', ');
 }
@@ -910,10 +1023,16 @@ function syncFoyerUI(){
   setShown('foyerTauxFields', foyer.mode === 'taux');
 
   document.querySelectorAll('#foyerSituation button').forEach(b => {
-    b.setAttribute('aria-pressed', (b.dataset.foyer === 'couple') === foyer.couple ? 'true' : 'false');
+    b.setAttribute('aria-pressed', b.dataset.foyer === foyer.situation ? 'true' : 'false');
   });
-  // Les revenus du conjoint n'existent qu'en couple : le champ disparaît ET la
-  // valeur est remise à zéro, pour que rien d'invisible n'entre dans le calcul.
+  // Les revenus du conjoint ne sont inclus que pour un foyer fiscal commun.
+  // En concubinage, les deux déclarations restent séparées.
+  setShown('foyerConcubinageInfo', foyer.situation === 'concubinage');
+  const parentIsolePossible = foyer.situation === 'seul' && foyer.personnesCharge > 0;
+  setShown('foyerParentIsoleRow', parentIsolePossible);
+  const parentIsoleInput = document.getElementById('foyerParentIsole');
+  if(parentIsoleInput) parentIsoleInput.checked = parentIsolePossible && foyer.parentIsole;
+  if(!parentIsolePossible) foyer.parentIsole = false;
   setShown('foyerConjointRow', foyer.couple);
   const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
   setShown('foyerWarn', alerteBareme);
@@ -932,7 +1051,7 @@ function syncFoyerUI(){
   if(alerte){
     resume = foyer.mode === 'taux'
       ? 'Taux personnel — écart entre salaires optimiste'
-      : 'En couple — revenus du conjoint à renseigner';
+      : 'Marié/PACS — revenus du conjoint à renseigner';
   }
   setText('foyerModuleDesc', resume);
   const desc = document.getElementById('foyerModuleDesc');
@@ -940,7 +1059,7 @@ function syncFoyerUI(){
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
     ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
 }
 
 function bindFoyerModule(){
@@ -953,12 +1072,15 @@ function bindFoyerModule(){
   });
   document.querySelectorAll('#foyerSituation button').forEach(btn => {
     btn.addEventListener('click', () => {
-      foyer.couple = btn.dataset.foyer === 'couple';
+      foyer.situation = ['seul','commun','concubinage'].includes(btn.dataset.foyer)
+        ? btn.dataset.foyer : 'seul';
+      foyer.couple = foyer.situation === 'commun';
       if(!foyer.couple){
         foyer.autresRevenus = 0;
         const champ = document.getElementById('foyerConjoint');
         if(champ) champ.value = '0';
       }
+      if(foyer.situation !== 'seul') foyer.parentIsole = false;
       syncFoyerUI();
       updateComputed();
     });
@@ -966,6 +1088,13 @@ function bindFoyerModule(){
   const charges = document.getElementById('foyerCharges');
   if(charges) charges.addEventListener('change', () => {
     foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
+    if(foyer.personnesCharge === 0) foyer.parentIsole = false;
+    syncFoyerUI();
+    updateComputed();
+  });
+  const parentIsole = document.getElementById('foyerParentIsole');
+  if(parentIsole) parentIsole.addEventListener('change', () => {
+    foyer.parentIsole = parentIsole.checked;
     syncFoyerUI();
     updateComputed();
   });
@@ -1012,6 +1141,8 @@ function updateComputed(){
 
   computed.forEach(({s, r}) => {
     const u = s.id;
+    const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
+    if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
     setText(`c-hero-${u}`, fmt(heroValue(r)));
     setText(`c-herolabel-${u}`, heroLabel());
     setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
@@ -1297,7 +1428,13 @@ function closeModal(result){
   document.removeEventListener('keydown', onModalKeydown, true);
   unlockBodyScroll();
   modalState = null;
-  setTimeout(() => { overlay.hidden = true; overlay.innerHTML = ''; }, 200);
+  setTimeout(() => {
+    // Une nouvelle modale peut réutiliser l'overlay avant la fin de cette
+    // animation de fermeture : ne jamais effacer son contenu entre-temps.
+    if(modalState) return;
+    overlay.hidden = true;
+    overlay.innerHTML = '';
+  }, 200);
   if(previousFocus && typeof previousFocus.focus === 'function') previousFocus.focus();
   if(resolve) resolve(result);
 }
@@ -1435,7 +1572,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
   return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, joursResto: 0 };
+    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
@@ -1747,6 +1884,11 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
     document.querySelectorAll('.raise-type-toggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
     document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
   });
+});
+// Le bouton est recréé par render() : déléguer au conteneur permanent
+// évite de chercher un élément inexistant au démarrage et n'attache qu'un écouteur.
+document.getElementById('cardsBody').addEventListener('click', e => {
+  if(e.target.closest && e.target.closest('#addScenario')) addScenario();
 });
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
   const amountInput = document.getElementById('raiseAmount');
