@@ -729,14 +729,13 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
 
-  // Tous les repères sont calculés en net social mensuel, avant prélèvement à la source.
-  // Le SMIC est simulé sans mutuelle ni titres-restaurant : ces éléments dépendent
-  // d'un employeur et ne constituent pas une caractéristique du SMIC.
-  const neutralSmicScenario = {
+  // Comparaison en net estimé après prélèvement à la source : montant approchant
+  // le virement bancaire, après cotisations et retenues salariales modélisées.
+  const neutralScenario = {
     ...s,
-    brut: benchmarks.smicBrut,
     dureeType: '35',
     mutuelle: 0,
+    mutuellePat: 0,
     joursResto: 0,
     valeurResto: 0,
     partResto: 0,
@@ -745,58 +744,76 @@ function renderBenchmarks(computed){
     absenceType: 'none',
     absenceDuree: 0
   };
-  const smicNet = Math.max(0, compute(neutralSmicScenario, foyer).m.netSocial);
+  const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
+  const smicResult = compute(neutralSmicScenario, foyer);
+  const smicNetBank = Math.max(0, smicResult.netApresImpot);
+
   const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
   // Recalcul complet à 35 h : ne pas proratiser un net calculé sur 39 h.
   const base35 = compute({
     ...s, brut: brut35, dureeType: '35',
     absenceType: 'none', absenceDuree: 0
   }, foyer);
-  const userNet35 = Math.max(0, base35.m.netSocial);
-  const medianNet = 2190;
-  const smic = benchmarkDelta(userNet35, smicNet);
-  const median = benchmarkDelta(userNet35, medianNet);
+  const userNetBank35 = Math.max(0, base35.netApresImpot);
+
+  // La référence INSEE (2 190 €) est un net avant impôt. On reconstitue
+  // le brut correspondant avec le moteur, puis on applique le même foyer
+  // fiscal pour obtenir une estimation comparable après PAS.
+  const medianNetBeforeTax = 2190;
+  let low = 0, high = 10000;
+  for(let i = 0; i < 48; i++){
+    const mid = (low + high) / 2;
+    const probe = compute({ ...neutralScenario, brut: mid }, foyer).m.netApres;
+    if(probe < medianNetBeforeTax) low = mid;
+    else high = mid;
+  }
+  const medianScenario = compute({ ...neutralScenario, brut: (low + high) / 2 }, foyer);
+  const medianNetBank = Math.max(0, medianScenario.netApresImpot);
+
+  const smic = benchmarkDelta(userNetBank35, smicNetBank);
+  const median = benchmarkDelta(userNetBank35, medianNetBank);
   const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
   return `
     <div class="benchmark-heading">
       <div>
         <h2 class="bars-title">Votre salaire face aux repères</h2>
-        <p class="hint">Comparaison en net social mensuel, avant impôt, sur une base de 35 h.</p>
+        <p class="hint">Comparaison du net estimé après impôt, sur une base de 35 h, selon votre situation fiscale.</p>
       </div>
     </div>
     <div class="benchmark-your-salary">
-      <span>Votre net estimé à 35 h</span>
-      <strong>${fmt(userNet35)} <small>/ mois</small></strong>
+      <span>Votre net estimé reçu à 35 h</span>
+      <strong>${fmt(userNetBank35)} <small>/ mois</small></strong>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC net estimé · 35 h</div>
-        <div class="benchmark-value">${fmt(smicNet)}</div>
+        <div class="benchmark-label">SMIC · net estimé après impôt</div>
+        <div class="benchmark-value">${fmt(smicNetBank)}</div>
         <div class="benchmark-meta">Brut de référence : ${fmt(benchmarks.smicBrut)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${smic.amount} <small>(${smic.pct})</small></div>
         <details class="benchmark-details">
-          <summary>Comprendre le calcul</summary>
-          <p>Estimation du net social à partir du SMIC brut mensuel de ${fmt(benchmarks.smicBrut)}, sur 35 h, sans mutuelle ni titres-restaurant. Date d’effet : ${esc(benchmarks.smicDate)}.</p>
-          <p>Le net affiché est une estimation du simulateur, pas un montant officiel.</p>
-          <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source : Urssaf — montant du SMIC</a></p>
+          <summary>Méthode de calcul</summary>
+          <p>Simulation sur 35 h, sans mutuelle ni titres-restaurant, avec votre situation fiscale et une estimation du prélèvement à la source. Date d’effet du SMIC : ${esc(benchmarks.smicDate)}.</p>
+          <p>Le montant est une estimation du simulateur, pas un montant officiel de virement.</p>
+          <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source du brut : Urssaf — montant du SMIC</a></p>
         </details>
       </article>
       <article class="benchmark-item">
-        <div class="benchmark-label">Salaire médian du privé · net</div>
-        <div class="benchmark-value">${fmt(medianNet)}</div>
-        <div class="benchmark-meta">INSEE · 2024 · équivalent temps plein</div>
+        <div class="benchmark-label">Salaire médian privé · net estimé après impôt</div>
+        <div class="benchmark-value">${fmt(medianNetBank)}</div>
+        <div class="benchmark-meta">Estimation reconstituée depuis 2 190 € net avant impôt · INSEE 2024</div>
         <div class="benchmark-result ${signedClass(median)}">${median.amount} <small>(${median.pct})</small></div>
-        <div class="benchmark-context">Écart entre votre net estimé et le salaire médian.</div>
-        <details class="benchmark-contract"><summary>Voir votre estimation au contrat actuel</summary><p>À ${s.dureeType} h : <strong>${fmt(r.m.netSocial)}</strong> net social estimé / mois.</p></details>
+        <details class="benchmark-details">
+          <summary>Estimation à votre durée de travail</summary>
+          <p>À ${s.dureeType} h : <strong>${fmt(r.netApresImpot)}</strong> estimés reçus sur le compte / mois, après prélèvement à la source et retenues salariales modélisées.</p>
+        </details>
       </article>
     </div>
     <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
       <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net du SMIC est une estimation du simulateur, pas un montant officiel.</p>
-    </div></details>
-    <p class="benchmark-disclaimer">Les montants nets sont des estimations avant prélèvement à la source. Le calcul du SMIC exclut mutuelle et titres-restaurant. Le salaire médian INSEE 2024 est une référence nationale du privé, non spécifique à votre métier ou à votre région.</p>`;
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le montant après impôt reste une estimation.</p>
+    </div></details>`;
 }
 function bindBenchmarkSettings(){
   const save = document.getElementById('saveBenchmarkSettings');
