@@ -130,24 +130,13 @@ export function calculatePublicodes(input = {}) {
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
-  const taxMode = input.modeImpot === undefined ? 'barème' : String(input.modeImpot)
-  if (!['barème', 'neutre', 'personnalisé'].includes(taxMode)) {
-    throw new TypeError('modeImpot doit être « barème », « neutre » ou « personnalisé ».')
+  const taxMode = input.modeImpot === undefined ? null : String(input.modeImpot)
+  if (taxMode !== null && taxMode !== 'personnalisé') {
+    throw new TypeError('Les modes neutre et barème nécessitent les règles fiscales communes, non intégrées à ce prototype.')
   }
-  const taxRate = numberInRange(input.tauxPAS ?? 0, 'tauxPAS', 0, 100)
-  if (taxMode === 'personnalisé' && input.tauxPAS === undefined) {
-    throw new TypeError('tauxPAS est requis lorsque le mode d’impôt est personnalisé.')
-  }
-  const family = input.situationFamille === undefined ? 'célibataire' : String(input.situationFamille)
-  if (!['célibataire', 'couple', 'veuf'].includes(family)) {
-    throw new TypeError('situationFamille doit être célibataire, couple ou veuf.')
-  }
-  const children = integerInRange(input.enfantsCharge ?? 0, 'enfantsCharge', 0, 20)
-  const isolatedParent = input.parentIsole === true
-  if (isolatedParent && (family !== 'célibataire' || children === 0)) {
-    throw new TypeError('parentIsole nécessite une situation célibataire avec au moins un enfant à charge.')
-  }
-
+  const taxRate = taxMode === 'personnalisé'
+    ? numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
+    : null
   const situation = {
     'salarié': 'oui',
     'salarié . contrat': "'CDI'",
@@ -199,26 +188,21 @@ export function calculatePublicodes(input = {}) {
   }
   const netBeforeTax = evaluateNumber(engine, RULES.netBeforeTax)
   const taxableNet = evaluateNumber(engine, RULES.taxableNet)
-  // Le modèle fiscal attend une base annuelle explicite. Sans cette conversion,
-  // le moteur renvoie 0 pour « impôt . revenu imposable » alors que le net imposable
-  // mensuel est bien calculé. On annualise le net imposable récurrent du scénario.
-  situation['impôt . méthode de calcul'] = taxMode === 'barème'
-    ? "'barème standard'"
-    : taxMode === 'neutre' ? "'taux neutre'" : "'taux personnalisé'"
-  situation['impôt . taux personnalisé'] = percent(taxRate)
-  situation['paramètres . impôt . foyer fiscal . situation de famille'] = "'" + family + "'"
-  situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
-  situation['impôt . foyer fiscal . parent isolé'] = isolatedParent ? 'oui' : 'non'
-  if (taxMode === 'barème') {
-    situation["paramètres . impôt . revenu d'activité"] = `${(taxableNet * 12).toFixed(2)} €/an`
-  } else {
-    situation['paramètres . impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
+  let netAfterTax = null
+  let incomeTax = null
+  let calculatedTaxRate = null
+  if (taxMode === 'personnalisé') {
+    // Les règles du paquet social attendent une base annuelle pour le PAS.
+    // On annualise le net imposable mensuel récurrent du scénario.
+    situation['impôt . méthode de calcul'] = "'taux personnalisé'"
+    situation['impôt . taux personnalisé'] = percent(taxRate)
+    situation['impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
+    engine.setSituation(situation)
+    netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
+    incomeTax = evaluateNumber(engine, RULES.incomeTax)
+    calculatedTaxRate = evaluateNumber(engine, RULES.calculatedTaxRate)
   }
-  engine.setSituation(situation)
-  const netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
-  const incomeTax = evaluateNumber(engine, RULES.incomeTax)
-  const calculatedTaxRate = evaluateNumber(engine, RULES.calculatedTaxRate)
-  const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
+  const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)(engine, RULES.employeeContributions)
   const overtimePay = evaluateNumber(engine, RULES.overtimePay)
   const employeeHealthCalculated = evaluateNumber(engine, RULES.employeeHealth)
   const employerHealthCalculated = evaluateNumber(engine, RULES.employerHealth)
