@@ -643,7 +643,7 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
+  netApresImpot: 'Le net après prélèvement à la source évalué par le modèle fiscal officiel Mon-entreprise / Urssaf selon les paramètres du foyer transmis.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -1301,8 +1301,8 @@ function syncFoyerUI(){
   if(desc) desc.classList.toggle('is-warn', alerte);
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
-    ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    ? `Le taux personnalisé transmis à l’Urssaf s’applique selon les règles de son modèle fiscal. Ce taux est constant dans vos scénarios : il peut donc limiter la pertinence d’une comparaison entre salaires très différents.`
+    : `Estimation calculée par le modèle fiscal officiel Mon-entreprise / Urssaf à partir du foyer renseigné. Le modèle est simplifié et certaines règles sont signalées comme expérimentales ; ce résultat ne remplace pas un avis d’imposition. Vérifiez les avertissements éventuels du moteur.`);
 }
 
 function bindFoyerModule(){
@@ -1812,11 +1812,17 @@ const ONBOARDING_MUTUELLE_DEFAUT = 30;
 // nouveau salaire, pour ne jamais deviner silencieusement ces montants.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="field-row">
-          <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
-          <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          <div class="sub-hint">Par défaut : ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
+        <div class="two-col">
+          <div class="field-row">
+            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
+          <div class="field-row">
+            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
         </div>
+        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
           <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
@@ -1837,6 +1843,7 @@ function renderMutuelleTrFields(idPrefix){
 // lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
 function bindMutuelleTrFields(overlay, idPrefix){
   const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+  const mutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
@@ -1857,8 +1864,10 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
   return () => {
     const mutuelleRaw = mutuelleInput.value.trim();
+    const mutuellePatRaw = mutuellePatInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
+    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = Math.max(0, parseNum(valeurInput.value));
