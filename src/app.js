@@ -195,12 +195,14 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
+  const status = document.getElementById('urssafStatus');
+  if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf. Aucun calcul local de cotisations ou d’impôt ne sera utilisé.';
+    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Calculer avec l’Urssaf';
@@ -218,19 +220,20 @@ function updateUrssafStatus(computed){
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(smicPending) pending.push({s:smicScenario,r:null});
   if(failed.length || smicError){
-    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' appel(s) à l’API Urssaf ont échoué. Consultez les détails puis réessayez. Aucun résultat local de remplacement n’est fourni.';
+    statusText.textContent = 'Le calcul n’a pas abouti. Vérifiez votre connexion puis réessayez.';
+    if(status) status.classList.add('is-error');
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Réessayer les calculs';
     return;
   }
   if(unsupported.length){
-    statusText.textContent = unsupported.length + ' scénario(s) ne sont pas encore pris en charge. Consultez les messages dans les cartes, puis modifiez les paramètres concernés ; aucun calcul local n’est effectué.';
+    statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
     button.hidden = true;
     return;
   }
   if(pending.length){
-    statusText.textContent = 'Calcul des salaires et du repère SMIC par l’API officielle Mon-entreprise / Urssaf. Les résultats affichés sont recalculés dès que les paramètres changent.';
+    statusText.textContent = 'Mise à jour des calculs…';
     button.hidden = true;
     return;
   }
@@ -239,11 +242,7 @@ function updateUrssafStatus(computed){
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
-  let message = 'Calcul terminé avec le moteur officiel Mon-entreprise de l’Urssaf.';
-  if(checkedAt) message += ' Dernière réponse reçue le ' + new Date(checkedAt).toLocaleString('fr-FR') + '.';
-  if(missing.length) message += ' Variables non renseignées utilisant une valeur par défaut (' + missing.length + ') : ' + missing.slice(0,4).join(', ') + (missing.length > 4 ? '…' : '') + '.';
-  if(warnings.length) message += ' Le moteur a émis ' + warnings.length + ' avertissement(s). Consultez le détail.';
-  statusText.textContent = message;
+  statusText.textContent = 'Calculs à jour.';
   if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
     diagnosticsList.innerHTML = [
       ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
