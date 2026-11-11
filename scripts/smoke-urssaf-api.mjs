@@ -75,8 +75,10 @@ async function runSocial(name, input) {
       variablesParDefaut: result.missingVariables,
       avertissements: result.warnings
     })
+    return result
   } catch (error) {
     failures.push({ scenario: name, error: error.message })
+    return null
   }
 }
 
@@ -95,6 +97,12 @@ async function runTax(name, input) {
     }
     if (result.netAfterTax > result.netBeforeTax + 0.01 || result.incomeTax < 0) {
       throw new Error('Relation net après impôt / prélèvement incohérente.')
+    }
+    // Le modèle renvoie le montant annuel d'impôt ; le net après PAS est mensuel.
+    // Vérifier leur cohérence évite de valider deux champs numériques mais discordants.
+    const monthlyTax = result.incomeTax / 12
+    if (Math.abs((result.netBeforeTax - result.netAfterTax) - monthlyTax) > 0.03) {
+      throw new Error(`Net après impôt incohérent avec l'impôt annuel : écart mensuel ${(result.netBeforeTax - result.netAfterTax).toFixed(2)} €, impôt annualisé / 12 ${monthlyTax.toFixed(2)} €.`)
     }
     checks.push({
       scenario: name,
@@ -122,16 +130,27 @@ for (const rule of ['SMIC', 'plafond sécurité sociale']) {
   }
 }
 
-await runSocial('2300 € brut, 39 h, mutuelle 30/30, sans titres', {
+const social39NoTickets = await runSocial('2300 € brut, 39 h, mutuelle 30/30, sans titres', {
   brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0
 })
 await runSocial('2300 € brut, 35 h, mutuelle 30/30, sans titres', {
   brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0
 })
-await runSocial('2300 € brut, 39 h, mutuelle 30/30, 21 titres de 8 €', {
+const social39WithTickets = await runSocial('2300 € brut, 39 h, mutuelle 30/30, 21 titres de 8 €', {
   brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30,
   joursResto: 21, valeurResto: 8, partResto: 50
 })
+if (social39NoTickets && social39WithTickets) {
+  // Le net versé doit déjà déduire la part salariale des titres, exactement une fois.
+  const netDifference = social39NoTickets.netBeforeTax - social39WithTickets.netBeforeTax
+  const ticketEmployeeShare = social39WithTickets.mealTicketEmployee
+  if (Math.abs(netDifference - ticketEmployeeShare) > 0.03) {
+    failures.push({
+      scenario: 'cohérence du net bancaire avec les titres-restaurant',
+      error: `Le net avant impôt ne reflète pas exactement la part salariale des titres : différence ${netDifference.toFixed(2)} €, part salarié ${ticketEmployeeShare.toFixed(2)} €.`
+    })
+  }
+}
 
 await runTax('taux personnalisé 10 %', {
   brut: 2300, dureeType: '35', modeImpot: 'personnalisé', tauxPAS: 10
