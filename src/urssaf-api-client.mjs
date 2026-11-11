@@ -391,12 +391,6 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     const annualTaxableSalary = finalEvaluation.values[2] * 12
     finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
 
-    // Le taux neutre utilise une entrée distincte : le revenu imposable annuel
-    // qui sert d'assiette à sa grille mensuelle officielle.
-    if (taxMode === 'neutre') {
-      // `impôt . revenu imposable` is already supplied above; `paramètres` is not a rule in modele-social.
-    }
-
     // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
     // annuel puis applique l'abattement fiscal officiel de 10 %.
     if (taxMode === 'barème') {
@@ -404,21 +398,46 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
       finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
     }
 
-    // Le taux neutre est une règle distincte ; `impôt . taux d'imposition` correspond au taux effectif du barème standard.
-    const taxRateExpression = taxMode === 'neutre'
-      ? "impôt . taux neutre d'impôt sur le revenu"
-      : EXPRESSIONS.taxRate
+    // L'API expose le taux neutre comme une règle de barème, mais son mode
+    // "taux neutre" ne produit pas toujours le montant de prélèvement. On récupère
+    // le taux de la grille officielle, puis on laisse l'API calculer le montant
+    // avec ce taux explicite. Aucun calcul fiscal n'est fait localement.
+    let neutralRateEvaluation = null
+    if (taxMode === 'neutre') {
+      neutralRateEvaluation = await evaluateRequest(
+        fetchImpl,
+        endpoint,
+        timeoutMs,
+        finalSituation,
+        ["impôt . taux neutre d'impôt sur le revenu"]
+      )
+      const neutralRate = neutralRateEvaluation.values[0]
+      if (!Number.isFinite(neutralRate) || neutralRate < 0 || neutralRate > 100) {
+        throw new Error('L’API Urssaf n’a pas renvoyé un taux neutre exploitable.')
+      }
+      finalSituation['impôt . méthode de calcul'] = "'taux personnalisé'"
+      finalSituation['impôt . taux personnalisé'] = percent(neutralRate)
+    }
+
     const taxEvaluation = await evaluateRequest(
       fetchImpl,
       endpoint,
       timeoutMs,
       finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, taxRateExpression]
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
     )
     finalEvaluation = {
       values: taxEvaluation.values,
-      missingVariables: [...new Set([...finalEvaluation.missingVariables, ...taxEvaluation.missingVariables])],
-      warnings: [...new Set([...finalEvaluation.warnings, ...taxEvaluation.warnings])]
+      missingVariables: [...new Set([
+        ...finalEvaluation.missingVariables,
+        ...(neutralRateEvaluation?.missingVariables ?? []),
+        ...taxEvaluation.missingVariables
+      ])],
+      warnings: [...new Set([
+        ...finalEvaluation.warnings,
+        ...(neutralRateEvaluation?.warnings ?? []),
+        ...taxEvaluation.warnings
+      ])]
     }
   }
 
