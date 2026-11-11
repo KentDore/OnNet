@@ -1,6 +1,6 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #182 (11/11/2026, run 43032047839) est vert après ajout explicite des tests du client API au workflow ; il comprend les tests de calcul, le build, les parcours navigateur simulés et le smoke-test réel Chromium. Cela valide la couverture technique exécutée, pas encore la justesse indépendante de tous les calculs.
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #182 (11/11/2026, run 43032047839) est vert après ajout explicite des tests du client API au workflow ; il comprend les tests de calcul, le build, les parcours navigateur simulés et le smoke-test réel Chromium. Le script de comparaison complet avec l’API n’est pas exécuté par cette CI. Cela valide la couverture technique exécutée, pas encore la justesse indépendante de tous les calculs.
 
 ## Décision d'architecture
 
@@ -59,13 +59,13 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
 - [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
 - [x] Exécuter explicitement `test/urssaf-api-client.test.mjs` dans le workflow `quality.yml` : la CI #182 passe les 15 tests du client API, après correction d’une assertion trop stricte sur l’arrondi flottant du calibrage 39 h.
-- [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
+- [x] Exécuter le workflow CI complet : tests de calcul, tests du client API, build autonome, parcours navigateur et smoke-test réel Chromium. La CI n’exécute pas le script de comparaison `scripts/compare-urssaf-api.mjs`, afin d’éviter une multiplication des appels API réels.
 - [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #177.
 - [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 
 ### Phase C — parité et qualité
-- [x] Comparer en CI neuf scénarios sociaux entre l'API et le paquet npm local, avec une tolérance de 0,03 € ; tous les écarts observés étaient nuls lors du run vert du 11/11/2026.
+- [ ] Exécuter manuellement `npm run compare:urssaf-api` : comparaison diagnostique entre l'API et le paquet npm local (ce n'est pas une validation indépendante). La matrice comprend les salaires faibles, le SMIC, les seuils PMSS à 4 004,99 €, 4 005 € et 4 005,01 €, ainsi que des salaires élevés. Les résultats doivent être consignés après exécution réelle.
 - [ ] Comparer les cas de référence avec le simulateur web public, indépendamment du paquet npm local.
 - [x] Ajouter 10 tests simulés dédiés au client API, en plus des 12 tests de l'adaptateur local ; les deux suites passent dans le workflow vert.
 - [x] Ajouter des tests de non-régression pour heures supplémentaires, mutuelle, titres-restaurant, date, erreurs API, limites de débit et entrées fiscales.
