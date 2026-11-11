@@ -222,7 +222,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
     const benchmarkNetBeforeTax = await page.locator('.benchmark-your-salary strong').innerText();
-    const parseEuro = value => Number(value.replace(/[^\\d,.-]/g, '').replace(',', '.'));
+    const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
     assert.equal(parseEuro(cardNetBeforeTax), parseEuro(benchmarkNetBeforeTax), 'la carte et le comparatif doivent réutiliser le même net avant impôt Urssaf');
