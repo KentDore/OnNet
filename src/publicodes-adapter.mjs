@@ -115,6 +115,7 @@ export function calculatePublicodes(input = {}) {
     'salarié . contrat . salaire brut': money(baseGross),
     'salarié . contrat . statut cadre': 'non',
     'salarié . contrat . temps de travail . temps partiel': 'non',
+    'établissement . commune': "'Pacé'",
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heures/mois`,
