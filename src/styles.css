@@ -162,6 +162,19 @@
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
+
+  /* Onboarding : les paramètres secondaires restent repliés pour garder
+     le premier écran court, surtout sur mobile. */
+  .onboarding-optional{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;}
+  .onboarding-optional > summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:13px;font-weight:650;color:var(--ink-soft);padding:4px 0;}
+  .onboarding-optional > summary::-webkit-details-marker{display:none;}
+  .onboarding-optional > summary::before{content:"+";font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:15px;}
+  .onboarding-optional[open] > summary::before{content:"–";}
+  .onboarding-optional .optional-label{margin-left:auto;font-size:11px;font-weight:500;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 8px;}
+  .onboarding-optional-body{padding-top:12px;}
+  .onboarding-optional-body > .sub-hint{margin:0 0 12px;}
+  @media(max-width:480px){.onboarding-mutuelle-fields{grid-template-columns:1fr;}}
+
   .modal-share-row{display:flex; gap:8px; margin:2px 0 18px;}
   .modal-share-row .btn{width:auto; flex:none;}
   .modal-share-input{
