@@ -20,9 +20,9 @@ Les résultats restent des estimations : le modèle fiscal Urssaf comporte des r
 
 - Comparaison de plusieurs salaires, graphiques, réorganisation des cartes et simulation d’augmentation.
 - Saisie du brut mensuel, en 35 h ou 39 h. Le mode 39 h suppose explicitement un contrat de 35 h avec 4 heures supplémentaires rémunérées par semaine (environ 17,33 h/mois) ; le calcul est fait selon le droit commun, sans prise en compte des RTT. Les accords/conventions spécifiques ne sont pas paramétrables dans OnNet.
-- CDI du secteur privé non-cadre, droit commun, avec commune de l’établissement modifiable pour chaque salaire (Pacé par défaut).
+- CDI du secteur privé non-cadre, droit commun, avec recherche de commune via l’API officielle geo.api.gouv.fr, code postal et département confirmés (Pacé par défaut). Le nom de la commune et le département sont transmis au modèle Urssaf ; le code postal sert à lever les ambiguïtés.
 - Saisie séparée des parts salariale et employeur de mutuelle.
-- Titres-restaurant : nombre, valeur et part salariale.
+- Titres-restaurant : nombre, valeur et part salariale (40 à 50 %, pour respecter la participation employeur de 50 à 60 % du modèle Urssaf).
 - Impôt au barème standard du modèle ou taux de prélèvement personnalisé.
 - Repère SMIC : le montant brut est récupéré via la règle officielle `SMIC` de l’API Mon-entreprise / Urssaf ; le net avant impôt est ensuite calculé par cette même API. Une saisie manuelle reste possible et n’est jamais écrasée automatiquement. Si l’API est indisponible, OnNet signale l’erreur au lieu d’afficher une valeur codée en dur comme actuelle.
 - Repère de salaire médian privé : référence INSEE 2024 (2 190 € net mensuel en EQTP).
@@ -33,7 +33,7 @@ Les résultats restent des estimations : le modèle fiscal Urssaf comporte des r
 - Le périmètre raccordé est limité au CDI privé non-cadre, à temps plein, en droit commun et aux durées 35 h / 39 h. Les conventions particulières, le temps partiel, les cadres, la fonction publique et certains régimes territoriaux ne sont pas couverts par cette première version.
 - Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés : un scénario qui les utilise est bloqué au lieu de recevoir une estimation locale.
 - Le net annuel affiché est le net mensuel Urssaf multiplié par 12 ; ce n’est pas une évaluation annuelle indépendante. Le salaire brut annuel saisi à l’onboarding est divisé par 12.
-- La commune par défaut est Pacé. Vérifiez ou modifiez cette commune pour chaque poste comparé.
+- La commune par défaut est Pacé. Pour changer de lieu, sélectionnez une suggestion géographique afin de confirmer code postal et département ; une saisie libre non confirmée bloque le calcul.
 - Le salaire médian est une référence nationale, pas un repère spécifique au métier ou à la région.
 - Le module de simulation d’absence a été retiré.
 
