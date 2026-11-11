@@ -243,35 +243,16 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
 });
 
 
-test('récupère le SMIC officiel à la volée et conserve une valeur manuelle explicite', async () => {
+test('le SMIC est récupéré via l’API et aucun réglage manuel n’est proposé', async () => {
   const { context, page, calls } = await openApp({ smicValue: 1950.25 });
   try {
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
+    assert.equal(await page.locator('.benchmark-settings').count(), 0);
+    assert.equal(await page.locator('#benchmarkSmicBrut').count(), 0);
+    assert.equal(await page.locator('#benchmarkSmicDate').count(), 0);
+    assert.equal(await page.locator('#saveBenchmarkSettings').count(), 0);
+    assert.equal(await page.locator('#resetBenchmarkSettings').count(), 0);
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1950.250000 €/mois'));
-    await page.locator('.benchmark-settings summary').click();
-    await page.locator('#benchmarkSmicBrut').fill('1800');
-    await page.locator('#benchmarkSmicDate').fill('2026-01-01');
-    await page.locator('#saveBenchmarkSettings').click();
-    await page.waitForFunction(() =>
-      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
-      null, { timeout: 15000 }
-    );
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
-    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.benchmarks.v1')));
-    assert.equal(saved.smicBrut, 1800);
-    assert.equal(saved.smicDate, '2026-01-01');
-
-    await page.reload();
-    await page.locator('#urssafCalculateBtn').click();
-    await page.waitForFunction(() =>
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
-      document.querySelectorAll('.benchmark-item').length === 2,
-      null, { timeout: 20000 }
-    );
-    await page.locator('.benchmark-settings summary').click();
-    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1800.00');
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
   } finally {
     await context.close();
   }
