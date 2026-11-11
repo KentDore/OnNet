@@ -159,7 +159,7 @@ async function openApp(options = {}) {
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
   }
 
-  if (options.consent !== false) {
+  if (options.consent !== false && !options.emptyStorage) {
     await page.locator('#urssafCalculateBtn').click();
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
@@ -408,6 +408,7 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     const before = calls.count;
     await page.locator('#addScenario').click();
     await page.locator('#modalAddInput').fill('3400');
+    await page.locator('#modalOverlay .onboarding-optional summary').click();
     await page.locator('#modalAddMutuelle').fill('25');
     await page.locator('#modalAddMutuellePat').fill('40');
     assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25');
