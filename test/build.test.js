@@ -25,7 +25,7 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   assert.ok(html.includes(utils));
   assert.ok(html.includes(app));
   assert.ok(html.includes("const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'"));
-  assert.ok(html.includes('window.OnNetUrssafApi = { calculateWithUrssafApi, urssafApiExpressions };'));
+  assert.ok(html.includes('window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };'));
   assert.ok(html.includes('brand-version">v9.9.9</span>'));
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal(html.includes('@@ONNET_CALC@@'), false);
