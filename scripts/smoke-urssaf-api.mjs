@@ -37,10 +37,16 @@ function assertFinite(label, value) {
   if (!Number.isFinite(value)) throw new Error(`${label} absent ou non numérique.`)
 }
 
+function assertLocationResolved(result) {
+  const missing = (result.missingVariables || []).filter(name => String(name).startsWith('établissement . commune . département'))
+  if (missing.length) throw new Error('Le département de l’établissement reste non résolu par le modèle Urssaf : ' + missing.join(', '))
+}
+
 async function runSocial(name, input) {
   console.error(`[social] ${name}`)
   try {
     const result = await calculateWithUrssafApi({ commune: 'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
+    assertLocationResolved(result)
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
       ['net avant impôt', result.netBeforeTax],
@@ -86,6 +92,7 @@ async function runTax(name, input) {
   console.error(`[fiscal] ${name}`)
   try {
     const result = await calculateWithUrssafApi({ commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
+    assertLocationResolved(result)
     for (const [label, value] of [
       ['net avant impôt', result.netBeforeTax],
       ['net après impôt', result.netAfterTax],
