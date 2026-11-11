@@ -62,7 +62,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Exécuter le workflow CI complet : tests de calcul, tests du client API, build autonome, parcours navigateur et smoke-test réel Chromium. La CI n’exécute pas le script de comparaison `scripts/compare-urssaf-api.mjs`, afin d’éviter une multiplication des appels API réels.
 - [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #177.
 - [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
-- [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
+- [ ] Retester le smoke-test réel des trois méthodes fiscales via l'API après l'adaptation du taux neutre : vérifier que le taux de grille officiel est réinjecté comme taux explicite et que l'API renvoie un prélèvement positif cohérent. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 - [ ] Traiter explicitement la limite fiscale dans l'interface et la documentation : Urssaf marque la règle `impôt . méthode de calcul . barème standard` et la règle `impôt . taux d'imposition` comme expérimentales ; elles peuvent évoluer, être renommées ou supprimées sans changement de version majeure. L'estimation après impôt ne doit donc pas être présentée comme une retenue garantie.
 
 ### Phase C — parité et qualité
