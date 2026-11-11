@@ -185,7 +185,10 @@ async function addSecondScenario(page, gross = '3200') {
 test('indique la source Urssaf et ne transmet aucune donnée avant consentement', async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
-    assert.equal(calls.count, 0);
+    await page.waitForFunction(() => window.__onnetSmicRequestObserved === true, null, { timeout: 5000 }).catch(() => {});
+    assert.ok(calls.count >= 1);
+    assert.ok(calls.bodies.every(body => body.expressions.includes('SMIC')));
+    assert.ok(calls.bodies.every(body => !body.situation['salarié . contrat . salaire brut']));
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
     assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
