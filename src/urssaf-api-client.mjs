@@ -317,6 +317,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
     // annuel puis applique l'abattement fiscal officiel de 10 %.
     if (taxMode === 'barème') {
+      // Identifiant officiel exact, avec apostrophe ASCII dans le nom de règle.
       finalSituation["paramètres . impôt . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
     }
 
