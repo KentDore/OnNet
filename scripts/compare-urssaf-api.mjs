@@ -83,30 +83,51 @@ const comparisons = [
 
 const round = value => Number(value.toFixed(2))
 const results = []
+const diagnosticErrors = []
+
+function shouldStopDiagnostic(error) {
+  return /HTTP 429|HTTP 5\\d\\d|Impossible de joindre l’API Urssaf|Délai dépassé/i.test(error?.message || '')
+}
 
 for (const scenario of scenarios) {
-  const local = calculatePublicodes(scenario.input)
-  const remote = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
-  const values = comparisons.map(([label, key]) => {
-    const localValue = local[key]
-    const urssafValue = remote[key]
-    if (!Number.isFinite(urssafValue)) {
-      throw new Error(`Valeur API absente ou non numérique pour ${label} dans « ${scenario.name} ».`)
-    }
-    return {
-      name: label,
-      local: round(localValue),
-      urssaf: round(urssafValue),
-      difference: Number((localValue - urssafValue).toFixed(4))
-    }
-  })
+  console.error(`[social] ${scenario.name}`)
+  const entry = { scenario: scenario.name, comparisons: [] }
+  let remote
 
-  results.push({
-    scenario: scenario.name,
-    comparisons: values,
-    missingVariables: remote.missingVariables,
-    warnings: remote.warnings
-  })
+  try {
+    remote = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
+    entry.api = Object.fromEntries(comparisons.map(([label, key]) => [label, Number.isFinite(remote[key]) ? round(remote[key]) : null]))
+    entry.missingVariables = remote.missingVariables
+    entry.warnings = remote.warnings
+  } catch (error) {
+    entry.apiError = error.message
+    diagnosticErrors.push({ scenario: scenario.name, source: 'API', error: error.message })
+    results.push(entry)
+    if (shouldStopDiagnostic(error)) throw error
+    continue
+  }
+
+  try {
+    const local = calculatePublicodes(scenario.input)
+    entry.comparisons = comparisons.map(([label, key]) => {
+      const localValue = local[key]
+      const urssafValue = remote[key]
+      if (!Number.isFinite(localValue) || !Number.isFinite(urssafValue)) {
+        throw new Error(`Valeur locale ou API absente pour ${label}.`)
+      }
+      return {
+        name: label,
+        local: round(localValue),
+        urssaf: round(urssafValue),
+        difference: Number((localValue - urssafValue).toFixed(4))
+      }
+    })
+  } catch (error) {
+    entry.localError = error.message
+    diagnosticErrors.push({ scenario: scenario.name, source: 'modèle npm local', error: error.message })
+  }
+
+  results.push(entry)
 }
 
 const fiscalScenarios = [
@@ -118,33 +139,40 @@ const fiscalScenarios = [
 
 const fiscalResults = []
 for (const scenario of fiscalScenarios) {
-  const result = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
-  for (const [name, value] of [
-    ['net après impôt', result.netAfterTax],
-    ['impôt', result.incomeTax],
-    ['taux appliqué', result.calculatedTaxRate]
-  ]) {
-    if (!Number.isFinite(value)) {
-      throw new Error(`Résultat fiscal API absent ou non numérique (${name}) pour ${scenario.name}.`)
+  console.error(`[fiscal] ${scenario.name}`)
+  try {
+    const result = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
+    for (const [name, value] of [
+      ['net après impôt', result.netAfterTax],
+      ['impôt', result.incomeTax],
+      ['taux appliqué', result.calculatedTaxRate]
+    ]) {
+      if (!Number.isFinite(value)) {
+        throw new Error(`Résultat fiscal API absent ou non numérique (${name}).`)
+      }
     }
+    if (result.incomeTax <= 0 || result.netAfterTax >= result.netBeforeTax) {
+      throw new Error(`Le scénario fiscal ne produit aucun prélèvement positif : ${JSON.stringify({
+        netBeforeTax: result.netBeforeTax,
+        netAfterTax: result.netAfterTax,
+        incomeTax: result.incomeTax,
+        calculatedTaxRate: result.calculatedTaxRate,
+        missingVariables: result.missingVariables
+      })}`)
+    }
+    fiscalResults.push({
+      scenario: scenario.name,
+      netAfterTax: round(result.netAfterTax),
+      incomeTax: round(result.incomeTax),
+      calculatedTaxRate: round(result.calculatedTaxRate),
+      missingVariables: result.missingVariables,
+      warnings: result.warnings
+    })
+  } catch (error) {
+    fiscalResults.push({ scenario: scenario.name, error: error.message })
+    diagnosticErrors.push({ scenario: scenario.name, source: 'fiscalité API', error: error.message })
+    if (shouldStopDiagnostic(error)) throw error
   }
-  if (result.incomeTax <= 0 || result.netAfterTax >= result.netBeforeTax) {
-    throw new Error(`Le scénario fiscal « ${scenario.name} » ne produit aucun prélèvement positif : ${JSON.stringify({
-      netBeforeTax: result.netBeforeTax,
-      netAfterTax: result.netAfterTax,
-      incomeTax: result.incomeTax,
-      calculatedTaxRate: result.calculatedTaxRate,
-      missingVariables: result.missingVariables
-    })}`)
-  }
-  fiscalResults.push({
-    scenario: scenario.name,
-    netAfterTax: round(result.netAfterTax),
-    incomeTax: round(result.incomeTax),
-    calculatedTaxRate: round(result.calculatedTaxRate),
-    missingVariables: result.missingVariables,
-    warnings: result.warnings
-  })
 }
 
 console.log(JSON.stringify({ references: { date: REFERENCE_DATE, smic: { value: smicValue, missingVariables: smicReference.missingVariables, warnings: smicReference.warnings }, pmss: { value: pmssValue, missingVariables: pmssReference.missingVariables, warnings: pmssReference.warnings } }, social: results, fiscal: fiscalResults }, null, 2))
@@ -154,6 +182,9 @@ const mismatches = results.flatMap(result =>
     .filter(item => Math.abs(item.difference) > 0.03)
     .map(item => ({ scenario: result.scenario, ...item }))
 )
-if (mismatches.length) {
-  throw new Error(`Écart supérieur à 3 centimes entre le modèle npm local et l'API officielle : ${JSON.stringify(mismatches)}`)
+if (mismatches.length || diagnosticErrors.length) {
+  throw new Error(`Diagnostic incomplet ou écarts détectés : ${JSON.stringify({
+    mismatches,
+    errors: diagnosticErrors
+  })}`)
 }
