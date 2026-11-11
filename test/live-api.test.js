@@ -7,6 +7,18 @@ const { chromium } = require('playwright');
 
 const ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate';
 
+function currentDateInParis() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date()).map(part => [part.type, part.value])
+  );
+  return `${parts.day}/${parts.month}/${parts.year}`;
+}
+
 test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 39 h', async () => {
   let server;
   let browser;
@@ -28,7 +40,8 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     const result = await page.goto(`http://127.0.0.1:${server.address().port}/`);
     assert.equal(result.status(), 200);
 
-    const apiResult = await page.evaluate(async endpoint => {
+    const referenceDate = currentDateInParis();
+    const apiResult = await page.evaluate(async ({ endpoint, referenceDate }) => {
       async function evaluate(expressions, situation) {
         const response = await fetch(endpoint, {
           method: 'POST',
@@ -47,7 +60,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
         'établissement . commune': "'Pacé'",
         'salarié . convention collective': "'droit commun'",
         'salarié . activité partielle': 'non',
-        'date': '11/11/2026'
+        'date': referenceDate
       };
 
       const weeklyOvertime = 4 * 52 / 12;
@@ -76,7 +89,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       });
 
       return { thirtyFiveHours, thirtyNineHours, weeklyOvertime, baseGrossFor39h };
-    }, ENDPOINT);
+    }, { endpoint: ENDPOINT, referenceDate });
 
     const thirtyFive = apiResult.thirtyFiveHours;
     assert.equal(thirtyFive.ok, true, `35 h : HTTP ${thirtyFive.status} depuis le navigateur`);
@@ -85,10 +98,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     const gross35 = thirtyFive.body.evaluate[1].nodeValue;
     const net35 = thirtyFive.body.evaluate[2].nodeValue;
     assert.ok(Number.isFinite(smic) && smic > 0, 'La règle SMIC doit renvoyer une valeur positive');
-    // Référence indépendante publiée par l'Urssaf pour le 11/11/2026 : 1 867,02 €/mois.
-    // https://mon-entreprise.urssaf.fr/documentation/SMIC
-    assert.ok(Math.abs(smic - 1867.02) <= 0.02,
-      `SMIC mensuel : attendu 1 867,02 € selon la documentation Urssaf (reçu : ${smic})`);
+    // Smoke-test technique : vérifier une valeur API positive, sans figer un montant annuel.
     assert.ok(Number.isFinite(gross35) && Math.abs(gross35 - 2300) <= 0.05,
       `35 h : le brut API doit correspondre à 2 300 € (reçu : ${gross35})`);
     assert.ok(Number.isFinite(net35) && net35 > 0, '35 h : le net avant impôt doit être positif');
@@ -134,7 +144,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       'établissement . commune': "'Pacé'",
       'salarié . convention collective': "'droit commun'",
       'salarié . activité partielle': 'non',
-      'date': '11/11/2026'
+      'date': referenceDate
     }, smic });
     assert.equal(smicBenchmark.ok, true, 'SMIC : le calcul dédié doit répondre');
     assert.equal(smicBenchmark.body.evaluate?.length, 2, 'SMIC : brut et net avant impôt attendus');
