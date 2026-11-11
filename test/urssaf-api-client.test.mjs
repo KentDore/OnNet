@@ -30,7 +30,7 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . cotisations . prévoyances . santé . salarié': 30,
     'salarié . cotisations . prévoyances . santé . employeur': 30,
     'salarié . rémunération . frais professionnels . titres-restaurant . montant': 168,
-    'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 84,
+    'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 70,
     'salarié . rémunération . frais professionnels . non déductible': 0,
     'salarié . rémunération . net . payé après impôt': 1700,
     'impôt . montant': 1320,
@@ -150,8 +150,8 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.netBeforeTax, 1810)
   assert.equal(result.taxableNet, 1880)
   assert.equal(result.mealTicketAmount, 168)
-  assert.equal(result.mealTicketEmployee, 84)
-  assert.equal(result.mealTicketEmployer, 84)
+  assert.equal(result.mealTicketEmployee, 98)
+  assert.equal(result.mealTicketEmployer, 70)
   assert.equal(result.mealTicketNonDeductible, 0)
   assert.equal(result.missingVariables.length, 0)
 })
@@ -222,6 +222,7 @@ test('traite les montants de titres-restaurant non applicables comme nuls si auc
   })
 
   assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant'], 'non')
+  assert.equal(request.expressions.some(expression => expression.includes('titres-restaurant')), false)
   assert.equal(result.mealTicketAmount, 0)
   assert.equal(result.mealTicketEmployee, 0)
   assert.equal(result.mealTicketEmployer, 0)
