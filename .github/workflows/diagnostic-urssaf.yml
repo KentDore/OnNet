@@ -1,9 +1,8 @@
 name: Diagnostic API Urssaf (ciblé)
 
 on:
-  pull_request:
-    paths:
-      - .github/workflows/diagnostic-urssaf.yml
+  push:
+    branches: [fix/smic-official-api]
 
 concurrency:
   group: onnet-urssaf-api-diagnostic
@@ -11,6 +10,7 @@ concurrency:
 
 jobs:
   compare:
+    if: contains(github.event.head_commit.message, '[run-urssaf-matrix]')
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
