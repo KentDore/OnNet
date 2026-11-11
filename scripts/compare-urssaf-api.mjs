@@ -54,7 +54,8 @@ for (const scenario of scenarios) {
 const fiscalScenarios = [
   { name: 'taux personnalisé 10 %', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'personnalisé', tauxPAS: 10 } },
   { name: 'taux neutre', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'neutre' } },
-  { name: 'barème standard, célibataire sans enfant', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'barème', situationFamille: 'célibataire', enfantsACharge: 0 } }
+  { name: 'barème standard, célibataire sans enfant', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'barème', situationFamille: 'célibataire', enfantsACharge: 0 } },
+  { name: 'barème standard, couple avec 24 000 € autres revenus imposables', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'barème', situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000 } }
 ]
 
 const fiscalResults = []
