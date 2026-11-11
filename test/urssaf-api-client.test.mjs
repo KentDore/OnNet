@@ -9,6 +9,8 @@ function scenario(overrides = {}) {
   return {
     brut: 2300,
     commune: 'Pacé',
+    codePostal: '35740',
+    departement: 'Ille-et-Vilaine',
     dureeType: '35',
     mutuelle: 30,
     mutuellePat: 30,
@@ -143,6 +145,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(request.situation['salarié . contrat . salaire brut'], '2300.000000 €/mois')
   assert.equal(request.situation['salarié . contrat . temps de travail . temps partiel'], 'non')
   assert.equal(request.situation['établissement . commune'], "'Pacé'")
+  assert.equal(request.situation['établissement . commune . département'], "'Ille-et-Vilaine'")
   assert.equal(request.situation.date, '11/11/2026')
   assert.equal(request.expressions[0], 'salarié . rémunération . brut')
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
@@ -154,6 +157,12 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.mealTicketEmployer, 70)
   assert.equal(result.mealTicketNonDeductible, 0)
   assert.equal(result.missingVariables.length, 0)
+})
+
+test('refuse une commune sans département confirmé', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario({ commune:'Commune inconnue', departement:'' }), {
+    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
+  }), /département doit être renseignée/)
 })
 
 test('transmet la commune de l’établissement et échappe les apostrophes', async () => {
