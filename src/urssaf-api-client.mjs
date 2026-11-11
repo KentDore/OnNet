@@ -15,7 +15,6 @@ const EXPRESSIONS = Object.freeze({
   employerHealth: 'salarié . cotisations . prévoyances . santé . employeur',
   netAfterTax: 'salarié . rémunération . net . payé après impôt',
   incomeTax: 'impôt . montant',
-  calculatedTaxRate: "impôt . taux d'imposition"
 })
 
 function numberInRange(value, name, min, max) {
@@ -155,11 +154,11 @@ function normalizeMissingVariables(value) {
 
 function normalizeWarnings(value) {
   if (!Array.isArray(value)) return []
-  return value.map(item => {
+  return [...new Set(value.map(item => {
     if (typeof item === 'string') return item
     if (item && typeof item.message === 'string') return item.message
     return 'Avertissement non détaillé du moteur Urssaf.'
-  })
+  }))]
 }
 
 function describeApiFailure(status) {
@@ -237,6 +236,9 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 /**
  * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
  * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
+ * Le taux affiché hors mode personnalisé est un taux effectif dérivé des montants
+ * nets retournés (écart net avant/après PAS / net imposable), car l'API ne
+ * retourne pas une valeur numérique exploitable pour la règle de taux global.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
 export async function calculateWithUrssafApi(input = {}, options = {}) {
