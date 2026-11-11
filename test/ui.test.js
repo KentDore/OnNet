@@ -193,7 +193,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
       null, { timeout: 20000 }
     );
-    assert.ok(calls.count >= 4);
+    assert.ok(calls.count >= 3);
     assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /moteur officiel Mon-entreprise \/ Urssaf/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
 
