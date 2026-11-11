@@ -52,6 +52,10 @@ OnNet fournit une **estimation**, pas un bulletin de paie. Le moteur modélise u
 
 Le coût employeur n'est pas calculé : une majoration forfaitaire du brut donnerait une estimation trompeuse, notamment autour du SMIC.
 
+## Dernière correction — 2.1.3
+
+La comparaison au SMIC et au salaire médian utilise désormais le net avant impôt par heure. Le salaire de l'utilisateur conserve sa durée contractuelle réelle : aucun recalcul à 35 h n'est effectué. Le SMIC reste une référence à 35 h.
+
 ## Développement et versionnage
 
 Les sources de développement sont dans `src/`. Le script génère un fichier HTML autonome contenant les styles et les scripts :
