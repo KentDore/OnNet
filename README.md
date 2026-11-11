@@ -19,7 +19,7 @@ Les résultats restent des estimations : le modèle fiscal Urssaf comporte des r
 ## Fonctionnalités raccordées
 
 - Comparaison de plusieurs salaires, graphiques, réorganisation des cartes et simulation d’augmentation.
-- Saisie du brut mensuel, en 35 h ou 39 h ; pour 39 h, OnNet transmet 4 heures supplémentaires par semaine (environ 17,33 h/mois) et laisse le moteur Urssaf calculer leur rémunération. Le scénario force actuellement le droit commun : la majoration standard est de 25 % pour les 8 premières heures supplémentaires hebdomadaires, mais les accords/conventions spécifiques ne sont pas paramétrables dans OnNet.
+- Saisie du brut mensuel, en 35 h ou 39 h. Le mode 39 h suppose explicitement un contrat de 35 h avec 4 heures supplémentaires rémunérées par semaine (environ 17,33 h/mois) ; le calcul est fait selon le droit commun, sans prise en compte des RTT. Les accords/conventions spécifiques ne sont pas paramétrables dans OnNet.
 - CDI du secteur privé non-cadre, droit commun, avec commune de l’établissement modifiable pour chaque salaire (Pacé par défaut).
 - Saisie séparée des parts salariale et employeur de mutuelle.
 - Titres-restaurant : nombre, valeur et part salariale.
