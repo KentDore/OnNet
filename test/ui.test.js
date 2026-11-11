@@ -106,6 +106,7 @@ test.after(async () => {
 
 async function openApp(options = {}) {
   const context = await browser.newContext();
+  await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const calls = { count: 0, bodies: [] };
   await context.route('**/api/v1/evaluate', async route => {
     const request = route.request().postDataJSON();
@@ -217,7 +218,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
     const benchmarkNet = await page.locator('.benchmark-your-salary strong').innerText();
-    assert.equal(cardNet, benchmarkNet, 'la carte et le comparatif doivent réutiliser le même net Urssaf');
+    assert.equal(cardNet, benchmarkNet.replace(' / mois', ''), 'la carte et le comparatif doivent réutiliser le même net Urssaf');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
@@ -231,6 +232,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
   });
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
     assert.match(diagnostics, /catégorie professionnelle/);
