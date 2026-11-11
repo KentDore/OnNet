@@ -66,17 +66,6 @@ try {
     )
   }
   const body = await page.locator('body').innerText({ timeout: 15000 })
-  let nextQuestion = null
-  const closeShare = page.getByRole('button', { name: /fermer/i })
-  if (await closeShare.count()) await closeShare.last().click()
-  const cadreButton = page.getByRole('button', { name: /aller à la question : cadre/i })
-  if (await cadreButton.count()) {
-    await cadreButton.first().click()
-    await page.waitForTimeout(1000)
-    const afterCadre = await page.locator('body').innerText({ timeout: 15000 })
-    const stepIndex = afterCadre.indexOf('Étape ')
-    nextQuestion = stepIndex < 0 ? afterCadre.slice(0, 800) : afterCadre.slice(stepIndex, stepIndex + 1200)
-  }
   const labels = [
     'Salaire brut',
     'Salaire net',
@@ -97,7 +86,6 @@ try {
     fieldValues,
     shareDialog,
     shareValues,
-    nextQuestion,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
