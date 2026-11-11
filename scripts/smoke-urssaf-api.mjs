@@ -131,7 +131,12 @@ async function runTax(name, input) {
 
 const references = {}
 for (const rule of ['SMIC', 'plafond sécurité sociale']) {
-  const result = await evaluateUrssafExpression(rule, { date }, { fetchImpl: throttledFetch })
+  const result = await evaluateUrssafExpression(rule, {
+    date,
+    'établissement . commune': "'Pacé'",
+    'établissement . commune . département': "'Ille-et-Vilaine'"
+  }, { fetchImpl: throttledFetch })
+  assertLocationResolved(result)
   assertFinite(rule, result.value)
   if (result.value <= 0) throw new Error(`Valeur invalide pour la règle ${rule}.`)
   references[rule] = {
