@@ -289,7 +289,7 @@ function defaultScenarios(){
   ];
 }
 
-// ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
+// ---------- Persistance locale (les données de paie ne sont envoyées qu'après consentement) ----------
 const STORAGE_KEY = 'onnet.state.v1';
 const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
