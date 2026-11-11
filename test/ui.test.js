@@ -288,16 +288,31 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
 test('transmet la commune propre à chaque salaire et la conserve dans le lien partagé', async () => {
   const { context, page, calls } = await openApp();
   try {
+    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{
+        nom: 'Rennes',
+        code: '35238',
+        codesPostaux: ['35000'],
+        codeDepartement: '35',
+        departement: { nom: 'Ille-et-Vilaine', code: '35' }
+      }])
+    }));
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
     await card.locator('[data-key="commune"]').fill('Rennes');
-    await card.locator('[data-key="commune"]').blur();
+    await page.waitForSelector('.commune-option', { timeout: 5000 });
+    await page.locator('.commune-option').first().click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
       null, { timeout: 15000 }
     );
-    assert.ok(calls.bodies.some(body => body.situation['établissement . commune'] === "'Rennes'"));
+    assert.ok(calls.bodies.some(body =>
+      body.situation['établissement . commune'] === "'Rennes'" &&
+      body.situation['établissement . commune . département'] === "'Ille-et-Vilaine'"
+    ));
 
     await page.locator('#shareBtn').click();
     await page.locator('#shareCreateBtn').click();
@@ -308,6 +323,8 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
       return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
     }, shareUrl);
     assert.equal(payload.scenarios[0].commune, 'Rennes');
+    assert.equal(payload.scenarios[0].codePostal, '35000');
+    assert.equal(payload.scenarios[0].departement, 'Ille-et-Vilaine');
   } finally {
     await context.close();
   }
