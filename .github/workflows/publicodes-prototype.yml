@@ -8,6 +8,7 @@ on:
       - 'package.json'
       - 'src/publicodes-adapter.mjs'
       - 'scripts/build-publicodes.js'
+      - 'scripts/publicodes-scenarios.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
       - '.github/workflows/publicodes-prototype.yml'
@@ -39,6 +40,8 @@ jobs:
         run: npm install --no-audit --no-fund
       - name: Test Publicodes adapter
         run: npm run test:prototype
+      - name: Print reproducible salary scenarios
+        run: npm run scenarios:publicodes
       - name: Build standalone HTML prototype
         run: npm run build:publicodes
       - name: Check generated prototype
