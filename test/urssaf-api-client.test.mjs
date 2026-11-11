@@ -183,21 +183,21 @@ test('prépare les paramètres de mutuelle et titres-restaurant sans inverser le
   assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur'], '60.000000%')
 })
 
-test('accepte une valeur unitaire de titre-restaurant jusqu’à 1 000 €', async () => {
+test('accepte une valeur unitaire de titre-restaurant de 500 €', async () => {
   let request
-  await calculateWithUrssafApi(scenario({ joursResto: 1, valeurResto: 1000 }), {
+  await calculateWithUrssafApi(scenario({ joursResto: 1, valeurResto: 500 }), {
     fetchImpl: mockFetch(body => {
       request = body
       return response(apiResponse(body.expressions))
     })
   })
-  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '1000.00 €/titre-restaurant')
+  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '500.00 €/titre-restaurant')
 })
 
-test('refuse une valeur unitaire de titre-restaurant supérieure à 1 000 €', async () => {
-  await assert.rejects(calculateWithUrssafApi(scenario({ valeurResto: 1000.01 }), {
+test('refuse une valeur unitaire de titre-restaurant supérieure à 500 €', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario({ valeurResto: 500.01 }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
-  }), /valeurResto doit être compris entre 0 et 1000/)
+  }), /valeurResto doit être compris entre 0 et 500/)
 })
 
 test('traite les montants de titres-restaurant non applicables comme nuls si aucun titre n’est déclaré', async () => {
@@ -282,7 +282,7 @@ test('alimente l’assiette annuelle officielle du taux neutre', async () => {
 
   assert.equal(requests.length, 2)
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(requests[1].situation['paramètres . impôt . revenu imposable'], '22560.00 €/an')
+  assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
 })
 
 test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
@@ -303,7 +303,7 @@ test('configure le barème officiel avec revenu annuel et foyer fiscal', async (
   const request = requests[1]
   assert.equal(request.situation['impôt . méthode de calcul'], "'barème standard'")
   assert.equal(request.situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(request.situation["paramètres . impôt . revenu d'activité"], '22560.00 €/an')
+  assert.equal(request.situation["impôt . foyer fiscal . revenu imposable . revenu d'activité"], '22560.00 €/an')
   assert.equal(request.situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
   assert.equal(request.situation['impôt . foyer fiscal . enfants à charge'], '1 enfant')
   assert.equal(request.situation['impôt . foyer fiscal . parent isolé'], 'oui')
