@@ -384,7 +384,7 @@ function sanitizeScenario(raw){
   const clean = Object.assign({}, raw);
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
-    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
+    valeurResto:[0,500], partResto:[0,100], nbMois:[1,24],
     primes:[0,100000000]
   };
   for(const [key, range] of Object.entries(limits)){
@@ -812,7 +812,7 @@ function renderCard(s, r, showRemove){
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
-          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:1000})}</div>
+          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:500})}</div>
           <div class="field-row"><label for="f-part-${uid}">Part salarié (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
         </div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
@@ -1908,7 +1908,7 @@ function renderMutuelleTrFields(idPrefix){
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="1000"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>`;
@@ -1952,7 +1952,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
     const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
-      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 1000);
+      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
     return result;
