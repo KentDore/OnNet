@@ -188,7 +188,7 @@ test('alimente l’assiette annuelle officielle du taux neutre', async () => {
 
   assert.equal(requests.length, 2)
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(requests[1].situation['paramètres . impôt . revenu imposable'], '22560.00 €/an')
+  assert.equal(Object.hasOwn(requests[1].situation, 'paramètres . impôt . revenu imposable'), false)
 })
 
 test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
