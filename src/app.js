@@ -11,6 +11,7 @@ let urssafRequestQueue = Promise.resolve();
 let urssafLastRequestAt = 0;
 const urssafResultCache = new Map();
 const urssafErrorCache = new Map();
+let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
 
 function currentCalculationDate(){
   const d = new Date();
@@ -31,7 +32,7 @@ function taxInputForFoyer(f){
 }
 
 function scenarioCalculationDate(s){
-  return s.isBenchmark ? benchmarks.smicDate : currentCalculationDate();
+  return s.isBenchmark && benchmarks.mode === 'manual' ? benchmarks.smicDate : currentCalculationDate();
 }
 
 function calculationKey(s, f){
@@ -127,9 +128,16 @@ function mapUrssafResultToOnNet(result){
   };
 }
 
+function getSmicGross(){
+  if(benchmarks.mode === 'manual') return benchmarks.smicBrut;
+  return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
+}
+
 function buildSmicScenario(base){
+  const amount = getSmicGross();
+  if(!Number.isFinite(amount) || amount <= 0) return null;
   return Object.assign({}, base, {
-    id:-1, name:'Référence SMIC', brut:benchmarks.smicBrut, dureeType:'35',
+    id:-1, name:'Référence SMIC', brut:amount, dureeType:'35',
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
     nbMois:12, primes:0, isBenchmark:true
   });
@@ -148,6 +156,7 @@ function getCachedSmicResult(){
   const base = findScenario(refId) || scenarios[0];
   if(!base) return null;
   const scenario = buildSmicScenario(base);
+  if(!scenario) return null;
   return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
 }
 
@@ -183,9 +192,11 @@ function updateUrssafStatus(computed){
   const smicScenario = base ? buildSmicScenario(base) : null;
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
-  const smicError = smicScenario && !smicResult && urssafErrorCache.has(smicKey);
+  const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
+    (benchmarks.mode === 'official' && officialSmicState.status === 'error');
+  const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
-  if(!smicResult && !smicError) pending.push({s:smicScenario,r:null});
+  if(smicPending) pending.push({s:smicScenario,r:null});
   if(failed.length || smicError){
     statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' appel(s) à l’API Urssaf ont échoué. Consultez les détails puis réessayez. Aucun résultat local de remplacement n’est fourni.';
     button.hidden = false;
@@ -223,9 +234,41 @@ function updateUrssafStatus(computed){
 }
 
 async function executeUrssafCalculations(generation, forceRetry){
+  // Le SMIC est une règle officielle, pas une constante copiée dans OnNet.
+  // En cas d'échec, aucun ancien montant codé en dur n'est utilisé en silence.
+  if(benchmarks.mode === 'official' &&
+     (officialSmicState.status !== 'ready' || forceRetry === true)){
+    officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+    updateUrssafStatus(getCurrentComputed());
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
+        throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+      );
+      if(generation !== urssafGeneration) return;
+      if(!Number.isFinite(result.value) || result.value <= 0){
+        throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
+      }
+      officialSmicState = {
+        status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
+      };
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      officialSmicState = {
+        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
+      };
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+
   const jobs = scenarios.map(s => Object.assign({},s));
   const base = findScenario(refId) || scenarios[0];
-  if(base) jobs.push(buildSmicScenario(base));
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  if(smicScenario) jobs.push(smicScenario);
   const seen = new Set();
   for(const s of jobs){
     if(generation !== urssafGeneration) return;
@@ -303,16 +346,18 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
 const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
-const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06-01' });
+const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut:null, smicDate:'', mode:'official' });
 function loadBenchmarks(){
   try{
     const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
-    const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
-    return {
-      smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
-      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
-    };
+    if(!saved || typeof saved !== 'object') return { ...BENCHMARK_DEFAULTS };
+    const smicBrut = Number(saved.smicBrut);
+    const smicDate = typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
+    // Toute configuration antérieure persistée venait d'une saisie manuelle.
+    // On la conserve afin de ne pas écraser un choix explicite de l'utilisateur.
+    if(!Number.isFinite(smicBrut) || smicBrut <= 0 || smicBrut > 100000 ||
+       !/^\d{4}-\d{2}-\d{2}$/.test(smicDate)) return { ...BENCHMARK_DEFAULTS };
+    return { smicBrut, smicDate, mode:'manual' };
   }catch(_){
     return { ...BENCHMARK_DEFAULTS };
   }
@@ -956,14 +1001,18 @@ function renderBenchmarks(computed){
   const { s, r } = item;
   if(!r) return '';
   const smicResult = getCachedSmicResult();
-  if(!smicResult) return '<p class="hint">Calcul du repère SMIC par le moteur Urssaf en cours…</p>';
+  if(!smicResult){
+    if(benchmarks.mode === 'official' && officialSmicState.status === 'error') return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
+    return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
+  }
 
   // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
   // strictement la durée et les montants du contrat saisi.
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
   const smicMonthlyHours = HEURES_BASE;
   const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
-  const smicHourlyGross = benchmarks.smicBrut / smicMonthlyHours;
+  const smicGross = getSmicGross();
+  const smicHourlyGross = smicGross / smicMonthlyHours;
 
   // Comparaison en net avant impôt par heure réellement travaillée.
   // Aucun recalcul du salaire de l'utilisateur à 35 h.
@@ -1001,7 +1050,7 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(benchmarks.smicBrut)}</div>
+        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(smicGross)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
@@ -1024,7 +1073,7 @@ function renderBenchmarks(computed){
     </div>
     <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
-      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
       <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
@@ -1039,13 +1088,14 @@ function bindBenchmarkSettings(){
       showToastImpl('Montant ou date du SMIC invalide.');
       return;
     }
-    benchmarks = { smicBrut: amount, smicDate: date };
+    benchmarks = { smicBrut: amount, smicDate: date, mode:'manual' };
     try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
     render();
     showToastImpl('Repère SMIC actualisé.');
   });
   if(reset) reset.addEventListener('click', () => {
     benchmarks = { ...BENCHMARK_DEFAULTS };
+    officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
     try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
     render();
   });
