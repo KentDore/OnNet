@@ -248,6 +248,8 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 /**
  * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
  * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
+ * Les assiettes fiscales annuelles sont transmises explicitement : revenu
+ * imposable pour le PAS/taux neutre et revenu d'activité pour le barème.
  * Le taux affiché hors mode personnalisé est un taux effectif dérivé des montants
  * nets retournés (écart net avant/après PAS / net imposable), car l'API ne
  * retourne pas une valeur numérique exploitable pour la règle de taux global.
