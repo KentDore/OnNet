@@ -162,7 +162,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
 test('refuse une participation salariale titres-restaurant hors limites', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto:21, partResto:30 }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
-  }), /partResto doit être comprise entre 40 et 50/)
+  }), /partResto doit être compris entre 40 et 50/)
 })
 
 test('refuse une commune sans département confirmé', async () => {
