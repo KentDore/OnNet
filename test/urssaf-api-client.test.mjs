@@ -152,7 +152,7 @@ test('prépare les paramètres de mutuelle et titres-restaurant sans inverser le
   assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur'], '60.000000%')
 })
 
-test('prépare un scénario 39 h avec les 4 heures supplémentaires mensuelles', async () => {
+test('prépare un scénario 39 h avec 4 heures supplémentaires hebdomadaires converties en heures mensuelles', async () => {
   let request
   const result = await calculateWithUrssafApi(scenario({ dureeType: '39', joursResto: 0 }), {
     fetchImpl: mockFetch(body => {
@@ -160,6 +160,7 @@ test('prépare un scénario 39 h avec les 4 heures supplémentaires mensuelles',
       const values = apiResponse(body.expressions)
       const base = Number.parseFloat(body.situation['salarié . contrat . salaire brut'])
       const overtime = 4 * 52 / 12
+      // Le mock représente le taux standard de 25 % du modèle Urssaf, pas une règle locale OnNet.
       values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.25
       values.evaluate[4].nodeValue = 250
       return response(values)
