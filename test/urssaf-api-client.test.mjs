@@ -287,6 +287,8 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
   })
 
   assert.equal(requests[0].situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
+  assert.equal(requests[0].situation['salarié . convention collective'], "'droit commun'",
+    'le scénario 39 h doit demander explicitement la majoration de droit commun au modèle Urssaf')
   assert.equal(result.overtimeHours, 4 * 52 / 12)
   assert.ok(Math.abs(result.grossCalculated - 2300) <= 0.005, 'Le brut reconstitué doit respecter la tolérance API de 0,005 €')
   assert.ok(result.baseGross < 2300, 'Le salaire de base 35 h doit être inférieur au brut total 39 h')
