@@ -146,7 +146,6 @@ export function calculatePublicodes(input = {}) {
   if (isolatedParent && (family !== 'célibataire' || children === 0)) {
     throw new TypeError('parentIsole nécessite une situation célibataire avec au moins un enfant à charge.')
   }
-  const otherTaxableIncome = numberInRange(input.autresRevenusImposables ?? 0, 'autresRevenusImposables', 0, 100000000)
 
   const situation = {
     'salarié': 'oui',
@@ -169,7 +168,6 @@ export function calculatePublicodes(input = {}) {
     'impôt . foyer fiscal . situation de famille': "'" + family + "'",
     'impôt . foyer fiscal . enfants à charge': `${children} enfant`,
     'impôt . foyer fiscal . parent isolé': isolatedParent ? 'oui' : 'non',
-    'impôt . foyer fiscal . autres revenus imposables': `${otherTaxableIncome.toFixed(2)} €/an`,
     'date': dateForPublicodes(input.date)
   }
 
