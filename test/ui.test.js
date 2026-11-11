@@ -200,7 +200,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       null, { timeout: 20000 }
     );
     assert.ok(calls.count >= 3);
-    assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /moteur officiel Mon-entreprise \/ Urssaf/);
+    assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /API officielle Mon-entreprise \(Urssaf\)/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
 
     const legacy = await page.evaluate(() => {
