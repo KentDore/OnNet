@@ -53,6 +53,18 @@ try {
   const fieldValues = await page.locator('input[type="text"]').evaluateAll(elements =>
     elements.map(element => ({ id: element.id, value: element.value }))
   )
+  let shareDialog = null
+  let shareValues = []
+  const shareButton = page.getByRole('button', { name: /générer un lien de partage/i })
+  if (await shareButton.count()) {
+    await shareButton.first().click()
+    await page.waitForTimeout(500)
+    shareDialog = await page.locator('[role="dialog"]').first().innerText().catch(() => null)
+    shareValues = await page.locator('input, textarea').evaluateAll(elements =>
+      elements.map(element => ({ id: element.id || null, value: 'value' in element ? element.value : '' }))
+        .filter(element => element.value.includes('simulateurs/salaire-brut-net'))
+    )
+  }
   const body = await page.locator('body').innerText({ timeout: 15000 })
   const labels = [
     'Salaire brut',
@@ -72,6 +84,8 @@ try {
     excerpts,
     controls,
     fieldValues,
+    shareDialog,
+    shareValues,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
