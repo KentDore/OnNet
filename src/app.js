@@ -659,16 +659,20 @@ function num(id, key, uid, value, opts){
 function renderCard(s, r, showRemove){
   const uid = s.id;
   const isRef = s.id === refId;
-
-  const trWarn = r.tr.reintegre > 0.005;
+  const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
+  const calculationError = getCalculationError(s,foyer);
   const trMotifs = {
-    sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-    sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-    plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+    sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+    api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
   };
-
+  const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
+  const resultText = r
+    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
-  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
+  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
     <div class="card-top">
       <button type="button" class="drag-handle" draggable="true" data-drag-handle="${uid}" aria-label="Déplacer la tuile ${esc(s.name)}. Utilisez les flèches gauche et droite pour la réordonner au clavier." aria-keyshortcuts="ArrowLeft ArrowRight" title="Cliquer et glisser pour réorganiser">⠿</button>
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
@@ -678,9 +682,11 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="hero">
-      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${fmt(heroValue(r))}</div>
+      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">Après impôt : <strong>${fmt(heroPasValue(r))}</strong></div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Après impôt : —'}</div>
+      <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
+      ${r && r.warnings && r.warnings.length ? `<details class="result-source"><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
     </div>
 
     <div class="field-row">
@@ -688,7 +694,7 @@ function renderCard(s, r, showRemove){
       ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
     </div>
 
-    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>
+    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}</div>
 
     <div class="field-row">
       <label>Base horaire</label>
@@ -712,15 +718,15 @@ function renderCard(s, r, showRemove){
             ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
+        <div class="sub-hint">Les deux parts sont transmises séparément au moteur Urssaf.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
           <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
-          <div class="field-row"><label for="f-part-${uid}">Part (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
+          <div class="field-row"><label for="f-part-${uid}">Part salarié (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
         </div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
-          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
+          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? (trMotifs[r.tr.motif] || trMotifs.api) : ''}</span>
         </div>
         <div class="section-tag">Mensualités &amp; primes</div>
         <div class="two-col">
@@ -733,15 +739,7 @@ function renderCard(s, r, showRemove){
             ${num(`f-primes-${uid}`,'primes',uid,s.primes,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
-        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
-          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
-          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
-            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
-            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
-          </select>
-          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
-        </div>
+        <div class="sub-hint">La version actuelle calcule 12 mensualités sans prime libre. Un scénario avec 13ᵉ/14ᵉ mois ou prime reste indisponible tant que cette donnée n'est pas raccordée à l'API Urssaf.</div>
       </div>
     </details>
   </div>`;
@@ -929,23 +927,11 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
+  const smicResult = getCachedSmicResult();
+  if(!smicResult) return '<p class="hint">Calcul du repère SMIC par le moteur Urssaf en cours…</p>';
 
   // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
   // strictement la durée et les montants du contrat saisi.
-  const neutralScenario = {
-    ...s,
-    dureeType: '35',
-    mutuelle: 0,
-    mutuellePat: 0,
-    joursResto: 0,
-    valeurResto: 0,
-    partResto: 0,
-    nbMois: 12,
-    primes: 0,
-    absenceType: 'none',
-  };
-  const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
-  const smicResult = compute(neutralSmicScenario, foyer);
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
   const smicMonthlyHours = HEURES_BASE;
   const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
@@ -1012,7 +998,7 @@ function renderBenchmarks(computed){
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
       <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net avant impôt est une estimation du simulateur ; le taux horaire brut est calculé à partir du brut mensuel.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
