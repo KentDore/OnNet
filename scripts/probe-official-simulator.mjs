@@ -12,7 +12,26 @@ const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ locale: 'fr-FR' })
   const response = await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 60000 })
-  await page.waitForTimeout(10000)
+  await page.waitForTimeout(3000)
+  const closeDialog = page.getByRole('button', { name: /fermer/i })
+  if (await closeDialog.count()) {
+    await closeDialog.first().click()
+    await page.waitForTimeout(1000)
+  }
+  const controls = await page.locator('input, button, select, [role="combobox"]').evaluateAll(elements =>
+    elements.slice(0, 100).map(element => ({
+      tag: element.tagName,
+      type: element.getAttribute('type'),
+      id: element.id || null,
+      name: element.getAttribute('name'),
+      placeholder: element.getAttribute('placeholder'),
+      ariaLabel: element.getAttribute('aria-label'),
+      role: element.getAttribute('role'),
+      value: 'value' in element ? element.value : null,
+      text: (element.innerText || element.textContent || '').trim().slice(0, 100)
+    }))
+  )
+  await page.waitForTimeout(5000)
   const body = await page.locator('body').innerText({ timeout: 15000 })
   const labels = [
     'Salaire brut',
@@ -30,6 +49,7 @@ try {
     title: await page.title(),
     url,
     excerpts,
+    controls,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
