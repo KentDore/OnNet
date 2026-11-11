@@ -2,81 +2,63 @@
 
 **Le brut promet. Le net décide.**
 
-OnNet est un simulateur de salaire brut → net pour le secteur privé français. Il compare plusieurs offres ou scénarios, y compris les différences d'horaires, de primes et de mensualités.
+OnNet compare plusieurs scénarios de rémunération pour le secteur privé français.
 
-L'application fonctionne dans le navigateur, sans compte ni serveur de calcul. Les scénarios sont enregistrés localement dans le navigateur. Elle n'envoie pas automatiquement les données à un serveur.
+## État de la migration
 
-**Attention aux liens de partage :** les données choisies sont encodées dans le fragment de l'URL. Ce n'est ni chiffré ni protégé par mot de passe ; toute personne qui reçoit le lien peut lire les données incluses. N'incluez les détails de paie et la situation fiscale que si nécessaire.
+La branche `migration/publicodes-urssaf` raccorde le calculateur principal à l’API REST officielle **Mon-entreprise / Urssaf**. Cette migration n’est pas encore publiée : `main`, `index.html` et la version actuellement accessible sur GitHub Pages restent inchangés jusqu’à validation et approbation explicite.
 
-## Utilisation
+## Source des calculs et confidentialité
 
-- Ouvrir `Onnet-2.1.6.html` pour utiliser la version autonome hors ligne.
-- `index.html` correspond à la version publiée sur GitHub Pages.
-- Aucune installation n'est nécessaire pour utiliser l'application.
+Les montants de brut reconstitué, de net avant impôt, de net imposable, de cotisations et de prélèvement à la source proviennent de l’API officielle Urssaf. OnNet ne calcule pas localement les cotisations ni l’impôt et ne bascule pas vers un ancien moteur en cas d’échec.
 
-## Version 2.1.2
+Avant l’envoi, l’utilisateur doit cliquer sur **« Calculer avec l’Urssaf »**. Les données nécessaires (rémunération, horaires, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale) sont alors transmises à l’API. Une connexion Internet est indispensable. Les scénarios, réglages et liens de partage restent gérés dans le navigateur.
 
-- **Repères salariaux cohérents** : les écarts au SMIC et au salaire médian sont désormais calculés en net avant impôt, sur une base de 35 h. Le salaire net estimé après impôt affiché pour l'utilisateur reste inchangé.
-- **SMIC** : affichage du brut mensuel à 35 h, du taux horaire brut correspondant et d'une estimation du net avant impôt.
-- **Salaire médian** : utilisation directe du repère de 2 190 € net avant impôt (INSEE 2024), sans reconstitution artificielle ni application du taux fiscal individuel.
+Les résultats restent des estimations : le modèle fiscal Urssaf comporte des règles simplifiées ou expérimentales. Les montants ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Les avertissements et variables recevant une valeur par défaut sont signalés.
 
-## Version 2.1.0
+## Fonctionnalités raccordées
 
-- **Mutuelle distincte** : saisie de la part salariale et de la part employeur. La part employeur est réintégrée au net imposable ; la part salariale réduit le net payé, mais n'est pas déduite du revenu imposable.
-- **13ᵉ/14ᵉ mois** : option pour préciser si les heures supplémentaires sont incluses dans la mensualité supplémentaire d'un contrat à 39 h.
-- **Foyer fiscal** : distinction entre personne seule, imposition commune des personnes mariées/pacsées et concubinage avec déclarations séparées ; ajout du cas parent isolé (case T). La résidence alternée n'est pas modélisée.
-- **Partage maîtrisé** : sélection des salaires à inclure, avec options séparées pour les détails de paie et la situation fiscale.
-- **Comparaison et ergonomie** : l'insight suit la métrique sélectionnée, le panneau des repères salariaux utilise les couleurs du thème, et les événements du bouton d'ajout et des modales sont sécurisés contre les erreurs de démarrage et les courses d'animation.
-- Synchronisation de `index.html` et du fichier autonome versionné avec les sources de développement.
+- Comparaison de plusieurs salaires, graphiques, réorganisation des cartes et simulation d’augmentation.
+- Saisie du brut mensuel, en 35 h ou 39 h ; le scénario 39 h transmet 4 heures supplémentaires hebdomadaires avec une majoration par défaut de 25 %.
+- CDI du secteur privé non-cadre, droit commun, avec commune de l’établissement modifiable pour chaque salaire (Pacé par défaut).
+- Saisie séparée des parts salariale et employeur de mutuelle.
+- Titres-restaurant : nombre, valeur et part salariale.
+- Impôt au barème standard du modèle ou taux de prélèvement personnalisé.
+- Repère SMIC : net avant impôt calculé via l’API Urssaf. Le montant brut de référence est modifiable.
+- Repère de salaire médian privé : référence INSEE 2024 (2 190 € net mensuel en EQTP).
+- Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 
-## Fonctionnalités
+## Limites actuelles
 
-- Comparaison multi-salaires et réorganisation des cartes par glisser-déposer ou au clavier.
-- Saisie mensuelle ou annuelle, primes, nombre de mensualités (1 à 24, avec 12/13/14 comme cas usuels) et choix de base pour le 13ᵉ/14ᵉ mois.
-- Calcul estimatif des cotisations du régime non-cadre du secteur privé : CSG/CRDS, vieillesse, retraite complémentaire, réduction sur les heures supplémentaires.
-- Titres-restaurant avec vérification des limites de participation employeur et du plafond d'exonération.
-- Impôt sur le revenu estimé au barème 2026 applicable aux revenus 2025, ou calcul au taux de prélèvement à la source saisi par l'utilisateur.
-- Net horaire, net annuel, net après impôt, graphique de répartition, comparaison au SMIC estimé et à un repère national de salaire médian.
-- Modules d'augmentation et d'absence, impression et export PDF via le navigateur.
+- Le périmètre raccordé est limité au CDI privé non-cadre, à temps plein, en droit commun et aux durées 35 h / 39 h. Les conventions particulières, le temps partiel, les cadres, la fonction publique et certains régimes territoriaux ne sont pas couverts par cette première version.
+- Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés : un scénario qui les utilise est bloqué au lieu de recevoir une estimation locale.
+- Le net annuel affiché est le net mensuel Urssaf multiplié par 12 ; ce n’est pas une évaluation annuelle indépendante. Le salaire brut annuel saisi à l’onboarding est divisé par 12.
+- La commune par défaut est Pacé. Vérifiez ou modifiez cette commune pour chaque poste comparé.
+- Le salaire médian est une référence nationale, pas un repère spécifique au métier ou à la région.
+- Le module de simulation d’absence a été retiré.
 
-## Limites à connaître
+## Données partagées
 
-OnNet fournit une **estimation**, pas un bulletin de paie. Le moteur modélise uniquement un salarié non-cadre du secteur privé. Il ne couvre pas notamment le temps partiel, la régularisation progressive des plafonds en cours d'année, la prévoyance et les régimes Alsace-Moselle.
+Les scénarios enregistrés localement restent dans le navigateur. Un lien de partage encode les données sélectionnées dans le fragment de l’URL ; ce contenu n’est ni chiffré ni protégé par mot de passe. N’incluez les détails de paie et la situation fiscale que si nécessaire.
 
-- **Mutuelle** : les valeurs par défaut sont des exemples de 30 € côté salarié et 30 € côté employeur ; remplacez-les par les montants du bulletin de paie. Les anciennes sauvegardes sans part employeur distincte conservent une hypothèse d'égalité avec la part salariale.
-- **Absences** : congés et arrêts sont simplifiés ; l'arrêt ne reproduit pas le calcul réel des IJSS, de l'ancienneté et de la convention collective.
-- **Heures supplémentaires** : la part de net imposable qui leur est attribuable est estimée au prorata du brut.
-- **Impôt** : le montant affiché est le supplément d'impôt imputable au salaire comparé, pas l'impôt total du foyer. Ne sont pas intégrés les crédits/réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé, acomptes, régularisations et contribution exceptionnelle sur les hauts revenus. Le barème 2027 applicable aux revenus 2026 n'étant pas encore connu, l'estimation de ces revenus restera approximative.
-- **Parent isolé** : le cas de la résidence alternée et les situations fiscales particulières non décrites dans l'interface ne sont pas modélisés.
-- **Repères salariaux** : le salaire médian est une référence nationale du privé (INSEE 2024), pas un repère spécifique au métier ou à la région. Le net du SMIC est estimé par le simulateur.
+## Développement
 
-Le coût employeur n'est pas calculé : une majoration forfaitaire du brut donnerait une estimation trompeuse, notamment autour du SMIC.
+Le client API est dans `src/urssaf-api-client.mjs`. `src/ui-utils.js` ne contient que des utilitaires de présentation. Le build autonome embarque le client API et ne charge pas l’ancien calculateur `src/calc.js`. Le paquet local `modele-social` / `publicodes` est conservé pour les diagnostics et tests de parité, pas pour calculer les résultats présentés à l’utilisateur.
 
-## Dernière correction — 2.1.6
-
-Dans le comparatif des repères, le net avant impôt devient la valeur principale. Le net après impôt estimé au barème n'est plus présenté comme un montant reçu sur le compte bancaire lorsque l'utilisateur n'a pas renseigné son taux de prélèvement à la source. Le taux horaire et la durée réelle du contrat restent visibles.
-
-## Développement et versionnage
-
-Les sources de développement sont dans `src/`. Le script génère un fichier HTML autonome contenant les styles et les scripts :
+Construire un HTML de test sans modifier les fichiers de production :
 
 ```sh
-node scripts/build.js 2.1.0
-node scripts/build.js 2.1.0 index.html
+npm ci
+node scripts/build.js 2.1.6 /tmp/Onnet-migration.html
 ```
 
-La première commande génère `Onnet-2.1.0.html` ; la seconde reconstruit la page `index.html` publiée. Les deux fichiers doivent rester identiques.
-
-Le versionnage suit [SemVer](https://semver.org/lang/fr/) : majeur pour une rupture importante, mineur pour une nouvelle fonctionnalité rétrocompatible, correctif pour une correction ou un ajustement visuel.
-
-## Tests
+Tests :
 
 ```sh
+npm run test:prototype
 node --test test/calc.test.js
 node --test test/build.test.js
 node --test test/ui.test.js
 ```
 
-Les tests navigateur nécessitent Playwright et Chromium. La CI les installe automatiquement. Les tests vérifient aussi que `index.html` et le fichier autonome versionné correspondent exactement aux sources.
-
-Les paramètres légaux sont regroupés au début de `src/calc.js` et doivent être revalidés chaque année.
+Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement.
