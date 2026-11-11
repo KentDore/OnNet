@@ -1,4 +1,5 @@
 name: Diagnostic API Urssaf (validation production)
+# Le diagnostic navigateur du simulateur officiel peut être déclenché par [probe-simulator].
 
 on:
   workflow_dispatch:
