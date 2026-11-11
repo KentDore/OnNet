@@ -92,9 +92,9 @@ test('présente les deux repères avec le net mensuel en premier et le taux net 
     const smicCard = cards.nth(0);
     const medianCard = cards.nth(1);
     assert.match(await smicCard.locator('.benchmark-label').innerText(), /SMIC/);
-    assert.match(await smicCard.locator('.benchmark-meta').first().innerText(), /Net horaire:.*Brut mensuel:/);
+    assert.match(await smicCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Brut mensuel\s*:/);
     assert.match(await medianCard.locator('.benchmark-label').innerText(), /Salaire médian/);
-    assert.match(await medianCard.locator('.benchmark-meta').first().innerText(), /Net horaire:.*Référence mensuelle nette/);
+    assert.match(await medianCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Référence mensuelle nette/);
     assert.match(await medianCard.locator('details').innerText(), /brut mensuel correspondant n'est pas affiché/i);
   } finally {
     await context.close();
@@ -111,7 +111,7 @@ test('compare le salaire réel au SMIC sans le recalculer à 35 h', async () => 
     assert.match(text, /contrat de 39 h/);
     assert.match(text, /net avant impôt/);
     assert.equal(await page.getByText('Votre net estimé reçu à 35 h', { exact: true }).count(), 0);
-    assert.match(await page.locator('.benchmark-heading').innerText(), /taux horaires/);
+    assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
   } finally {
     await context.close();
   }
@@ -254,23 +254,17 @@ test('le statut fiscal distingue seul, concubinage et foyer commun', async () =>
   }
 });
 
-test('compare un contrat de 39 h au médian après recalcul réel sur 35 h', async () => {
+test('compare un contrat de 39 h sans convertir le salaire à 35 h', async () => {
   const { context, page } = await openApp();
   try {
-    const expected = await page.evaluate(() => {
-      const scenario = scenarios[0];
-      const result = compute(scenario, foyer);
-      const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
-      return compute({ ...scenario, brut: brut35, dureeType: '35' }, foyer).netApresImpot;
-    });
+    const expected = await page.evaluate(() => compute(scenarios[0], foyer).netApresImpot);
     const displayed = await page.locator('.benchmark-your-salary strong').innerText();
-    const contractDetails = page.locator('.benchmark-item').nth(1).locator('.benchmark-details');
-    await contractDetails.locator('summary').click();
-    const actual39 = await contractDetails.locator('p').innerText();
-    const amount = Number(displayed.match(/[0-9][0-9\s]*,[0-9]{2}/)?.[0].replace(/\s/g, '').replace(',', '.') || displayed.match(/[0-9][0-9\s]*/)?.[0].replace(/\s/g, ''));
+    const amount = Number(displayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
     assert.ok(Number.isFinite(amount), displayed);
-    assert.ok(Math.abs(amount - expected) < 1, `net 35 h affiché ${amount}, attendu ${expected}`);
-    assert.match(actual39, /39 h/);
+    assert.ok(Math.abs(amount - expected) < 1, `net réel affiché ${amount}, attendu ${expected}`);
+    const details = page.locator('.benchmark-item').nth(1).locator('.benchmark-details');
+    await details.locator('summary').click();
+    assert.match(await details.innerText(), /39 h/);
   } finally {
     await context.close();
   }
@@ -282,8 +276,8 @@ test('compare les repères en net avant impôt sans modifier le net reçu affich
     assert.equal(await page.locator('.benchmark-item').count(), 2);
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
     assert.match(await page.locator('.benchmark-heading').innerText(), /net avant impôt/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /reçu à 35 h/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Base des écarts/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net estimé reçu/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre base/);
     assert.equal(await page.locator('.benchmark-details summary').nth(0).innerText(), 'Méthode de calcul');
     assert.equal(await page.locator('.benchmark-details summary').nth(1).innerText(), 'Estimation à votre durée de travail');
     assert.equal(await page.locator('.benchmark-details').first().evaluate(el => el.open), false);
@@ -294,13 +288,11 @@ test('compare les repères en net avant impôt sans modifier le net reçu affich
 
     const expected = await page.evaluate(() => {
       const item = scenarios[0];
-      const result = compute(item, foyer);
-      const brut35 = Math.max(0, result.brutHoraire * HEURES_BASE);
-      const base35 = compute({ ...item, brut: brut35, dureeType: '35', absenceType: 'none', absenceDuree: 0 }, foyer);
+      const actual = compute(item, foyer);
       const neutral = { ...item, brut: 1867.02, dureeType: '35', mutuelle: 0, mutuellePat: 0,
         joursResto: 0, valeurResto: 0, partResto: 0, nbMois: 12, primes: 0,
         absenceType: 'none', absenceDuree: 0 };
-      return { userBeforeTax: base35.netApres, userAfterTax: base35.netApresImpot, smicBeforeTax: compute(neutral, foyer).netApres };
+      return { userBeforeTax: actual.netApres, userAfterTax: actual.netApresImpot, smicBeforeTax: compute(neutral, foyer).netApres };
     });
     const salaryText = await page.locator('.benchmark-your-salary strong').innerText();
     const salaryAmount = Number(salaryText.replace(/[^0-9,.-]/g, '').replace(',', '.'));
@@ -310,7 +302,7 @@ test('compare les repères en net avant impôt sans modifier le net reçu affich
     const smicDisplayed = await page.locator('.benchmark-item').nth(0).locator('.benchmark-value').innerText();
     const smicAmount = Number(smicDisplayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
     assert.ok(Math.abs(smicAmount - expected.smicBeforeTax) < 1, 'SMIC comparé en net avant impôt');
-    assert.match(await page.locator('.benchmark-item').nth(0).innerText(), /12,31.*brut\/heure|12,31.*€/);
+    assert.match(await page.locator('.benchmark-item').nth(0).innerText(), /12,31.*brut\/heure|Brut mensuel/);
 
     await page.locator('#benchmarkBody .benchmark-settings summary').click();
     await page.locator('#benchmarkSmicBrut').fill('1900');
