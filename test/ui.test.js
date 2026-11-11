@@ -364,6 +364,21 @@ test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf
   }
 });
 
+test('limite la valeur unitaire des titres-restaurant à 1 000 € dans la carte', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const field = page.locator('#cardsBody [data-key="valeurResto"]').first();
+    await field.fill('1200');
+    await field.blur();
+    assert.equal(await field.inputValue(), '1000');
+    assert.ok(calls.bodies.some(body =>
+      body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'] === '1000.00 €'
+    ));
+  } finally {
+    await context.close();
+  }
+});
+
 test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () => {
   const { context, page, calls } = await openApp();
   try {
