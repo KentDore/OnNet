@@ -14,6 +14,68 @@ let server;
 let baseUrl;
 let tempDir;
 
+const ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate';
+
+function getNumber(situation, key) {
+  const value = Number.parseFloat(String(situation[key] ?? '0'));
+  return Number.isFinite(value) ? value : 0;
+}
+
+function makeApiResponse(request, options = {}) {
+  const situation = request.situation || {};
+  const baseGross = getNumber(situation, 'salarié . contrat . salaire brut');
+  const overtimeHours = getNumber(situation, 'salarié . temps de travail . heures supplémentaires');
+  const gross = baseGross + (baseGross / 151.67) * overtimeHours * 1.25;
+
+  const healthTotal = getNumber(situation, 'salarié . cotisations . prévoyances . santé . montant');
+  const healthEmployerRate = getNumber(situation, 'salarié . cotisations . prévoyances . santé . taux employeur') / 100;
+  const employeeHealth = healthTotal * (1 - healthEmployerRate);
+  const employerHealth = healthTotal * healthEmployerRate;
+
+  const ticketCount = getNumber(situation, 'salarié . rémunération . frais professionnels . titres-restaurant . nombre');
+  const ticketValue = getNumber(situation, 'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire');
+  const ticketEmployerRate = getNumber(situation, 'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur') / 100;
+  const mealTicketEmployer = ticketCount * ticketValue * ticketEmployerRate;
+  const mealTicketEmployee = ticketCount * ticketValue - mealTicketEmployer;
+
+  const employeeContributions = gross * 0.22 + employeeHealth;
+  const netBeforeTax = gross - employeeContributions - mealTicketEmployee;
+  const taxableNet = gross * 0.82 + employerHealth;
+  const overtimePay = (baseGross / 151.67) * overtimeHours * 1.25;
+
+  const values = {
+    'salarié . rémunération . brut': gross,
+    'salarié . rémunération . net . à payer avant impôt': netBeforeTax,
+    'salarié . rémunération . net . imposable': taxableNet,
+    'salarié . cotisations . salarié': employeeContributions,
+    'salarié . rémunération . heures supplémentaires': overtimePay,
+    'salarié . cotisations . prévoyances . santé . salarié': employeeHealth,
+    'salarié . cotisations . prévoyances . santé . employeur': employerHealth,
+    'salarié . rémunération . frais professionnels . titres-restaurant . salarié': mealTicketEmployee,
+    'salarié . rémunération . frais professionnels . titres-restaurant . employeur': mealTicketEmployer,
+    'salarié . rémunération . frais professionnels . non déductible': 0,
+    'salarié . rémunération . net . payé après impôt': netBeforeTax - 100,
+    'impôt . montant': 1200,
+    "impôt . taux d'imposition": 5
+  };
+
+  return {
+    evaluate: request.expressions.map(expression => ({
+      nodeValue: values[expression] ?? 0,
+      missingVariables: options.missingVariables || []
+    })),
+    warnings: options.warnings || []
+  };
+}
+
+async function waitForCalls(calls, expected, timeoutMs = 10000) {
+  const deadline = Date.now() + timeoutMs;
+  while (calls.count < expected && Date.now() < deadline) {
+    await new Promise(resolve => setTimeout(resolve, 50));
+  }
+  assert.ok(calls.count >= expected, `attendu au moins ${expected} appels API, obtenu ${calls.count}`);
+}
+
 test.before(async () => {
   const root = path.resolve(__dirname, '..');
   tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnet-ui-'));
@@ -33,7 +95,6 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
-
   browser = await chromium.launch({ headless: true });
 });
 
@@ -43,9 +104,30 @@ test.after(async () => {
   if (tempDir) fs.rmSync(tempDir, { recursive: true, force: true });
 });
 
-async function openApp() {
+async function openApp(options = {}) {
   const context = await browser.newContext();
-  await context.grantPermissions(['clipboard-read', 'clipboard-write'], { origin: baseUrl });
+  const calls = { count: 0, bodies: [] };
+  await context.route('**/api/v1/evaluate', async route => {
+    const request = route.request().postDataJSON();
+    calls.count += 1;
+    calls.bodies.push(request);
+    if (options.failApi) {
+      await route.fulfill({
+        status: 503,
+        contentType: 'application/json',
+        body: JSON.stringify({ error: 'Service unavailable' })
+      });
+      return;
+    }
+    const body = makeApiResponse(request, options);
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      headers: { 'access-control-allow-origin': '*' },
+      body: JSON.stringify(body)
+    });
+  });
+
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.stack || error.message));
@@ -58,21 +140,33 @@ async function openApp() {
           mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
           partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
           maintienPct: 90, carenceCouverte: false,
-          absenceType: 'none', absenceDuree: 0
+          absenceType: 'arret', absenceDuree: 5
         }],
         refId: 0,
         metric: 'netHoraire',
         displayAmt: 'net',
-        displayPeriod: 'mensuel'
+        displayPeriod: 'mois'
       }));
     }
   });
   await page.goto(baseUrl);
-  if(pageErrors.length){
+  if (pageErrors.length) {
     await context.close();
-    throw new Error('Erreur JavaScript au chargement :\\n' + pageErrors.join('\\n'));
+    throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
   }
-  return { context, page };
+
+  if (options.consent !== false) {
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() => {
+      const status = document.getElementById('urssafStatusText')?.textContent || '';
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return status.includes('Calcul terminé') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
+        document.querySelectorAll('.benchmark-item').length === 2;
+    }, null, { timeout: 20000 });
+  }
+
+  return { context, page, calls };
 }
 
 async function addSecondScenario(page, gross = '3200') {
@@ -84,46 +178,95 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
-test('présente les deux repères avec le net mensuel en premier et le taux net horaire', async () => {
-  const { context, page } = await openApp();
+test('indique la source Urssaf et ne transmet aucune donnée avant consentement', async () => {
+  const { context, page, calls } = await openApp({ consent: false });
   try {
-    const cards = page.locator('.benchmark-item');
-    assert.equal(await cards.count(), 2);
-    const smicCard = cards.nth(0);
-    const medianCard = cards.nth(1);
-    assert.match(await smicCard.locator('.benchmark-label').innerText(), /SMIC/);
-    assert.match(await smicCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Brut mensuel\s*:/);
-    assert.match(await medianCard.locator('.benchmark-label').innerText(), /Salaire médian/);
-    assert.match(await medianCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Référence mensuelle nette/);
-    const medianDetails = medianCard.locator('details');
-    await medianDetails.locator('summary').click();
-    assert.match(await medianDetails.innerText(), /brut mensuel correspondant n'est pas affiché/i);
+    assert.equal(calls.count, 0);
+    assert.equal(await page.locator('#absenceModule').count(), 0);
+    assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /transmis à l’API Urssaf/);
+    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
+
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      null, { timeout: 20000 }
+    );
+    assert.ok(calls.count >= 4);
+    assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /moteur officiel Mon-entreprise \/ Urssaf/);
+    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
+
+    const legacy = await page.evaluate(() => {
+      const data = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return data.scenarios[0];
+    });
+    for (const key of ['absenceType', 'absenceDuree', 'maintienPct', 'carenceCouverte']) {
+      assert.equal(Object.hasOwn(legacy, key), false, `l’ancienne propriété ${key} doit être neutralisée`);
+    }
   } finally {
     await context.close();
   }
 });
 
-test('compare le salaire réel au SMIC sans le recalculer à 35 h', async () => {
-  const { context, page } = await openApp();
+test('les chiffres principaux et le repère SMIC sont calculés via l’API', async () => {
+  const { context, page, calls } = await openApp();
   try {
-    const benchmark = page.locator('.benchmark-your-salary');
-    await benchmark.waitFor({ state: 'visible' });
-    const text = await benchmark.innerText();
-    assert.match(text, /Votre net avant impôt/);
-    assert.match(text, /contrat de 39 h/);
-    assert.match(text, /net avant impôt/);
-    assert.equal(await page.getByText('Votre net estimé reçu à 35 h', { exact: true }).count(), 0);
+    assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
+    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
     assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
+    const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
+    const benchmarkNet = await page.locator('.benchmark-your-salary strong').innerText();
+    assert.equal(cardNet, benchmarkNet, 'la carte et le comparatif doivent réutiliser le même net Urssaf');
+    assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
   }
 });
 
-test('affiche le comparatif et permet d’ajouter un salaire', async () => {
-  const { context, page } = await openApp();
+test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', async () => {
+  const { context, page } = await openApp({
+    warnings: [{ message: 'Une règle expérimentale a été utilisée.' }],
+    missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
+  });
   try {
-    assert.equal(await page.locator('#cardsBody [data-card]').count(), 1);
-    await addSecondScenario(page);
+    assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    const diagnostics = await page.locator('#urssafWarningsList').innerText();
+    assert.match(diagnostics, /règle expérimentale/);
+    assert.match(diagnostics, /catégorie professionnelle/);
+    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1);
+  } finally {
+    await context.close();
+  }
+});
+
+test('gère une indisponibilité Urssaf sans afficher de résultat local', async () => {
+  const { context, page, calls } = await openApp({ consent: false, failApi: true });
+  try {
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      document.querySelector('#cardsBody [data-result-state="error"]') !== null,
+      null, { timeout: 12000 }
+    );
+    assert.ok(calls.count >= 1);
+    assert.equal(await page.locator('#cardsBody .hero-value').first().innerText(), '—');
+    assert.match(await page.locator('#cardsBody .result-source').first().innerText(), /indisponible|joindre l’API Urssaf/);
+    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const before = calls.count;
+    await addSecondScenario(page, '3200');
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
+      null, { timeout: 15000 }
+    );
+    assert.ok(calls.count > before);
     assert.equal(await page.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3200');
   } finally {
@@ -131,17 +274,25 @@ test('affiche le comparatif et permet d’ajouter un salaire', async () => {
   }
 });
 
-test('conserve une modification du brut après rechargement', async () => {
-  const { context, page } = await openApp();
+test('conserve la saisie du brut après rechargement sans consentement implicite', async () => {
+  const { context, page, calls } = await openApp();
   try {
+    const before = calls.count;
     const gross = page.locator('#cardsBody [data-key="brut"]').first();
     await gross.fill('3100');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       return state && state.scenarios[0].brut === 3100;
     });
+    await page.waitForFunction(() =>
+      document.querySelector('#cardsBody [data-result-state="ready"]') !== null &&
+      document.querySelector('#cardsBody .hero-value')?.textContent !== '—',
+      null, { timeout: 12000 }
+    );
+    assert.ok(calls.count > before);
     await page.reload();
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3100');
+    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
   } finally {
     await context.close();
   }
@@ -171,152 +322,45 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     await sharedPage.goto(shareUrl);
     assert.equal(await sharedPage.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await sharedPage.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3450');
+    assert.equal(await sharedPage.locator('#urssafCalculateBtn').isVisible(), true);
   } finally {
     await context.close();
   }
 });
 
-test('le partage permet de sélectionner les salaires et les données sensibles', async () => {
-  const { context, page } = await openApp();
+test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async () => {
+  const { context, page, calls } = await openApp();
   try {
-    await addSecondScenario(page, '3450');
-    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
-    await secondCard.locator('details.more summary').click();
-    await secondCard.locator('[data-key="mutuelle"]').fill('35');
-    await secondCard.locator('[data-key="mutuellePat"]').fill('65');
+    const before = calls.count;
     await page.locator('#foyerModuleToggle').click();
     await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    await page.locator('#foyerConjoint').fill('45000');
-
-    await page.locator('#shareBtn').click();
-    await page.locator('#shareScenario-0').uncheck();
-    await page.locator('#shareIncludeDetails').check();
-    await page.locator('#shareIncludeFoyer').check();
-    await page.locator('#shareCreateBtn').click();
-    const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
-    const payload = await page.evaluate(url => {
-      const encoded = new URL(url).hash.slice('#share='.length).replace(/-/g, '+').replace(/_/g, '/');
-      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
-      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
-    }, shareUrl);
-    assert.equal(payload.scenarios.length, 1);
-    assert.equal(payload.scenarios[0].brut, 3450);
-    assert.equal(payload.scenarios[0].mutuelle, 35);
-    assert.equal(payload.scenarios[0].mutuellePat, 65);
-    assert.equal(payload.v, 2);
-    assert.equal(payload.foyer.situation, 'commun');
-    assert.equal(payload.foyer.autresRevenus, 45000);
+    await page.locator('#foyerConjoint').fill('24000');
+    await waitForCalls(calls, before + 2, 15000);
+    assert.ok(calls.bodies.some(body =>
+      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
+      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
+    ));
   } finally {
     await context.close();
   }
 });
 
-test('le calcul du 13e mois affiche le choix selon la durée et les mensualités', async () => {
-  const { context, page } = await openApp();
+test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local', async () => {
+  const { context, page, calls } = await openApp();
   try {
+    const before = calls.count;
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
-    const nbMois = card.locator('[data-key="nbMois"]');
-    await nbMois.fill('13');
-    const basisRow = card.locator('[id^="c-13m-basis-row-"]');
+    await card.locator('[data-key="nbMois"]').fill('13');
+    await card.locator('[data-key="nbMois"]').blur();
     await page.waitForFunction(() => {
-      const row = document.querySelector('[id^="c-13m-basis-row-"]');
-      return row && row.style.display !== 'none';
-    });
-    await card.locator('[data-duree="35"]').click();
-    assert.equal(await basisRow.evaluate(el => el.style.display), 'none');
-    await card.locator('[data-duree="39"]').click();
-    assert.notEqual(await basisRow.evaluate(el => el.style.display), 'none');
-  } finally {
-    await context.close();
-  }
-});
-
-test('le statut fiscal distingue seul, concubinage et foyer commun', async () => {
-  const { context, page } = await openApp();
-  try {
-    await page.locator('#foyerModuleToggle').click();
-    await page.locator('#foyerCharges').selectOption('1');
-    await page.locator('#foyerParentIsoleRow').waitFor({ state: 'visible' });
-    await page.locator('#foyerParentIsole').check();
-    let state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
-    assert.equal(state.foyer.parentIsole, true);
-    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
-    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
-    assert.equal(await page.locator('#foyerParentIsoleRow').isVisible(), false);
-    state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
-    assert.equal(state.foyer.situation, 'concubinage');
-    assert.equal(state.foyer.couple, false);
-    assert.equal(state.foyer.parentIsole, false);
-    await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
-    assert.equal(state.foyer.couple, true);
-  } finally {
-    await context.close();
-  }
-});
-
-test('compare un contrat de 39 h sans convertir le salaire à 35 h', async () => {
-  const { context, page } = await openApp();
-  try {
-    const expected = await page.evaluate(() => compute(scenarios[0], foyer).netApres);
-    const displayed = await page.locator('.benchmark-your-salary strong').innerText();
-    const amount = Number(displayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
-    assert.ok(Number.isFinite(amount), displayed);
-    assert.ok(Math.abs(amount - expected) < 1, `net avant impôt affiché ${amount}, attendu ${expected}`);
-    const details = page.locator('.benchmark-item').nth(1).locator('.benchmark-details');
-    await details.locator('summary').click();
-    assert.match(await details.innerText(), /39 h/);
-  } finally {
-    await context.close();
-  }
-});
-
-test('affiche le net avant impôt comme valeur principale', async () => {
-  const { context, page } = await openApp();
-  try {
-    assert.equal(await page.locator('.benchmark-item').count(), 2);
-    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1867.02');
-    assert.match(await page.locator('.benchmark-heading').innerText(), /net avant impôt/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Net horaire/);
-    assert.equal(await page.locator('.benchmark-details summary').nth(0).innerText(), 'Méthode de calcul');
-    assert.equal(await page.locator('.benchmark-details summary').nth(1).innerText(), 'Méthode de calcul');
-    assert.equal(await page.locator('.benchmark-details').first().evaluate(el => el.open), false);
-    assert.equal(await page.locator('.benchmark-details').nth(1).evaluate(el => el.open), false);
-    assert.equal(await page.locator('.benchmark-disclaimer').count(), 0);
-    const gridColumns = await page.locator('.benchmark-grid').evaluate(el => getComputedStyle(el).gridTemplateColumns);
-    assert.equal(gridColumns.trim().split(/\s+/).length, 2);
-
-    const expected = await page.evaluate(() => {
-      const item = scenarios[0];
-      const actual = compute(item, foyer);
-      const neutral = { ...item, brut: 1867.02, dureeType: '35', mutuelle: 0, mutuellePat: 0,
-        joursResto: 0, valeurResto: 0, partResto: 0, nbMois: 12, primes: 0,
-        absenceType: 'none', absenceDuree: 0 };
-      return { userBeforeTax: actual.netApres, smicBeforeTax: compute(neutral, foyer).netApres };
-    });
-    const salaryText = await page.locator('.benchmark-your-salary strong').innerText();
-    const salaryAmount = Number(salaryText.replace(/[^0-9,.-]/g, '').replace(',', '.'));
-    assert.ok(Math.abs(salaryAmount - expected.userBeforeTax) < 1, 'Le net avant impôt doit être la valeur principale');
-    const baseText = await page.locator('.benchmark-your-salary').innerText();
-    assert.match(baseText, new RegExp(Math.round(expected.userBeforeTax).toString().replace(/\B(?=(\d{3})+(?!\d))/g, '[\\s\\u202f]?')));
-    const smicDisplayed = await page.locator('.benchmark-item').nth(0).locator('.benchmark-value').innerText();
-    const smicAmount = Number(smicDisplayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
-    assert.ok(Math.abs(smicAmount - expected.smicBeforeTax) < 1, 'SMIC comparé en net avant impôt');
-    assert.match(await page.locator('.benchmark-item').nth(0).innerText(), /12,31.*brut\/heure|Brut mensuel/);
-
-    await page.locator('#benchmarkBody .benchmark-settings summary').click();
-    await page.locator('#benchmarkSmicBrut').fill('1900');
-    await page.locator('#benchmarkSmicDate').fill('2027-01-01');
-    await page.locator('#saveBenchmarkSettings').click();
-    await page.waitForFunction(() => {
-      const state = JSON.parse(localStorage.getItem('onnet.benchmarks.v1') || 'null');
-      return state && state.smicBrut === 1900 && state.smicDate === '2027-01-01';
-    });
-    assert.match(await page.locator('#benchmarkBody').innerText(), /1\s?900/);
-    await page.reload();
-    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1900.00');
+      const card = document.querySelector('#cardsBody [data-card]');
+      return card?.dataset.resultState === 'error' &&
+        (card.querySelector('.result-source')?.textContent || '').includes('13ᵉ/14ᵉ mois');
+    }, null, { timeout: 5000 });
+    await new Promise(resolve => setTimeout(resolve, 500));
+    assert.equal(calls.count, before, 'le scénario non pris en charge ne doit pas appeler un moteur local ou une seconde API');
+    assert.equal(await card.locator('.hero-value').innerText(), '—');
   } finally {
     await context.close();
   }
@@ -341,4 +385,3 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
     await context.close();
   }
 });
-
