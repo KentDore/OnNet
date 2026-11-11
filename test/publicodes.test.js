@@ -73,6 +73,13 @@ test('la mutuelle salariale et patronale sont bien distinguées', () => {
   near(result.employerHealth, 36, 0.01, 'part employeur mutuelle')
 })
 
+test('refuse explicitement les titres-restaurant tant que la règle upstream est en erreur', () => {
+  assert.throws(
+    () => calculatePublicodes(scenario({ joursResto: 21, valeurResto: 8 })),
+    /titres-restaurant sont temporairement désactivés/
+  )
+})
+
 test('rejette les valeurs de saisie hors limites et les durées inconnues', () => {
   assert.throws(() => calculatePublicodes(scenario({ brut: -10 })), /brut/)
   assert.throws(() => calculatePublicodes(scenario({ dureeType: '42' })), /dureeType/)
