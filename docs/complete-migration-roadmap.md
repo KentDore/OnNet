@@ -1,6 +1,6 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Les tests navigateur utilisent une API simulée ; le test live dédié et la vérification CORS dans un vrai navigateur restent à faire.
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le smoke-test réel depuis Chromium valide CORS, la règle `SMIC` et un calcul de net avant impôt avec un salaire représentatif ; le dernier résultat CI est à confirmer.
 
 ## Décision d'architecture
 
@@ -19,7 +19,7 @@ Principes d'intégration :
 - [x] Remonter les avertissements et les variables auxquelles l'API a appliqué une valeur par défaut.
 - [x] Le calculateur principal affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
 - [x] La commune de l’établissement est modifiable par scénario ; Pacé est la valeur initiale. Le repère SMIC n’envoie pas de données fiscales inutiles.
-- [x] Tester un appel API réel dans Chromium : CORS, réponse JSON et règle `SMIC` numérique validés dans la CI du 11/11/2026 (run 43023772499).
+- [x] Tester un appel API réel dans Chromium : CORS, réponse JSON, règle `SMIC` et calcul de net avant impôt avec un salaire représentatif. Le premier smoke-test a réussi dans la CI du 11/11/2026 (run 43023772499) ; la version étendue attend sa CI.
 - [ ] Compléter par un essai sur réseau mobile et par des tests d’erreurs transitoires en conditions réelles.
 - [ ] Réévaluer l’intérêt d’un proxy serveur avant publication ; ne jamais journaliser les payloads de paie.
 - [ ] Garder une validation indépendante : comparer l'API au simulateur officiel et aux sources réglementaires ; la parité avec le même modèle local ne prouve pas la conformité juridique.
@@ -56,7 +56,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
 - [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
 - [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
-- [x] Tester l’appel de bout en bout depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499).
+- [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et attend sa CI.
 - [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 
