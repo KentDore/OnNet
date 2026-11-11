@@ -19,7 +19,7 @@ Principes d'intégration :
 - [x] Remonter les avertissements et les variables auxquelles l'API a appliqué une valeur par défaut.
 - [x] Le calculateur principal affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
 - [x] La commune de l’établissement est modifiable par scénario ; Pacé est la valeur initiale. Le repère SMIC n’envoie pas de données fiscales inutiles.
-- [ ] Tester le vrai appel dans un navigateur de bout en bout (CORS, réseau mobile, erreurs transitoires) ; la présence du middleware CORS a été vérifiée dans le code serveur officiel, mais pas encore dans un navigateur réel.
+- [x] Tester un appel API réel dans Chromium : CORS, réponse JSON et règle `SMIC` numérique validés dans la CI du 11/11/2026 (run 43023772499). [ ] Compléter par un essai sur réseau mobile et par des tests d'erreurs transitoires en conditions réelles.
 - [ ] Réévaluer l’intérêt d’un proxy serveur avant publication ; ne jamais journaliser les payloads de paie.
 - [ ] Garder une validation indépendante : comparer l'API au simulateur officiel et aux sources réglementaires ; la parité avec le même modèle local ne prouve pas la conformité juridique.
 - [ ] Mettre à jour ce document après chaque phase et consigner les écarts constatés.
@@ -55,7 +55,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
 - [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
 - [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
-- [ ] Tester l'appel de bout en bout depuis un navigateur réel et confirmer la compatibilité CORS.
+- [x] Tester l'appel de bout en bout depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). [ ] Compléter par un essai sur réseau mobile et des scénarios d'erreurs transitoires.
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 
 ### Phase C — parité et qualité
@@ -69,7 +69,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Remplacer l'adaptateur de calcul local par l'adaptateur API dans le calculateur principal de la branche de migration.
 - [x] Garder le stockage, le partage, les graphiques et l'export indépendants du moteur de paie.
 - [x] Ajouter les tests de non-régression des sauvegardes, des anciens champs d’absence et des liens de partage.
-- [ ] Auditer le poids du bundle, les performances et l'accessibilité. Les erreurs API et le comportement hors ligne sont déjà testés ; compléter le test CORS dans un navigateur réel et sur réseau mobile.
+- [ ] Auditer le poids du bundle, les performances et l'accessibilité. Les erreurs API et le comportement hors ligne sont déjà testés ; compléter le test sur réseau mobile.
 - [x] Comportement hors ligne explicite : calcul impossible sans Internet, aucun fallback local.
 
 ## Risques à surveiller
@@ -82,7 +82,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - Les variables absentes peuvent recevoir une valeur par défaut : OnNet les signale, mais il reste à décider si certaines doivent bloquer le calcul.
 - Le client API transmet les paramètres du scénario (salaire, durée, mutuelle, titres-restaurant et, si saisi, données fiscales) au service Urssaf. Il n'y a aucun repli local en cas d'échec.
 - Le calcul fiscal dépend de la méthode et des données du foyer. Ne pas présenter une estimation comme un montant réel de bulletin.
-- Le calculateur principal de la branche est relié à l'API, mais les tests CORS sur navigateur réel et réseau mobile restent à effectuer.
+- Le smoke-test CORS sur Chromium a réussi (CI du 11/11/2026, run 43023772499). Le test sur réseau mobile reste à effectuer ; ce smoke-test ne valide pas à lui seul tous les parcours de calcul en production.
 
 ## Règle de mise en production
 
