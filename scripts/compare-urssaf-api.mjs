@@ -1,45 +1,16 @@
 import { calculatePublicodes } from '../src/publicodes-adapter.mjs'
 
 const scenarios = [
-  {
-    name: '2300 € brut, CDI non-cadre, 39 h, mutuelle 30/30, Pacé, sans titres-restaurant',
-    input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '2300 € brut, CDI non-cadre, 35 h, mutuelle 30/30, Pacé, sans titres-restaurant',
-    input: { brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '2300 € brut, CDI non-cadre, 39 h, sans mutuelle, Pacé, sans titres-restaurant',
-    input: { brut: 2300, dureeType: '39', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '2300 € brut, CDI non-cadre, 39 h, mutuelle 30/30, 21 titres de 8 €, Pacé',
-    input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8, partResto: 50, date: '2026-11-11' }
-  ,
-  {
-    name: '1800 € brut, 35 h, sous le SMIC mensuel de référence, sans mutuelle',
-    input: { brut: 1800, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '1900 € brut, 35 h, proche du SMIC mensuel, sans mutuelle',
-    input: { brut: 1900, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '3990 € brut, 35 h, juste sous le plafond de Sécurité sociale 2026',
-    input: { brut: 3990, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '4020 € brut, 35 h, juste au-dessus du plafond de Sécurité sociale 2026',
-    input: { brut: 4020, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  },
-  {
-    name: '8000 € brut, 35 h, tranche 2 retraite complémentaire',
-    input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
-  }
-  }
+  { name: '2300 € brut, 39 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '2300 € brut, 35 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '2300 € brut, 39 h, sans mutuelle ni titres', input: { brut: 2300, dureeType: '39', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '2300 € brut, 39 h, mutuelle 30/30, 21 titres de 8 €', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8, partResto: 50, date: '2026-11-11' } },
+  { name: '1800 € brut, 35 h, bas de grille', input: { brut: 1800, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '1900 € brut, 35 h, proche du SMIC mensuel de référence', input: { brut: 1900, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '3990 € brut, 35 h, juste sous le PMSS 2026', input: { brut: 3990, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '4020 € brut, 35 h, juste au-dessus du PMSS 2026', input: { brut: 4020, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '8000 € brut, 35 h, tranche 2 retraite complémentaire', input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } }
 ]
-
 const euro = value => `${value.toFixed(6)} €/mois`
 const percent = value => `${value.toFixed(6)}%`
 const expressions = [
