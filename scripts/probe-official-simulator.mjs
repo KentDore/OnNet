@@ -67,7 +67,8 @@ try {
   }
   const body = await page.locator('body').innerText({ timeout: 15000 })
   let nextQuestion = null
-  const closeShare = page.getByRole('button', { name: /fermer/i })
+  const shareModal = page.locator('[role="dialog"]').filter({ hasText: 'Votre lien de partage' })
+  const closeShare = shareModal.getByRole('button', { name: /fermer/i })
   if (await closeShare.count()) await closeShare.first().click()
   const nextButton = page.getByRole('button', { name: /suivant, passer à la question suivante/i })
   if (await nextButton.count()) {
