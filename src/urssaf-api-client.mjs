@@ -69,8 +69,8 @@ function formatDate(value) {
 }
 
 function publicodesString(value, name, fallback) {
-  const text = String(value ?? fallback ?? '').trim().replace(/\\s+/g, ' ')
-  if (!text || text.length > 80 || /[\\r\\n\\u0000-\\u001f]/.test(text)) {
+  const text = String(value ?? fallback ?? '').trim().replace(/\s+/g, ' ')
+  if (!text || text.length > 80 || /[\r\n\u0000-\u001f]/.test(text)) {
     throw new TypeError(`${name} doit être renseignée sur 1 à 80 caractères.`)
   }
   return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
