@@ -88,6 +88,10 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     const gross35 = thirtyFive.body.evaluate[1].nodeValue;
     const net35 = thirtyFive.body.evaluate[2].nodeValue;
     assert.ok(Number.isFinite(smic) && smic > 0, 'La règle SMIC doit renvoyer une valeur positive');
+    // Référence indépendante publiée par l'Urssaf pour le 11/11/2026 : 1 867,02 €/mois.
+    // https://mon-entreprise.urssaf.fr/documentation/SMIC
+    assert.ok(Math.abs(smic - 1867.02) <= 0.02,
+      `SMIC mensuel : attendu 1 867,02 € selon la documentation Urssaf (reçu : ${smic})`);
     assert.ok(Number.isFinite(gross35) && Math.abs(gross35 - 2300) <= 0.05,
       `35 h : le brut API doit correspondre à 2 300 € (reçu : ${gross35})`);
     assert.ok(Number.isFinite(net35) && net35 > 0, '35 h : le net avant impôt doit être positif');
