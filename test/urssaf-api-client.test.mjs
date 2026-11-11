@@ -160,6 +160,12 @@ test('configure le barème avec le foyer fiscal et rejette un parent isolé inco
     }), { fetchImpl: mockFetch(() => response(apiResponse([]))) }),
     /parentIsole/
   )
+  await assert.rejects(
+    calculateWithUrssafApi(scenario({ modeImpot: 'barème' }), {
+      fetchImpl: mockFetch(() => response(apiResponse([])))
+    }),
+    /situationFamille doit être renseignée/
+  )
 })
 
 test('remonte les variables par défaut et avertissements de l’API', async () => {
