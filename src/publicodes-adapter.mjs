@@ -211,7 +211,7 @@ export function calculatePublicodes(input = {}) {
   situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
   situation['impôt . foyer fiscal . parent isolé'] = isolatedParent ? 'oui' : 'non'
   if (taxMode === 'barème') {
-    situation['paramètres . impôt . revenu d'activité'] = `${(taxableNet * 12).toFixed(2)} €/an`
+    situation["paramètres . impôt . revenu d'activité"] = `${(taxableNet * 12).toFixed(2)} €/an`
   } else {
     situation['paramètres . impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
   }
