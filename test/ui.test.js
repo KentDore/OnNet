@@ -249,6 +249,13 @@ test('récupère le SMIC officiel à la volée et conserve une valeur manuelle e
     assert.equal(saved.smicDate, '2026-01-01');
 
     await page.reload();
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé') &&
+      document.querySelectorAll('.benchmark-item').length === 2,
+      null, { timeout: 20000 }
+    );
+    await page.locator('.benchmark-settings summary').click();
     assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1800.00');
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
   } finally {
