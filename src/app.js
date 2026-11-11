@@ -46,7 +46,7 @@ function calculationKey(s, f){
     nbMois:Number(s.nbMois || 12),
     primes:Number(s.primes || 0),
     date:scenarioCalculationDate(s),
-    fiscal:taxInputForFoyer(f)
+    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
   });
 }
 
@@ -72,7 +72,7 @@ function buildUrssafInput(s, f){
     valeurResto:Number(s.valeurResto) || 0,
     partResto:Number(s.partResto),
     date:scenarioCalculationDate(s)
-  }, taxInputForFoyer(f));
+  }, s.isBenchmark ? {} : taxInputForFoyer(f));
 }
 
 function mapUrssafResultToOnNet(result){
@@ -116,7 +116,7 @@ function mapUrssafResultToOnNet(result){
     netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
     netApresImpot:result.netAfterTax,
-    annuelNetApresImpot:result.netAfterTax * 12,
+    annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
     impotAnnuel:result.incomeTax,
     tauxImpot:result.calculatedTaxRate,
     brutHoraire:result.baseGross / HEURES_BASE,
