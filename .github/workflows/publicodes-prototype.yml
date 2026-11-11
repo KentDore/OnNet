@@ -39,8 +39,10 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
+      - name: Generate dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Install locked dependencies
+        run: npm ci --no-audit --no-fund
       - name: Test Publicodes adapter
         run: npm run test:prototype
       - name: Compare with the official Urssaf API
@@ -57,6 +59,13 @@ jobs:
         run: |
           test -s dist/Onnet-publicodes-prototype.html
           ! grep -q 'PUBLICODES_BUNDLE' dist/Onnet-publicodes-prototype.html
+      - name: Upload generated lockfile
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnet-package-lock
+          path: package-lock.json
+          if-no-files-found: error
+          retention-days: 3
       - name: Upload standalone prototype
         uses: actions/upload-artifact@v4
         with:
