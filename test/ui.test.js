@@ -113,7 +113,8 @@ async function openApp(options = {}) {
     const request = route.request().postDataJSON();
     calls.count += 1;
     calls.bodies.push(request);
-    if (options.failApi) {
+    if (options.delayMs) await new Promise(resolve => setTimeout(resolve, options.delayMs));
+    if (options.failApi || calls.count <= (options.failFirstCalls || 0)) {
       await route.fulfill({
         status: 503,
         contentType: 'application/json',
@@ -186,9 +187,11 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
   const { context, page, calls } = await openApp({ consent: false });
   try {
     await waitForCalls(calls, 1);
-    assert.ok(calls.count >= 1);
-    assert.ok(calls.bodies.every(body => body.expressions.includes('SMIC')));
-    assert.ok(calls.bodies.every(body => !body.situation['salarié . contrat . salaire brut']));
+    const startupRequests = calls.bodies.slice();
+    assert.equal(startupRequests.length, 1, 'un seul appel initial doit suffire pour actualiser le SMIC');
+    assert.deepEqual(startupRequests[0].expressions, ['SMIC']);
+    assert.equal(Object.hasOwn(startupRequests[0].situation, 'salarié . contrat . salaire brut'), false,
+      'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
     assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
@@ -644,6 +647,53 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(state.scenarios[0].mutuelle, 30);
     assert.equal(state.scenarios[0].mutuellePat, 30);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par le consentement', async () => {
+  const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
+  try {
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
+      null, { timeout: 20000 }
+    );
+    const smicRequests = calls.bodies.filter(body => body.expressions.includes('SMIC'));
+    assert.equal(smicRequests.length, 1, 'les appels concurrents doivent partager la même promesse SMIC');
+    assert.deepEqual(smicRequests[0].expressions, ['SMIC']);
+    assert.ok(calls.bodies.some(body =>
+      Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')
+    ), 'les calculs salariaux doivent démarrer après le consentement');
+  } finally {
+    await context.close();
+  }
+});
+
+test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs après consentement', async () => {
+  const { context, page, calls } = await openApp({ consent: false, failFirstCalls: 1 });
+  try {
+    await waitForCalls(calls, 1);
+    assert.match(await page.locator('#benchmarkBody').innerText(), /indisponible via l’API officielle/);
+    assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
+    assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
+
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
+      document.querySelectorAll('.benchmark-item').length === 2,
+      null, { timeout: 20000 }
+    );
+
+    assert.ok(calls.count >= 4, 'un nouvel appel SMIC puis les calculs salariaux sont attendus');
+    assert.equal(calls.bodies.filter(body => body.expressions.includes('SMIC')).length, 2,
+      'le SMIC doit être retenté une seule fois après l’échec initial');
+    assert.ok(calls.bodies.some(body =>
+      Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')
+    ));
   } finally {
     await context.close();
   }
