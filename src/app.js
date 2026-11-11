@@ -1867,8 +1867,15 @@ function bindMutuelleTrFields(overlay, idPrefix){
   });
 
   return () => {
-    const mutuelleRaw = mutuelleInput.value.trim();
-    const mutuellePatRaw = mutuellePatInput.value.trim();
+    // Relire le DOM au moment de la validation : les modales partagent leur
+    // conteneur et peuvent remplacer leur contenu entre deux ouvertures.
+    const currentMutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+    const currentMutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
+    if(!currentMutuelleInput || !currentMutuellePatInput){
+      throw new Error('Les deux champs de mutuelle sont introuvables dans la modale.');
+    }
+    const mutuelleRaw = currentMutuelleInput.value.trim();
+    const mutuellePatRaw = currentMutuellePatInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
     const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
     const result = { mutuelle, mutuellePat, joursResto: 0 };
