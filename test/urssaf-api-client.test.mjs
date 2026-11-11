@@ -343,7 +343,7 @@ test('transmet les autres revenus imposables du foyer en couple et exige une val
     request.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
     '24000.00 €/an'
   )
-  assert.equal(request.situation["paramètres . impôt . revenu d'activité"], '22560.00 €/an')
+  assert.equal(request.situation["impôt . foyer fiscal . revenu imposable . revenu d'activité"], '22560.00 €/an')
 
   await assert.rejects(
     calculateWithUrssafApi(scenario({
