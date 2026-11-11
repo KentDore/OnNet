@@ -11,16 +11,16 @@ Documentation : https://mon-entreprise.urssaf.fr/d%C3%A9veloppeur/api
 L'API permet d'évaluer les règles du modèle social et de consulter les règles disponibles. Elle est ouverte et sans authentification. Cela réduit la maintenance des règles copiées dans OnNet, mais ne garantit pas que l'API soit instantanément synchronisée avec le simulateur public : des écarts de version ont déjà été signalés.
 
 Principes d'intégration :
-- [ ] Créer un client API isolé, avec délai maximal, gestion des erreurs réseau/HTTP/JSON et validation stricte des valeurs retournées.
-- [ ] Construire une situation Publicodes à partir des entrées OnNet et demander à l'API toutes les expressions nécessaires en une seule requête lorsque c'est possible.
-- [ ] Ne pas afficher de résultat partiel si une expression essentielle manque, si une valeur n'est pas numérique ou si la réponse contient une erreur bloquante.
-- [ ] Ne pas basculer silencieusement vers le moteur local en cas d'indisponibilité : ses règles épinglées peuvent diverger de l'API. Afficher une erreur explicite et proposer de réessayer.
-- [ ] Garder le paquet local `modele-social` uniquement pour les tests de non-régression et les comparaisons, jusqu'à ce que le client API soit validé. Réévaluer ensuite s'il reste nécessaire dans le bundle de production.
-- [ ] Contrôler les avertissements et variables manquantes retournés par l'API ; ne pas ignorer les règles expérimentales.
-- [ ] Afficher une mention claire : estimation indicative, moteur Urssaf, date du scénario et état de disponibilité du service.
-- [ ] Tester CORS et l'accès direct depuis le navigateur, les limites de requêtes, les erreurs transitoires et les changements de schéma avant d'adopter l'appel direct côté client.
-- [ ] Si un proxy serveur est nécessaire, le concevoir sans journaliser ni conserver les situations salariales sensibles.
-- [ ] Garder une stratégie de test indépendante : la parité avec l'API du même modèle ne constitue pas une validation indépendante du droit.
+- [x] Créer un client API isolé avec délai maximal, gestion des erreurs réseau/HTTP/JSON et validation stricte des valeurs retournées (`src/urssaf-api-client.mjs`).
+- [x] Construire une situation Publicodes à partir des entrées du prototype et regrouper les expressions nécessaires dans un appel API ; le scénario 39 h peut nécessiter jusqu'à trois appels pour recalibrer le brut.
+- [x] Ne pas afficher de résultat partiel si une expression essentielle manque, si une valeur n'est pas numérique ou si la réponse contient une erreur bloquante.
+- [x] Ne pas basculer vers le moteur local en cas d'indisponibilité : l'erreur est affichée explicitement.
+- [x] Garder le paquet local `modele-social` pour la comparaison et les diagnostics ; le build du prototype utilise désormais uniquement le client API.
+- [x] Remonter les avertissements et les variables auxquelles l'API a appliqué une valeur par défaut.
+- [x] Le prototype affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
+- [ ] Tester le vrai appel dans un navigateur de bout en bout (CORS, réseau mobile, erreurs transitoires) ; la présence du middleware CORS a été vérifiée dans le code serveur officiel, mais pas encore dans un navigateur réel.
+- [ ] Décider si un proxy serveur est préférable avant l'intégration au site principal ; ne pas journaliser les payloads de paie.
+- [ ] Garder une validation indépendante : comparer l'API au simulateur officiel et aux sources réglementaires ; la parité avec le même modèle local ne prouve pas la conformité juridique.
 - [ ] Mettre à jour ce document après chaque phase et consigner les écarts constatés.
 
 ## Inventaire fonctionnel de référence
@@ -46,12 +46,15 @@ Les limites historiques documentées — absence de modélisation complète des 
 - [ ] Vérifier les cas limites : salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
 
 ### Phase B — client API officiel
-- [ ] Implémenter un client REST dédié à `https://mon-entreprise.urssaf.fr/api/v1/evaluate`.
-- [ ] Vérifier les routes et le modèle salarié appropriés à partir de la documentation actuelle et du Swagger.
-- [ ] Valider les réponses, les unités, les avertissements et les variables manquantes.
-- [ ] Vérifier CORS, délai maximal, disponibilité et erreurs réseau depuis le prototype navigateur.
-- [ ] Couvrir les modes fiscalité personnalisée, taux neutre et barème uniquement si les règles et entrées nécessaires sont confirmées par le modèle officiel.
-- [ ] Ne pas inventer les paramètres absents et ne pas calculer le net après impôt à partir d'un taux supposé.
+- [x] Implémenter le client REST dédié à `https://mon-entreprise.urssaf.fr/api/v1/evaluate`.
+- [x] Confirmer que `/api/v1/evaluate` utilise le modèle `modele-social` et que le catalogue officiel expose les trois méthodes fiscales.
+- [x] Valider la structure de réponse, les valeurs numériques, les avertissements et les variables manquantes.
+- [x] Gérer le délai maximal, les erreurs réseau, les statuts HTTP 400/429/5xx et les réponses JSON invalides.
+- [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème et ne pas supposer le statut de parent isolé.
+- [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et trois cas fiscaux.
+- [ ] Exécuter et valider le workflow CI après les derniers commits ; les scénarios en direct restent dépendants de la disponibilité et du quota API.
+- [ ] Tester l'appel de bout en bout depuis un navigateur réel et confirmer la compatibilité CORS.
+- [ ] Vérifier avec des cas de référence le calcul fiscal des trois modes, notamment la base annuelle et la situation du foyer.
 
 ### Phase C — parité et qualité
 - [ ] Comparer les résultats API avec des scénarios de référence et le simulateur officiel en utilisant exactement les mêmes hypothèses et dates.
@@ -68,11 +71,15 @@ Les limites historiques documentées — absence de modélisation complète des 
 
 ## Risques à surveiller
 
-- L'API officielle est ouverte et sans authentification, mais cela ne constitue pas une garantie de disponibilité ou de synchronisation instantanée avec le simulateur web.
-- Un ticket public a documenté un écart entre API et simulateur pour un cas daté de 2026, lié à des versions de règles différentes : https://github.com/betagouv/mon-entreprise/issues/4581
-- Certaines règles peuvent être expérimentales et évoluer sans compatibilité garantie. Contrôler les avertissements retournés.
-- Le calcul d'un net après impôt dépend de la méthode et des données fiscales effectivement fournies. Ne pas présenter une estimation comme un montant réel de bulletin.
-- Les situations salariales sont potentiellement sensibles : limiter les données envoyées, ne pas journaliser les payloads et vérifier les conditions d'utilisation applicables.
+- L'API officielle est ouverte et sans authentification ; la documentation décrit une API REST, et le code serveur officiel applique CORS.
+- Le code serveur consulté applique actuellement une limite de 5 requêtes/seconde/IP en production : https://github.com/betagouv/mon-entreprise/blob/master/api/source/middlewares/rate-limiter.ts
+- Le cache API serveur est configuré avec une durée de 24 heures : https://github.com/betagouv/mon-entreprise/blob/master/api/source/middlewares/redis-cache.ts. Une même requête peut donc réutiliser un résultat mis en cache ; l'API ne garantit pas une actualisation instantanée de chaque règle.
+- Un incident public a documenté un écart entre API et simulateur pour un scénario daté de 2026, dû à un déploiement API non aligné : https://github.com/betagouv/mon-entreprise/issues/4581 et https://github.com/betagouv/mon-entreprise/issues/4624
+- Certaines règles sont expérimentales et peuvent changer sans garantie de compatibilité. Contrôler les avertissements retournés.
+- Les variables absentes peuvent recevoir une valeur par défaut : OnNet les signale, mais il reste à décider si certaines doivent bloquer le calcul.
+- Le client API transmet les paramètres du scénario (salaire, durée, mutuelle, titres-restaurant et, si saisi, données fiscales) au service Urssaf. Il n'y a aucun repli local en cas d'échec.
+- Le calcul fiscal dépend de la méthode et des données du foyer. Ne pas présenter une estimation comme un montant réel de bulletin.
+- Le prototype autonome est relié à l'API, mais le calculateur principal OnNet n'est pas encore migré.
 
 ## Règle de mise en production
 
