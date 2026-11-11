@@ -40,7 +40,7 @@ function assertFinite(label, value) {
 async function runSocial(name, input) {
   console.error(`[social] ${name}`)
   try {
-    const result = await calculateWithUrssafApi({ commune: 'Pacé', ...input, date }, { fetchImpl: throttledFetch })
+    const result = await calculateWithUrssafApi({ commune: 'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
       ['net avant impôt', result.netBeforeTax],
@@ -85,7 +85,7 @@ async function runSocial(name, input) {
 async function runTax(name, input) {
   console.error(`[fiscal] ${name}`)
   try {
-    const result = await calculateWithUrssafApi({ ...input, date }, { fetchImpl: throttledFetch })
+    const result = await calculateWithUrssafApi({ commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     for (const [label, value] of [
       ['net avant impôt', result.netBeforeTax],
       ['net après impôt', result.netAfterTax],
