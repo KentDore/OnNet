@@ -9,7 +9,8 @@
   "scripts": {
     "build:publicodes": "node scripts/build-publicodes.js",
     "test:publicodes": "node --test test/publicodes.test.js",
-    "test:prototype": "npm run test:publicodes"
+    "test:prototype": "npm run test:publicodes",
+    "scenarios:publicodes": "node scripts/publicodes-scenarios.mjs"
   },
   "dependencies": {
     "modele-social": "11.1.0",
