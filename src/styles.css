@@ -673,3 +673,18 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .commune-option:last-child{border-bottom:0;}
 .commune-option:hover,.commune-option:focus-visible{background:var(--surface-secondary, #f3f4f6);outline:none;}
 .commune-search-status{padding:10px 12px;color:var(--muted, #667085);font-size:.9rem;}
+
+
+/* Statut URSSAF : information discrète, sans alerte permanente. */
+.urssaf-status{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:9px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink-soft);}
+.urssaf-status-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;width:100%;}
+.urssaf-status-main{display:flex;align-items:center;gap:8px;flex:1 1 220px;margin:0;font-size:.78rem;line-height:1.4;color:var(--muted,var(--ink-soft));}
+.urssaf-status-main strong{font-weight:550;}
+.urssaf-status-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#299764;}
+.urssaf-status #urssafCalculateBtn{margin:0;padding:7px 11px;font-size:.76rem;}
+.urssaf-status .result-source{flex:0 0 100%;margin:0;font-size:.72rem;}
+.urssaf-status .result-source summary{cursor:pointer;color:var(--muted,var(--ink-soft));}
+.urssaf-status .result-source ul{max-height:180px;overflow:auto;padding-left:18px;line-height:1.45;}
+.urssaf-status.is-error{padding:12px 14px;border:1px solid var(--warn-line);border-radius:12px;background:var(--warn-soft);color:var(--warn);}
+.urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
+@media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
