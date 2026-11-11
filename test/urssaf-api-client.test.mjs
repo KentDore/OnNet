@@ -34,7 +34,8 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . frais professionnels . non déductible': 0,
     'salarié . rémunération . net . payé après impôt': 1700,
     'impôt . montant': 1320,
-    "impôt . taux d'imposition": 10
+    "impôt . taux d'imposition": 10,
+    'impôt . taux neutre d’impôt sur le revenu': 4.1
   }
   return {
     evaluate: expressions.map(expression => ({
@@ -283,6 +284,10 @@ test('alimente l’assiette annuelle officielle du taux neutre', async () => {
   assert.equal(requests.length, 2)
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
+  assert.ok(requests[1].expressions.includes('impôt . taux neutre d’impôt sur le revenu'))
+  assert.equal((await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
+    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
+  })).calculatedTaxRate, 4.1)
 })
 
 test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
