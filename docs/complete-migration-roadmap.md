@@ -33,10 +33,12 @@ Les limites historiques documentées — absence de modélisation complète des 
 - [ ] Vérifier les cas limites, notamment salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
 
 ### Phase B — fiscalité officielle
-- [ ] Ajouter le choix entre barème standard, taux neutre et taux personnalisé dans l'adaptateur après validation de l'activation des règles fiscales.
+- [x] Valider le calcul au taux personnalisé dans l'adaptateur en fournissant la base annuelle attendue par le modèle.
+- [ ] Intégrer les règles fiscales communes officielles nécessaires au barème standard et au taux neutre avant de les exposer.
 - [x] Ajouter les champs du foyer fiscal supportés par le modèle salarié (situation, enfants, parent isolé).
 - [ ] Vérifier les règles fiscales réellement disponibles dans la version npm verrouillée : certaines règles du jeu Publicodes sont signalées comme expérimentales.
-- [ ] **Blocage constaté pendant l'audit :** dans l'essai d'intégration, la base imposable utilisée par la règle `impôt . revenu imposable` est revenue à 0 et le net après impôt est resté identique au net avant impôt. L'intégration fiscale a été retirée plutôt que de laisser un résultat trompeur ; diagnostiquer les règles et la situation requise avant de réessayer.
+- [x] **Diagnostic fiscal :** le paquet `modele-social` seul ne fournit pas certaines règles d'entrée du modèle commun. Sans base annuelle explicite, `impôt . revenu imposable` renvoie 0 ; en fournissant cette base, le taux personnalisé est appliqué et le net après PAS varie comme attendu.
+- [ ] Pour le barème et le taux neutre, intégrer les paramètres et règles fiscales communes officielles absents du paquet social. Ne pas ajouter des paramètres fictifs : les modes non validés sont refusés explicitement.
 - [ ] Ajouter des scénarios de référence pour les trois modes, y compris les cas où le taux personnalisé vaut 0 %.
 - [ ] Distinguer dans l'interface le net avant impôt, le net payé après PAS et l'estimation d'impôt annuel ; ne jamais étiqueter une estimation annuelle comme le prélèvement réel du bulletin.
 - [ ] Définir explicitement le comportement pour revenus du foyer autres que le salaire, crédits/réductions, taux individualisé et taux neutre. Ne pas supposer que le modèle salarié les couvre.
