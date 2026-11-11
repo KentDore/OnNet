@@ -185,7 +185,7 @@ async function addSecondScenario(page, gross = '3200') {
 test('indique la source Urssaf et ne transmet aucune donnée avant consentement', async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
-    await page.waitForTimeout(150);
+    await waitForCalls(calls, 1);
     assert.ok(calls.count >= 1);
     assert.ok(calls.bodies.every(body => body.expressions.includes('SMIC')));
     assert.ok(calls.bodies.every(body => !body.situation['salarié . contrat . salaire brut']));
@@ -196,7 +196,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
     assert.match(notice, /transmis à l’API officielle de l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
-    assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Source des calculs : moteur officiel Mon-entreprise de l’Urssaf/);
+    assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();

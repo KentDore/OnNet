@@ -221,7 +221,7 @@ function updateUrssafStatus(computed){
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
   const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
-    (benchmarks.mode === 'official' && officialSmicState.status === 'error');
+    (officialSmicState.status === 'error');
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(smicPending) pending.push({s:smicScenario,r:null});
@@ -244,7 +244,7 @@ function updateUrssafStatus(computed){
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
-  if(benchmarks.mode === 'official' && officialSmicState.status === 'ready') ready.push(officialSmicState);
+  if(officialSmicState.status === 'ready') ready.push(officialSmicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
@@ -380,8 +380,6 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
-const benchmarks = Object.freeze({ mode:'official' });
-
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
@@ -1029,7 +1027,7 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
   const smicResult = getCachedSmicResult();
-  if(!smicResult && benchmarks.mode === 'official' && officialSmicState.status === 'error'){
+  if(!smicResult && officialSmicState.status === 'error'){
     return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
   }
   if(!r) return '';
@@ -1085,8 +1083,8 @@ function renderBenchmarks(computed){
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient ${benchmarks.mode === 'official' ? 'de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf' : 'de votre saisie manuelle'} ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
-          ${benchmarks.mode === 'official' && officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          ${officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
           <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
