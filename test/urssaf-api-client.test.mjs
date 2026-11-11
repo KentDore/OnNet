@@ -94,6 +94,37 @@ test('refuse une réponse SMIC non numérique et ne substitue pas de valeur loca
   }), /valeur numérique/)
 })
 
+test('calcule le repère SMIC avec les seules expressions nécessaires', async () => {
+  let request
+  const result = await calculateWithUrssafApi(scenario({
+    brut: 1867.02,
+    mutuelle: 0,
+    mutuellePat: 0,
+    joursResto: 0,
+    benchmarkOnly: true
+  }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response({
+        evaluate: [
+          { nodeValue: 1867.02, missingVariables: [] },
+          { nodeValue: 1480, missingVariables: [] }
+        ],
+        warnings: []
+      })
+    })
+  })
+
+  assert.deepEqual(request.expressions, [
+    'salarié . rémunération . brut',
+    'salarié . rémunération . net . à payer avant impôt'
+  ])
+  assert.equal(result.benchmarkOnly, true)
+  assert.equal(result.grossCalculated, 1867.02)
+  assert.equal(result.netBeforeTax, 1480)
+  assert.equal(result.taxableNet, undefined)
+})
+
 test('envoie une situation CDI et une seule requête pour un scénario 35 h', async () => {
   let calls = 0
   let request
