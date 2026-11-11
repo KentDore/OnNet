@@ -12,6 +12,10 @@ const scenarios = [
   {
     name: '2300 € brut, CDI non-cadre, 39 h, sans mutuelle, Pacé, sans titres-restaurant',
     input: { brut: 2300, dureeType: '39', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' }
+  },
+  {
+    name: '2300 € brut, CDI non-cadre, 39 h, mutuelle 30/30, 21 titres de 8 €, Pacé',
+    input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8, partResto: 50, date: '2026-11-11' }
   }
 ]
 
@@ -42,6 +46,9 @@ for (const scenario of scenarios) {
   const local = calculatePublicodes(input)
   const totalHealth = input.mutuelle + input.mutuellePat
   const employerHealthRate = totalHealth > 0 ? input.mutuellePat / totalHealth * 100 : 50
+  const ticketDays = input.joursResto ?? 0
+  const ticketValue = input.valeurResto ?? 0
+  const employerTicketRate = 100 - (input.partResto ?? 50)
   const situation = {
     'salarié': 'oui',
     'salarié . contrat': "'CDI'",
@@ -54,6 +61,10 @@ for (const scenario of scenarios) {
     'salarié . temps de travail . heures supplémentaires': `${local.overtimeHours} heure/mois`,
     'salarié . cotisations . prévoyances . santé . montant': euro(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
+    'salarié . rémunération . frais professionnels . titres-restaurant': ticketDays > 0 ? 'oui' : 'non',
+    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${ticketDays} titre-restaurant/mois`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${ticketValue.toFixed(2)} €/titre-restaurant`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerTicketRate),
     'date': '11/11/2026'
   }
 
