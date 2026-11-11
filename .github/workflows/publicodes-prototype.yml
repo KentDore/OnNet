@@ -88,7 +88,7 @@ jobs:
     name: Vérifications réelles auprès de l'API Urssaf (manuelles)
     if: >-
       github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && contains(github.event.head_commit.message, '[live-api]')) ||
+      (github.event_name == 'push' && github.ref == 'refs/heads/migration/publicodes-urssaf-final') ||
       (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'migration/publicodes-urssaf-final')
     runs-on: ubuntu-latest
     steps:
