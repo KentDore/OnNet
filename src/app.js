@@ -1994,7 +1994,7 @@ function renderMutuelleTrFields(idPrefix){
         <details class="onboarding-optional">
           <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
           <div class="onboarding-optional-body">
-            <p class="sub-hint">Valeurs par défaut : 30 € par mois côté salarié et 30 € côté employeur. Ajustez-les selon votre bulletin.</p>
+            <p class="sub-hint">30 € de mutuelle sont déduits du salaire chaque mois. Ajustez le montant selon votre bulletin.</p>
             <div class="two-col onboarding-mutuelle-fields">
               <div class="field-row">
                 <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
