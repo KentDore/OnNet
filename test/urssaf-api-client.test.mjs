@@ -103,7 +103,9 @@ test('prépare un scénario 39 h avec les 4 heures supplémentaires mensuelles',
     fetchImpl: mockFetch(body => {
       request = body
       const values = apiResponse(body.expressions)
-      values.evaluate[0].nodeValue = 2300
+      const base = Number.parseFloat(body.situation['salarié . contrat . salaire brut'])
+      const overtime = 4 * 52 / 12
+      values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.25
       values.evaluate[4].nodeValue = 250
       return response(values)
     })
