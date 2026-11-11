@@ -205,6 +205,7 @@ export function calculatePublicodes(input = {}) {
   const taxableNet = evaluateNumber(engine, RULES.taxableNet)
   const netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
   const incomeTax = evaluateNumber(engine, RULES.incomeTax)
+  const calculatedTaxRate = evaluateNumber(engine, 'impôt . taux d\'imposition')
   const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
   const overtimePay = evaluateNumber(engine, RULES.overtimePay)
   const employeeHealthCalculated = evaluateNumber(engine, RULES.employeeHealth)
@@ -225,6 +226,7 @@ export function calculatePublicodes(input = {}) {
     taxableNet,
     netAfterTax,
     incomeTax,
+    calculatedTaxRate,
     taxMode,
     employeeContributions,
     employeeHealth: employeeHealthCalculated,
