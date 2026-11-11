@@ -164,6 +164,10 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
+  const diagnostics = document.getElementById('urssafWarnings');
+  const diagnosticsList = document.getElementById('urssafWarningsList');
+  if(diagnostics) diagnostics.hidden = true;
+  if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
     statusText.textContent = 'Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf. Aucun calcul local de cotisations ou d’impôt ne sera utilisé.';
     button.hidden = false;
@@ -197,8 +201,15 @@ function updateUrssafStatus(computed){
   let message = 'Calcul terminé avec le moteur officiel Mon-entreprise de l’Urssaf.';
   if(checkedAt) message += ' Dernière réponse reçue le ' + new Date(checkedAt).toLocaleString('fr-FR') + '.';
   if(missing.length) message += ' Variables non renseignées utilisant une valeur par défaut (' + missing.length + ') : ' + missing.slice(0,4).join(', ') + (missing.length > 4 ? '…' : '') + '.';
-  if(warnings.length) message += ' Avertissements du moteur : ' + warnings.slice(0,2).join(' ') + (warnings.length > 2 ? '…' : '');
+  if(warnings.length) message += ' Le moteur a émis ' + warnings.length + ' avertissement(s). Consultez le détail.';
   statusText.textContent = message;
+  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
+    diagnosticsList.innerHTML = [
+      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
+      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
+    ].join('');
+    diagnostics.hidden = false;
+  }
   button.hidden = true;
 }
 
