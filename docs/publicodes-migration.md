@@ -85,7 +85,7 @@ La matrice automatisée compte maintenant neuf scénarios, soit 63 valeurs compa
 
 **Précaution :** le scénario à 1 800 € est uniquement un point de test mathématique situé sous le SMIC mensuel de référence ; ce n'est pas une recommandation de rémunération légale pour un temps plein. Le SMIC horaire applicable en métropole est de 12,31 € à la date de cette vérification, soit environ 1 867 € brut mensuel pour 151,67 h. Source : [simulateur officiel Urssaf](https://mon-entreprise.urssaf.fr/simulateurs/salaire-brut-net). Le plafond mensuel de Sécurité sociale 2026 est de 4 005 € : [source Urssaf](https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/plafonds-securite-sociale.html).
 
-Le test des heures supplémentaires vérifie également la formule de rémunération à 25 % sur le scénario 39 h. Il ne valide pas la majoration à 50 %, car l'interface actuelle ne permet que 35 h ou 39 h.
+Le test des heures supplémentaires vérifie la formule de rémunération à 25 % sur le scénario 39 h. Un diagnostic séparé teste aussi le palier à 50 % avec 43,33 h/mois (environ 10 h/semaine), sans étendre pour autant les choix de durée proposés par l'interface actuelle (35 h ou 39 h).
 
 ### Comparaison avec le service officiel
 
@@ -94,6 +94,8 @@ Le script `scripts/compare-urssaf-api.mjs` interroge `POST https://mon-entrepris
 Résultat au 11/11/2026 : **28 valeurs sur 28 identiques au centime près** sur les quatre scénarios ci-dessus. Le test est automatisé dans GitHub Actions et échoue si un écart dépasse 0,03 €.
 
 Le scénario avec titres-restaurant donne un net avant impôt de 1 736,28 €, contre 1 820,28 € sans titres, soit 84 € de retenue salariale (21 × 8 € × 50 %). Le montant et la participation employeur respectent les paramètres de ce test.
+
+Le diagnostic `scripts/diagnose-overtime-50.mjs` utilise un salaire de base de 3 000 € et 43,33 h supplémentaires/mois. Le moteur local et l'API officielle renvoient tous deux 1 114,19 € de rémunération d'heures supplémentaires (écart 0,00 €). Ce résultat est supérieur au calcul si toutes les heures étaient majorées à 25 % (1 071,32 €) et inférieur au calcul si elles étaient toutes majorées à 50 % (1 285,59 €), ce qui confirme le cumul des deux paliers dans ce scénario. Le diagnostic remonte 12 avertissements de règles expérimentales : la parité ne supprime pas ces avertissements et ne valide pas toutes les situations de paie.
 
 Le brut reconstitué à 39 h ressort à 2 300,01 € côté moteur local comme côté API officielle, pour une entrée OnNet de 2 300 €. C'est un écart d'arrondi commun aux deux moteurs dans cette inversion de salaire de base ; il n'affecte pas les sept écarts comparés, mais il faudra décider comment l'afficher et le documenter.
 
