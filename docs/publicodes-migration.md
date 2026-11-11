@@ -1,12 +1,12 @@
 # Migration du calcul brut → net vers Publicodes / modèle Urssaf
 
-Statut : étude technique initiale — branche `migration/publicodes-urssaf`
+Statut : intégration principale réalisée sur `migration/publicodes-urssaf`, non publiée. Les scénarios live de ce nouveau raccordement restent à valider.
 
 ## Décision
 
 Utiliser le paquet officiel `modele-social` et le moteur `publicodes` comme source des calculs de paie, plutôt que maintenir dans OnNet une seconde implémentation des cotisations et des règles légales.
 
-La migration doit rester progressive. Le moteur actuel ne sera pas supprimé tant que les scénarios de référence ne passent pas les tests de comparaison.
+L’API officielle est désormais le seul moteur de calcul du calculateur principal sur cette branche. L’ancien fichier `src/calc.js` n’est plus embarqué dans le build. Le paquet `modele-social` / `publicodes` reste disponible pour les tests de parité et diagnostics, jamais comme solution de repli en production.
 
 ## Sources officielles vérifiées
 
@@ -35,7 +35,7 @@ Les seules opérations locales tolérées sont des conversions d'unités ou de r
 
 ## Correspondance initiale des données
 
-Les noms ci-dessous sont ceux des règles officielles du modèle salarié. Les unités d'entrée doivent suivre exactement les exemples du dépôt officiel : `heure/mois` pour les heures supplémentaires dans le moteur (même si les exemples de paramètres d'URL affichent parfois `heures/mois`), `titre-restaurant/mois` pour le nombre et `€/titre-restaurant` pour le montant unitaire. Le prototype utilise aussi `établissement . commune = 'Pacé'` pour expliciter la localisation.
+Les noms ci-dessous sont ceux des règles officielles du modèle salarié. Les unités d'entrée doivent suivre exactement les exemples du dépôt officiel : `heure/mois` pour les heures supplémentaires dans le moteur (même si les exemples de paramètres d'URL affichent parfois `heures/mois`), `titre-restaurant/mois` pour le nombre et `€/titre-restaurant` pour le montant unitaire. Le client transmet `établissement . commune` pour chaque scénario. La valeur initiale est Pacé et l’utilisateur peut la modifier dans les détails du salaire.
 
 | Donnée OnNet | Situation Publicodes envisagée |
 |---|---|
@@ -65,7 +65,7 @@ Pour une première version, OnNet peut rester limité au CDI privé non-cadre en
 
 La mutuelle doit être convertie depuis les deux montants existants vers un montant total et un taux employeur. Il faudra avertir lorsque la part employeur est inférieure au minimum modélisé de 50 %, et vérifier le cas où le montant total est nul.
 
-L'impôt sur le revenu doit être traité dans une phase séparée : le net avant impôt et le net effectivement payé après PAS sont deux résultats distincts. Ne pas remplacer le calcul fiscal actuel par une valeur par défaut Publicodes sans avoir choisi explicitement la méthode et les hypothèses de foyer fiscal.
+L’impôt sur le revenu est désormais demandé à l’API avec le mode choisi (barème standard ou taux personnalisé) et les informations du foyer nécessaires. Le net avant impôt et le net payé après PAS restent deux résultats distincts ; les limites expérimentales du modèle fiscal doivent rester visibles.
 
 ## Résultats et parité API officielle (11/11/2026)
 
