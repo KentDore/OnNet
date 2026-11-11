@@ -33,7 +33,7 @@ const situation = {
 const expressions = [
   'salarié . rémunération . brut',
   'salarié . rémunération . net . à payer avant impôt',
-  'salarié . rémunération . net imposable',
+  'salarié . rémunération . net . imposable',
   'salarié . cotisations . salarié',
   'salarié . rémunération . heures supplémentaires',
   'salarié . cotisations . prévoyances . santé . salarié',
