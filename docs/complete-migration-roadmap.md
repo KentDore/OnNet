@@ -1,6 +1,6 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #182 (11/11/2026, run 43032047839) est vert après ajout explicite des tests du client API au workflow ; il comprend les tests de calcul, le build, les parcours navigateur simulés et le smoke-test réel Chromium. Le script de comparaison complet avec l’API n’est pas exécuté par cette CI. Cela valide la couverture technique exécutée, pas encore la justesse indépendante de tous les calculs.
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #194 (11/11/2026, run 43034957692, commit `6af377f1b5fa1f8807b19022c2c12c34ab600786`) est vert : syntaxe, tests de calcul, client API, build, parcours navigateur simulés et smoke-test réel Chromium. Playwright `1.55.1` est installé sans `apt-get` et son installation a signalé zéro vulnérabilité. Le script de comparaison complet avec l’API n’est pas exécuté par cette CI. Cela valide la couverture technique exécutée, pas encore la justesse indépendante de tous les calculs.
 
 ## Décision d'architecture
 
