@@ -22,20 +22,25 @@ jobs:
           node-version: 22
       - name: Installer les dépendances du projet
         run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
-      # Les erreurs métier sont consignées par scénario ; les erreurs 429/5xx interrompent la campagne.
-      # Relancer après correction des variables fiscales du modèle social.
-      # Vérifier l'application du taux neutre via deux évaluations officielles.
-      # Relancer avec la règle de taux neutre distincte.
-      # Syntaxe corrigée : guillemets doubles autour de l'apostrophe ASCII.
-      # Tester le taux neutre sans forcer une assiette annuelle calculée localement.
-      # Retester après rétablissement de l'assiette annuelle et foyer neutre explicite.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
+
+  probe-simulator:
+    if: contains(github.event.head_commit.message, '[probe-simulator]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances du projet
+        run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
       - name: Installer Playwright pour le simulateur officiel
         run: npm install --no-save --no-package-lock playwright@1.55.1
       - name: Installer Chromium
         run: npx playwright install chromium
-      # La comparaison du simulateur web reste diagnostique et hors CI standard.
-      # Inclure les nets avant impôt et imposable dans la comparaison indépendante.
       - name: Inspecter le simulateur web officiel (cas synthétique)
         run: node scripts/probe-official-simulator.mjs
