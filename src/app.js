@@ -47,6 +47,8 @@ function calculationKey(s, f){
     nbMois:Number(s.nbMois || 12),
     primes:Number(s.primes || 0),
     commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
     date:scenarioCalculationDate(s),
     fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
   });
@@ -61,6 +63,9 @@ function unsupportedCalculationReason(s){
   }
   if(Number(s.primes || 0) > 0){
     return 'Ce scénario comporte des primes annuelles libres qui ne sont pas encore raccordées à l’API Urssaf.';
+  }
+  if(!String(s.codePostal || '').trim() || !String(s.departement || '').trim()){
+    return 'Sélectionnez une commune dans les suggestions pour renseigner son code postal et son département avant le calcul.';
   }
   return null;
 }
@@ -77,6 +82,8 @@ function buildUrssafInput(s, f){
     valeurResto:Number(s.valeurResto) || 0,
     partResto:Number(s.partResto),
     commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
     date:scenarioCalculationDate(s),
     benchmarkOnly:Boolean(s.isBenchmark)
   }, s.isBenchmark ? {} : taxInputForFoyer(f));
@@ -328,7 +335,7 @@ function scheduleUrssafCalculations(immediate, forceRetry){
 let justAddedId = null;
 function mkScenario(over){
   const base = {
-    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé',
+    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
@@ -402,6 +409,12 @@ function sanitizeScenario(raw){
   clean.commune = typeof clean.commune === 'string' && clean.commune.trim()
     ? clean.commune.trim().replace(/\s+/g, ' ').slice(0, 80)
     : 'Pacé';
+  if(clean.commune === 'Pacé' && !clean.codePostal && !clean.departement){
+    clean.codePostal = '35740';
+    clean.departement = 'Ille-et-Vilaine';
+  }
+  clean.codePostal = typeof clean.codePostal === 'string' && /^\\d{5}$/.test(clean.codePostal) ? clean.codePostal : '';
+  clean.departement = typeof clean.departement === 'string' ? clean.departement.trim().slice(0, 80) : '';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
@@ -551,6 +564,7 @@ function buildShareUrl(options){
   const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
     // Données essentielles à la comparaison salariale.
     id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, commune:s.commune || 'Pacé',
+    codePostal:s.codePostal || '', departement:s.departement || '',
     nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
     // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
@@ -794,8 +808,9 @@ function renderCard(s, r, showRemove){
         <div class="section-tag">Lieu de travail</div>
     <div class="field-row">
       <label for="f-commune-${uid}">Commune de l’établissement</label>
-      <input type="text" id="f-commune-${uid}" value="${esc(s.commune || 'Pacé')}" data-id="${uid}" data-key="commune" maxlength="80" autocomplete="off">
-      <div class="sub-hint">Cette commune est transmise au moteur Urssaf pour ce salaire. Vérifiez qu’elle correspond à l’établissement du poste.</div>
+      <input type="text" id="f-commune-${uid}" value="${esc(communeLabel(s))}" data-id="${uid}" data-key="commune" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="commune-suggestions-${uid}">
+      <div class="commune-suggestions" id="commune-suggestions-${uid}" role="listbox" hidden></div>
+      <div class="sub-hint" id="commune-hint-${uid}">${s.codePostal && s.departement ? `Lieu identifié : ${esc(s.codePostal)} — ${esc(s.departement)}. Les informations sont transmises à l’API Urssaf.` : 'Choisissez une suggestion pour confirmer le code postal et le département.'}</div>
     </div>
     <div class="section-tag">Mutuelle</div>
         <div class="two-col">
@@ -1603,14 +1618,70 @@ function validateNumericInput(el, finalCheck){
   return true;
 }
 
+function communeLabel(s){
+  if(s && s.codePostal && s.departement) return String(s.commune) + ' — ' + String(s.codePostal) + ' (' + String(s.departement) + ')';
+  return String(s && s.commune || 'Commune') + ' — sélection requise';
+}
+
+const communeSearchTimers = new Map();
+const communeSearchSequences = new Map();
+async function searchCommunes(id, query){
+  const input = document.getElementById('f-commune-' + id);
+  const list = document.getElementById('commune-suggestions-' + id);
+  if(!input || !list) return;
+  if(communeSearchTimers.has(id)) clearTimeout(communeSearchTimers.get(id));
+  const term = String(query || '').trim();
+  if(term.length < 2){ list.hidden = true; list.innerHTML = ''; return; }
+  const sequence = (communeSearchSequences.get(id) || 0) + 1;
+  communeSearchSequences.set(id, sequence);
+  list.hidden = false;
+  list.innerHTML = '<div class="commune-search-status">Recherche des communes…</div>';
+  const timer = setTimeout(async () => {
+    try{
+      const params = new URLSearchParams({ fields:'nom,code,codesPostaux,departement,codeDepartement', limit:'8' });
+      if(/^\\d{2,5}$/.test(term)) params.set('codePostal', term);
+      else { params.set('nom', term); params.set('boost', 'population'); }
+      const response = await fetch('https://geo.api.gouv.fr/communes?' + params.toString(), { headers:{ Accept:'application/json' } });
+      if(!response.ok) throw new Error('Service géographique indisponible');
+      const data = await response.json();
+      if(communeSearchSequences.get(id) !== sequence) return;
+      const options = [];
+      for(const item of Array.isArray(data) ? data : []){
+        const department = item.departement && item.departement.nom;
+        const postcodes = Array.isArray(item.codesPostaux) ? item.codesPostaux : [];
+        if(!item.nom || !department || !postcodes.length) continue;
+        for(const codePostal of postcodes){
+          options.push({ commune:item.nom, codePostal, departement:department, codeCommune:item.code, codeDepartement:item.codeDepartement });
+          if(options.length >= 8) break;
+        }
+        if(options.length >= 8) break;
+      }
+      list._communeOptions = options;
+      list.innerHTML = options.length ? options.map((option, index) => '<button type="button" class="commune-option" role="option" data-commune-index="' + index + '">' + esc(option.commune) + ' — ' + esc(option.codePostal) + ' (' + esc(option.departement) + ')</button>').join('') : '<div class="commune-search-status">Aucune commune trouvée. Essayez un code postal ou un nom plus précis.</div>';
+      list.querySelectorAll('.commune-option').forEach(button => button.addEventListener('click', () => {
+        const selected = list._communeOptions && list._communeOptions[Number(button.dataset.communeIndex)];
+        const scenario = findScenario(id);
+        if(!selected || !scenario) return;
+        Object.assign(scenario, selected);
+        list.hidden = true;
+        render();
+        updateComputed();
+      }));
+    }catch(error){
+      if(communeSearchSequences.get(id) !== sequence) return;
+      list.innerHTML = '<div class="commune-search-status">Impossible de vérifier la commune. Réessayez avant de calculer.</div>';
+    }
+  }, 250);
+  communeSearchTimers.set(id, timer);
+}
+
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    // La commune est validée à la perte de focus : ne pas lancer une requête
-    // Urssaf à chaque frappe.
+    searchCommunes(id, e.target.value);
     return;
   }
   if(key === 'name'){
@@ -1633,12 +1704,11 @@ function onBlurClamp(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    const commune = e.target.value.trim().replace(/\s+/g, ' ').slice(0, 80) || s.commune || 'Pacé';
-    e.target.value = commune;
-    if(s.commune !== commune){
-      s.commune = commune;
-      updateComputed();
-    }
+    e.target.value = communeLabel(s);
+    const hint = document.getElementById('commune-hint-' + id);
+    if(hint && (!s.codePostal || !s.departement)) hint.textContent = 'Commune non confirmée : saisissez un nom ou un code postal, puis choisissez une suggestion.';
+    const list = document.getElementById('commune-suggestions-' + id);
+    if(list && !e.relatedTarget?.classList?.contains('commune-option')) list.hidden = true;
     return;
   }
   if(!validateNumericInput(e.target, true)) return;
