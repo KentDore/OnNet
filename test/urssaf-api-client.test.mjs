@@ -1,9 +1,9 @@
 'use strict'
 
-const { test } = require('node:test')
-const assert = require('node:assert/strict')
+import { test } from 'node:test'
+import assert from 'node:assert/strict'
 
-const { calculateWithUrssafApi } = await import('../src/urssaf-api-client.mjs')
+import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
 
 function scenario(overrides = {}) {
   return {
