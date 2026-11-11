@@ -337,7 +337,7 @@ function sanitizeScenario(raw){
     clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
   }
   clean.commune = typeof clean.commune === 'string' && clean.commune.trim()
-    ? clean.commune.trim().replace(/\\s+/g, ' ').slice(0, 80)
+    ? clean.commune.trim().replace(/\s+/g, ' ').slice(0, 80)
     : 'Pacé';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
@@ -487,7 +487,7 @@ function buildShareUrl(options){
 
   const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
     // Données essentielles à la comparaison salariale.
-    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, commune:s.commune || 'Pacé',
     nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
     // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
@@ -1534,7 +1534,7 @@ function onInput(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    const commune = e.target.value.trim().replace(/\\s+/g, ' ').slice(0, 80);
+    const commune = e.target.value.trim().replace(/\s+/g, ' ').slice(0, 80);
     if(!commune) return;
     s.commune = commune;
     updateComputed();
@@ -1560,7 +1560,7 @@ function onBlurClamp(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    const commune = e.target.value.trim().replace(/\\s+/g, ' ').slice(0, 80) || s.commune || 'Pacé';
+    const commune = e.target.value.trim().replace(/\s+/g, ' ').slice(0, 80) || s.commune || 'Pacé';
     s.commune = commune;
     e.target.value = commune;
     updateComputed();
