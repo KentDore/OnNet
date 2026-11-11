@@ -13,7 +13,8 @@
     "scenarios:publicodes": "node scripts/publicodes-scenarios.mjs",
     "compare:urssaf-api": "node scripts/compare-urssaf-api.mjs",
     "diagnose:urssaf-meal-tickets": "node scripts/diagnose-urssaf-meal-tickets.mjs",
-    "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs"
+    "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs",
+    "diagnose:publicodes-tax": "node scripts/diagnose-publicodes-tax.mjs"
   },
   "dependencies": {
     "modele-social": "11.1.0",
