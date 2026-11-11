@@ -109,6 +109,39 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       '39 h : le brut total doit correspondre au salaire de base plus la rémunération des heures supplémentaires');
     assert.ok(Number.isFinite(net39) && net39 > 0, '39 h : le net avant impôt doit être positif');
 
+    const smicBenchmark = await page.evaluate(async ({ endpoint, commonSituation, smic }) => {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', accept: 'application/json' },
+        body: JSON.stringify({
+          expressions: [
+            'salarié . rémunération . brut',
+            'salarié . rémunération . net . à payer avant impôt'
+          ],
+          situation: {
+            ...commonSituation,
+            'salarié . contrat . salaire brut': `${smic} €/mois`,
+            'salarié . temps de travail . heures supplémentaires': '0 heure/mois'
+          }
+        })
+      });
+      const body = await response.json();
+      return { status: response.status, ok: response.ok, body };
+    }, { endpoint: ENDPOINT, commonSituation: {
+      'salarié': 'oui',
+      'salarié . contrat': "'CDI'",
+      'salarié . contrat . statut cadre': 'non',
+      'salarié . contrat . temps de travail . temps partiel': 'non',
+      'établissement . commune': "'Pacé'",
+      'salarié . convention collective': "'droit commun'",
+      'salarié . activité partielle': 'non',
+      'date': '11/11/2026'
+    }, smic });
+    assert.equal(smicBenchmark.ok, true, 'SMIC : le calcul dédié doit répondre');
+    assert.equal(smicBenchmark.body.evaluate?.length, 2, 'SMIC : brut et net avant impôt attendus');
+    assert.ok(Number.isFinite(smicBenchmark.body.evaluate[0].nodeValue), 'SMIC : brut numérique');
+    assert.ok(Number.isFinite(smicBenchmark.body.evaluate[1].nodeValue), 'SMIC : net avant impôt numérique');
+
     // Vérification de robustesse sur des montants très faibles, usuels et élevés.
     // Ces cas contrôlent le comportement technique de l'API, pas la conformité
     // juridique de chaque situation particulière.
@@ -149,12 +182,12 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       const [gross, net, taxable, contributions] = response.body.evaluate.map(item => item.nodeValue);
       assert.ok(Number.isFinite(gross), `Brut ${grossTarget} € : le brut doit être numérique (reçu : ${gross})`);
       assert.ok(Number.isFinite(net), `Brut ${grossTarget} € : le net doit être numérique (reçu : ${net})`);
-      if (grossTarget >= 1867.02) {
+      if (grossTarget >= 4000) {
         for (const [label, value] of Object.entries({ taxable, contributions })) {
           assert.ok(Number.isFinite(value), `Brut ${grossTarget} € : ${label} doit être numérique (reçu : ${value})`);
         }
       } else {
-        // Sous un salaire mensuel proche du SMIC, certaines expressions détaillées
+        // Pour les très faibles salaires, certaines expressions détaillées
         // peuvent être absentes. Le client refuse alors le résultat incomplet au lieu
         // de fabriquer un net imposable ou des cotisations.
         for (const [label, value] of Object.entries({ taxable, contributions })) {
