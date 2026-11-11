@@ -11,6 +11,7 @@ on:
       - 'scripts/publicodes-scenarios.mjs'
       - 'scripts/compare-urssaf-api.mjs'
       - 'scripts/diagnose-urssaf-meal-tickets.mjs'
+      - 'scripts/diagnose-overtime-50.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
       - '.github/workflows/publicodes-prototype.yml'
@@ -46,6 +47,8 @@ jobs:
         run: npm run compare:urssaf-api
       - name: Diagnose meal tickets with the official API
         run: npm run diagnose:urssaf-meal-tickets
+      - name: Verify 50% overtime premium with the official API
+        run: node scripts/diagnose-overtime-50.mjs
       - name: Print reproducible salary scenarios
         run: npm run scenarios:publicodes
       - name: Build standalone HTML prototype
