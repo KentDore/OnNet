@@ -772,6 +772,7 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
+      ${s.dureeType === '39' ? '<div class="sub-hint">Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine. Calcul selon le droit commun, sans prise en compte des RTT.</div>' : ''}
     </div>
 
     <details class="more">
