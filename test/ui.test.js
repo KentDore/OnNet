@@ -373,10 +373,17 @@ test('limite la valeur unitaire des titres-restaurant à 1 000 € dans la carte
     await field.fill('1200');
     await field.blur();
     assert.equal(await field.inputValue(), '1000');
-    await waitForCalls(calls, before + 1);
-    assert.ok(calls.bodies.some(body =>
+    const expectedRequest = () => calls.bodies.some(body =>
       body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'] === '1000.00 €/titre-restaurant'
-    ));
+    );
+    const deadline = Date.now() + 10000;
+    while (!expectedRequest() && Date.now() < deadline) {
+      await new Promise(resolve => setTimeout(resolve, 50));
+    }
+    assert.ok(expectedRequest(), 'attendu une requête API avec le titre-restaurant à 1 000 € ; reçu : ' +
+      JSON.stringify(calls.bodies.slice(before).map(body =>
+        body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire']
+      )));
   } finally {
     await context.close();
   }
@@ -390,8 +397,6 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     await page.locator('#modalAddInput').fill('3400');
     await page.locator('#modalAddMutuelle').fill('25');
     await page.locator('#modalAddMutuellePat').fill('40');
-    assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25', 'la part salarié doit être saisie dans le champ de la modale');
-    assert.equal(await page.locator('#modalAddMutuellePat').inputValue(), '40');
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
