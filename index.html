@@ -1036,9 +1036,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . rémunération . avantages en nature': 'non',
     'salarié . rémunération . primes . activité . base': '0 €/mois',
     "salarié . rémunération . primes . fin d'année": 'non',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant': '0 €/mois',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant': '0 €/an',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . prime de transport . montant': '0 €/an',
     'salarié . régimes spécifiques . taux réduits': 'non',
     'salarié . régimes spécifiques . DFS': 'non',
     'salarié . régimes spécifiques . impatriés': 'non',
@@ -1217,10 +1214,11 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
     })
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
+    const warnings = normalizeWarnings(payload.warnings)
     return {
       values,
       missingVariables,
-      warnings: normalizeWarnings(payload.warnings)
+      warnings
     }
   } finally {
     clearTimeout(timeoutId)
@@ -1779,18 +1777,19 @@ async function executeUrssafCalculations(generation, forceRetry){
       if(!Number.isFinite(result.value) || result.value <= 0){
         throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       }
-      // Une réponse valide reste réutilisable même si l’utilisateur a modifié
-      // le formulaire pendant l’appel réseau. La génération protège le rendu,
-      // pas la mise en cache d’un résultat lié à ses paramètres exacts.
+      // Le montant officiel reste réutilisable même si l'interface a changé
+      // pendant l'appel ; la génération protège uniquement le rendu.
       officialSmicState = {
         status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
       };
     }catch(error){
-      officialSmicState = {
-        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
-        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
-      };
+      if(generation === urssafGeneration){
+        officialSmicState = {
+          status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+          error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
+        };
+      }
     }
     if(generation !== urssafGeneration) return;
     updateUrssafStatus(getCurrentComputed());
@@ -1817,15 +1816,13 @@ async function executeUrssafCalculations(generation, forceRetry){
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
         buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
       );
-      // Conserver le résultat pour cette clé exacte même si une saisie plus
-      // récente a rendu cette génération obsolète : cela évite de repayer
-      // le coût réseau lors du prochain passage sur les mêmes paramètres.
+      // Une réponse valide reste réutilisable pour ses paramètres exacts,
+      // même si une saisie plus récente a rendu son affichage obsolète.
       urssafResultCache.set(key,mapUrssafResultToOnNet(result));
       urssafErrorCache.delete(key);
       if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
     }catch(error){
-      // Ne pas mémoriser une erreur issue d'une génération obsolète :
-      // le prochain affichage doit pouvoir retenter le calcul.
+      // Une erreur obsolète ne doit pas bloquer une prochaine tentative.
       if(generation === urssafGeneration){
         urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
       }
