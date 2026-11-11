@@ -480,3 +480,54 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ date: '2026-02-31' }), { fetchImpl }), /date calendaire valide/)
   assert.equal(calls, 0)
 })
+
+
+test('traduit les erreurs HTTP 400 et 503 sans résultat de substitution', async () => {
+  for (const [status, expected] of [
+    [400, /rejeté la situation transmise/],
+    [503, /temporairement indisponible/]
+  ]) {
+    let calls = 0;
+    await assert.rejects(calculateWithUrssafApi(scenario(), {
+      fetchImpl: mockFetch(() => {
+        calls += 1;
+        return response({}, status);
+      })
+    }), expected);
+    assert.equal(calls, 1, `aucune nouvelle tentative implicite pour HTTP ${status}`);
+  }
+});
+
+test('refuse une réponse JSON illisible ou un nombre de résultats incomplet', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl: mockFetch(() => ({
+      ok: true,
+      status: 200,
+      json: async () => { throw new SyntaxError('invalid json'); }
+    }))
+  }), /JSON illisible/);
+
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl: mockFetch(body => response({
+      evaluate: body.expressions.slice(0, -1).map(() => ({ nodeValue: 1, missingVariables: [] }))
+    }))
+  }), /Réponse incomplète/);
+});
+
+test('interrompt une requête qui dépasse le délai configuré', async () => {
+  let receivedSignal;
+  const fetchImpl = (_url, options) => new Promise((resolve, reject) => {
+    receivedSignal = options.signal;
+    options.signal.addEventListener('abort', () => {
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      reject(error);
+    }, { once: true });
+  });
+
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl,
+    timeoutMs: 1000
+  }), /Délai dépassé/);
+  assert.equal(receivedSignal.aborted, true);
+});
