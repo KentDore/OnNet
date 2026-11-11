@@ -213,6 +213,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
   const { context, page, calls } = await openApp();
   try {
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
+    assert.ok(calls.bodies.every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
     assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
