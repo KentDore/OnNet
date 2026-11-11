@@ -2,7 +2,6 @@ const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'
 const DEFAULT_TIMEOUT_MS = 15000
 const MONTHLY_BASE_HOURS = 151.67
 const MONTHLY_OVERTIME_HOURS_39H = 4 * 52 / 12
-const DEFAULT_OVERTIME_PREMIUM = 25
 const MAX_GROSS_CALIBRATION_ATTEMPTS = 3
 
 const EXPRESSIONS = Object.freeze({
@@ -320,9 +319,9 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
   }
 
   const overtimeHours = durationType === '39' ? MONTHLY_OVERTIME_HOURS_39H : 0
-  const overtimeFactor = 1 + DEFAULT_OVERTIME_PREMIUM / 100
   let baseGross = durationType === '39'
-    ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours * overtimeFactor)
+    // Estimation initiale neutre : le taux réel est calculé par l’API Urssaf.
+    ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours)
     : grossTarget
 
   const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
