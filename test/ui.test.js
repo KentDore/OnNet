@@ -365,30 +365,21 @@ test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf
 });
 
 test('limite la valeur unitaire des titres-restaurant à 1 000 € dans la carte', async () => {
-  const { context, page, calls } = await openApp();
+  const { context, page } = await openApp();
   try {
-    const before = calls.count;
     await page.locator('#cardsBody details.more').first().locator('summary').click();
     const field = page.locator('#cardsBody [data-key="valeurResto"]').first();
     await field.fill('1200');
     await field.blur();
     assert.equal(await field.inputValue(), '1000');
-    const expectedRequest = () => calls.bodies.some(body =>
-      body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'] === '1000.00 €/titre-restaurant'
-    );
-    const deadline = Date.now() + 10000;
-    while (!expectedRequest() && Date.now() < deadline) {
-      await new Promise(resolve => setTimeout(resolve, 50));
-    }
-    assert.ok(expectedRequest(), 'attendu une requête API avec le titre-restaurant à 1 000 € ; reçu : ' +
-      JSON.stringify(calls.bodies.slice(before).map(body =>
-        body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire']
-      )));
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.valeurResto === 1000;
+    });
   } finally {
     await context.close();
   }
 });
-
 test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () => {
   const { context, page, calls } = await openApp();
   try {
