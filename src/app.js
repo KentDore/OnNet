@@ -3,6 +3,251 @@
 
 // ---------- État ----------
 let idCounter = 0;
+
+let urssafConsentGranted = false;
+let urssafGeneration = 0;
+let urssafDebounceTimer = null;
+let urssafRequestQueue = Promise.resolve();
+let urssafLastRequestAt = 0;
+const urssafResultCache = new Map();
+const urssafErrorCache = new Map();
+
+function currentCalculationDate(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function taxInputForFoyer(f){
+  if(f.mode === 'taux'){
+    return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
+  }
+  return {
+    modeImpot:'barème',
+    situationFamille:f.couple ? 'couple' : 'célibataire',
+    enfantsACharge:Number(f.personnesCharge) || 0,
+    parentIsole:!f.couple && f.parentIsole === true,
+    autresRevenusImposables:f.couple ? (Number(f.autresRevenus) || 0) : 0
+  };
+}
+
+function scenarioCalculationDate(s){
+  return s.isBenchmark ? benchmarks.smicDate : currentCalculationDate();
+}
+
+function calculationKey(s, f){
+  return JSON.stringify({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto) || 0,
+    nbMois:Number(s.nbMois || 12),
+    primes:Number(s.primes || 0),
+    date:scenarioCalculationDate(s),
+    fiscal:taxInputForFoyer(f)
+  });
+}
+
+function unsupportedCalculationReason(s){
+  if(Number(s.nbMois || 12) !== 12){
+    return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
+  }
+  if(Number(s.primes || 0) > 0){
+    return 'Ce scénario comporte des primes annuelles libres qui ne sont pas encore raccordées à l’API Urssaf.';
+  }
+  return null;
+}
+
+function buildUrssafInput(s, f){
+  const reason = unsupportedCalculationReason(s);
+  if(reason) throw new Error(reason);
+  return Object.assign({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto),
+    date:scenarioCalculationDate(s)
+  }, taxInputForFoyer(f));
+}
+
+function mapUrssafResultToOnNet(result){
+  const gross = result.grossCalculated;
+  const overtimeHours = result.overtimeHours;
+  const monthlyHours = HEURES_BASE + overtimeHours;
+  // Le total des cotisations salarié inclut déjà la part salariale de mutuelle.
+  // On isole cette ligne pour conserver la décomposition visuelle sans la compter deux fois.
+  const otherEmployeeContributions = Math.max(0, result.employeeContributions - result.employeeHealth);
+  const monthly = {
+    brutTotal:gross,
+    netApres:result.netBeforeTax,
+    netImposable:result.taxableNet,
+    cotisNettes:otherEmployeeContributions,
+    netSocial:result.netBeforeTax + result.mealTicketEmployee
+  };
+  const annual = {
+    brutTotal:gross * 12,
+    netApres:result.netBeforeTax * 12,
+    netImposable:result.taxableNet * 12
+  };
+  const tr = {
+    totalSalarie:result.mealTicketEmployee,
+    totalEmployeur:result.mealTicketEmployer,
+    reintegre:result.mealTicketNonDeductible,
+    motif:result.mealTicketNonDeductible > 0.005 ? 'api' : null
+  };
+  return {
+    engine:result.engine,
+    checkedAt:result.checkedAt,
+    missingVariables:result.missingVariables,
+    warnings:result.warnings,
+    hasHS:overtimeHours > 0,
+    heuresSup:overtimeHours,
+    brutHS:result.overtimePay,
+    tr,
+    m:monthly,
+    a:annual,
+    netApres:monthly.netApres,
+    netImposable:monthly.netImposable,
+    annuelNet:annual.netApres,
+    netApresImpot:result.netAfterTax,
+    annuelNetApresImpot:result.netAfterTax * 12,
+    impotAnnuel:result.incomeTax,
+    tauxImpot:result.calculatedTaxRate,
+    brutHoraire:result.baseGross / HEURES_BASE,
+    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
+    tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
+  };
+}
+
+function buildSmicScenario(base){
+  return Object.assign({}, base, {
+    id:-1, name:'Référence SMIC', brut:benchmarks.smicBrut, dureeType:'35',
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
+    nbMois:12, primes:0, isBenchmark:true
+  });
+}
+
+function getCurrentComputed(){
+  return scenarios.map(s => ({s, r:urssafResultCache.get(calculationKey(s,foyer)) || null}));
+}
+
+function getCalculationError(s, f){
+  const key = calculationKey(s, f || foyer);
+  return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
+}
+
+function getCachedSmicResult(){
+  const base = findScenario(refId) || scenarios[0];
+  if(!base) return null;
+  const scenario = buildSmicScenario(base);
+  return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
+}
+
+function queuedUrssafFetch(url, options){
+  const request = urssafRequestQueue.then(async () => {
+    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
+    if(delay) await new Promise(resolve => setTimeout(resolve, delay));
+    urssafLastRequestAt = Date.now();
+    return window.fetch(url, options);
+  });
+  urssafRequestQueue = request.catch(() => {});
+  return request;
+}
+
+function updateUrssafStatus(computed){
+  const statusText = document.getElementById('urssafStatusText');
+  const button = document.getElementById('urssafCalculateBtn');
+  if(!statusText || !button) return;
+  if(!urssafConsentGranted){
+    statusText.textContent = 'Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf. Aucun calcul local de cotisations ou d’impôt ne sera utilisé.';
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Calculer avec l’Urssaf';
+    return;
+  }
+  const failed = computed.filter(({s,r}) => !r && getCalculationError(s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicResult = getCachedSmicResult();
+  const smicError = smicScenario && !smicResult ? getCalculationError(smicScenario,foyer) : null;
+  const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
+  if(!smicResult && !smicError) pending.push({s:smicScenario,r:null});
+  if(failed.length || smicError){
+    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' calcul(s) indisponible(s). Consultez le message affiché dans chaque carte ou sous les repères. Aucun résultat de remplacement calculé localement n’est fourni.';
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Réessayer les calculs';
+    return;
+  }
+  if(pending.length){
+    statusText.textContent = 'Calcul des salaires et du repère SMIC par l’API officielle Mon-entreprise / Urssaf. Les résultats affichés sont recalculés dès que les paramètres changent.';
+    button.hidden = true;
+    return;
+  }
+  const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
+  const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
+  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
+  const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
+  let message = 'Calcul terminé avec le moteur officiel Mon-entreprise de l’Urssaf.';
+  if(checkedAt) message += ' Dernière réponse reçue le ' + new Date(checkedAt).toLocaleString('fr-FR') + '.';
+  if(missing.length) message += ' Variables non renseignées utilisant une valeur par défaut (' + missing.length + ') : ' + missing.slice(0,4).join(', ') + (missing.length > 4 ? '…' : '') + '.';
+  if(warnings.length) message += ' Avertissements du moteur : ' + warnings.slice(0,2).join(' ') + (warnings.length > 2 ? '…' : '');
+  statusText.textContent = message;
+  button.hidden = true;
+}
+
+async function executeUrssafCalculations(generation, forceRetry){
+  const jobs = scenarios.map(s => Object.assign({},s));
+  const base = findScenario(refId) || scenarios[0];
+  if(base) jobs.push(buildSmicScenario(base));
+  const seen = new Set();
+  for(const s of jobs){
+    if(generation !== urssafGeneration) return;
+    const key = calculationKey(s,foyer);
+    if(seen.has(key) || urssafResultCache.has(key)) continue;
+    seen.add(key);
+    if(forceRetry) urssafErrorCache.delete(key);
+    if(urssafErrorCache.has(key)) continue;
+    const unsupported = unsupportedCalculationReason(s);
+    if(unsupported){
+      urssafErrorCache.set(key,unsupported);
+      continue;
+    }
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.calculateWithUrssafApi !== 'function'){
+        throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
+        buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
+      );
+      if(generation !== urssafGeneration) return;
+      urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+  if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
+}
+
+function scheduleUrssafCalculations(immediate, forceRetry){
+  if(urssafDebounceTimer) clearTimeout(urssafDebounceTimer);
+  const generation = ++urssafGeneration;
+  const computed = getCurrentComputed();
+  updateUrssafStatus(computed);
+  if(!urssafConsentGranted) return;
+  const run = () => executeUrssafCalculations(generation, forceRetry === true);
+  if(immediate) run();
+  else urssafDebounceTimer = setTimeout(run, 300);
+}
+
 // Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
 // une seule fois (effacé à la fin du render() qui l'utilise).
 let justAddedId = null;
