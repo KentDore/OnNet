@@ -51,7 +51,7 @@ function makeApiResponse(request, options = {}) {
     'salarié . rémunération . heures supplémentaires': overtimePay,
     'salarié . cotisations . prévoyances . santé . salarié': employeeHealth,
     'salarié . cotisations . prévoyances . santé . employeur': employerHealth,
-    'salarié . rémunération . frais professionnels . titres-restaurant . salarié': mealTicketEmployee,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant': ticketCount * ticketValue,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': mealTicketEmployer,
     'salarié . rémunération . frais professionnels . non déductible': 0,
     'salarié . rémunération . net . payé après impôt': netBeforeTax - 100,
