@@ -1155,7 +1155,15 @@ function render(){
   const isSingle = computed.length === 1;
   const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
   const comparePanel = document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden = !allReady;
+  if(comparePanel) comparePanel.hidden = false;
+  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
+  if(chartContent){
+    const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
+    chartElements.forEach(selector => {
+      const element = comparePanel.querySelector(selector);
+      if(element) element.hidden = !allReady;
+    });
+  }
 
   updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
