@@ -3,7 +3,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 
-import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
+import { calculateWithUrssafApi, evaluateUrssafExpression } from '../src/urssaf-api-client.mjs'
 
 function scenario(overrides = {}) {
   return {
@@ -62,6 +62,37 @@ function response(payload, status = 200) {
     json: async () => payload
   }
 }
+
+
+test('évalue la règle SMIC officielle avec une date de situation et conserve les diagnostics', async () => {
+  let request
+  const result = await evaluateUrssafExpression('SMIC', { date:'2026-11-11' }, {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response({
+        evaluate: [{ nodeValue: 1867.02, missingVariables: { 'Département': 1 } }],
+        warnings: ['Règle expérimentale signalée']
+      })
+    })
+  })
+
+  assert.deepEqual(request.expressions, ['SMIC'])
+  assert.deepEqual(request.situation, { date:'11/11/2026' })
+  assert.equal(result.value, 1867.02)
+  assert.deepEqual(result.missingVariables, ['Département'])
+  assert.deepEqual(result.warnings, ['Règle expérimentale signalée'])
+  assert.equal(result.endpoint, 'https://mon-entreprise.urssaf.fr/api/v1/evaluate')
+  assert.ok(result.checkedAt)
+})
+
+test('refuse une réponse SMIC non numérique et ne substitue pas de valeur locale', async () => {
+  await assert.rejects(evaluateUrssafExpression('SMIC', {}, {
+    fetchImpl: mockFetch(() => response({
+      evaluate: [{ nodeValue: null, missingVariables: [] }],
+      warnings: []
+    }))
+  }), /valeur numérique/)
+})
 
 test('envoie une situation CDI et une seule requête pour un scénario 35 h', async () => {
   let calls = 0
