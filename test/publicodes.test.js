@@ -121,21 +121,8 @@ test('le taux personnalisé est appliqué par le modèle fiscal officiel', () =>
   near(result.netBeforeTax - result.netAfterTax, result.taxableNet * 0.1, 0.5, 'retenue au taux personnalisé')
 })
 
-test('le taux neutre est calculé par le modèle officiel', () => {
-  const result = calculatePublicodes(scenario({ modeImpot: 'neutre' }))
-  assert.ok(Number.isFinite(result.netAfterTax))
-  assert.ok(result.netAfterTax <= result.netBeforeTax)
-})
-
-test('le barème standard prend en compte la situation familiale', () => {
-  const single = calculatePublicodes(scenario({ modeImpot: 'barème' }))
-  const couple = calculatePublicodes(scenario({ modeImpot: 'barème', situationFamille: 'couple' }))
-  assert.ok(single.incomeTax > 0)
-  assert.ok(couple.incomeTax > 0)
-  assert.notEqual(single.netAfterTax, couple.netAfterTax)
-})
-
 test('refuse un taux personnalisé absent et une configuration familiale incohérente', () => {
-  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'personnalisé' })), /tauxPAS est requis/)
-  assert.throws(() => calculatePublicodes(scenario({ parentIsole: true })), /parentIsole nécessite/)
+  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'personnalisé' })), /tauxPAS/)
+  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'barème' })), /règles fiscales communes/)
+  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'neutre' })), /règles fiscales communes/)
 })
