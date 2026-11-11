@@ -4,9 +4,7 @@ Statut : intégration principale réalisée sur `migration/publicodes-urssaf`, n
 
 ## Décision
 
-Utiliser le paquet officiel `modele-social` et le moteur `publicodes` comme source des calculs de paie, plutôt que maintenir dans OnNet une seconde implémentation des cotisations et des règles légales.
-
-L’API officielle est désormais le seul moteur de calcul du calculateur principal sur cette branche. L’ancien fichier `src/calc.js` n’est plus embarqué dans le build. Le paquet `modele-social` / `publicodes` reste disponible pour les tests de parité et diagnostics, jamais comme solution de repli en production.
+L’API REST officielle Mon-entreprise / Urssaf est le seul moteur de calcul du calculateur principal sur cette branche. L’ancien fichier `src/calc.js` n’est plus embarqué dans le build. Le paquet `modele-social` / `publicodes` reste disponible pour les tests de parité et diagnostics, jamais comme solution de repli en production.
 
 ## Sources officielles vérifiées
 
@@ -27,7 +25,7 @@ Décision retenue : les résultats de calcul affichés par OnNet doivent proveni
 2. L'API officielle évalue les règles et renvoie les valeurs affichées : brut calculé, net avant impôt, net imposable, cotisations et, si demandé, net après impôt, montant d'impôt et taux.
 3. Le paquet local `modele-social` / `publicodes` reste réservé aux tests de parité et diagnostics de développement. Il ne doit jamais remplacer silencieusement l'API dans l'application.
 4. En cas d'indisponibilité, de réponse incomplète ou de variables manquantes bloquantes, OnNet doit expliquer que le calcul n'a pas pu être confirmé, plutôt que produire une estimation locale présentée comme officielle.
-5. Les comparaisons, sauvegardes et données personnelles restent côté navigateur autant que possible. Les données nécessaires au calcul sont toutefois transmises à l'API Urssaf : l'interface devra l'indiquer clairement avant le calcul.
+5. Les comparaisons, sauvegardes et données personnelles restent côté navigateur autant que possible. Les paramètres nécessaires au calcul ne sont transmis à l’API Urssaf qu’après action explicite et la portée de cette transmission est annoncée dans l’interface.
 
 Les seules opérations locales tolérées sont des conversions d'unités ou de représentation nécessaires pour construire la situation (par exemple convertir un brut total 39 h en salaire de base + heures supplémentaires, ou annualiser une rémunération mensuelle récurrente si la règle fiscale attend une assiette annuelle). Ces transformations doivent être documentées, testées et ne doivent jamais remplacer une règle de calcul Urssaf. Les hypothèses de saisie (statut cadre, convention collective, majoration, situation familiale, etc.) doivent être explicites et modifiables lorsque pertinentes.
 
@@ -122,12 +120,12 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 
 ## Séquencement proposé
 
-1. Ajouter un environnement npm et verrouiller les dépendances.
-2. Produire un prototype de bundle autonome, sans modifier le calcul existant.
-3. Écrire l'adaptateur et les tests sur un petit jeu de scénarios.
-4. Comparer les résultats avec l'outil officiel et analyser tous les écarts.
-5. Migrer les sorties du moteur une à une.
-6. Retirer l'ancien calcul uniquement après validation complète.
+La séquence initiale de prototype est terminée sur la branche de migration :
+1. le build autonome principal embarque le client API officiel et les seuls utilitaires de présentation ;
+2. les résultats du comparateur, des cartes, des graphiques et du repère SMIC proviennent des réponses API ;
+3. aucun calcul local ne remplace une réponse indisponible ;
+4. les scénarios non encore pris en charge (primes libres et mensualités différentes de 12) sont bloqués ;
+5. les tests CI et navigateur utilisent des réponses simulées ; les scénarios live Urssaf et la vérification CORS réelle restent des critères de sortie avant publication.
 
 ## État d'avancement
 
