@@ -2111,11 +2111,11 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">35 h · ${fmt(smicHourlyGross)} € brut/heure · ${fmt(benchmarks.smicBrut)} € brut/mois</div>
+        <div class="benchmark-meta">35 h · ${smicHourlyGross.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} € brut/heure · ${fmt(benchmarks.smicBrut)} brut/mois</div>
         <div class="benchmark-result ${signedClass(smic)}">${smic.amount} <small>(${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Repère calculé sur 35 h, sans mutuelle ni titres-restaurant. Le taux horaire brut est déduit du brut mensuel et de 151,67 h/mois. Date d’effet du SMIC : ${esc(benchmarks.smicDate)}.</p>
+          <p>Repère calculé sur 35 h, sans mutuelle ni titres-restaurant. Le taux horaire brut est calculé à partir du brut mensuel et de 151,67 h/mois. Date d’effet du SMIC : ${esc(benchmarks.smicDate)}.</p>
           <p>Le net avant impôt est une estimation du simulateur ; le brut horaire et mensuel sont les repères de saisie.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
