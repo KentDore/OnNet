@@ -29,7 +29,7 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . heures supplémentaires': 0,
     'salarié . cotisations . prévoyances . santé . salarié': 30,
     'salarié . cotisations . prévoyances . santé . employeur': 30,
-    'salarié . rémunération . frais professionnels . titres-restaurant . salarié': 84,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant': 168,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 84,
     'salarié . rémunération . frais professionnels . non déductible': 0,
     'salarié . rémunération . net . payé après impôt': 1700,
@@ -86,6 +86,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.endpoint, 'https://mon-entreprise.urssaf.fr/api/v1/evaluate')
   assert.equal(result.netBeforeTax, 1810)
   assert.equal(result.taxableNet, 1880)
+  assert.equal(result.mealTicketAmount, 168)
   assert.equal(result.mealTicketEmployee, 84)
   assert.equal(result.mealTicketEmployer, 84)
   assert.equal(result.mealTicketNonDeductible, 0)
@@ -157,6 +158,7 @@ test('active le taux personnalisé après annualisation du net imposable', async
   assert.equal(result.incomeTax, 1320)
   assert.equal(result.calculatedTaxRate, 10)
   assert.equal(result.mealTicketEmployee, 84)
+  assert.equal(result.mealTicketAmount, 168)
 })
 
 test('alimente l’assiette annuelle officielle du taux neutre', async () => {
