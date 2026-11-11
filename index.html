@@ -1600,7 +1600,7 @@ function taxInputForFoyer(f){
 }
 
 function scenarioCalculationDate(s){
-  return s.isBenchmark && benchmarks.mode === 'manual' ? benchmarks.smicDate : currentCalculationDate();
+  return currentCalculationDate();
 }
 
 function calculationKey(s, f){
@@ -1717,7 +1717,6 @@ function mapUrssafResultToOnNet(result){
 }
 
 function getSmicGross(){
-  if(benchmarks.mode === 'manual') return benchmarks.smicBrut;
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
 
@@ -1940,25 +1939,7 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
-const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
-const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut:null, smicDate:'', mode:'official' });
-function loadBenchmarks(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    if(!saved || typeof saved !== 'object') return { ...BENCHMARK_DEFAULTS };
-    const smicBrut = Number(saved.smicBrut);
-    const smicDate = typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
-    // Toute configuration antérieure persistée venait d'une saisie manuelle.
-    // On la conserve afin de ne pas écraser un choix explicite de l'utilisateur.
-    if(!Number.isFinite(smicBrut) || smicBrut <= 0 || smicBrut > 100000 ||
-       !/^\d{4}-\d{2}-\d{2}$/.test(smicDate)) return { ...BENCHMARK_DEFAULTS };
-    return { smicBrut, smicDate, mode:'manual' };
-  }catch(_){
-    return { ...BENCHMARK_DEFAULTS };
-  }
-}
-let benchmarks = loadBenchmarks();
-
+const benchmarks = Object.freeze({ mode:'official' });
 
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
