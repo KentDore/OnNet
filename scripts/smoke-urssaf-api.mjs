@@ -78,6 +78,7 @@ async function runSocial(name, input) {
       mutuelleEmployeur: round(result.employerHealth),
       titresSalarie: round(result.mealTicketEmployee),
       titresEmployeur: round(result.mealTicketEmployer),
+      titresNonDeductible: round(result.mealTicketNonDeductible),
       variablesParDefaut: result.missingVariables,
       avertissements: result.warnings
     })
@@ -147,6 +148,17 @@ const social39WithTickets = await runSocial('2300 € brut, 39 h, mutuelle 30/30
   brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30,
   joursResto: 21, valeurResto: 8, partResto: 50
 })
+const highValueTickets = await runSocial('21 titres de 15 €, part employeur 60 % (contrôle du plafond)', {
+  brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30,
+  joursResto: 21, valeurResto: 15, partResto: 40
+})
+if (highValueTickets && Math.abs(highValueTickets.mealTicketNonDeductible - 35.28) > 0.03) {
+  failures.push({
+    scenario: 'contrôle du plafond titres-restaurant',
+    error: 'La part employeur excédant le plafond devrait être de 35,28 €/mois pour 21 titres de 15 € financés à 60 %, valeur API : ' + highValueTickets.mealTicketNonDeductible.toFixed(2) + ' €.'
+  })
+}
+
 if (social39NoTickets && social39WithTickets) {
   // Le net versé doit déjà déduire la part salariale des titres, exactement une fois.
   const netDifference = social39NoTickets.netBeforeTax - social39WithTickets.netBeforeTax
