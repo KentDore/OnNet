@@ -776,7 +776,7 @@ function renderBenchmarks(computed){
     <div class="benchmark-your-salary">
       <span>Votre net estimé reçu à 35 h</span>
       <strong>${fmt(userNetBank35)} <small>/ mois</small></strong>
-      <div class="benchmark-meta">Base des écarts : ${fmt(userNetBeforeTax35)} € net avant impôt / mois à 35 h.</div>
+      <div class="benchmark-meta benchmark-comparison-base">Base des écarts : ${fmt(userNetBeforeTax35)} € net avant impôt / mois à 35 h.</div>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
