@@ -1824,7 +1824,11 @@ async function executeUrssafCalculations(generation, forceRetry){
       urssafErrorCache.delete(key);
       if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
     }catch(error){
-      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      // Ne pas mémoriser une erreur issue d'une génération obsolète :
+      // le prochain affichage doit pouvoir retenter le calcul.
+      if(generation === urssafGeneration){
+        urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      }
     }
     if(generation !== urssafGeneration) return;
     updateUrssafStatus(getCurrentComputed());
