@@ -70,6 +70,15 @@ for (const scenario of fiscalScenarios) {
       throw new Error(`Résultat fiscal API absent ou non numérique (${name}) pour ${scenario.name}.`)
     }
   }
+  if (result.incomeTax <= 0 || result.netAfterTax >= result.netBeforeTax) {
+    throw new Error(`Le scénario fiscal « ${scenario.name} » ne produit aucun prélèvement positif : ${JSON.stringify({
+      netBeforeTax: result.netBeforeTax,
+      netAfterTax: result.netAfterTax,
+      incomeTax: result.incomeTax,
+      calculatedTaxRate: result.calculatedTaxRate,
+      missingVariables: result.missingVariables
+    })}`)
+  }
   fiscalResults.push({
     scenario: scenario.name,
     netAfterTax: round(result.netAfterTax),
