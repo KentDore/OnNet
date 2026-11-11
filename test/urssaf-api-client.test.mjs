@@ -269,7 +269,7 @@ test('active le taux personnalisé après annualisation du net imposable', async
   assert.equal(result.netAfterTax, 1700)
   assert.equal(result.incomeTax, 1320)
   assert.equal(result.calculatedTaxRate, 10)
-  assert.equal(result.mealTicketEmployee, 84)
+  assert.equal(result.mealTicketEmployee, 98)
   assert.equal(result.mealTicketAmount, 168)
 })
 
