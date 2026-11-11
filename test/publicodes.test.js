@@ -38,6 +38,8 @@ test('39 h : recompose le brut global avec 17,33 heures supplémentaires', () =>
   assert.ok(result.overtimePay > 0)
   near(result.grossCalculated, 2300, 0.02, 'brut reconstitué')
   assert.ok(result.baseGross < result.grossTarget)
+  const expectedOvertimeGross = result.baseGross / 151.67 * 17.33 * 1.25
+  near(result.overtimePay, expectedOvertimeGross, 0.03, 'heures supplémentaires majorées à 25 %')
 })
 
 test('35 h : transmet le brut comme salaire de base et aucune heure supplémentaire', () => {
