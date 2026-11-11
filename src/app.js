@@ -729,9 +729,8 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
 
-  // Les repères sont comparés en net avant impôt, à durée équivalente (35 h).
-  // Le montant principal affiché reste le net estimé après impôt : on ne modifie
-  // ni le calcul de salaire ni les métriques générales de l'application.
+  // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
+  // strictement la durée et les montants du contrat saisi.
   const neutralScenario = {
     ...s,
     dureeType: '35',
@@ -748,57 +747,65 @@ function renderBenchmarks(computed){
   const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
   const smicResult = compute(neutralSmicScenario, foyer);
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
-  const smicHourlyGross = benchmarks.smicBrut / (35 * 52 / 12);
+  const smicMonthlyHours = HEURES_BASE;
+  const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
+  const smicHourlyGross = benchmarks.smicBrut / smicMonthlyHours;
 
-  const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
-  // Recalcul complet à 35 h : ne pas proratiser un net calculé sur 39 h.
-  const base35 = compute({
-    ...s, brut: brut35, dureeType: '35',
-    absenceType: 'none', absenceDuree: 0
-  }, foyer);
-  const userNetBeforeTax35 = Math.max(0, base35.netApres);
-  const userNetBank35 = Math.max(0, base35.netApresImpot);
+  // Comparaison en net avant impôt par heure réellement travaillée.
+  // Aucun recalcul du salaire de l'utilisateur à 35 h.
+  const weeklyHours = Number(s.dureeType);
+  const userMonthlyHours = Number.isFinite(weeklyHours) && weeklyHours > 0
+    ? weeklyHours * 52 / 12
+    : 0;
+  const userNetBeforeTax = Math.max(0, r.netApres);
+  const userNetBank = Math.max(0, r.netApresImpot);
+  const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
 
-  // Référence INSEE 2024 : salaire mensuel net moyen/médian en EQTP privé,
-  // exprimé avant prélèvement à la source. Elle est conservée telle quelle.
+  // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
+  // Conversion en taux horaire sur la base légale de 151,67 h/mois.
   const medianNetBeforeTax = 2190;
+  const medianNetHourly = medianNetBeforeTax / HEURES_BASE;
 
-  const smic = benchmarkDelta(userNetBeforeTax35, smicNetBeforeTax);
-  const median = benchmarkDelta(userNetBeforeTax35, medianNetBeforeTax);
+  const smic = benchmarkDelta(userNetHourly, smicNetHourly);
+  const median = benchmarkDelta(userNetHourly, medianNetHourly);
   const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
+  const durationLabel = Number.isFinite(weeklyHours) && weeklyHours > 0
+    ? weeklyHours.toLocaleString('fr-FR') + ' h'
+    : 'durée non renseignée';
   return `
     <div class="benchmark-heading">
       <div>
         <h2 class="bars-title">Votre salaire face aux repères</h2>
-        <p class="hint">Comparaison en net avant impôt, sur une base de 35 h. Le montant reçu après impôt reste inchangé dans votre salaire.</p>
+        <p class="hint">Comparaison en net avant impôt par heure. Votre salaire reste calculé selon la durée réelle de votre contrat ; le SMIC et le salaire médian servent de références horaires.</p>
       </div>
     </div>
     <div class="benchmark-your-salary">
-      <span>Votre net estimé reçu à 35 h</span>
-      <strong>${fmt(userNetBank35)} <small>/ mois</small></strong>
-      <div class="benchmark-meta benchmark-comparison-base">Base des écarts : ${fmt(userNetBeforeTax35)} € net avant impôt / mois à 35 h.</div>
+      <span>Votre net estimé reçu</span>
+      <strong>${fmt(userNetBank)} <small>/ mois</small></strong>
+      <div class="benchmark-meta benchmark-comparison-base">Votre base : ${fmt(userNetBeforeTax)} € net avant impôt / mois · ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">35 h · ${smicHourlyGross.toLocaleString('fr-FR',{minimumFractionDigits:2,maximumFractionDigits:2})} € brut/heure · ${fmt(benchmarks.smicBrut)} brut/mois</div>
-        <div class="benchmark-result ${signedClass(smic)}">${smic.amount} <small>(${smic.pct})</small></div>
+        <div class="benchmark-meta">Référence 35 h · ${fmtHoraire(smicHourlyGross)} brut/heure · ${fmtHoraire(smicNetHourly)} net/heure</div>
+        <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Repère calculé sur 35 h, sans mutuelle ni titres-restaurant. Le taux horaire brut est calculé à partir du brut mensuel et de 151,67 h/mois. Date d’effet du SMIC : ${esc(benchmarks.smicDate)}.</p>
-          <p>Le net avant impôt est une estimation du simulateur ; le brut horaire et mensuel sont les repères de saisie.</p>
+          <p>Le SMIC est calculé sur 35 h, sans mutuelle ni titres-restaurant. Son taux horaire brut est calculé à partir du brut mensuel et de 151,67 h/mois. Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
+          <p>Le net avant impôt est une estimation du simulateur ; le brut horaire et mensuel du SMIC sont les repères de saisie.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
       </article>
       <article class="benchmark-item">
         <div class="benchmark-label">Salaire médian privé · net avant impôt</div>
         <div class="benchmark-value">${fmt(medianNetBeforeTax)}</div>
-        <div class="benchmark-meta">Référence nationale INSEE 2024 · 2 190 € net avant impôt</div>
-        <div class="benchmark-result ${signedClass(median)}">${median.amount} <small>(${median.pct})</small></div>
+        <div class="benchmark-meta">Référence nationale INSEE 2024 · ${fmtHoraire(medianNetHourly)} net/heure (base 35 h)</div>
+        <div class="benchmark-result ${signedClass(median)}">${fmtHoraireSigned(userNetHourly - medianNetHourly)} <small>/h (${median.pct})</small></div>
         <details class="benchmark-details">
           <summary>Estimation à votre durée de travail</summary>
-          <p>À ${s.dureeType} h : <strong>${fmt(r.netApresImpot)}</strong> estimés reçus sur le compte / mois, après prélèvement à la source et retenues salariales modélisées.</p>
+          <p>Votre contrat : ${durationLabel} · ${fmt(userNetBeforeTax)} € net avant impôt estimés / mois, soit ${fmtHoraire(userNetHourly)}.</p>
+          <p>La référence médiane est exprimée en équivalent temps plein (35 h) ; la comparaison porte sur les taux horaires pour ne pas ramener artificiellement votre salaire à 35 h.</p>
         </details>
       </article>
     </div>
