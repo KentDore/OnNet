@@ -1,10 +1,10 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : migration en cours, branche `migration/publicodes-urssaf`. Aucune modification de `main` et aucune mise en production.
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Les tests navigateur utilisent une API simulée ; le test live dédié et la vérification CORS dans un vrai navigateur restent à faire.
 
 ## Décision d'architecture
 
-**Le moteur principal cible est l'API REST officielle Mon-entreprise / Urssaf**, plutôt que la reproduction locale de règles sociales et fiscales.
+**Le moteur principal de la branche de migration est l'API REST officielle Mon-entreprise / Urssaf**, plutôt que la reproduction locale de règles sociales et fiscales.
 
 Documentation : https://mon-entreprise.urssaf.fr/d%C3%A9veloppeur/api
 
@@ -17,9 +17,10 @@ Principes d'intégration :
 - [x] Ne pas basculer vers le moteur local en cas d'indisponibilité : l'erreur est affichée explicitement.
 - [x] Garder le paquet local `modele-social` pour la comparaison et les diagnostics ; le build du prototype utilise désormais uniquement le client API.
 - [x] Remonter les avertissements et les variables auxquelles l'API a appliqué une valeur par défaut.
-- [x] Le prototype affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
+- [x] Le calculateur principal affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
+- [x] La commune de l’établissement est modifiable par scénario ; Pacé est la valeur initiale. Le repère SMIC n’envoie pas de données fiscales inutiles.
 - [ ] Tester le vrai appel dans un navigateur de bout en bout (CORS, réseau mobile, erreurs transitoires) ; la présence du middleware CORS a été vérifiée dans le code serveur officiel, mais pas encore dans un navigateur réel.
-- [ ] Décider si un proxy serveur est préférable avant l'intégration au site principal ; ne pas journaliser les payloads de paie.
+- [ ] Réévaluer l’intérêt d’un proxy serveur avant publication ; ne jamais journaliser les payloads de paie.
 - [ ] Garder une validation indépendante : comparer l'API au simulateur officiel et aux sources réglementaires ; la parité avec le même modèle local ne prouve pas la conformité juridique.
 - [ ] Mettre à jour ce document après chaque phase et consigner les écarts constatés.
 
@@ -31,7 +32,7 @@ Principes d'intégration :
 - Mutuelle salariale et patronale.
 - Titres-restaurant, part salariale/patronale et contrôle des plafonds.
 - Impôt : taux de prélèvement personnalisé saisi ou estimation au barème, composition du foyer, enfants à charge, parent isolé.
-- Modules d'augmentation et d'absence.
+- Module d'augmentation ; aucun module d'absence (retiré du périmètre).
 - Repères SMIC et salaire médian, graphique de répartition, impression/export PDF.
 - Sauvegardes locales et partage via URL fragment (non chiffré).
 
@@ -41,7 +42,8 @@ Les limites historiques documentées — absence de modélisation complète des 
 
 ### Phase A — fiabiliser les entrées OnNet
 - [x] Contrôler la validité des dates et le nombre entier de titres-restaurant.
-- [ ] Cartographier tous les champs OnNet vers les règles Publicodes officielles et leurs unités, notamment mensualités, primes, absences et revenu annuel du conjoint.
+- [x] Cartographier les champs actuellement pris en charge (brut, heures supplémentaires, commune, mutuelle, titres-restaurant et données fiscales) vers les règles et unités officielles.
+- [x] Bloquer explicitement les primes libres et les mensualités différentes de 12 tant que leur mapping API n’est pas validé.
 - [ ] Vérifier les hypothèses 35 h/39 h, les heures supplémentaires et les majorations conventionnelles.
 - [ ] Vérifier les cas limites : salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
 
@@ -64,11 +66,11 @@ Les limites historiques documentées — absence de modélisation complète des 
 - [ ] Ne pas utiliser les comparaisons API comme seule preuve de conformité.
 
 ### Phase D — intégration complète
-- [ ] Remplacer l'adaptateur de calcul local par l'adaptateur API dans le calculateur principal OnNet (seul le prototype isolé est actuellement raccordé).
-- [ ] Garder le stockage, le partage, les graphiques et l'export indépendants du moteur de paie.
-- [ ] Ajouter tests de non-régression des sauvegardes et des liens de partage.
+- [x] Remplacer l'adaptateur de calcul local par l'adaptateur API dans le calculateur principal de la branche de migration.
+- [x] Garder le stockage, le partage, les graphiques et l'export indépendants du moteur de paie.
+- [x] Ajouter les tests de non-régression des sauvegardes, des anciens champs d’absence et des liens de partage.
 - [ ] Auditer le poids du bundle, les performances, l'accessibilité, le fonctionnement hors ligne et la gestion d'erreur.
-- [ ] Décider explicitement du comportement hors ligne : pas de calcul local silencieux si ses règles peuvent diverger.
+- [x] Comportement hors ligne explicite : calcul impossible sans Internet, aucun fallback local.
 
 ## Risques à surveiller
 
@@ -80,11 +82,11 @@ Les limites historiques documentées — absence de modélisation complète des 
 - Les variables absentes peuvent recevoir une valeur par défaut : OnNet les signale, mais il reste à décider si certaines doivent bloquer le calcul.
 - Le client API transmet les paramètres du scénario (salaire, durée, mutuelle, titres-restaurant et, si saisi, données fiscales) au service Urssaf. Il n'y a aucun repli local en cas d'échec.
 - Le calcul fiscal dépend de la méthode et des données du foyer. Ne pas présenter une estimation comme un montant réel de bulletin.
-- Le prototype autonome est relié à l'API, mais le calculateur principal OnNet n'est pas encore migré.
+- Le calculateur principal de la branche est relié à l'API, mais les tests CORS sur navigateur réel et réseau mobile restent à effectuer.
 
 ## Règle de mise en production
 
-Pas de fusion vers `main), pas de remplacement du calculateur courant et pas de publication tant que :
+Pas de fusion vers `main`, pas de remplacement du calculateur courant et pas de publication tant que :
 1. le client API et ses erreurs sont testés ;
 2. la matrice de tests est verte ;
 3. les écarts importants sont expliqués ;
