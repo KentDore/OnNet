@@ -206,10 +206,15 @@ export function calculatePublicodes(input = {}) {
     ? "'barème standard'"
     : taxMode === 'neutre' ? "'taux neutre'" : "'taux personnalisé'"
   situation['impôt . taux personnalisé'] = percent(taxRate)
-  situation['impôt . foyer fiscal . situation de famille'] = "'" + family + "'"
+  situation['paramètres . impôt . taux neutre applicable'] = taxMode === 'neutre' ? 'oui' : 'non'
+  situation['paramètres . impôt . foyer fiscal . situation de famille'] = "'" + family + "'"
   situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
   situation['impôt . foyer fiscal . parent isolé'] = isolatedParent ? 'oui' : 'non'
-  situation['impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
+  if (taxMode === 'barème') {
+    situation['paramètres . impôt . revenu d'activité'] = `${(taxableNet * 12).toFixed(2)} €/an`
+  } else {
+    situation['paramètres . impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
+  }
   engine.setSituation(situation)
   const netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
   const incomeTax = evaluateNumber(engine, RULES.incomeTax)
