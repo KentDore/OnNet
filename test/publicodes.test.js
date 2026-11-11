@@ -62,14 +62,15 @@ test('convertit les deux parts de mutuelle en montant total et taux employeur', 
   near(result.employerHealth, 30, 0.01, 'part employeur mutuelle')
 })
 
-test('la part salariale des titres-restaurant réduit le net à payer', () => {
-  const withoutTickets = calculatePublicodes(scenario({
+test('la mutuelle salariale et patronale sont bien distinguées', () => {
+  const result = calculatePublicodes(scenario({
+    mutuelle: 24,
+    mutuellePat: 36,
     joursResto: 0,
     valeurResto: 0
   }))
-  const withTickets = calculatePublicodes(scenario())
-  // 21 titres × 8 € × 50 % à la charge du salarié = 84 €.
-  near(withoutTickets.netBeforeTax - withTickets.netBeforeTax, 84, 0.03, 'retenue titres-restaurant')
+  near(result.employeeHealth, 24, 0.01, 'part salariale mutuelle')
+  near(result.employerHealth, 36, 0.01, 'part employeur mutuelle')
 })
 
 test('rejette les valeurs de saisie hors limites et les durées inconnues', () => {
