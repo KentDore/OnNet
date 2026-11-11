@@ -32,7 +32,24 @@ test('API officielle accessible depuis un navigateur (CORS) et règle SMIC numé
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({ expressions: ['SMIC'], situation: {} })
+        body: JSON.stringify({
+          expressions: [
+            'SMIC',
+            'salarié . rémunération . net . à payer avant impôt'
+          ],
+          situation: {
+            'salarié': 'oui',
+            'salarié . contrat': "'CDI'",
+            'salarié . contrat . salaire brut': '2300 €/mois',
+            'salarié . contrat . statut cadre': 'non',
+            'salarié . contrat . temps de travail . temps partiel': 'non',
+            'établissement . commune': "'Pacé'",
+            'salarié . convention collective': "'droit commun'",
+            'salarié . activité partielle': 'non',
+            'salarié . temps de travail . heures supplémentaires': '0 heure/mois',
+            'date': '11/11/2026'
+          }
+        })
       });
       const body = await response.json();
       return { status: response.status, ok: response.ok, body };
@@ -40,9 +57,11 @@ test('API officielle accessible depuis un navigateur (CORS) et règle SMIC numé
 
     assert.equal(apiResult.ok, true, `HTTP ${apiResult.status} depuis le navigateur`);
     assert.ok(Array.isArray(apiResult.body.evaluate), 'Réponse API sans tableau evaluate');
-    assert.equal(apiResult.body.evaluate.length, 1, 'La règle SMIC doit retourner une seule valeur');
+    assert.equal(apiResult.body.evaluate.length, 2, 'L’API doit retourner les deux expressions demandées');
     assert.ok(Number.isFinite(apiResult.body.evaluate[0].nodeValue), 'La règle SMIC doit renvoyer une valeur numérique');
     assert.ok(apiResult.body.evaluate[0].nodeValue > 0, 'La valeur SMIC doit être positive');
+    assert.ok(Number.isFinite(apiResult.body.evaluate[1].nodeValue), 'Le net avant impôt doit être numérique');
+    assert.ok(apiResult.body.evaluate[1].nodeValue > 0, 'Le net avant impôt doit être positif');
     assert.deepEqual(browserErrors, []);
   } catch (error) {
     if (/Failed to fetch|CORS|NetworkError/i.test(String(error))) {
