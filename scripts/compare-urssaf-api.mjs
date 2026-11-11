@@ -29,6 +29,18 @@ const results = []
 for (const scenario of scenarios) {
   const local = calculatePublicodes(scenario.input)
   const remote = await calculateWithUrssafApi(scenario.input)
+  if (scenario.input.joursResto > 0) {
+    for (const [label, value] of [
+      ['montant total des titres-restaurant', remote.mealTicketAmount],
+      ['part salarié des titres-restaurant', remote.mealTicketEmployee],
+      ['part employeur des titres-restaurant', remote.mealTicketEmployer],
+      ['part non déductible des titres-restaurant', remote.mealTicketNonDeductible]
+    ]) {
+      if (!Number.isFinite(value)) {
+        throw new Error(`Valeur API absente ou non numérique pour ${label} dans « ${scenario.name} ».`)
+      }
+    }
+  }
   const values = comparisons.map(([label, key]) => {
     const localValue = local[key]
     const urssafValue = remote[key]
