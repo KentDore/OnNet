@@ -84,6 +84,22 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
+test('compare le salaire réel au SMIC sans le recalculer à 35 h', async () => {
+  const { context, page } = await openApp();
+  try {
+    const benchmark = page.locator('.benchmark-your-salary');
+    await benchmark.waitFor({ state: 'visible' });
+    const text = await benchmark.innerText();
+    assert.match(text, /Votre net estimé reçu/);
+    assert.match(text, /contrat de 39 h/);
+    assert.match(text, /net avant impôt/);
+    assert.equal(await page.getByText('Votre net estimé reçu à 35 h', { exact: true }).count(), 0);
+    assert.match(await page.locator('.benchmark-heading').innerText(), /taux horaires/);
+  } finally {
+    await context.close();
+  }
+});
+
 test('affiche le comparatif et permet d’ajouter un salaire', async () => {
   const { context, page } = await openApp();
   try {
