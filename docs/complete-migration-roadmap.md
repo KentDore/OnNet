@@ -65,7 +65,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 
 ### Phase C — parité et qualité
-- [ ] Exécuter manuellement `npm run compare:urssaf-api` : comparaison diagnostique entre l'API et le paquet npm local (ce n'est pas une validation indépendante). La matrice comprend les salaires faibles, le SMIC, les seuils PMSS à 4 004,99 €, 4 005 € et 4 005,01 €, ainsi que des salaires élevés. Les résultats doivent être consignés après exécution réelle.
+- [ ] Exécuter manuellement `npm run compare:urssaf-api` : comparaison diagnostique entre l'API et le paquet npm local (ce n'est pas une validation indépendante). La matrice comprend les salaires faibles, le SMIC, les seuils PMSS à 4 004,99 €, 4 005 € et 4 005,01 €, ainsi que des salaires élevés. Le script espace les appels API d'au moins 350 ms et s'arrête explicitement en cas de HTTP 429, sans retry automatique. Les résultats doivent être consignés après exécution réelle.
 - [ ] Comparer les cas de référence avec le simulateur web public, indépendamment du paquet npm local.
 - [x] Ajouter 10 tests simulés dédiés au client API, en plus des 12 tests de l'adaptateur local ; les deux suites passent dans le workflow vert.
 - [x] Ajouter des tests de non-régression pour heures supplémentaires, mutuelle, titres-restaurant, date, erreurs API, limites de débit et entrées fiscales.
