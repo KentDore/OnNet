@@ -927,6 +927,7 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
+  if(!r) return '';
   const smicResult = getCachedSmicResult();
   if(!smicResult) return '<p class="hint">Calcul du repère SMIC par le moteur Urssaf en cours…</p>';
 
@@ -1025,23 +1026,34 @@ function bindBenchmarkSettings(){
 
 // ---------- Rendu ----------
 function render(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+  const computed = getCurrentComputed();
+  const isSingle = computed.length === 1;
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
 
   updateRaiseBaseName();
-  const isSingle = computed.length === 1;
-  document.getElementById('stackHint').textContent = isSingle
-    ? 'Du brut au net, étape par étape.'
-    : 'Cliquez sur une carte pour la définir comme référence.';
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('stackHint').textContent = isSingle
+      ? 'Du brut au net, étape par étape.'
+      : 'Cliquez sur une carte pour la définir comme référence.';
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+  }
   bindRefPickers();
-  document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -1051,9 +1063,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  // Nettoie la classe d'animation une fois jouée : les mises à jour légères
-  // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
-  // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
   document.querySelectorAll('#cardsBody .card-enter, #stackChart .card-enter').forEach(el => {
     el.addEventListener('animationend', () => el.classList.remove('card-enter'), { once:true });
   });
@@ -1079,7 +1088,9 @@ function render(){
   updateNavButtons();
   saveState();
   suppressAutosave = false;
-  justAddedId = null; // l'animation d'entrée ne doit jouer qu'une fois
+  justAddedId = null;
+  updateUrssafStatus(computed);
+  scheduleUrssafCalculations(false,false);
 }
 
 function bindCardDragAndDrop(){
@@ -1220,7 +1231,8 @@ function foyerResume(){
 // L'impôt affiché dans le module suit le salaire de référence.
 function updateFoyerImpot(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-  if(ref) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${ref.r.tauxImpot.toFixed(1)} %)`);
+  if(ref && ref.r) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${Number(ref.r.tauxImpot || 0).toFixed(1)} %)`);
+  else setText('foyerImpot', '—');
 }
 
 function syncFoyerUI(){
@@ -1331,17 +1343,28 @@ function setText(id, txt){ const el = document.getElementById(id); if(el) el.tex
 function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
 function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
 
-function updateComputed(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
+function updateComputed(options = {}){
+  const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+  }
   bindRefPickers();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -1351,26 +1374,36 @@ function updateComputed(){
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
     if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
-    setText(`c-hero-${u}`, fmt(heroValue(r)));
+    setText(`c-hero-${u}`, r ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
+    setHTML(`c-heropas-${u}`, r ? `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Après impôt : —');
     setShown(`c-heropas-${u}`, heroPasShown());
 
     const hint = document.getElementById(`rate-hint-${u}`);
-    if(hint) hint.innerHTML = `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut`;
+    if(hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —';
 
-    const trWarn = r.tr.reintegre > 0.005;
+    const state = document.getElementById(`c-result-state-${u}`);
+    if(state){
+      const error = getCalculationError(s,foyer);
+      state.textContent = r
+        ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+        : (error || 'Calcul en attente de validation par l’API Urssaf.');
+    }
+    const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
     setShown(`c-trwarn-${u}`, trWarn);
     if(trWarn){
       const motifs = {
-        sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-        sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-        plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+        sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+        api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
       };
-      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || '');
+      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || motifs.api);
     }
   });
+  updateUrssafStatus(computed);
   saveState();
+  if(!options.skipUrssafSchedule) scheduleUrssafCalculations(false,false);
 }
 
 // ---------- Navigation du rail de cartes horizontal ----------
@@ -2163,6 +2196,11 @@ function scrollToNewCard(){
     animateScrollLeft(scroller, dest, 380, restoreCardSnap);
   });
 }
+
+document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
+  urssafConsentGranted = true;
+  scheduleUrssafCalculations(true,true);
+});
 
 render();
 // Un hash contenant explicitement un partage mais non restauré doit être signalé.
