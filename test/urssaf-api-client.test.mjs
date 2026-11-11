@@ -8,6 +8,7 @@ import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
 function scenario(overrides = {}) {
   return {
     brut: 2300,
+    commune: 'Pacé',
     dureeType: '35',
     mutuelle: 30,
     mutuellePat: 30,
@@ -78,6 +79,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(request.situation['salarié . contrat'], "'CDI'")
   assert.equal(request.situation['salarié . contrat . salaire brut'], '2300.000000 €/mois')
   assert.equal(request.situation['salarié . contrat . temps de travail . temps partiel'], 'non')
+  assert.equal(request.situation['établissement . commune'], "'Pacé'")
   assert.equal(request.situation.date, '11/11/2026')
   assert.equal(request.expressions[0], 'salarié . rémunération . brut')
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
@@ -87,6 +89,20 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.mealTicketEmployer, 84)
   assert.equal(result.mealTicketNonDeductible, 0)
   assert.equal(result.missingVariables.length, 0)
+})
+
+test('transmet la commune de l’établissement et échappe les apostrophes', async () => {
+  let request
+  await calculateWithUrssafApi(scenario({ commune: "L'Haÿ-les-Roses" }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response(apiResponse(body.expressions))
+    })
+  })
+  assert.equal(request.situation['établissement . commune'], "'L\\'Haÿ-les-Roses'")
+  await assert.rejects(calculateWithUrssafApi(scenario({ commune: '   ' }), {
+    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
+  }), /commune doit être renseignée/)
 })
 
 test('prépare les paramètres de mutuelle et titres-restaurant sans inverser les parts', async () => {
