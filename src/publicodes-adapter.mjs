@@ -23,6 +23,14 @@ function numberInRange(value, name, min, max) {
   return number
 }
 
+function integerInRange(value, name, min, max) {
+  const number = numberInRange(value, name, min, max)
+  if (!Number.isInteger(number)) {
+    throw new TypeError(`${name} doit être un nombre entier.`)
+  }
+  return number
+}
+
 function money(value) {
   return `${value.toFixed(6)} €/mois`
 }
@@ -33,17 +41,27 @@ function percent(value) {
 
 function dateForPublicodes(value) {
   if (value === undefined || value === null || value === '') {
+    // Utiliser la date locale : UTC peut déjà être au lendemain (ou la veille)
+    // selon le fuseau du serveur au moment de l'appel.
     const now = new Date()
     return [
-      String(now.getUTCDate()).padStart(2, '0'),
-      String(now.getUTCMonth() + 1).padStart(2, '0'),
-      now.getUTCFullYear()
+      String(now.getDate()).padStart(2, '0'),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      now.getFullYear()
     ].join('/')
   }
 
   const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value))
   if (!match) {
     throw new TypeError('date doit respecter le format AAAA-MM-JJ.')
+  }
+
+  const parsed = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`)
+  if (
+    Number.isNaN(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10) !== String(value)
+  ) {
+    throw new TypeError('date doit être une date calendaire valide au format AAAA-MM-JJ.')
   }
 
   return `${match[3]}/${match[2]}/${match[1]}`
@@ -104,7 +122,7 @@ export function calculatePublicodes(input = {}) {
   const totalHealth = employeeHealth + employerHealth
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 50
 
-  const mealTicketDays = numberInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
+  const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
