@@ -1007,7 +1007,7 @@ function buildSituation(input, baseGross, overtimeHours) {
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
-  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 1000)
+  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
@@ -1046,6 +1046,14 @@ function buildSituation(input, baseGross, overtimeHours) {
     if (mode === 'personnalisé') {
       const taxRate = numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
       situation['impôt . taux personnalisé'] = percent(taxRate)
+    }
+
+    // Le taux neutre correspond à la grille de référence d'un célibataire sans enfant.
+    // Renseigner explicitement le foyer évite que le calcul du montant d'impôt
+    // reste à zéro alors que la règle officielle du taux neutre renvoie un taux positif.
+    if (mode === 'neutre') {
+      situation['impôt . foyer fiscal . situation de famille'] = "'célibataire'"
+      situation['impôt . foyer fiscal . enfants à charge'] = '0 enfant'
     }
 
     if (mode === 'barème') {
@@ -1306,27 +1314,33 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
     // Les règles fiscales sont annuelles. Le net imposable du salaire retourné
     // par le modèle salarié est mensuel : il faut le convertir explicitement.
     const annualTaxableSalary = finalEvaluation.values[2] * 12
-    finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+    if (taxMode !== 'neutre') {
+      finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+    }
 
     // Le taux neutre utilise une entrée distincte : le revenu imposable annuel
     // qui sert d'assiette à sa grille mensuelle officielle.
     if (taxMode === 'neutre') {
-      finalSituation['paramètres . impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+      // `impôt . revenu imposable` is already supplied above; `paramètres` is not a rule in modele-social.
     }
 
     // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
     // annuel puis applique l'abattement fiscal officiel de 10 %.
     if (taxMode === 'barème') {
       // Identifiant officiel exact, avec apostrophe ASCII dans le nom de règle.
-      finalSituation["paramètres . impôt . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
+      finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
     }
 
+    // Le taux neutre est une règle distincte ; `impôt . taux d'imposition` correspond au taux effectif du barème standard.
+    const taxRateExpression = taxMode === 'neutre'
+      ? "impôt . taux neutre d'impôt sur le revenu"
+      : EXPRESSIONS.taxRate
     const taxEvaluation = await evaluateRequest(
       fetchImpl,
       endpoint,
       timeoutMs,
       finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, taxRateExpression]
     )
     finalEvaluation = {
       values: taxEvaluation.values,
@@ -1832,7 +1846,7 @@ function sanitizeScenario(raw){
   const clean = Object.assign({}, raw);
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
-    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
+    valeurResto:[0,500], partResto:[0,100], nbMois:[1,24],
     primes:[0,100000000]
   };
   for(const [key, range] of Object.entries(limits)){
@@ -2260,7 +2274,7 @@ function renderCard(s, r, showRemove){
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
-          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:1000})}</div>
+          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:500})}</div>
           <div class="field-row"><label for="f-part-${uid}">Part salarié (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
         </div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
@@ -3356,7 +3370,7 @@ function renderMutuelleTrFields(idPrefix){
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="1000"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>`;
@@ -3400,7 +3414,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
     const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
-      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 1000);
+      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
     return result;
