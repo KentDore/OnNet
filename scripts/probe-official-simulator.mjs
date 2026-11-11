@@ -18,6 +18,13 @@ try {
     await closeDialog.first().click()
     await page.waitForTimeout(1000)
   }
+  const collective = page.locator('input[type="radio"][value="droit commun"]')
+  if (await collective.count()) {
+    await collective.check({ force: true })
+    const nextQuestion = page.getByRole('button', { name: /suivant, passer à la question suivante/i })
+    if (await nextQuestion.count()) await nextQuestion.first().click()
+    await page.waitForTimeout(1000)
+  }
   const controls = await page.locator('input, button, select, [role="combobox"]').evaluateAll(elements =>
     elements.slice(0, 100).map(element => ({
       tag: element.tagName,
