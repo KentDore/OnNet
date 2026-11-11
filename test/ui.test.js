@@ -190,8 +190,10 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
     assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
     const notice = await page.locator('.urssaf-data-notice').innerText();
-    assert.match(notice, /rémunération.*horaires.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
-    assert.match(notice, /recalculées automatiquement/);
+    assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
+    assert.match(notice, /transmis à l’API officielle de l’Urssaf/);
+    assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
+    assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Source des calculs : moteur officiel Mon-entreprise de l’Urssaf/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
