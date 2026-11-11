@@ -109,9 +109,7 @@ test('prépare un scénario 39 h avec les 4 heures supplémentaires mensuelles',
     })
   })
 
-  assert.equal(request.situation['salarié . temps de travail . heures supplémentaires'], undefined)
-  assert.equal(request.situation['salarié . temps de travail . heures supplémentaires'], undefined)
-  assert.match(request.situation['salarié . temps de travail . heures supplémentaires'] ?? '', /heure/)
+  assert.equal(request.situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
   assert.equal(result.overtimeHours, 4 * 52 / 12)
   assert.equal(result.overtimePay, 250)
 })
