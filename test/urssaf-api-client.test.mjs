@@ -272,23 +272,31 @@ test('active le taux personnalisé après annualisation du net imposable', async
   assert.equal(result.mealTicketAmount, 168)
 })
 
-test('alimente l’assiette annuelle officielle du taux neutre', async () => {
+test('calcule le taux neutre avec la grille officielle puis le montant via l’API', async () => {
   const requests = []
-  await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
+  const result = await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
     fetchImpl: mockFetch(body => {
       requests.push(body)
-      return response(apiResponse(body.expressions))
+      const payload = apiResponse(body.expressions)
+      const effectiveRateIndex = body.expressions.indexOf("impôt . taux d'imposition")
+      if (effectiveRateIndex >= 0 && body.situation['impôt . taux personnalisé'] === '4.100000%') {
+        payload.evaluate[effectiveRateIndex].nodeValue = 4.1
+      }
+      return response(payload)
     })
   })
 
-  assert.equal(requests.length, 2)
+  assert.equal(requests.length, 3)
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
   assert.equal(requests[1].situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
   assert.equal(requests[1].situation['impôt . foyer fiscal . enfants à charge'], '0 enfant')
-  assert.ok(requests[1].expressions.includes("impôt . taux neutre d'impôt sur le revenu"))
-  assert.equal((await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
-    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
-  })).calculatedTaxRate, 4.1)
+  assert.deepEqual(requests[1].expressions, ["impôt . taux neutre d'impôt sur le revenu"])
+  assert.equal(requests[2].situation['impôt . méthode de calcul'], "'taux personnalisé'")
+  assert.equal(requests[2].situation['impôt . taux personnalisé'], '4.100000%')
+  assert.ok(requests[2].expressions.includes("impôt . taux d'imposition"))
+  assert.equal(result.calculatedTaxRate, 4.1)
+  assert.equal(result.netAfterTax, 1700)
+  assert.equal(result.incomeTax, 1320)
 })
 
 test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
