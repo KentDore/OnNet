@@ -30,7 +30,7 @@ Les résultats restent des estimations : le modèle fiscal Urssaf comporte des r
 
 ## Limites actuelles
 
-- Le périmètre raccordé est limité au CDI privé non-cadre, à temps plein, en droit commun et aux durées 35 h / 39 h. Les conventions particulières, le temps partiel, les cadres, la fonction publique et certains régimes territoriaux ne sont pas couverts par cette première version.
+- Le périmètre raccordé est limité au CDI privé non-cadre, à temps plein, en droit commun et aux durées 35 h / 39 h. Les conventions particulières, le temps partiel, les cadres, la fonction publique et certains régimes territoriaux ne sont pas couverts par cette première version. Les avantages en nature, primes libres, remboursements de transport spécifiques, DFS, taux réduits particuliers et régime des impatriés ne sont pas paramétrables ; le calcul suppose explicitement qu’ils sont absents.
 - Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés : un scénario qui les utilise est bloqué au lieu de recevoir une estimation locale.
 - Le net annuel affiché est le net mensuel Urssaf multiplié par 12 ; ce n’est pas une évaluation annuelle indépendante. Le salaire brut annuel saisi à l’onboarding est divisé par 12.
 - La commune par défaut est Pacé. Pour changer de lieu, sélectionnez une suggestion géographique afin de confirmer code postal et département ; une saisie libre non confirmée bloque le calcul.
