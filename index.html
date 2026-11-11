@@ -1071,6 +1071,9 @@ function buildSituation(input, baseGross, overtimeHours) {
   const employerHealth = numberInRange(input.mutuellePat ?? input.mutuelle ?? 0, 'mutuellePat', 0, 100000)
   const totalHealth = employeeHealth + employerHealth
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
+  if (totalHealth > 0 && employerHealthRate < 50) {
+    throw new TypeError('La part employeur de la complémentaire santé obligatoire doit être d’au moins 50 %.')
+  }
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
@@ -2356,7 +2359,7 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
-      ${s.dureeType === '39' ? '<div class="sub-hint">Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine. Calcul selon le droit commun, sans prise en compte des RTT.</div>' : ''}
+      ${s.dureeType === '39' ? '<div class="sub-hint">Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>' : ''}
     </div>
 
     <details class="more">
@@ -3605,6 +3608,7 @@ function showOnboardingModal(){
         <button type="button" data-duree="35" aria-pressed="true">35 h</button>
         <button type="button" data-duree="39" aria-pressed="false">39 h</button>
       </div>
+      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding')}
@@ -3636,10 +3640,12 @@ function showOnboardingModal(){
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
+  const dureeHint = overlay.querySelector('#modalOnboarding39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
@@ -3680,6 +3686,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
         <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
         <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
       </div>
+      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalAdd')}
@@ -3719,10 +3726,12 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
+  const dureeHint = overlay.querySelector('#modalAdd39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
