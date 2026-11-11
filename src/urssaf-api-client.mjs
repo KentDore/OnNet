@@ -277,7 +277,7 @@ export async function evaluateUrssafExpression(expression, situation = {}, optio
   const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
   const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
   const normalizedSituation = { ...situation }
-  if (typeof normalizedSituation.date === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(normalizedSituation.date)) {
+  if (typeof normalizedSituation.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(normalizedSituation.date)) {
     normalizedSituation.date = formatDate(normalizedSituation.date)
   }
 
