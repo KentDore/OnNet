@@ -382,7 +382,7 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
     return response({})
   }
 
-  await assert.rejects(calculateWithUrssafApi(scenario({ brut: -1 }), { fetchImpl }), /brut/)\n  await assert.rejects(calculateWithUrssafApi(scenario({ brut: 0 }), { fetchImpl }), /brut/)
+  await assert.rejects(calculateWithUrssafApi(scenario({ brut: -1 }), { fetchImpl }), /brut/)\n  await assert.rejects(calculateWithUrssafApi(scenario({ brut: 0 }), { fetchImpl }), /strictement supérieur à 0/)
   await assert.rejects(calculateWithUrssafApi(scenario({ dureeType: '37' }), { fetchImpl }), /dureeType/)
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto: 2.5 }), { fetchImpl }), /entier/)
   await assert.rejects(calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé' }), { fetchImpl }), /tauxPAS/)
