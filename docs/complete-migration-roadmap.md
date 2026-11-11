@@ -27,7 +27,7 @@ Principes d'intégration :
 ## Inventaire fonctionnel de référence
 
 - Comparaison de plusieurs salaires/offres et réorganisation des cartes.
-- Entrée du salaire mensuel ou annuel, durée 35 h/39 h, nombre de mensualités, primes et règles de rattachement du 13e/14e mois aux heures supplémentaires.
+- Entrée du salaire mensuel ou annuel, durée 35 h/39 h et commune d’établissement par scénario. Les primes libres et les mensualités différentes de 12 sont visibles mais bloquées tant que leur mapping à l’API n’est pas validé.
 - Brut, cotisations, net avant impôt, net imposable, net payé après prélèvement à la source et taux horaire.
 - Mutuelle salariale et patronale.
 - Titres-restaurant, part salariale/patronale et contrôle des plafonds.
@@ -36,7 +36,7 @@ Principes d'intégration :
 - Repères SMIC et salaire médian, graphique de répartition, impression/export PDF.
 - Sauvegardes locales et partage via URL fragment (non chiffré).
 
-Les limites historiques documentées — absence de modélisation complète des arrêts/IJSS, temps partiel, régularisation progressive des plafonds, Alsace-Moselle et régimes particuliers — ne doivent pas être présentées comme résolues simplement parce que l'API retourne un résultat.
+OnNet ne propose plus de module de simulation d’absence. Le périmètre raccordé ne couvre pas encore le temps partiel, la régularisation progressive des plafonds, Alsace-Moselle ou certains régimes particuliers ; une réponse de l’API ne signifie pas que toutes les particularités d’un bulletin sont prises en compte.
 
 ## Phases et critères de sortie
 
@@ -69,7 +69,7 @@ Les limites historiques documentées — absence de modélisation complète des 
 - [x] Remplacer l'adaptateur de calcul local par l'adaptateur API dans le calculateur principal de la branche de migration.
 - [x] Garder le stockage, le partage, les graphiques et l'export indépendants du moteur de paie.
 - [x] Ajouter les tests de non-régression des sauvegardes, des anciens champs d’absence et des liens de partage.
-- [ ] Auditer le poids du bundle, les performances, l'accessibilité, le fonctionnement hors ligne et la gestion d'erreur.
+- [ ] Auditer le poids du bundle, les performances et l'accessibilité. Les erreurs API et le comportement hors ligne sont déjà testés ; compléter le test CORS dans un navigateur réel et sur réseau mobile.
 - [x] Comportement hors ligne explicite : calcul impossible sans Internet, aucun fallback local.
 
 ## Risques à surveiller
