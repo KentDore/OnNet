@@ -67,16 +67,15 @@ try {
   }
   const body = await page.locator('body').innerText({ timeout: 15000 })
   let nextQuestion = null
-  const shareModal = page.locator('[role="dialog"]').filter({ hasText: 'Votre lien de partage' })
-  const closeShare = shareModal.getByRole('button', { name: /fermer/i })
-  if (await closeShare.count()) await closeShare.first().click()
-  const nextButton = page.getByRole('button', { name: /suivant, passer à la question suivante/i })
-  if (await nextButton.count()) {
-    await nextButton.first().click()
+  const closeShare = page.getByRole('button', { name: /fermer/i })
+  if (await closeShare.count()) await closeShare.last().click()
+  const cadreButton = page.getByRole('button', { name: /aller à la question : cadre/i })
+  if (await cadreButton.count()) {
+    await cadreButton.first().click()
     await page.waitForTimeout(1000)
-    const afterNext = await page.locator('body').innerText({ timeout: 15000 })
-    const stepIndex = afterNext.indexOf('Étape ')
-    nextQuestion = stepIndex < 0 ? afterNext.slice(0, 800) : afterNext.slice(stepIndex, stepIndex + 1200)
+    const afterCadre = await page.locator('body').innerText({ timeout: 15000 })
+    const stepIndex = afterCadre.indexOf('Étape ')
+    nextQuestion = stepIndex < 0 ? afterCadre.slice(0, 800) : afterCadre.slice(stepIndex, stepIndex + 1200)
   }
   const labels = [
     'Salaire brut',
