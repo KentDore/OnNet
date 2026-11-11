@@ -206,7 +206,6 @@ export function calculatePublicodes(input = {}) {
     ? "'barème standard'"
     : taxMode === 'neutre' ? "'taux neutre'" : "'taux personnalisé'"
   situation['impôt . taux personnalisé'] = percent(taxRate)
-  situation['paramètres . impôt . taux neutre applicable'] = taxMode === 'neutre' ? 'oui' : 'non'
   situation['paramètres . impôt . foyer fiscal . situation de famille'] = "'" + family + "'"
   situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
   situation['impôt . foyer fiscal . parent isolé'] = isolatedParent ? 'oui' : 'non'
