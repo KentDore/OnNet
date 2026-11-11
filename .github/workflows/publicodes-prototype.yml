@@ -24,6 +24,7 @@ on:
       - main
     paths:
       - 'package.json'
+      - 'package-lock.json'
       - 'src/publicodes-adapter.mjs'
       - 'src/urssaf-api-client.mjs'
       - 'scripts/build-publicodes.js'
@@ -31,12 +32,14 @@ on:
       - 'test/publicodes.test.js'
       - 'test/urssaf-api-client.test.mjs'
       - '.github/workflows/publicodes-prototype.yml'
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 jobs:
   validate:
+    name: Validation locale (sans dépendance à l'API distante)
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -45,18 +48,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test adapters and API client
         run: npm run test:prototype
-      - name: Compare with the official Urssaf API
-        run: npm run compare:urssaf-api
-      - name: Diagnose meal tickets with the official API
-        run: npm run diagnose:urssaf-meal-tickets
-      - name: Verify 50% overtime premium with the official API
-        run: node scripts/diagnose-overtime-50.mjs
-      - name: Diagnose official tax rules
-        run: npm run diagnose:publicodes-tax
       - name: Print reproducible salary scenarios
         run: npm run scenarios:publicodes
       - name: Build standalone HTML prototype
@@ -74,3 +70,26 @@ jobs:
           path: dist/Onnet-publicodes-prototype.html
           if-no-files-found: error
           retention-days: 14
+
+  live-api:
+    name: Vérifications réelles auprès de l'API Urssaf (manuelles)
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+      - name: Compare with the official Urssaf API
+        run: npm run compare:urssaf-api
+      - name: Diagnose meal tickets with the official API
+        run: npm run diagnose:urssaf-meal-tickets
+      - name: Verify 50% overtime premium with the official API
+        run: node scripts/diagnose-overtime-50.mjs
+      - name: Diagnose official tax rules
+        run: npm run diagnose:publicodes-tax
