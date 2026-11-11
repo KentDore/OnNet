@@ -200,7 +200,7 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
 
   assert.equal(requests[0].situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
   assert.equal(result.overtimeHours, 4 * 52 / 12)
-  assert.equal(result.grossCalculated, 2300)
+  assert.ok(Math.abs(result.grossCalculated - 2300) <= 0.005, 'Le brut reconstitué doit respecter la tolérance API de 0,005 €')
   assert.ok(result.baseGross < 2300, 'Le salaire de base 35 h doit être inférieur au brut total 39 h')
   assert.equal(result.overtimePay, 250)
   assert.equal(requests.length, 2, 'Le calibrage doit converger sans connaître le taux de majoration')
