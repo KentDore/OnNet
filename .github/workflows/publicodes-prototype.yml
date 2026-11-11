@@ -8,6 +8,7 @@ on:
       - 'package.json'
       - 'package-lock.json'
       - 'src/publicodes-adapter.mjs'
+      - 'src/urssaf-api-client.mjs'
       - 'scripts/build-publicodes.js'
       - 'scripts/publicodes-scenarios.mjs'
       - 'scripts/compare-urssaf-api.mjs'
@@ -16,6 +17,7 @@ on:
       - 'scripts/diagnose-publicodes-tax.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
+      - 'test/urssaf-api-client.test.mjs'
       - '.github/workflows/publicodes-prototype.yml'
   pull_request:
     branches:
@@ -23,9 +25,11 @@ on:
     paths:
       - 'package.json'
       - 'src/publicodes-adapter.mjs'
+      - 'src/urssaf-api-client.mjs'
       - 'scripts/build-publicodes.js'
       - 'prototype/**'
       - 'test/publicodes.test.js'
+      - 'test/urssaf-api-client.test.mjs'
       - '.github/workflows/publicodes-prototype.yml'
 
 permissions:
@@ -43,7 +47,7 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
-      - name: Test Publicodes adapter
+      - name: Test adapters and API client
         run: npm run test:prototype
       - name: Compare with the official Urssaf API
         run: npm run compare:urssaf-api
@@ -61,6 +65,8 @@ jobs:
         run: |
           test -s dist/Onnet-publicodes-prototype.html
           ! grep -q 'PUBLICODES_BUNDLE' dist/Onnet-publicodes-prototype.html
+          grep -q 'OnNetUrssafApi' dist/Onnet-publicodes-prototype.html
+          grep -q 'mon-entreprise.urssaf.fr/api/v1/evaluate' dist/Onnet-publicodes-prototype.html
       - name: Upload standalone prototype
         uses: actions/upload-artifact@v4
         with:
