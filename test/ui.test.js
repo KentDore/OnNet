@@ -529,6 +529,19 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
   }
 });
 
+test('la part salariale des titres-restaurant est bornée à 40–50 %', async () => {
+  const { context, page } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    const part = card.locator('[data-key="partResto"]');
+    assert.equal(await part.getAttribute('min'), '40');
+    assert.equal(await part.getAttribute('max'), '50');
+  } finally {
+    await context.close();
+  }
+});
+
 test('la recherche de commune confirme le département transmis à Urssaf', async () => {
   const { context, page, calls } = await openApp();
   try {
