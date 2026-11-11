@@ -793,7 +793,7 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
-      ${s.dureeType === '39' ? '<div class="sub-hint">Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 % (taux légal standard). Un accord collectif peut prévoir un autre taux. Les RTT ne sont pas pris en compte.</div>' : ''}
+      ${s.dureeType === '39' ? '<div class="sub-hint">Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>' : ''}
     </div>
 
     <details class="more">
@@ -2042,7 +2042,7 @@ function showOnboardingModal(){
         <button type="button" data-duree="35" aria-pressed="true">35 h</button>
         <button type="button" data-duree="39" aria-pressed="false">39 h</button>
       </div>
-      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 % (taux légal standard). Un accord collectif peut prévoir un autre taux. Les RTT ne sont pas pris en compte.</div>
+      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding')}
@@ -2120,7 +2120,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
         <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
         <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
       </div>
-      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 % (taux légal standard). Un accord collectif peut prévoir un autre taux. Les RTT ne sont pas pris en compte.</div>
+      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalAdd')}
