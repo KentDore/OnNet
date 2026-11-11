@@ -370,6 +370,7 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     await page.locator('#modalAddInput').fill('3400');
     await page.locator('#modalAddMutuelle').fill('25');
     await page.locator('#modalAddMutuellePat').fill('40');
+    assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25', 'la part salarié doit être saisie dans le champ de la modale');
     assert.equal(await page.locator('#modalAddMutuellePat').inputValue(), '40');
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() =>
