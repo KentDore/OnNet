@@ -134,9 +134,27 @@ export function calculatePublicodes(input = {}) {
       cyclicReferences: false
     }
   })
-  engine.setSituation(situation)
 
-  const grossCalculated = evaluateNumber(engine, RULES.gross)
+  // Le modèle peut différer de quelques centimes de l'inversion théorique
+  // (heures mensuelles et arrondis internes). On corrige la base par itérations
+  // à partir du brut réellement évalué, sans remplacer la formule du modèle.
+  let grossCalculated = 0
+  if (durationType === '39') {
+    for (let iteration = 0; iteration < 4; iteration += 1) {
+      situation['salarié . contrat . salaire brut'] = money(baseGross)
+      engine.setSituation(situation)
+      grossCalculated = evaluateNumber(engine, RULES.gross)
+      if (Math.abs(grossCalculated - brut) < 0.000001) break
+      if (grossCalculated <= 0) {
+        throw new Error('Impossible de recalibrer le brut de base avec le modèle Publicodes.')
+      }
+      baseGross *= brut / grossCalculated
+    }
+    situation['salarié . contrat . salaire brut'] = money(baseGross)
+  }
+
+  engine.setSituation(situation)
+  grossCalculated = evaluateNumber(engine, RULES.gross)
   const netBeforeTax = evaluateNumber(engine, RULES.netBeforeTax)
   const taxableNet = evaluateNumber(engine, RULES.taxableNet)
   const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
