@@ -56,7 +56,8 @@ function makeApiResponse(request, options = {}) {
     'salarié . rémunération . frais professionnels . non déductible': 0,
     'salarié . rémunération . net . payé après impôt': netBeforeTax - 100,
     'impôt . montant': 1200,
-    "impôt . taux d'imposition": 5
+    "impôt . taux d'imposition": 5,
+    'SMIC': options.smicValue ?? 1867.02
   };
 
   return {
@@ -213,7 +214,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
   const { context, page, calls } = await openApp();
   try {
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
-    assert.ok(calls.bodies.every(body => body.situation['établissement . commune'] === "'Pacé'"));
+    assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
+    assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
     assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
@@ -221,6 +223,49 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     const benchmarkNet = await page.locator('.benchmark-your-salary strong').innerText();
     assert.equal(cardNet, benchmarkNet.replace(' / mois', ''), 'la carte et le comparatif doivent réutiliser le même net Urssaf');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('récupère le SMIC officiel à la volée et conserve une valeur manuelle explicite', async () => {
+  const { context, page, calls } = await openApp({ smicValue: 1950.25 });
+  try {
+    assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
+    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1950.250000 €/mois'));
+    await page.locator('.benchmark-settings summary').click();
+    await page.locator('#benchmarkSmicBrut').fill('1800');
+    await page.locator('#benchmarkSmicDate').fill('2026-01-01');
+    await page.locator('#saveBenchmarkSettings').click();
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      null, { timeout: 15000 }
+    );
+    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.benchmarks.v1')));
+    assert.equal(saved.smicBrut, 1800);
+    assert.equal(saved.smicDate, '2026-01-01');
+
+    await page.reload();
+    assert.equal(await page.locator('#benchmarkSmicBrut').inputValue(), '1800.00');
+    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
+  } finally {
+    await context.close();
+  }
+});
+
+test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', async () => {
+  const { context, page } = await openApp({ consent:false, failApi:true });
+  try {
+    await page.locator('#urssafCalculateBtn').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('ont échoué'),
+      null, { timeout: 15000 }
+    );
+    assert.match(await page.locator('#benchmarkBody').innerText(), /indisponible via l’API officielle/);
+    assert.doesNotMatch(await page.locator('#benchmarkBody').innerText(), /1\s?867,02/);
   } finally {
     await context.close();
   }
