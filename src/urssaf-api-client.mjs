@@ -83,7 +83,9 @@ function buildSituation(input, baseGross, overtimeHours) {
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
-  const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
+  const employeeMealTicketRate = mealTicketDays > 0
+    ? numberInRange(input.partResto ?? 50, 'partResto', 40, 50)
+    : 50
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
   const situation = {
@@ -93,6 +95,7 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . contrat . statut cadre': 'non',
     'salarié . contrat . temps de travail . temps partiel': 'non',
     'établissement . commune': publicodesString(input.commune, 'commune', 'Pacé'),
+    'établissement . commune . département': publicodesString(input.departement, 'département', input.commune === 'Pacé' ? 'Ille-et-Vilaine' : ''),
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
