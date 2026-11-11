@@ -10,7 +10,16 @@ const scenarios = [
   { name: '1900 € brut, 35 h, proche du SMIC mensuel de référence', input: { brut: 1900, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
   { name: '3990 € brut, 35 h, juste sous le PMSS 2026', input: { brut: 3990, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
   { name: '4020 € brut, 35 h, juste au-dessus du PMSS 2026', input: { brut: 4020, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '8000 € brut, 35 h, tranche 2 retraite complémentaire', input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } }
+  { name: '8000 € brut, 35 h, tranche 2 retraite complémentaire', input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } ,
+  { name: '500 € brut, 35 h, très faible salaire positif', input: { brut: 500, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '1000 € brut, 35 h, salaire faible positif', input: { brut: 1000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: 'SMIC mensuel 2026, 35 h', input: { brut: 1867.02, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '4004,99 € brut, juste sous le PMSS 2026', input: { brut: 4004.99, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '4005 € brut, exactement au PMSS 2026', input: { brut: 4005, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '4005,01 € brut, juste au-dessus du PMSS 2026', input: { brut: 4005.01, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '20000 € brut, salaire élevé', input: { brut: 20000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+  { name: '100000 € brut, salaire très élevé', input: { brut: 100000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
+]
 ]
 
 const comparisons = [
