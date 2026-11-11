@@ -31,7 +31,7 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . salarié': 84,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 84,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . net social': 1894,
+    'salarié . rémunération . montant net social': 1894,
     'salarié . rémunération . net . payé après impôt': 1700,
     'impôt . montant': 1320,
     "impôt . taux d'imposition": 10
