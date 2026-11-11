@@ -1,0 +1,54 @@
+name: Publicodes prototype
+
+on:
+  push:
+    branches:
+      - migration/publicodes-urssaf
+    paths:
+      - 'package.json'
+      - 'src/publicodes-adapter.mjs'
+      - 'scripts/build-publicodes.js'
+      - 'prototype/**'
+      - 'test/publicodes.test.js'
+      - '.github/workflows/publicodes-prototype.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'package.json'
+      - 'src/publicodes-adapter.mjs'
+      - 'scripts/build-publicodes.js'
+      - 'prototype/**'
+      - 'test/publicodes.test.js'
+      - '.github/workflows/publicodes-prototype.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install --no-audit --no-fund
+      - name: Test Publicodes adapter
+        run: npm run test:prototype
+      - name: Build standalone HTML prototype
+        run: npm run build:publicodes
+      - name: Check generated prototype
+        run: |
+          test -s dist/Onnet-publicodes-prototype.html
+          ! grep -q 'PUBLICODES_BUNDLE' dist/Onnet-publicodes-prototype.html
+      - name: Upload standalone prototype
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnet-publicodes-prototype
+          path: dist/Onnet-publicodes-prototype.html
+          if-no-files-found: error
+          retention-days: 14
