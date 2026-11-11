@@ -402,7 +402,6 @@ test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
-    const before = calls.count;
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
     await card.locator('[data-key="nbMois"]').fill('13');
@@ -423,6 +422,7 @@ test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local
 test('ne propose pas de réessayer pour les paramètres hors périmètre', async () => {
   const { context, page, calls } = await openApp();
   try {
+    const before = calls.count;
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
     await card.locator('[data-key="nbMois"]').fill('13');
