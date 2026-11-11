@@ -22,5 +22,6 @@ jobs:
           node-version: 22
       - name: Installer les dépendances du projet
         run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
+      # Les erreurs métier sont consignées par scénario ; les erreurs 429/5xx interrompent la campagne.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
