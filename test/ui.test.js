@@ -712,6 +712,9 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
   try {
     await page.locator('#addScenario').click();
     const hint = page.locator('#modalAdd39Hint');
+    assert.equal(await hint.isVisible(), true);
+    assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#modalAddDuree [data-duree="35"]').click();
     assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
     assert.equal(await hint.isVisible(), true);
