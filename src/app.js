@@ -343,6 +343,11 @@ function mkScenario(over){
     treiziemeMoisBase:'base',
   };
   const scenario = Object.assign(base, over || {});
+  if(over && Object.prototype.hasOwnProperty.call(over, 'commune') && over.commune !== 'Pacé' &&
+     !Object.prototype.hasOwnProperty.call(over, 'codePostal') && !Object.prototype.hasOwnProperty.call(over, 'departement')){
+    scenario.codePostal = '';
+    scenario.departement = '';
+  }
   // Compatibilité avec les créations historiques : la part employeur suit
   // la part salarié, sauf lorsqu'une valeur distincte est fournie.
   if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
@@ -413,7 +418,7 @@ function sanitizeScenario(raw){
     clean.codePostal = '35740';
     clean.departement = 'Ille-et-Vilaine';
   }
-  clean.codePostal = typeof clean.codePostal === 'string' && /^\\d{5}$/.test(clean.codePostal) ? clean.codePostal : '';
+  clean.codePostal = typeof clean.codePostal === 'string' && /^\d{5}$/.test(clean.codePostal) ? clean.codePostal : '';
   clean.departement = typeof clean.departement === 'string' ? clean.departement.trim().slice(0, 80) : '';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
@@ -1639,7 +1644,7 @@ async function searchCommunes(id, query){
   const timer = setTimeout(async () => {
     try{
       const params = new URLSearchParams({ fields:'nom,code,codesPostaux,departement,codeDepartement', limit:'8' });
-      if(/^\\d{2,5}$/.test(term)) params.set('codePostal', term);
+      if(/^\d{2,5}$/.test(term)) params.set('codePostal', term);
       else { params.set('nom', term); params.set('boost', 'population'); }
       const response = await fetch('https://geo.api.gouv.fr/communes?' + params.toString(), { headers:{ Accept:'application/json' } });
       if(!response.ok) throw new Error('Service géographique indisponible');
