@@ -364,17 +364,17 @@ test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf
   }
 });
 
-test('limite la valeur unitaire des titres-restaurant à 1 000 € dans la carte', async () => {
+test('limite la valeur unitaire des titres-restaurant à 500 € dans la carte', async () => {
   const { context, page } = await openApp();
   try {
     await page.locator('#cardsBody details.more').first().locator('summary').click();
     const field = page.locator('#cardsBody [data-key="valeurResto"]').first();
-    await field.fill('1200');
+    await field.fill('800');
     await field.blur();
-    assert.equal(await field.inputValue(), '1000');
+    assert.equal(await field.inputValue(), '500');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
-      return state?.scenarios?.[0]?.valeurResto === 1000;
+      return state?.scenarios?.[0]?.valeurResto === 500;
     });
   } finally {
     await context.close();
