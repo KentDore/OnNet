@@ -175,7 +175,10 @@ test('remonte les variables par défaut et avertissements de l’API', async () 
         nodeValue: expression === 'salarié . rémunération . brut' ? 2300 : 100,
         missingVariables: { 'salarié . contrat . statut cadre': 1 }
       })),
-      warnings: [{ message: 'Une règle expérimentale a été utilisée.' }]
+      warnings: [
+        { message: 'Une règle expérimentale a été utilisée.' },
+        { message: 'Une règle expérimentale a été utilisée.' }
+      ]
     })))
   })
 
@@ -223,5 +226,6 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ dureeType: '37' }), { fetchImpl }), /dureeType/)
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto: 2.5 }), { fetchImpl }), /entier/)
   await assert.rejects(calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé' }), { fetchImpl }), /tauxPAS/)
+  await assert.rejects(calculateWithUrssafApi(scenario({ date: '2026-02-31' }), { fetchImpl }), /date calendaire valide/)
   assert.equal(calls, 0)
 })
