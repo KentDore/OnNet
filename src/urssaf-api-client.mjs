@@ -396,12 +396,16 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
       finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
     }
 
+    // Le taux neutre est une règle distincte ; `impôt . taux d'imposition` correspond au taux effectif du barème standard.
+    const taxRateExpression = taxMode === 'neutre'
+      ? 'impôt . taux neutre d’impôt sur le revenu'
+      : EXPRESSIONS.taxRate
     const taxEvaluation = await evaluateRequest(
       fetchImpl,
       endpoint,
       timeoutMs,
       finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, taxRateExpression]
     )
     finalEvaluation = {
       values: taxEvaluation.values,
