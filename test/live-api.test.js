@@ -7,7 +7,7 @@ const { chromium } = require('playwright');
 
 const ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate';
 
-test('API officielle accessible depuis un navigateur (CORS) et règle SMIC numérique', async () => {
+test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 39 h', async () => {
   let server;
   let browser;
   try {
@@ -29,39 +29,80 @@ test('API officielle accessible depuis un navigateur (CORS) et règle SMIC numé
     assert.equal(result.status(), 200);
 
     const apiResult = await page.evaluate(async endpoint => {
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json', accept: 'application/json' },
-        body: JSON.stringify({
-          expressions: [
-            'SMIC',
-            'salarié . rémunération . net . à payer avant impôt'
-          ],
-          situation: {
-            'salarié': 'oui',
-            'salarié . contrat': "'CDI'",
-            'salarié . contrat . salaire brut': '2300 €/mois',
-            'salarié . contrat . statut cadre': 'non',
-            'salarié . contrat . temps de travail . temps partiel': 'non',
-            'établissement . commune': "'Pacé'",
-            'salarié . convention collective': "'droit commun'",
-            'salarié . activité partielle': 'non',
-            'salarié . temps de travail . heures supplémentaires': '0 heure/mois',
-            'date': '11/11/2026'
-          }
+      async function evaluate(expressions, situation) {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify({ expressions, situation })
+        });
+        const body = await response.json();
+        return { status: response.status, ok: response.ok, body };
+      }
+
+      const commonSituation = {
+        'salarié': 'oui',
+        'salarié . contrat': "'CDI'",
+        'salarié . contrat . statut cadre': 'non',
+        'salarié . contrat . temps de travail . temps partiel': 'non',
+        'établissement . commune': "'Pacé'",
+        'salarié . convention collective': "'droit commun'",
+        'salarié . activité partielle': 'non',
+        'date': '11/11/2026'
+      };
+
+      const weeklyOvertime = 4 * 52 / 12;
+      const monthlyBaseHours = 151.67;
+      const overtimePremium = 1.25;
+      const requestedGross = 2300;
+      const baseGrossFor39h = requestedGross * monthlyBaseHours /
+        (monthlyBaseHours + weeklyOvertime * overtimePremium);
+
+      const [thirtyFiveHours, thirtyNineHours] = await Promise.all([
+        evaluate([
+          'SMIC',
+          'salarié . rémunération . brut',
+          'salarié . rémunération . net . à payer avant impôt'
+        ], {
+          ...commonSituation,
+          'salarié . contrat . salaire brut': '2300 €/mois',
+          'salarié . temps de travail . heures supplémentaires': '0 heure/mois'
+        }),
+        evaluate([
+          'salarié . rémunération . brut',
+          'salarié . rémunération . heures supplémentaires',
+          'salarié . rémunération . net . à payer avant impôt'
+        ], {
+          ...commonSituation,
+          'salarié . contrat . salaire brut': `${baseGrossFor39h.toFixed(6)} €/mois`,
+          'salarié . temps de travail . heures supplémentaires': `${weeklyOvertime} heure/mois`
         })
-      });
-      const body = await response.json();
-      return { status: response.status, ok: response.ok, body };
+      ]);
+
+      return { thirtyFiveHours, thirtyNineHours, weeklyOvertime, requestedGross };
     }, ENDPOINT);
 
-    assert.equal(apiResult.ok, true, `HTTP ${apiResult.status} depuis le navigateur`);
-    assert.ok(Array.isArray(apiResult.body.evaluate), 'Réponse API sans tableau evaluate');
-    assert.equal(apiResult.body.evaluate.length, 2, 'L’API doit retourner les deux expressions demandées');
-    assert.ok(Number.isFinite(apiResult.body.evaluate[0].nodeValue), 'La règle SMIC doit renvoyer une valeur numérique');
-    assert.ok(apiResult.body.evaluate[0].nodeValue > 0, 'La valeur SMIC doit être positive');
-    assert.ok(Number.isFinite(apiResult.body.evaluate[1].nodeValue), 'Le net avant impôt doit être numérique');
-    assert.ok(apiResult.body.evaluate[1].nodeValue > 0, 'Le net avant impôt doit être positif');
+    const thirtyFive = apiResult.thirtyFiveHours;
+    assert.equal(thirtyFive.ok, true, `35 h : HTTP ${thirtyFive.status} depuis le navigateur`);
+    assert.equal(thirtyFive.body.evaluate?.length, 3, '35 h : les trois expressions doivent être retournées');
+    const smic = thirtyFive.body.evaluate[0].nodeValue;
+    const gross35 = thirtyFive.body.evaluate[1].nodeValue;
+    const net35 = thirtyFive.body.evaluate[2].nodeValue;
+    assert.ok(Number.isFinite(smic) && smic > 0, 'La règle SMIC doit renvoyer une valeur positive');
+    assert.ok(Number.isFinite(gross35) && Math.abs(gross35 - 2300) <= 0.05,
+      `35 h : le brut API doit correspondre à 2 300 € (reçu : ${gross35})`);
+    assert.ok(Number.isFinite(net35) && net35 > 0, '35 h : le net avant impôt doit être positif');
+
+    const thirtyNine = apiResult.thirtyNineHours;
+    assert.equal(thirtyNine.ok, true, `39 h : HTTP ${thirtyNine.status} depuis le navigateur`);
+    assert.equal(thirtyNine.body.evaluate?.length, 3, '39 h : les trois expressions doivent être retournées');
+    const gross39 = thirtyNine.body.evaluate[0].nodeValue;
+    const overtimePay39 = thirtyNine.body.evaluate[1].nodeValue;
+    const net39 = thirtyNine.body.evaluate[2].nodeValue;
+    assert.ok(Number.isFinite(gross39) && Math.abs(gross39 - apiResult.requestedGross) <= 0.05,
+      `39 h : le brut reconstitué doit correspondre à 2 300 € (reçu : ${gross39})`);
+    assert.ok(Number.isFinite(overtimePay39) && overtimePay39 > 0,
+      `39 h : les heures supplémentaires doivent être rémunérées (reçu : ${overtimePay39})`);
+    assert.ok(Number.isFinite(net39) && net39 > 0, '39 h : le net avant impôt doit être positif');
     assert.deepEqual(browserErrors, []);
   } catch (error) {
     if (/Failed to fetch|CORS|NetworkError/i.test(String(error))) {
