@@ -10,7 +10,7 @@ L'application fonctionne dans le navigateur, sans compte ni serveur de calcul. L
 
 ## Utilisation
 
-- Ouvrir `Onnet-2.1.1.html` pour utiliser la version autonome hors ligne.
+- Ouvrir `Onnet-2.1.2.html` pour utiliser la version autonome hors ligne.
 - `index.html` correspond à la version publiée sur GitHub Pages.
 - Aucune installation n'est nécessaire pour utiliser l'application.
 
