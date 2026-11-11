@@ -83,6 +83,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(request.situation.date, '11/11/2026')
   assert.equal(request.expressions[0], 'salarié . rémunération . brut')
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
+  assert.equal(result.endpoint, 'https://mon-entreprise.urssaf.fr/api/v1/evaluate')
   assert.equal(result.netBeforeTax, 1810)
   assert.equal(result.taxableNet, 1880)
   assert.equal(result.mealTicketEmployee, 84)
