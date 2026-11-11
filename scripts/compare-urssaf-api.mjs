@@ -1,5 +1,5 @@
 import { calculatePublicodes } from '../src/publicodes-adapter.mjs'
-import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
+import { calculateWithUrssafApi, evaluateUrssafExpression } from '../src/urssaf-api-client.mjs'
 
 // Les scénarios sont exécutés en série, mais le client peut effectuer plusieurs
 // requêtes par scénario (notamment pour calibrer les 39 h puis calculer le PAS).
@@ -7,31 +7,65 @@ import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
 // campagne de diagnostic manuelle. Aucun retry automatique n'est effectué.
 const REQUEST_INTERVAL_MS = 350
 let lastRequestAt = 0
-async function throttledFetch(url, options) {
-  const delay = Math.max(0, REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt))
-  if (delay) await new Promise(resolve => setTimeout(resolve, delay))
-  lastRequestAt = Date.now()
-  return fetch(url, options)
+let requestQueue = Promise.resolve()
+function throttledFetch(url, options) {
+  const request = requestQueue.then(async () => {
+    const delay = Math.max(0, REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt))
+    if (delay) await new Promise(resolve => setTimeout(resolve, delay))
+    lastRequestAt = Date.now()
+    return fetch(url, options)
+  })
+  requestQueue = request.catch(() => {})
+  return request
 }
 
+function currentDateInParis() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date()).map(part => [part.type, part.value])
+  )
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
+
+const REFERENCE_DATE = currentDateInParis()
+const smicReference = await evaluateUrssafExpression('SMIC', { date: REFERENCE_DATE }, { fetchImpl: throttledFetch })
+const pmssReference = await evaluateUrssafExpression('plafond sécurité sociale', { date: REFERENCE_DATE }, { fetchImpl: throttledFetch })
+if (!Number.isFinite(smicReference.value) || smicReference.value <= 0) throw new Error('La règle SMIC renvoyée par l’API Urssaf est absente ou invalide.')
+if (!Number.isFinite(pmssReference.value) || pmssReference.value <= 0) throw new Error('La règle plafond sécurité sociale renvoyée par l’API Urssaf est absente ou invalide.')
+const pmssValue = pmssReference.value
+const smicValue = smicReference.value
+const pmssMinus15 = Number((pmssValue - 15).toFixed(2))
+const pmssPlus15 = Number((pmssValue + 15).toFixed(2))
+const pmssUnder = Number((pmssValue - 0.01).toFixed(2))
+const pmssExact = Number(pmssValue.toFixed(2))
+const pmssAbove = Number((pmssValue + 0.01).toFixed(2))
+const euroLabel = value => value.toLocaleString('fr-FR', {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2
+})
+
 const scenarios = [
-  { name: '2300 € brut, 39 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '2300 € brut, 35 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '2300 € brut, 39 h, sans mutuelle ni titres', input: { brut: 2300, dureeType: '39', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '2300 € brut, 39 h, mutuelle 30/30, 21 titres de 8 €', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8, partResto: 50, date: '2026-11-11' } },
-  { name: '1800 € brut, 35 h, bas de grille', input: { brut: 1800, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '1900 € brut, 35 h, proche du SMIC mensuel de référence', input: { brut: 1900, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '3990 € brut, 35 h, juste sous le PMSS 2026', input: { brut: 3990, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '4020 € brut, 35 h, juste au-dessus du PMSS 2026', input: { brut: 4020, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '8000 € brut, 35 h, tranche 2 retraite complémentaire', input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '500 € brut, 35 h, très faible salaire positif', input: { brut: 500, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '1000 € brut, 35 h, salaire faible positif', input: { brut: 1000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: 'SMIC mensuel 2026, 35 h', input: { brut: 1867.02, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '4004,99 € brut, juste sous le PMSS 2026', input: { brut: 4004.99, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '4005 € brut, exactement au PMSS 2026', input: { brut: 4005, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '4005,01 € brut, juste au-dessus du PMSS 2026', input: { brut: 4005.01, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '20000 € brut, salaire élevé', input: { brut: 20000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
-  { name: '100000 € brut, salaire très élevé', input: { brut: 100000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: '2026-11-11' } }
+  { name: '2300 € brut, 39 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '2300 € brut, 35 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '2300 € brut, 39 h, sans mutuelle ni titres', input: { brut: 2300, dureeType: '39', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '2300 € brut, 39 h, mutuelle 30/30, 21 titres de 8 €', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8, partResto: 50, date: REFERENCE_DATE } },
+  { name: '1800 € brut, 35 h, bas de grille', input: { brut: 1800, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '1900 € brut, 35 h, proche du SMIC mensuel de référence', input: { brut: 1900, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(pmssMinus15)} € brut, 35 h, sous le PMSS officiel`, input: { brut: pmssMinus15, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(pmssPlus15)} € brut, 35 h, au-dessus du PMSS officiel`, input: { brut: pmssPlus15, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '8000 € brut, 35 h, tranche 2 retraite complémentaire', input: { brut: 8000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '500 € brut, 35 h, très faible salaire positif', input: { brut: 500, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '1000 € brut, 35 h, salaire faible positif', input: { brut: 1000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(smicValue)} € brut, SMIC officiel, 35 h`, input: { brut: smicValue, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(pmssUnder)} € brut, juste sous le PMSS officiel`, input: { brut: pmssUnder, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(pmssExact)} € brut, exactement au PMSS officiel`, input: { brut: pmssExact, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: `${euroLabel(pmssAbove)} € brut, juste au-dessus du PMSS officiel`, input: { brut: pmssAbove, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '20000 € brut, salaire élevé', input: { brut: 20000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } },
+  { name: '100000 € brut, salaire très élevé', input: { brut: 100000, dureeType: '35', mutuelle: 0, mutuellePat: 0, joursResto: 0, valeurResto: 0, date: REFERENCE_DATE } }
 ]
 
 const comparisons = [
@@ -73,10 +107,10 @@ for (const scenario of scenarios) {
 }
 
 const fiscalScenarios = [
-  { name: 'taux personnalisé 10 %', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'personnalisé', tauxPAS: 10 } },
-  { name: 'taux neutre', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'neutre' } },
-  { name: 'barème standard, célibataire sans enfant', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'barème', situationFamille: 'célibataire', enfantsACharge: 0 } },
-  { name: 'barème standard, couple avec 24 000 € autres revenus imposables', input: { brut: 2300, dureeType: '35', date: '2026-11-11', modeImpot: 'barème', situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000 } }
+  { name: 'taux personnalisé 10 %', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'personnalisé', tauxPAS: 10 } },
+  { name: 'taux neutre', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'neutre' } },
+  { name: 'barème standard, célibataire sans enfant', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'barème', situationFamille: 'célibataire', enfantsACharge: 0 } },
+  { name: 'barème standard, couple avec 24 000 € autres revenus imposables', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'barème', situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000 } }
 ]
 
 const fiscalResults = []
@@ -110,7 +144,7 @@ for (const scenario of fiscalScenarios) {
   })
 }
 
-console.log(JSON.stringify({ social: results, fiscal: fiscalResults }, null, 2))
+console.log(JSON.stringify({ references: { date: REFERENCE_DATE, smic: { value: smicValue, missingVariables: smicReference.missingVariables, warnings: smicReference.warnings }, pmss: { value: pmssValue, missingVariables: pmssReference.missingVariables, warnings: pmssReference.warnings } }, social: results, fiscal: fiscalResults }, null, 2))
 
 const mismatches = results.flatMap(result =>
   result.comparisons
