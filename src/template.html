@@ -225,60 +225,7 @@
         </div>
       </div>
 
-      <div class="module-card" id="absenceModule" style="display:none" aria-hidden="true">
-        <button type="button" class="module-toggle-head" id="absenceModuleToggle" aria-expanded="false" aria-controls="absenceModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 0 0 0-20 0Z"></path><path d="M12 12v8a2 2 0 0 0 4 0"></path><path d="M12 2v1"></path></svg></span>
-          <span class="module-info">
-            <span class="module-name">Simuler une absence</span>
-            <span class="module-desc">Congés payés ou arrêt de travail</span>
-          </span>
-          <span class="module-switch" aria-hidden="true"></span>
-        </button>
-        <div class="module-body" id="absenceModuleBody">
-          <div class="hint">Calculé à partir de <strong id="absenceBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas, sur la base d'un mois de 30 jours.</div>
 
-          <div class="field-row">
-            <label>1. Type d'absence</label>
-            <div class="pill-toggle" id="absenceTypeToggle" role="group" aria-label="Type d'absence" style="width:100%;">
-              <button type="button" data-atype="conges" aria-pressed="true" style="flex:1;">Congés payés</button>
-              <button type="button" data-atype="arret" aria-pressed="false" style="flex:1;">Arrêt de travail</button>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <label for="absenceDuree">2. Durée de l'absence (jours sur le mois)</label>
-            <input type="text" inputmode="decimal" id="absenceDuree" value="5">
-          </div>
-
-          <div id="arretExtraFields" style="display:none;">
-            <div class="field-row">
-              <label for="ancienneteSelect">3. Ancienneté dans l'entreprise</label>
-              <select id="ancienneteSelect">
-                <option value="90">1 an ou plus — maintien à 90 % (loi de mensualisation)</option>
-                <option value="50">Moins d'1 an — indemnités de la Sécu seules (≈ 50 %)</option>
-                <option value="custom">Je connais mon propre taux</option>
-              </select>
-              <div class="sub-hint">Pourcentage du salaire maintenu. Votre convention collective peut prévoir davantage — à vérifier sur votre bulletin de paie.</div>
-            </div>
-            <div class="field-row" id="arretPctRow" style="display:none;">
-              <label for="arretPct">% du salaire maintenu (votre taux)</label>
-              <input type="text" inputmode="decimal" id="arretPct" value="90">
-            </div>
-
-            <div class="field-row">
-              <label>4. Délai de carence (3 premiers jours)</label>
-              <div class="pill-toggle" id="carenceToggle" role="group" aria-label="Délai de carence" style="width:100%;">
-                <button type="button" data-carence="non" aria-pressed="true" style="flex:1;">Non payée (cas général)</button>
-                <button type="button" data-carence="oui" aria-pressed="false" style="flex:1;">Payée par l'employeur</button>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn btn-primary" id="addAbsenceScenario" style="width:100%; margin-top:6px;">Ajouter ce salaire</button>
-
-          <div class="sub-hint" id="absenceHint" style="margin-top:14px; margin-bottom:0;"></div>
-        </div>
-      </div>
 
     </div>
   </section>
