@@ -647,7 +647,7 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
-    assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '15');
+    assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '30');
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '15');
     await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingSubmit').click();
@@ -656,8 +656,8 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
       return state?.scenarios?.[0]?.brut === 2500;
     });
     const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
-    assert.equal(state.scenarios[0].mutuelle, 15);
-    assert.equal(state.scenarios[0].mutuellePat, 15);
+    assert.equal(state.scenarios[0].mutuelle, 30);
+    assert.equal(state.scenarios[0].mutuellePat, 30);
   } finally {
     await context.close();
   }
