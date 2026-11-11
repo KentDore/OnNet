@@ -84,6 +84,23 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
+test('présente les deux repères avec le net mensuel en premier et le taux net horaire', async () => {
+  const { context, page } = await openApp();
+  try {
+    const cards = page.locator('.benchmark-item');
+    assert.equal(await cards.count(), 2);
+    const smicCard = cards.nth(0);
+    const medianCard = cards.nth(1);
+    assert.match(await smicCard.locator('.benchmark-label').innerText(), /SMIC/);
+    assert.match(await smicCard.locator('.benchmark-meta').first().innerText(), /Net horaire:.*Brut mensuel:/);
+    assert.match(await medianCard.locator('.benchmark-label').innerText(), /Salaire médian/);
+    assert.match(await medianCard.locator('.benchmark-meta').first().innerText(), /Net horaire:.*Référence mensuelle nette/);
+    assert.match(await medianCard.locator('details').innerText(), /brut mensuel correspondant n'est pas affiché/i);
+  } finally {
+    await context.close();
+  }
+});
+
 test('compare le salaire réel au SMIC sans le recalculer à 35 h', async () => {
   const { context, page } = await openApp();
   try {
