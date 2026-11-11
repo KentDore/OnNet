@@ -95,7 +95,7 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . contrat . statut cadre': 'non',
     'salarié . contrat . temps de travail . temps partiel': 'non',
     'établissement . commune': publicodesString(input.commune, 'commune', 'Pacé'),
-    'établissement . commune . département': publicodesString(input.departement, 'département', input.commune === 'Pacé' ? 'Ille-et-Vilaine' : ''),
+    'établissement . commune . département': publicodesString(input.departement, 'département', (!input.commune || input.commune === 'Pacé') ? 'Ille-et-Vilaine' : ''),
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
