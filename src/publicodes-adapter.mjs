@@ -2,7 +2,7 @@ import modeleSocialRules from 'modele-social'
 import PublicodesEngine from 'publicodes'
 
 const HEURES_BASE_MENSUELLES = 151.67
-const HEURES_SUP_39H_MENSUELLES = 17.33
+const HEURES_SUP_39H_MENSUELLES = 4 * 52 / 12
 const MAJORATION_HEURES_SUP_DEFAUT = 25
 
 const RULES = Object.freeze({
@@ -82,7 +82,7 @@ function evaluateNumber(engine, dottedName) {
  * Contrat de l'adaptateur :
  * - brut OnNet = brut mensuel total, heures supplémentaires comprises ;
  * - 35 h = salaire de base seul ;
- * - 39 h = 35 h de base + 17,33 h supplémentaires/mois, majorées à 25 % ;
+ * - 39 h = 35 h de base + 4 × 52 / 12 heures supplémentaires/mois, majorées à 25 % ;
  * - mutuelle saisie séparément salarié/employeur, convertie en montant total
  *   et taux employeur, comme attendu par modele-social ;
  * - partResto représente la part salariale OnNet, alors que Publicodes attend
@@ -120,7 +120,7 @@ export function calculatePublicodes(input = {}) {
     100000
   )
   const totalHealth = employeeHealth + employerHealth
-  const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 50
+  const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
@@ -173,6 +173,9 @@ export function calculatePublicodes(input = {}) {
 
   engine.setSituation(situation)
   grossCalculated = evaluateNumber(engine, RULES.gross)
+  if (Math.abs(grossCalculated - brut) > 0.005) {
+    throw new Error(`Le brut reconstitué (${grossCalculated.toFixed(2)} €) diffère du brut demandé (${brut.toFixed(2)} €) de plus de 0,005 €.`)
+  }
   const netBeforeTax = evaluateNumber(engine, RULES.netBeforeTax)
   const taxableNet = evaluateNumber(engine, RULES.taxableNet)
   const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
