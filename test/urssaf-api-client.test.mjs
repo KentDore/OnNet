@@ -107,6 +107,22 @@ test('transmet la commune de l’établissement et échappe les apostrophes', as
   }), /commune doit être renseignée/)
 })
 
+test('ne demande pas les règles de titres-restaurant quand le salarié n’en reçoit pas', async () => {
+  let request
+  const result = await calculateWithUrssafApi(scenario({ joursResto: 0, valeurResto: 0 }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response(apiResponse(body.expressions))
+    })
+  })
+
+  assert.equal(request.expressions.some(expression => expression.includes('titres-restaurant')), false)
+  assert.equal(result.mealTicketAmount, 0)
+  assert.equal(result.mealTicketEmployee, 0)
+  assert.equal(result.mealTicketEmployer, 0)
+  assert.equal(result.mealTicketNonDeductible, 0)
+})
+
 test('prépare les paramètres de mutuelle et titres-restaurant sans inverser les parts', async () => {
   let request
   await calculateWithUrssafApi(scenario({ mutuelle: 24, mutuellePat: 36, partResto: 40 }), {
