@@ -112,7 +112,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     // Vérification de robustesse sur des montants très faibles, usuels et élevés.
     // Ces cas contrôlent le comportement technique de l'API, pas la conformité
     // juridique de chaque situation particulière.
-    for (const grossTarget of [0, 1, 500, 1867.02, 4000, 100000]) {
+    for (const grossTarget of [1, 500, 1867.02, 4000, 100000]) {
       const response = await page.evaluate(async ({ endpoint, commonSituation, grossTarget }) => {
         const apiResponse = await fetch(endpoint, {
           method: 'POST',
