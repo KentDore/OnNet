@@ -152,24 +152,27 @@ test('prépare les paramètres de mutuelle et titres-restaurant sans inverser le
   assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur'], '60.000000%')
 })
 
-test('prépare un scénario 39 h avec 4 heures supplémentaires hebdomadaires converties en heures mensuelles', async () => {
-  let request
+test('reconstitue le brut total 39 h sans supposer localement un taux de majoration', async () => {
+  const requests = []
   const result = await calculateWithUrssafApi(scenario({ dureeType: '39', joursResto: 0 }), {
     fetchImpl: mockFetch(body => {
-      request = body
+      requests.push(body)
       const values = apiResponse(body.expressions)
       const base = Number.parseFloat(body.situation['salarié . contrat . salaire brut'])
       const overtime = 4 * 52 / 12
-      // Le mock représente le taux standard de 25 % du modèle Urssaf, pas une règle locale OnNet.
-      values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.25
+      // Taux fictif de 10 % pour vérifier que le client s'appuie sur le brut retourné par l'API.
+      values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.10
       values.evaluate[4].nodeValue = 250
       return response(values)
     })
   })
 
-  assert.equal(request.situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
+  assert.equal(requests[0].situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
   assert.equal(result.overtimeHours, 4 * 52 / 12)
+  assert.equal(result.grossCalculated, 2300)
+  assert.ok(result.baseGross < 2300, 'Le salaire de base 35 h doit être inférieur au brut total 39 h')
   assert.equal(result.overtimePay, 250)
+  assert.equal(requests.length, 2, 'Le calibrage doit converger sans connaître le taux de majoration')
 })
 
 test('active le taux personnalisé après annualisation du net imposable', async () => {
