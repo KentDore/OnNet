@@ -238,8 +238,23 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
       throw new Error('Réponse incomplète de l’API Urssaf : les expressions demandées ne sont pas toutes présentes.')
     }
 
+    const noMealTickets = situation['salarié . rémunération . frais professionnels . titres-restaurant'] === 'non'
+    const zeroWhenNoMealTickets = new Set([
+      EXPRESSIONS.mealTicketAmount,
+      EXPRESSIONS.mealTicketEmployer,
+      EXPRESSIONS.mealTicketNonDeductible
+    ])
     const values = payload.evaluate.map((item, index) => {
-      if (!item || !Number.isFinite(item.nodeValue)) {
+      if (!item) {
+        throw new Error(`L’API Urssaf n’a pas fourni de résultat pour « ${expressions[index]} ».`)
+      }
+      if (!Number.isFinite(item.nodeValue)) {
+        // Sans titres-restaurant déclarés, ces règles ne sont pas applicables :
+        // l'API peut renvoyer null. Le zéro découle alors explicitement de la saisie,
+        // et ne constitue pas un résultat de calcul de remplacement.
+        if (noMealTickets && item.nodeValue === null && zeroWhenNoMealTickets.has(expressions[index])) {
+          return 0
+        }
         throw new Error(`L’API Urssaf n’a pas fourni de valeur numérique pour « ${expressions[index]} ».`)
       }
       return item.nodeValue
