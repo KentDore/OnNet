@@ -116,24 +116,27 @@ test('prépare un scénario 39 h avec les 4 heures supplémentaires mensuelles',
   assert.equal(result.overtimePay, 250)
 })
 
-test('active le taux personnalisé uniquement quand le mode est demandé', async () => {
-  let request
+test('active le taux personnalisé après annualisation du net imposable', async () => {
+  const requests = []
   const result = await calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé', tauxPAS: 10 }), {
     fetchImpl: mockFetch(body => {
-      request = body
+      requests.push(body)
       return response(apiResponse(body.expressions))
     })
   })
 
+  assert.equal(requests.length, 2)
+  const request = requests[1]
   assert.equal(request.situation['impôt . méthode de calcul'], "'taux personnalisé'")
   assert.equal(request.situation['impôt . taux personnalisé'], '10.000000%')
+  assert.equal(request.situation['impôt . revenu imposable'], '22560.00 €/an')
   assert.equal(result.netAfterTax, 1700)
   assert.equal(result.incomeTax, 1320)
   assert.equal(result.calculatedTaxRate, 10)
 })
 
-test('configure le barème avec le foyer fiscal et rejette un parent isolé incohérent', async () => {
-  let request
+test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
+  const requests = []
   await calculateWithUrssafApi(scenario({
     modeImpot: 'barème',
     situationFamille: 'célibataire',
@@ -141,12 +144,16 @@ test('configure le barème avec le foyer fiscal et rejette un parent isolé inco
     parentIsole: true
   }), {
     fetchImpl: mockFetch(body => {
-      request = body
+      requests.push(body)
       return response(apiResponse(body.expressions))
     })
   })
 
+  assert.equal(requests.length, 2)
+  const request = requests[1]
   assert.equal(request.situation['impôt . méthode de calcul'], "'barème standard'")
+  assert.equal(request.situation['impôt . revenu imposable'], '22560.00 €/an')
+  assert.equal(request.situation["paramètres . impôt . revenu d'activité"], '22560.00 €/an')
   assert.equal(request.situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
   assert.equal(request.situation['impôt . foyer fiscal . enfants à charge'], '1 enfant')
   assert.equal(request.situation['impôt . foyer fiscal . parent isolé'], 'oui')
@@ -186,6 +193,7 @@ test('transmet les autres revenus imposables du foyer en couple et exige une val
     request.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
     '24000.00 €/an'
   )
+  assert.equal(request.situation["paramètres . impôt . revenu d'activité"], '22560.00 €/an')
 
   await assert.rejects(
     calculateWithUrssafApi(scenario({
