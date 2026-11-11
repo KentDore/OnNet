@@ -16,8 +16,8 @@ function scenario(overrides = {}) {
     dureeType: '39',
     mutuelle: 30,
     mutuellePat: 30,
-    joursResto: 21,
-    valeurResto: 8,
+    joursResto: 0,
+    valeurResto: 0,
     partResto: 50,
     date: '2026-11-11',
     ...overrides
