@@ -1663,6 +1663,7 @@ async function searchCommunes(id, query){
         const scenario = findScenario(id);
         if(!selected || !scenario) return;
         Object.assign(scenario, selected);
+        scenario.locationSelectionPending = false;
         list.hidden = true;
         render();
         updateComputed();
@@ -1681,6 +1682,12 @@ function onInput(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
+    if(e.target.value !== communeLabel(s)){
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = true;
+    }
     searchCommunes(id, e.target.value);
     return;
   }
@@ -1704,11 +1711,20 @@ function onBlurClamp(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    e.target.value = communeLabel(s);
-    const hint = document.getElementById('commune-hint-' + id);
-    if(hint && (!s.codePostal || !s.departement)) hint.textContent = 'Commune non confirmée : saisissez un nom ou un code postal, puis choisissez une suggestion.';
+    if(e.relatedTarget?.classList?.contains('commune-option')) return;
     const list = document.getElementById('commune-suggestions-' + id);
-    if(list && !e.relatedTarget?.classList?.contains('commune-option')) list.hidden = true;
+    if(list) list.hidden = true;
+    if(s.locationSelectionPending){
+      const typed = e.target.value.trim().slice(0, 80);
+      if(typed) s.commune = typed;
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = false;
+      updateComputed();
+      return;
+    }
+    e.target.value = communeLabel(s);
     return;
   }
   if(!validateNumericInput(e.target, true)) return;
