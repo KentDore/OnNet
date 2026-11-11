@@ -12,7 +12,7 @@ async function main(){
   const styles = await fs.readFile(path.join(root, 'src', 'styles.css'), 'utf8');
   const apiSource = await fs.readFile(path.join(root, 'src', 'urssaf-api-client.mjs'), 'utf8');
   const api = apiSource.replace(/^export\s+/gm, '') +
-    '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, urssafApiExpressions };\n';
+    '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n';
   const utils = await fs.readFile(path.join(root, 'src', 'ui-utils.js'), 'utf8');
   const app = await fs.readFile(path.join(root, 'src', 'app.js'), 'utf8');
   let html = template;
