@@ -31,7 +31,21 @@ try {
       text: (element.innerText || element.textContent || '').trim().slice(0, 100)
     }))
   )
-  await page.waitForTimeout(5000)
+  const grossInput = page.locator('[id="salarié___contrat___salaire_brut-input"]')
+  await grossInput.fill('2300')
+  await grossInput.press('Tab')
+  try {
+    await page.waitForFunction(() => {
+      const net = document.querySelector('[id="salarié___rémunération___net___à_payer_avant_impôt-input"]')
+      return net && net.value.trim() !== '€' && net.value.trim() !== ''
+    }, null, { timeout: 15000 })
+  } catch {
+    // Le contenu complet sera consigné pour diagnostiquer un changement du simulateur.
+  }
+  await page.waitForTimeout(3000)
+  const fieldValues = await page.locator('input[type="text"]').evaluateAll(elements =>
+    elements.map(element => ({ id: element.id, value: element.value }))
+  )
   const body = await page.locator('body').innerText({ timeout: 15000 })
   const labels = [
     'Salaire brut',
@@ -50,6 +64,7 @@ try {
     url,
     excerpts,
     controls,
+    fieldValues,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
