@@ -680,7 +680,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   <header>
     <div class="header-top">
       <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.5</span></div>
+        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.6</span></div>
         <div class="eyebrow">Simulateur de paie · cotisations 2026</div>
       </div>
       <div class="header-actions">
@@ -2087,7 +2087,6 @@ function renderBenchmarks(computed){
     ? weeklyHours * 52 / 12
     : 0;
   const userNetBeforeTax = Math.max(0, r.netApres);
-  const userNetBank = Math.max(0, r.netApresImpot);
   const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
 
   // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
@@ -2109,9 +2108,9 @@ function renderBenchmarks(computed){
       </div>
     </div>
     <div class="benchmark-your-salary">
-      <span>Votre net estimé reçu</span>
-      <strong>${fmt(userNetBank)} <small>/ mois</small></strong>
-      <div class="benchmark-meta benchmark-comparison-base">Votre base : ${fmt(userNetBeforeTax)} € net avant impôt / mois · ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
+      <span>Votre net avant impôt</span>
+      <strong>${fmt(userNetBeforeTax)} <small>/ mois</small></strong>
+      <div class="benchmark-meta benchmark-comparison-base">Net horaire : ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
