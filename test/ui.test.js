@@ -259,7 +259,7 @@ test('le statut fiscal distingue seul, concubinage et foyer commun', async () =>
 test('compare un contrat de 39 h sans convertir le salaire à 35 h', async () => {
   const { context, page } = await openApp();
   try {
-    const expected = await page.evaluate(() => compute(scenarios[0], foyer).netApresImpot);
+    const expected = await page.evaluate(() => compute(scenarios[0], foyer).netApres);
     const displayed = await page.locator('.benchmark-your-salary strong').innerText();
     const amount = Number(displayed.replace(/[^0-9,.-]/g, '').replace(',', '.'));
     assert.ok(Number.isFinite(amount), displayed);
