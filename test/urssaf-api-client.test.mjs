@@ -88,6 +88,15 @@ test('évalue la règle SMIC officielle avec une date de situation et conserve l
   assert.ok(result.checkedAt)
 })
 
+test('refuse les erreurs internes Publicodes même si les valeurs numériques sont présentes', async () => {
+  await assert.rejects(evaluateUrssafExpression('SMIC', {}, {
+    fetchImpl: mockFetch(() => response({
+      evaluate: [{ nodeValue: 1867.02, missingVariables: [] }],
+      warnings: ['EngineError: comparaison impossible entre unités']
+    }))
+  }), /erreur interne.*EngineError/)
+})
+
 test('refuse une réponse SMIC non numérique et ne substitue pas de valeur locale', async () => {
   await assert.rejects(evaluateUrssafExpression('SMIC', {}, {
     fetchImpl: mockFetch(() => response({
@@ -148,8 +157,8 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(request.situation['établissement . commune . département'], "'Ille-et-Vilaine'")
   assert.equal(request.situation['salarié . rémunération . avantages en nature'], 'non')
   assert.equal(request.situation['salarié . rémunération . primes . activité . base'], '0 €/mois')
-  assert.equal(request.situation['salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant'], '0 €/mois')
-  assert.equal(request.situation['salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant'], '0 €/an')
+  assert.equal(Object.hasOwn(request.situation, 'salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant'), false)
+  assert.equal(Object.hasOwn(request.situation, 'salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant'), false)
   assert.equal(request.situation.date, '11/11/2026')
   assert.equal(request.expressions[0], 'salarié . rémunération . brut')
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
