@@ -13,6 +13,10 @@ const EXPRESSIONS = Object.freeze({
   overtimePay: 'salarié . rémunération . heures supplémentaires',
   employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
   employerHealth: 'salarié . cotisations . prévoyances . santé . employeur',
+  mealTicketEmployee: 'salarié . rémunération . frais professionnels . titres-restaurant . salarié',
+  mealTicketEmployer: 'salarié . rémunération . frais professionnels . titres-restaurant . employeur',
+  mealTicketNonDeductible: 'salarié . rémunération . frais professionnels . non déductible',
+  netSocial: 'salarié . rémunération . net social',
   netAfterTax: 'salarié . rémunération . net . payé après impôt',
   incomeTax: 'impôt . montant',
   taxRate: "impôt . taux d'imposition",
@@ -287,7 +291,11 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     EXPRESSIONS.employeeContributions,
     EXPRESSIONS.overtimePay,
     EXPRESSIONS.employeeHealth,
-    EXPRESSIONS.employerHealth
+    EXPRESSIONS.employerHealth,
+    EXPRESSIONS.mealTicketEmployee,
+    EXPRESSIONS.mealTicketEmployer,
+    EXPRESSIONS.mealTicketNonDeductible,
+    EXPRESSIONS.netSocial
   ]
 
   let finalEvaluation
@@ -360,9 +368,13 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     employeeHealth: values[5],
     employerHealth: values[6],
     taxMode,
-    netAfterTax: taxMode === null ? null : values[7],
-    incomeTax: taxMode === null ? null : values[8],
-    calculatedTaxRate: taxMode === null ? null : values[9],
+    mealTicketEmployee: values[7],
+    mealTicketEmployer: values[8],
+    mealTicketNonDeductible: values[9],
+    netSocial: values[10],
+    netAfterTax: taxMode === null ? null : values[11],
+    incomeTax: taxMode === null ? null : values[12],
+    calculatedTaxRate: taxMode === null ? null : values[13],
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: new Date().toISOString()
