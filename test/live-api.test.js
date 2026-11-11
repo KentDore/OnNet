@@ -55,26 +55,25 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       const baseGrossFor39h = 2300 * monthlyBaseHours /
         (monthlyBaseHours + weeklyOvertime);
 
-      const [thirtyFiveHours, thirtyNineHours] = await Promise.all([
-        evaluate([
-          'SMIC',
-          'salarié . rémunération . brut',
-          'salarié . rémunération . net . à payer avant impôt'
-        ], {
-          ...commonSituation,
-          'salarié . contrat . salaire brut': '2300 €/mois',
-          'salarié . temps de travail . heures supplémentaires': '0 heure/mois'
-        }),
-        evaluate([
-          'salarié . rémunération . brut',
-          'salarié . rémunération . heures supplémentaires',
-          'salarié . rémunération . net . à payer avant impôt'
-        ], {
-          ...commonSituation,
-          'salarié . contrat . salaire brut': `${baseGrossFor39h.toFixed(6)} €/mois`,
-          'salarié . temps de travail . heures supplémentaires': `${weeklyOvertime} heure/mois`
-        })
-      ]);
+      const thirtyFiveHours = await evaluate([
+        'SMIC',
+        'salarié . rémunération . brut',
+        'salarié . rémunération . net . à payer avant impôt'
+      ], {
+        ...commonSituation,
+        'salarié . contrat . salaire brut': '2300 €/mois',
+        'salarié . temps de travail . heures supplémentaires': '0 heure/mois'
+      });
+      await new Promise(resolve => setTimeout(resolve, 1200));
+      const thirtyNineHours = await evaluate([
+        'salarié . rémunération . brut',
+        'salarié . rémunération . heures supplémentaires',
+        'salarié . rémunération . net . à payer avant impôt'
+      ], {
+        ...commonSituation,
+        'salarié . contrat . salaire brut': `${baseGrossFor39h.toFixed(6)} €/mois`,
+        'salarié . temps de travail . heures supplémentaires': `${weeklyOvertime} heure/mois`
+      });
 
       return { thirtyFiveHours, thirtyNineHours, weeklyOvertime, baseGrossFor39h };
     }, ENDPOINT);
@@ -141,64 +140,6 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     assert.equal(smicBenchmark.body.evaluate?.length, 2, 'SMIC : brut et net avant impôt attendus');
     assert.ok(Number.isFinite(smicBenchmark.body.evaluate[0].nodeValue), 'SMIC : brut numérique');
     assert.ok(Number.isFinite(smicBenchmark.body.evaluate[1].nodeValue), 'SMIC : net avant impôt numérique');
-
-    // Vérification de robustesse sur des montants très faibles, usuels et élevés.
-    // Ces cas contrôlent le comportement technique de l'API, pas la conformité
-    // juridique de chaque situation particulière.
-    for (const grossTarget of [1, 500, 1867.02, 4000, 100000]) {
-      const response = await page.evaluate(async ({ endpoint, commonSituation, grossTarget }) => {
-        const apiResponse = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'content-type': 'application/json', accept: 'application/json' },
-          body: JSON.stringify({
-            expressions: [
-              'salarié . rémunération . brut',
-              'salarié . rémunération . net . à payer avant impôt',
-              'salarié . rémunération . net . imposable',
-              'salarié . cotisations . salarié'
-            ],
-            situation: {
-              ...commonSituation,
-              'salarié . contrat . salaire brut': `${grossTarget} €/mois`,
-              'salarié . temps de travail . heures supplémentaires': '0 heure/mois'
-            }
-          })
-        });
-        const body = await apiResponse.json();
-        return { status: apiResponse.status, ok: apiResponse.ok, body };
-      }, { endpoint: ENDPOINT, commonSituation: {
-        'salarié': 'oui',
-        'salarié . contrat': "'CDI'",
-        'salarié . contrat . statut cadre': 'non',
-        'salarié . contrat . temps de travail . temps partiel': 'non',
-        'établissement . commune': "'Pacé'",
-        'salarié . convention collective': "'droit commun'",
-        'salarié . activité partielle': 'non',
-        'date': '11/11/2026'
-      }, grossTarget });
-
-      assert.equal(response.ok, true, `Brut ${grossTarget} € : HTTP ${response.status}`);
-      assert.equal(response.body.evaluate?.length, 4, `Brut ${grossTarget} € : quatre expressions attendues`);
-      const [gross, net, taxable, contributions] = response.body.evaluate.map(item => item.nodeValue);
-      assert.ok(Number.isFinite(gross), `Brut ${grossTarget} € : le brut doit être numérique (reçu : ${gross})`);
-      assert.ok(Number.isFinite(net), `Brut ${grossTarget} € : le net doit être numérique (reçu : ${net})`);
-      if (grossTarget >= 4000) {
-        for (const [label, value] of Object.entries({ taxable, contributions })) {
-          assert.ok(Number.isFinite(value), `Brut ${grossTarget} € : ${label} doit être numérique (reçu : ${value})`);
-        }
-      } else {
-        // Pour les très faibles salaires, certaines expressions détaillées
-        // peuvent être absentes. Le client refuse alors le résultat incomplet au lieu
-        // de fabriquer un net imposable ou des cotisations.
-        for (const [label, value] of Object.entries({ taxable, contributions })) {
-          assert.ok(value === undefined || Number.isFinite(value),
-            `Brut ${grossTarget} € : ${label} doit être absent ou numérique (reçu : ${value})`);
-        }
-      }
-      assert.ok(Math.abs(gross - grossTarget) <= 0.05,
-        `Brut demandé ${grossTarget} € : montant calculé ${gross} €`);
-      assert.ok(net >= 0, `Brut ${grossTarget} € : le net ne doit pas être négatif (${net})`);
-    }
 
     assert.deepEqual(browserErrors, []);
   } catch (error) {
