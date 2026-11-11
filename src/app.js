@@ -209,7 +209,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
+    statusText.textContent = 'Les résultats sont calculés via l’API officielle Mon-entreprise de l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Calculer avec l’Urssaf';
@@ -777,7 +777,7 @@ function renderCard(s, r, showRemove){
   };
   const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
   const resultText = r
-    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
     : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
   <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
@@ -1122,7 +1122,7 @@ function renderBenchmarks(computed){
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
       <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé via l’API officielle Mon-entreprise (Urssaf) ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
@@ -1179,7 +1179,7 @@ function render(){
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   } else {
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
     document.getElementById('insightBox').innerHTML = '';
     stackChartEl.className = '';
     stackChartEl.innerHTML = '';
@@ -1496,7 +1496,7 @@ function updateComputed(options = {}){
     document.getElementById('stackLegend').innerHTML = '';
     document.getElementById('barsBody').innerHTML = '';
     document.getElementById('barsAlerts').innerHTML = '';
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
@@ -1520,7 +1520,7 @@ function updateComputed(options = {}){
     const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
     const error = getCalculationError(s,foyer);
     if(state) state.textContent = r
-      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
       : (error || 'Calcul en attente de validation par l’API Urssaf.');
     if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
     const warnings = document.getElementById(`c-result-warnings-${u}`);
