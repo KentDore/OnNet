@@ -114,11 +114,17 @@ function buildSituation(input, baseGross, overtimeHours) {
     }
 
     if (mode === 'barème') {
-      const familyStatus = input.situationFamille ?? 'célibataire'
+      const familyStatus = input.situationFamille
       if (!['célibataire', 'couple', 'veuf'].includes(familyStatus)) {
-        throw new TypeError('situationFamille doit être célibataire, couple ou veuf.')
+        throw new TypeError('situationFamille doit être renseignée : célibataire, couple ou veuf.')
       }
-      const children = integerInRange(input.enfantsACharge ?? 0, 'enfantsACharge', 0, 20)
+      if (input.enfantsACharge === undefined || input.enfantsACharge === null) {
+        throw new TypeError('enfantsACharge doit être renseigné pour le calcul au barème.')
+      }
+      const children = integerInRange(input.enfantsACharge, 'enfantsACharge', 0, 20)
+      if (familyStatus === 'célibataire' && children > 0 && typeof input.parentIsole !== 'boolean') {
+        throw new TypeError('parentIsole doit être renseigné pour une personne célibataire avec enfant(s).')
+      }
       const singleParent = input.parentIsole ?? false
       if (typeof singleParent !== 'boolean') {
         throw new TypeError('parentIsole doit être un booléen.')
