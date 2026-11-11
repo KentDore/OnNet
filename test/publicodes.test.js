@@ -32,13 +32,13 @@ function near(actual, expected, tolerance, label) {
   )
 }
 
-test('39 h : recompose le brut global avec 17,33 heures supplémentaires', () => {
+test('39 h : recompose le brut global avec les heures supplémentaires annualisées exactes', () => {
   const result = calculatePublicodes(scenario())
-  assert.equal(result.overtimeHours, 17.33)
+  assert.equal(result.overtimeHours, 4 * 52 / 12)
   assert.ok(result.overtimePay > 0)
   near(result.grossCalculated, 2300, 0.005, 'brut reconstitué')
   assert.ok(result.baseGross < result.grossTarget)
-  const expectedOvertimeGross = result.baseGross / 151.67 * 17.33 * 1.25
+  const expectedOvertimeGross = result.baseGross / 151.67 * (4 * 52 / 12) * 1.25
   near(result.overtimePay, expectedOvertimeGross, 0.03, 'heures supplémentaires majorées à 25 %')
 })
 
@@ -103,4 +103,11 @@ test('rejette une date impossible plutôt que de la transmettre au moteur', () =
     () => calculatePublicodes(scenario({ date: '2026-02-31' })),
     /date calendaire valide/
   )
+})
+
+test('39 h : conserve le brut demandé sur plusieurs montants', () => {
+  for (const brut of [0, 1, 1800, 2300, 3990, 4020, 8000, 1000000]) {
+    const result = calculatePublicodes(scenario({ brut }))
+    near(result.grossCalculated, brut, 0.005, `brut reconstitué pour ${brut} €`)
+  }
 })
