@@ -10,6 +10,7 @@ on:
       - 'scripts/build-publicodes.js'
       - 'scripts/publicodes-scenarios.mjs'
       - 'scripts/compare-urssaf-api.mjs'
+      - 'scripts/diagnose-urssaf-meal-tickets.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
       - '.github/workflows/publicodes-prototype.yml'
@@ -43,6 +44,8 @@ jobs:
         run: npm run test:prototype
       - name: Compare with the official Urssaf API
         run: npm run compare:urssaf-api
+      - name: Diagnose meal tickets with the official API
+        run: npm run diagnose:urssaf-meal-tickets
       - name: Print reproducible salary scenarios
         run: npm run scenarios:publicodes
       - name: Build standalone HTML prototype
