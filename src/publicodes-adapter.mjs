@@ -118,7 +118,7 @@ export function calculatePublicodes(input = {}) {
     'établissement . commune': "'Pacé'",
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
-    'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heures/mois`,
+    'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
     'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
