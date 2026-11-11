@@ -200,6 +200,33 @@ test('refuse une valeur unitaire de titre-restaurant supérieure à 1 000 €', 
   }), /valeurResto doit être compris entre 0 et 1000/)
 })
 
+test('traite les montants de titres-restaurant non applicables comme nuls si aucun titre n’est déclaré', async () => {
+  let request
+  const result = await calculateWithUrssafApi(scenario({ joursResto: 0, valeurResto: 0 }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      const payload = apiResponse(body.expressions)
+      const notApplicable = new Set([
+        'salarié . rémunération . frais professionnels . titres-restaurant . montant',
+        'salarié . rémunération . frais professionnels . titres-restaurant . employeur',
+        'salarié . rémunération . frais professionnels . non déductible'
+      ])
+      payload.evaluate = body.expressions.map((expression, index) =>
+        notApplicable.has(expression)
+          ? { nodeValue: null, missingVariables: [] }
+          : payload.evaluate[index]
+      )
+      return response(payload)
+    })
+  })
+
+  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant'], 'non')
+  assert.equal(result.mealTicketAmount, 0)
+  assert.equal(result.mealTicketEmployee, 0)
+  assert.equal(result.mealTicketEmployer, 0)
+  assert.equal(result.mealTicketNonDeductible, 0)
+})
+
 test('reconstitue le brut total 39 h sans supposer localement un taux de majoration', async () => {
   const requests = []
   const result = await calculateWithUrssafApi(scenario({ dureeType: '39', joursResto: 0 }), {
