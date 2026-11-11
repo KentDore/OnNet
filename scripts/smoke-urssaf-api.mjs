@@ -40,7 +40,7 @@ function assertFinite(label, value) {
 async function runSocial(name, input) {
   console.error(`[social] ${name}`)
   try {
-    const result = await calculateWithUrssafApi({ ...input, date }, { fetchImpl: throttledFetch })
+    const result = await calculateWithUrssafApi({ commune: 'Pacé', ...input, date }, { fetchImpl: throttledFetch })
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
       ['net avant impôt', result.netBeforeTax],
@@ -112,7 +112,7 @@ async function runTax(name, input) {
 
 const references = {}
 for (const rule of ['SMIC', 'plafond sécurité sociale']) {
-  const result = await evaluateUrssafExpression(rule, { date }, { fetchImpl: throttledFetch })
+  const result = await evaluateUrssafExpression(rule, { date, commune: 'Pacé' }, { fetchImpl: throttledFetch })
   assertFinite(rule, result.value)
   if (result.value <= 0) throw new Error(`Valeur invalide pour la règle ${rule}.`)
   references[rule] = {
@@ -142,6 +142,10 @@ await runTax('taux neutre', {
 await runTax('barème standard, célibataire sans enfant', {
   brut: 2300, dureeType: '35', modeImpot: 'barème',
   situationFamille: 'célibataire', enfantsACharge: 0
+})
+await runTax('barème standard, couple avec 24 000 € autres revenus', {
+  brut: 2300, dureeType: '35', modeImpot: 'barème',
+  situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000
 })
 
 console.log(JSON.stringify({ date, references, checks, failures }, null, 2))
