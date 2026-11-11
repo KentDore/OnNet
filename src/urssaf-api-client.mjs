@@ -82,7 +82,7 @@ function buildSituation(input, baseGross, overtimeHours) {
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
-  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
+  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 1000)
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
