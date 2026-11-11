@@ -46,6 +46,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Cartographier les champs actuellement pris en charge (brut, heures supplémentaires, commune, mutuelle, titres-restaurant et données fiscales) vers les règles et unités officielles.
 - [x] Bloquer explicitement les primes libres et les mensualités différentes de 12 tant que leur mapping API n’est pas validé.
 - [x] Vérifier la conversion des 4 heures supplémentaires hebdomadaires en heures mensuelles et retirer le taux de majoration du calcul local d'initialisation du brut.
+- [x] Afficher sous le choix 39 h l’hypothèse de calcul : contrat de 35 h + 4 h supplémentaires rémunérées par semaine, droit commun, sans prise en compte des RTT.
 - [ ] Permettre ou bloquer explicitement les conventions collectives spécifiques : le scénario 39 h force actuellement le droit commun, donc il ne doit pas être présenté comme adapté à toutes les conventions.
 - [ ] Vérifier les cas limites : salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
 
