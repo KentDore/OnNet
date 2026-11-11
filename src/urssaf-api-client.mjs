@@ -314,6 +314,12 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     const annualTaxableSalary = finalEvaluation.values[2] * 12
     finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
 
+    // Le taux neutre utilise une entrée distincte : le revenu imposable annuel
+    // qui sert d'assiette à sa grille mensuelle officielle.
+    if (taxMode === 'neutre') {
+      finalSituation['paramètres . impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+    }
+
     // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
     // annuel puis applique l'abattement fiscal officiel de 10 %.
     if (taxMode === 'barème') {
