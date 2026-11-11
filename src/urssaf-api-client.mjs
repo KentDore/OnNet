@@ -52,7 +52,7 @@ function formatDate(value) {
     ].join('/')
   }
 
-  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(value))
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value))
   if (!match) {
     throw new TypeError('date doit respecter le format AAAA-MM-JJ.')
   }
