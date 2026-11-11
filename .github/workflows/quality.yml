@@ -18,7 +18,8 @@ jobs:
       - name: Installer Playwright
         run: |
           npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.0
-          npx --no-install playwright install --with-deps chromium
+          # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
+          npx --no-install playwright install chromium
       - name: Vérifier la syntaxe JavaScript
         run: |
           node --check src/urssaf-api-client.mjs
