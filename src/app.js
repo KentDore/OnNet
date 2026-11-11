@@ -765,7 +765,7 @@ function renderStack(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
   return sorted.map(({s, r}) => {
     const m = r.m;
-    const cotis = m.cotisNettes, mutuelle = s.mutuelle, tr = r.tr.totalSalarie;
+    const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
