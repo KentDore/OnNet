@@ -1000,10 +1000,12 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
-  if(!r) return '';
   const smicResult = getCachedSmicResult();
+  if(!smicResult && benchmarks.mode === 'official' && officialSmicState.status === 'error'){
+    return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
+  }
+  if(!r) return '';
   if(!smicResult){
-    if(benchmarks.mode === 'official' && officialSmicState.status === 'error') return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
     return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
   }
 
