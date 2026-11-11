@@ -27,5 +27,6 @@ jobs:
       # Relancer avec la règle de taux neutre distincte.
       # Syntaxe corrigée : guillemets doubles autour de l'apostrophe ASCII.
       # Tester le taux neutre sans forcer une assiette annuelle calculée localement.
+      # Retester après rétablissement de l'assiette annuelle et foyer neutre explicite.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
