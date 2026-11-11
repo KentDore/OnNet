@@ -4,7 +4,12 @@
 // ---------- État ----------
 let idCounter = 0;
 
-let urssafConsentGranted = false;
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
+function loadUrssafConsent(){
+  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
+  catch(_){ return false; }
+}
+let urssafConsentGranted = loadUrssafConsent();
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 let urssafRequestQueue = Promise.resolve();
@@ -196,6 +201,8 @@ function updateUrssafStatus(computed){
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
   const status = document.getElementById('urssafStatus');
+  const rememberConsent = document.getElementById('urssafRememberConsent');
+  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
   if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
@@ -786,7 +793,7 @@ function renderCard(s, r, showRemove){
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
-      <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
+      <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
@@ -1147,6 +1154,8 @@ function render(){
   const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
   const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const comparePanel = document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden = !allReady;
 
   updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
@@ -2430,8 +2439,20 @@ function scrollToNewCard(){
   });
 }
 
+document.getElementById('urssafRememberConsent').addEventListener('change', e => {
+  try{
+    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
+    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(_){
+    e.target.checked = false;
+    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
+  }
+});
 document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
   urssafConsentGranted = true;
+  if(document.getElementById('urssafRememberConsent').checked){
+    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
+  }
   scheduleUrssafCalculations(true,true);
 });
 
