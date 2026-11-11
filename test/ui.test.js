@@ -638,6 +638,13 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
     assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '30');
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '30');
+    const overtimeHint = modal.locator('#modalOnboarding39Hint');
+    assert.equal(await overtimeHint.isVisible(), false);
+    await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
+    assert.equal(await overtimeHint.isVisible(), true);
+    assert.match(await overtimeHint.innerText(), /majorées à 25 %.*accord collectif.*RTT/);
+    await modal.locator('#modalOnboardingDuree [data-duree="35"]').click();
+    assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() => {
