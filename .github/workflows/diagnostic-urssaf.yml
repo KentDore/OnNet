@@ -31,3 +31,9 @@ jobs:
       # Retester après rétablissement de l'assiette annuelle et foyer neutre explicite.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
+      - name: Installer Playwright pour le simulateur officiel
+        run: npm install --no-save --no-package-lock playwright@1.55.1
+      - name: Installer Chromium
+        run: npx playwright install chromium
+      - name: Inspecter le simulateur web officiel (cas synthétique)
+        run: node scripts/probe-official-simulator.mjs
