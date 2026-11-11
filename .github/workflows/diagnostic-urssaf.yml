@@ -1,0 +1,26 @@
+name: Diagnostic API Urssaf (manuel)
+
+on:
+  push:
+    branches: [fix/smic-official-api]
+
+concurrency:
+  group: onnet-urssaf-api-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: contains(github.event.head_commit.message, '[run-urssaf-matrix]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances du projet
+        run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
+      - name: Exécuter la matrice diagnostique contre l’API officielle
+        run: npm run compare:urssaf-api
