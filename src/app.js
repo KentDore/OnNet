@@ -762,7 +762,7 @@ function renderBenchmarks(computed){
   const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
 
   // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
-  // Conversion en taux horaire sur la base légale de 151,67 h/mois.
+  // Aucun brut médian n'est déduit faute de donnée source équivalente.
   const medianNetBeforeTax = 2190;
   const medianNetHourly = medianNetBeforeTax / HEURES_BASE;
 
@@ -788,24 +788,24 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Référence 35 h · ${fmtHoraire(smicHourlyGross)} brut/heure · ${fmtHoraire(smicNetHourly)} net/heure</div>
+        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(benchmarks.smicBrut)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Le SMIC est calculé sur 35 h, sans mutuelle ni titres-restaurant. Son taux horaire brut est calculé à partir du brut mensuel et de 151,67 h/mois. Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
-          <p>Le net avant impôt est une estimation du simulateur ; le brut horaire et mensuel du SMIC sont les repères de saisie.</p>
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel est la valeur officielle renseignée ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
       </article>
       <article class="benchmark-item">
         <div class="benchmark-label">Salaire médian privé · net avant impôt</div>
         <div class="benchmark-value">${fmt(medianNetBeforeTax)}</div>
-        <div class="benchmark-meta">Référence nationale INSEE 2024 · ${fmtHoraire(medianNetHourly)} net/heure (base 35 h)</div>
+        <div class="benchmark-meta">Net horaire : ${fmtHoraire(medianNetHourly)} · Référence mensuelle nette INSEE 2024</div>
         <div class="benchmark-result ${signedClass(median)}">${fmtHoraireSigned(userNetHourly - medianNetHourly)} <small>/h (${median.pct})</small></div>
         <details class="benchmark-details">
-          <summary>Estimation à votre durée de travail</summary>
+          <summary>Méthode de calcul</summary>
+          <p>La référence INSEE publiée est de 2 190 € net mensuel en équivalent temps plein. Son taux horaire est calculé sur 151,67 h/mois. Le brut mensuel correspondant n'est pas affiché, car il ne figure pas dans cette donnée source.</p>
           <p>Votre contrat : ${durationLabel} · ${fmt(userNetBeforeTax)} € net avant impôt estimés / mois, soit ${fmtHoraire(userNetHourly)}.</p>
-          <p>La référence médiane est exprimée en équivalent temps plein (35 h) ; la comparaison porte sur les taux horaires pour ne pas ramener artificiellement votre salaire à 35 h.</p>
         </details>
       </article>
     </div>
