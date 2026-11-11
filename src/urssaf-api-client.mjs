@@ -82,7 +82,7 @@ function buildSituation(input, baseGross, overtimeHours) {
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
-  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 1000)
+  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
@@ -386,14 +386,14 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     // Le taux neutre utilise une entrée distincte : le revenu imposable annuel
     // qui sert d'assiette à sa grille mensuelle officielle.
     if (taxMode === 'neutre') {
-      finalSituation['paramètres . impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+      // `impôt . revenu imposable` is already supplied above; `paramètres` is not a rule in modele-social.
     }
 
     // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
     // annuel puis applique l'abattement fiscal officiel de 10 %.
     if (taxMode === 'barème') {
       // Identifiant officiel exact, avec apostrophe ASCII dans le nom de règle.
-      finalSituation["paramètres . impôt . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
+      finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
     }
 
     const taxEvaluation = await evaluateRequest(
