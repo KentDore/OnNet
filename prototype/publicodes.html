@@ -45,7 +45,7 @@
   <header>
     <div class="eyebrow">Prototype technique · branche de migration</div>
     <h1>OnNet × moteur Urssaf</h1>
-    <p class="lead">Ce prototype exécute localement les règles du paquet officiel <strong>modele-social</strong> avec Publicodes. Il ne modifie pas encore le calculateur OnNet en production.</p>
+    <p class="lead">Ce prototype transmet le scénario à l’API REST officielle Mon-entreprise / Urssaf. Une connexion Internet est nécessaire ; les paramètres saisis sont transmis au service pour calcul. Il ne modifie pas encore le calculateur OnNet en production.</p>
   </header>
 
   <form id="salary-form">
@@ -94,7 +94,7 @@
   </form>
 
   <section class="results" id="results" aria-live="polite">
-    <h2>Résultat du moteur Publicodes</h2>
+    <h2>Résultat de l’API Urssaf</h2>
     <div class="hero">
       <span>Net mensuel avant impôt sur le revenu</span>
       <strong id="net">—</strong>
@@ -111,10 +111,12 @@
       <dt>Mutuelle — part employeur reconnue</dt><dd id="employer-health">—</dd>
       <dt>Écart entre brut demandé et reconstitué</dt><dd id="gross-difference">—</dd>
     </dl>
+    <p class="note" id="api-info" role="status"></p>
   </section>
 
   <aside class="note-card">
-    <p class="note"><strong>Périmètre volontairement limité :</strong> CDI privé non-cadre, droit commun, 35 h ou 39 h avec majoration standard de 25 %, sans absence ni activité partielle. Le régime local Alsace-Moselle, les conventions collectives particulières, la situation fiscale détaillée et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés. Les résultats doivent être comparés au simulateur officiel avec des paramètres strictement identiques avant toute mise en production.</p>
+    <p class="note"><strong>Source et périmètre :</strong> appel en direct à l’API REST officielle Urssaf ; l’API peut être momentanément indisponible ou limiter les requêtes. Certaines données non renseignées peuvent recevoir une valeur par défaut du modèle ; elles seront signalées sous le résultat. Le calcul reste une estimation et ne remplace pas un bulletin de paie.</p>
+    <p class="note"><strong>Scénario simplifié :</strong> CDI privé non-cadre, droit commun, 35 h ou 39 h avec majoration standard de 25 %, sans absence ni activité partielle. Le régime local Alsace-Moselle, les conventions collectives particulières, la situation fiscale détaillée et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés. Les résultats doivent être comparés au simulateur officiel avec des paramètres strictement identiques avant toute mise en production.</p>
   </aside>
 </main>
 
@@ -125,6 +127,8 @@
   const form = document.getElementById('salary-form')
   const results = document.getElementById('results')
   const error = document.getElementById('error')
+  const apiInfo = document.getElementById('api-info')
+  const submitButton = form.querySelector('button[type="submit"]')
   const euro = new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' })
   const number = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 })
 
@@ -132,11 +136,14 @@
     document.getElementById(id).textContent = value
   }
 
-  form.addEventListener('submit', event => {
+  form.addEventListener('submit', async event => {
     event.preventDefault()
     error.textContent = ''
+    apiInfo.textContent = ''
+    submitButton.disabled = true
+    submitButton.textContent = 'Calcul en cours…'
     try {
-      const result = window.OnNetUrssaf.calculatePublicodes({
+      const result = await window.OnNetUrssafApi.calculateWithUrssafApi({
         brut: Number(document.getElementById('gross').value),
         dureeType: document.getElementById('duration').value,
         mutuelle: Number(document.getElementById('health-employee').value),
@@ -158,14 +165,25 @@
       show('employee-health', euro.format(result.employeeHealth))
       show('employer-health', euro.format(result.employerHealth))
       show('gross-difference', euro.format(result.grossDifference))
+      const notes = []
+      if (result.missingVariables.length) {
+        notes.push(`Valeurs par défaut appliquées à ${result.missingVariables.length} variable(s) : ${result.missingVariables.join(', ')}.`)
+      }
+      if (result.warnings.length) {
+        notes.push(`Avertissements du moteur : ${result.warnings.join(' ')}`)
+      }
+      apiInfo.textContent = notes.length
+        ? notes.join(' ')
+        : `Calcul effectué par l’API Urssaf le ${new Date(result.checkedAt).toLocaleString('fr-FR')}.`
       results.classList.add('visible')
     } catch (cause) {
       results.classList.remove('visible')
       error.textContent = cause instanceof Error ? cause.message : 'Erreur de calcul inconnue.'
+    } finally {
+      submitButton.disabled = false
+      submitButton.textContent = 'Calculer avec l’API Urssaf'
     }
   })
-
-  form.requestSubmit()
 })()
 </script>
 </body>
