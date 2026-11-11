@@ -162,7 +162,7 @@ async function openApp(options = {}) {
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
-      return status.includes('Calcul terminé') &&
+      return status.includes('Calculs à jour') &&
         cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('.benchmark-item').length === 2;
     }, null, { timeout: 20000 });
@@ -191,7 +191,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
 
     await page.locator('#urssafCalculateBtn').click();
     await page.waitForFunction(() =>
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
     );
     assert.ok(calls.count >= 3);
@@ -247,7 +247,7 @@ test('récupère le SMIC officiel à la volée et conserve une valeur manuelle e
     await page.locator('#saveBenchmarkSettings').click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 15000 }
     );
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1800.000000 €/mois'));
@@ -258,7 +258,7 @@ test('récupère le SMIC officiel à la volée et conserve une valeur manuelle e
     await page.reload();
     await page.locator('#urssafCalculateBtn').click();
     await page.waitForFunction(() =>
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé') &&
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('.benchmark-item').length === 2,
       null, { timeout: 20000 }
     );
@@ -306,7 +306,7 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
     await page.locator('.commune-option').first().click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 15000 }
     );
     assert.ok(calls.bodies.some(body =>
