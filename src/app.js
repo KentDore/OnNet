@@ -1994,7 +1994,7 @@ function renderMutuelleTrFields(idPrefix){
         <details class="onboarding-optional">
           <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
           <div class="onboarding-optional-body">
-            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Sinon, laissez-les vides : aucune valeur de mutuelle ne sera supposée.</p>
+            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Un champ vide est compté à 0 € dans la simulation.</p>
             <div class="two-col onboarding-mutuelle-fields">
               <div class="field-row">
                 <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
