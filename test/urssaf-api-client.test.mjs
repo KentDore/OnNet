@@ -88,13 +88,16 @@ test('évalue la règle SMIC officielle avec une date de situation et conserve l
   assert.ok(result.checkedAt)
 })
 
-test('refuse les erreurs internes Publicodes même si les valeurs numériques sont présentes', async () => {
-  await assert.rejects(evaluateUrssafExpression('SMIC', {}, {
+test('conserve les EngineError de l’API comme avertissements sans masquer la valeur retournée', async () => {
+  const result = await evaluateUrssafExpression('SMIC', {}, {
     fetchImpl: mockFetch(() => response({
       evaluate: [{ nodeValue: 1867.02, missingVariables: [] }],
       warnings: ['EngineError: comparaison impossible entre unités']
     }))
-  }), /erreur interne.*EngineError/)
+  })
+
+  assert.equal(result.value, 1867.02)
+  assert.deepEqual(result.warnings, ['EngineError: comparaison impossible entre unités'])
 })
 
 test('refuse une réponse SMIC non numérique et ne substitue pas de valeur locale', async () => {
