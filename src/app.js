@@ -2042,6 +2042,7 @@ function showOnboardingModal(){
         <button type="button" data-duree="35" aria-pressed="true">35 h</button>
         <button type="button" data-duree="39" aria-pressed="false">39 h</button>
       </div>
+      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 % (taux légal standard). Un accord collectif peut prévoir un autre taux. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding')}
@@ -2073,10 +2074,12 @@ function showOnboardingModal(){
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
+  const dureeHint = overlay.querySelector('#modalOnboarding39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
@@ -2117,6 +2120,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
         <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
         <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
       </div>
+      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 % (taux légal standard). Un accord collectif peut prévoir un autre taux. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalAdd')}
@@ -2156,10 +2160,12 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
+  const dureeHint = overlay.querySelector('#modalAdd39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
