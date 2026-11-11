@@ -32,5 +32,8 @@ jobs:
         run: node --test test/calc.test.js
       - name: Tester le build
         run: node --test test/build.test.js
-      - name: Tester les parcours navigateur
+      - name: Tester les parcours navigateur simulés
         run: node --test test/ui.test.js
+      # Test réel distinct : valide l'accès cross-origin au service officiel.
+      - name: Vérifier l'API Urssaf réelle depuis Chromium
+        run: node --test test/live-api.test.js
