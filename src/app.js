@@ -45,6 +45,7 @@ function calculationKey(s, f){
     partResto:Number(s.partResto) || 0,
     nbMois:Number(s.nbMois || 12),
     primes:Number(s.primes || 0),
+    commune:String(s.commune || 'Pacé').trim(),
     date:scenarioCalculationDate(s),
     fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
   });
@@ -71,6 +72,7 @@ function buildUrssafInput(s, f){
     joursResto:Number(s.joursResto) || 0,
     valeurResto:Number(s.valeurResto) || 0,
     partResto:Number(s.partResto),
+    commune:String(s.commune || 'Pacé').trim(),
     date:scenarioCalculationDate(s)
   }, s.isBenchmark ? {} : taxInputForFoyer(f));
 }
@@ -265,7 +267,7 @@ function scheduleUrssafCalculations(immediate, forceRetry){
 let justAddedId = null;
 function mkScenario(over){
   const base = {
-    id: idCounter++, name:'Salaire', brut:2800,
+    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé',
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
@@ -334,6 +336,9 @@ function sanitizeScenario(raw){
   if(clean.mutuellePat === undefined){
     clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
   }
+  clean.commune = typeof clean.commune === 'string' && clean.commune.trim()
+    ? clean.commune.trim().replace(/\\s+/g, ' ').slice(0, 80)
+    : 'Pacé';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
@@ -719,7 +724,13 @@ function renderCard(s, r, showRemove){
     <details class="more">
       <summary>Détails avancés</summary>
       <div class="more-body">
-        <div class="section-tag">Mutuelle</div>
+        <div class="section-tag">Lieu de travail</div>
+    <div class="field-row">
+      <label for="f-commune-${uid}">Commune de l’établissement</label>
+      <input type="text" id="f-commune-${uid}" value="${esc(s.commune || 'Pacé')}" data-id="${uid}" data-key="commune" maxlength="80" autocomplete="off">
+      <div class="sub-hint">Cette commune est transmise au moteur Urssaf pour ce salaire. Vérifiez qu’elle correspond à l’établissement du poste.</div>
+    </div>
+    <div class="section-tag">Mutuelle</div>
         <div class="two-col">
           <div class="field-row">
             <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
@@ -1522,6 +1533,13 @@ function onInput(e){
   const key = e.target.dataset.key;
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    const commune = e.target.value.trim().replace(/\\s+/g, ' ').slice(0, 80);
+    if(!commune) return;
+    s.commune = commune;
+    updateComputed();
+    return;
+  }
   if(key === 'name'){
     s.name = e.target.value;
     updateComputed();
@@ -1541,6 +1559,13 @@ function onBlurClamp(e){
   const id = parseInt(e.target.dataset.id, 10);
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    const commune = e.target.value.trim().replace(/\\s+/g, ' ').slice(0, 80) || s.commune || 'Pacé';
+    s.commune = commune;
+    e.target.value = commune;
+    updateComputed();
+    return;
+  }
   if(!validateNumericInput(e.target, true)) return;
   const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
   const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
@@ -1567,7 +1592,8 @@ async function addScenario(){
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    dureeType:last.dureeType
+    dureeType:last.dureeType,
+    commune:last.commune || 'Pacé'
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
