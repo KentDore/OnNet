@@ -10,14 +10,15 @@ L'application fonctionne dans le navigateur, sans compte ni serveur de calcul. L
 
 ## Utilisation
 
-- Ouvrir `Onnet-2.1.1.html` pour utiliser la version autonome hors ligne.
+- Ouvrir `Onnet-2.1.2.html` pour utiliser la version autonome hors ligne.
 - `index.html` correspond à la version publiée sur GitHub Pages.
 - Aucune installation n'est nécessaire pour utiliser l'application.
 
-## Version 2.1.1
+## Version 2.1.2
 
-- **Comparaison bancaire** : les repères affichent désormais une estimation du montant après prélèvement à la source. Le SMIC et le salaire médian sont recalculés selon la situation fiscale ; le salaire médian est reconstitué depuis la référence nette avant impôt INSEE 2024 et reste indicatif.
-- **Ergonomie** : explications repliables harmonisées et suppression du paragraphe redondant sous l’actualisation du SMIC.
+- **Repères salariaux cohérents** : les écarts au SMIC et au salaire médian sont désormais calculés en net avant impôt, sur une base de 35 h. Le salaire net estimé après impôt affiché pour l'utilisateur reste inchangé.
+- **SMIC** : affichage du brut mensuel à 35 h, du taux horaire brut correspondant et d'une estimation du net avant impôt.
+- **Salaire médian** : utilisation directe du repère de 2 190 € net avant impôt (INSEE 2024), sans reconstitution artificielle ni application du taux fiscal individuel.
 
 ## Version 2.1.0
 
