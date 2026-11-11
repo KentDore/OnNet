@@ -281,10 +281,6 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
     const warnings = normalizeWarnings(payload.warnings)
-    const engineErrors = warnings.filter(warning => /\bEngineError\b/i.test(warning))
-    if (engineErrors.length) {
-      throw new Error(`Le moteur Publicodes a signalé une erreur interne : ${engineErrors.join(' | ')}`)
-    }
     return {
       values,
       missingVariables,
