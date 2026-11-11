@@ -1988,37 +1988,39 @@ function showShareModal(url){
   });
 }
 
-const ONBOARDING_MUTUELLE_DEFAUT = 30;
-
-// Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
-// nouveau salaire, pour ne jamais deviner silencieusement ces montants.
+// Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="two-col">
-          <div class="field-row">
-            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+        <details class="onboarding-optional">
+          <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
+          <div class="onboarding-optional-body">
+            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Sinon, laissez-les vides : aucune valeur de mutuelle ne sera supposée.</p>
+            <div class="two-col onboarding-mutuelle-fields">
+              <div class="field-row">
+                <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="Ex. 30" autocomplete="off">
+              </div>
+              <div class="field-row">
+                <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="Ex. 30" autocomplete="off">
+              </div>
+            </div>
+            <div class="field-row" style="margin-bottom:0;">
+              <label>Avez-vous des titres-restaurant ?</label>
+              <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
+                <button type="button" data-tr="non" aria-pressed="true">Non</button>
+                <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+              </div>
+            </div>
+            <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
+              <div class="three-col">
+                <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+                <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+                <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+              </div>
+            </div>
           </div>
-          <div class="field-row">
-            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          </div>
-        </div>
-        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>Avez-vous des titres restaurant ?</label>
-          <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
-            <button type="button" data-tr="non" aria-pressed="true">Non</button>
-            <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-          </div>
-        </div>
-        <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-          <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-          </div>
-        </div>`;
+        </details>`;
 }
 
 // Branche les interactions du bloc ci-dessus et renvoie une fonction de
@@ -2054,8 +2056,8 @@ function bindMutuelleTrFields(overlay, idPrefix){
     }
     const mutuelleRaw = currentMutuelleInput.value.trim();
     const mutuellePatRaw = currentMutuellePatInput.value.trim();
-    const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    const mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
@@ -2068,7 +2070,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
 function showOnboardingModal(){
   const html = `
-    <p id="modalMsg" class="modal-msg">Commencez par votre salaire actuel — vous pourrez en ajouter d'autres à comparer ensuite.</p>
+    <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2217,8 +2219,8 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     // la modale est réutilisée par plusieurs parcours de l'application.
     const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
     const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
-    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    benefits.mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
