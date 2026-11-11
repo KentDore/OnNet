@@ -23,6 +23,7 @@ on:
       - 'scripts/diagnose-urssaf-meal-tickets.mjs'
       - 'scripts/diagnose-overtime-50.mjs'
       - 'scripts/diagnose-publicodes-tax.mjs'
+      - 'scripts/smoke-urssaf-api.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
       - 'test/urssaf-api-client.test.mjs'
@@ -108,3 +109,5 @@ jobs:
         run: node scripts/diagnose-overtime-50.mjs
       - name: Diagnose official tax rules
         run: npm run diagnose:publicodes-tax
+      - name: Run production API smoke tests (including meal-ticket ceiling)
+        run: node scripts/smoke-urssaf-api.mjs
