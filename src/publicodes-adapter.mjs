@@ -106,8 +106,10 @@ export function calculatePublicodes(input = {}) {
 
   const mealTicketDays = numberInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
-  const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
-  const employerMealTicketRate = 100 - employeeMealTicketRate
+  numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
+  if (mealTicketDays > 0) {
+    throw new Error('Les titres-restaurant sont temporairement désactivés : le modèle Publicodes renvoie actuellement une erreur d’unité sur cette règle. Aucun résultat ne sera affiché avec cette option.')
+  }
 
   const situation = {
     'salarié': 'oui',
@@ -121,10 +123,6 @@ export function calculatePublicodes(input = {}) {
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
-    'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
-    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
-    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
-    'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
     'date': dateForPublicodes(input.date)
   }
 
