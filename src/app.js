@@ -77,11 +77,21 @@ function buildUrssafInput(s, f){
     valeurResto:Number(s.valeurResto) || 0,
     partResto:Number(s.partResto),
     commune:String(s.commune || 'Pacé').trim(),
-    date:scenarioCalculationDate(s)
+    date:scenarioCalculationDate(s),
+    benchmarkOnly:Boolean(s.isBenchmark)
   }, s.isBenchmark ? {} : taxInputForFoyer(f));
 }
 
 function mapUrssafResultToOnNet(result){
+  if(result.benchmarkOnly){
+    return {
+      engine:result.engine,
+      checkedAt:result.checkedAt,
+      missingVariables:result.missingVariables,
+      warnings:result.warnings,
+      netApres:result.netBeforeTax
+    };
+  }
   const gross = result.grossCalculated;
   const overtimeHours = result.overtimeHours;
   const monthlyHours = HEURES_BASE + overtimeHours;
