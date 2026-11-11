@@ -345,7 +345,7 @@
 
   /* ---- Comparaison secondaire ---- */
   .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
-  .ref-row label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:0;}
+  .ref-row label{font-size:13px; font-weight:600; color:var(--ink-soft); margin:0;}
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
   .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
   .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
@@ -369,7 +369,7 @@
 
   /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
-  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; min-height:44px; padding:10px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
   .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
@@ -490,7 +490,7 @@
 
   .field-row{margin-bottom:14px;}
   .field-row:last-child{margin-bottom:0;}
-  .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
+  .field-row label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
   .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
   .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
@@ -696,7 +696,12 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
 @media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
 
-.result-error{margin-top:8px;font-size:13px;color:#9b2929}.calculation-meta{font-size:11px;color:var(--muted,#697386);margin-top:8px}
+/* Lisibilité des statuts et périmètre des commandes */
+.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+.chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
@@ -736,6 +741,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
     <div class="urssaf-status-copy">
       <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués par le moteur officiel de l’Urssaf.</strong></p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
       <details class="result-source" id="urssafWarnings" hidden>
         <summary>Détails techniques (facultatif)</summary>
         <ul id="urssafWarningsList"></ul>
@@ -744,6 +750,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
+    <p class="chart-scope-hint">Graphique présenté en net mensuel ; les bascules Brut/Net et Mensuel/Annuel ci-dessous ne modifient que les cartes.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
@@ -1523,7 +1530,12 @@ function esc(s){
 // ---------- État ----------
 let idCounter = 0;
 
-let urssafConsentGranted = false;
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
+function loadUrssafConsent(){
+  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
+  catch(_){ return false; }
+}
+let urssafConsentGranted = loadUrssafConsent();
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 let urssafRequestQueue = Promise.resolve();
@@ -1715,6 +1727,8 @@ function updateUrssafStatus(computed){
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
   const status = document.getElementById('urssafStatus');
+  const rememberConsent = document.getElementById('urssafRememberConsent');
+  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
   if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
@@ -2305,7 +2319,7 @@ function renderCard(s, r, showRemove){
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
-      <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
+      <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
@@ -2666,6 +2680,16 @@ function render(){
   const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
   const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const comparePanel = document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden = false;
+  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
+  if(chartContent){
+    const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
+    chartElements.forEach(selector => {
+      const element = comparePanel.querySelector(selector);
+      if(element) element.hidden = !allReady;
+    });
+  }
 
   updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
@@ -3949,8 +3973,20 @@ function scrollToNewCard(){
   });
 }
 
+document.getElementById('urssafRememberConsent').addEventListener('change', e => {
+  try{
+    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
+    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(_){
+    e.target.checked = false;
+    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
+  }
+});
 document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
   urssafConsentGranted = true;
+  if(document.getElementById('urssafRememberConsent').checked){
+    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
+  }
   scheduleUrssafCalculations(true,true);
 });
 
