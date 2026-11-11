@@ -48,6 +48,10 @@
       <strong>Source des calculs : moteur officiel Mon-entreprise de l’Urssaf.</strong>
       <p id="urssafStatusText">Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf pour obtenir les résultats. Aucun calcul local de cotisations ou d’impôt n’est utilisé.</p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <details class="result-source" id="urssafWarnings" hidden>
+        <summary>Avertissements et variables par défaut du moteur</summary>
+        <ul id="urssafWarningsList"></ul>
+      </details>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
