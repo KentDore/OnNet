@@ -232,6 +232,7 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
     await card.locator('[data-key="commune"]').fill('Rennes');
+    await card.locator('[data-key="commune"]').blur();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
@@ -299,6 +300,28 @@ test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf
     assert.ok(calls.count > before);
     assert.equal(await page.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3200');
+  } finally {
+    await context.close();
+  }
+});
+
+test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const before = calls.count;
+    await page.locator('#addScenario').click();
+    await page.locator('#modalAddInput').fill('3400');
+    await page.locator('#modalAddMutuelle').fill('25');
+    await page.locator('#modalAddMutuellePat').fill('40');
+    await page.locator('#modalAddSubmit').click();
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
+      null, { timeout: 15000 }
+    );
+    const request = calls.bodies.slice(before).find(body => body.situation['salarié . contrat . salaire brut']);
+    assert.ok(request, 'le nouveau scénario doit être envoyé à l’API');
+    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . montant'], '65.000000 €/mois');
+    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . taux employeur'], '61.538462%');
   } finally {
     await context.close();
   }
