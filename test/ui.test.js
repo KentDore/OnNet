@@ -219,9 +219,14 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
     assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
-    const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
-    const benchmarkNet = await page.locator('.benchmark-your-salary strong').innerText();
-    assert.equal(cardNet, benchmarkNet.replace(' / mois', ''), 'la carte et le comparatif doivent réutiliser le même net Urssaf');
+    const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
+    const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
+    const benchmarkNetBeforeTax = await page.locator('.benchmark-your-salary strong').innerText();
+    const parseEuro = value => Number(value.replace(/[^\\d,.-]/g, '').replace(',', '.'));
+    assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt mensuel/);
+    assert.match(cardNetBeforeTax, /Avant impôt/);
+    assert.equal(parseEuro(cardNetBeforeTax), parseEuro(benchmarkNetBeforeTax), 'la carte et le comparatif doivent réutiliser le même net avant impôt Urssaf');
+    assert.equal(parseEuro(cardNetAfterTax), parseEuro(benchmarkNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
