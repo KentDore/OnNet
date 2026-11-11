@@ -126,7 +126,12 @@ export function calculatePublicodes(input = {}) {
     'date': dateForPublicodes(input.date)
   }
 
-  const engine = new PublicodesEngine(modeleSocialRules)
+  const engine = new PublicodesEngine(modeleSocialRules, {
+    warn: {
+      deprecatedSyntax: false,
+      cyclicReferences: false
+    }
+  })
   engine.setSituation(situation)
 
   const grossCalculated = evaluateNumber(engine, RULES.gross)
