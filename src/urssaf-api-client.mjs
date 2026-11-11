@@ -15,6 +15,7 @@ const EXPRESSIONS = Object.freeze({
   employerHealth: 'salarié . cotisations . prévoyances . santé . employeur',
   netAfterTax: 'salarié . rémunération . net . payé après impôt',
   incomeTax: 'impôt . montant',
+  taxRate: "impôt . taux d'imposition",
 })
 
 function numberInRange(value, name, min, max) {
@@ -250,9 +251,8 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
  * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
  * Les assiettes fiscales annuelles sont transmises explicitement : revenu
  * imposable pour le PAS/taux neutre et revenu d'activité pour le barème.
- * Le taux affiché hors mode personnalisé est un taux effectif dérivé des montants
- * nets retournés (écart net avant/après PAS / net imposable), car l'API ne
- * retourne pas une valeur numérique exploitable pour la règle de taux global.
+ * Le taux d'imposition est demandé directement au modèle officiel : il ne doit
+ * pas être reconstruit à partir de l'écart entre deux montants nets.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
 export async function calculateWithUrssafApi(input = {}, options = {}) {
@@ -334,7 +334,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
       endpoint,
       timeoutMs,
       finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax]
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
     )
     finalEvaluation = {
       values: taxEvaluation.values,
@@ -362,13 +362,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     taxMode,
     netAfterTax: taxMode === null ? null : values[7],
     incomeTax: taxMode === null ? null : values[8],
-    calculatedTaxRate: taxMode === null
-      ? null
-      : taxMode === 'personnalisé'
-        ? numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
-        : values[2] > 0
-          ? Math.max(0, ((values[1] - values[7]) / values[2]) * 100)
-          : null,
+    calculatedTaxRate: taxMode === null ? null : values[9],
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: new Date().toISOString()
