@@ -74,9 +74,18 @@ try {
     await page.waitForTimeout(1000)
   }
   const body = await page.locator('body').innerText({ timeout: 15000 })
-  payslipLines = body.split('\n')
+  const bodyLines = body.split('\n').map(line => line.trim()).filter(Boolean)
+  payslipLines = bodyLines
     .filter(line => /mutuelle|santé|prévoyance|CSG|CRDS|cotisations|contribution|net imposable|net à payer|retraite|retenue/i.test(line))
     .slice(0, 80)
+  const healthIndex = bodyLines.findIndex(line => /complémentaire garanties frais de santé obligatoire/i.test(line))
+  const payslipContext = {
+    health: healthIndex < 0 ? null : bodyLines.slice(Math.max(0, healthIndex - 5), healthIndex + 10),
+    csg: (() => {
+      const index = bodyLines.findIndex(line => /CSG déductible de l'impôt sur le revenu/i.test(line))
+      return index < 0 ? null : bodyLines.slice(Math.max(0, index - 4), index + 8)
+    })()
+  }
   const labels = [
     'Salaire brut',
     'Salaire net',
@@ -98,6 +107,7 @@ try {
     shareDialog,
     shareValues,
     payslipLines,
+    payslipContext,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
