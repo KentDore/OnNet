@@ -202,7 +202,7 @@ export function calculatePublicodes(input = {}) {
     incomeTax = evaluateNumber(engine, RULES.incomeTax)
     calculatedTaxRate = evaluateNumber(engine, RULES.calculatedTaxRate)
   }
-  const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)(engine, RULES.employeeContributions)
+  const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
   const overtimePay = evaluateNumber(engine, RULES.overtimePay)
   const employeeHealthCalculated = evaluateNumber(engine, RULES.employeeHealth)
   const employerHealthCalculated = evaluateNumber(engine, RULES.employerHealth)
