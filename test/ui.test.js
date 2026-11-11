@@ -185,7 +185,7 @@ async function addSecondScenario(page, gross = '3200') {
 test('indique la source Urssaf et ne transmet aucune donnée avant consentement', async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
-    await page.waitForFunction(() => window.__onnetSmicRequestObserved === true, null, { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(150);
     assert.ok(calls.count >= 1);
     assert.ok(calls.bodies.every(body => body.expressions.includes('SMIC')));
     assert.ok(calls.bodies.every(body => !body.situation['salarié . contrat . salaire brut']));
