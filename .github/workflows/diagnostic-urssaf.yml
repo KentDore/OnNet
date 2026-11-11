@@ -26,5 +26,6 @@ jobs:
       # Relancer après correction des variables fiscales du modèle social.
       # Relancer avec la règle de taux neutre distincte.
       # Syntaxe corrigée : guillemets doubles autour de l'apostrophe ASCII.
+      # Tester le taux neutre sans forcer une assiette annuelle calculée localement.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
