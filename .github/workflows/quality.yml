@@ -30,6 +30,8 @@ jobs:
         run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
       - name: Tester les calculs
         run: node --test test/calc.test.js
+      - name: Tester le client API Urssaf
+        run: node --test test/urssaf-api-client.test.mjs
       - name: Tester le build
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur simulés
