@@ -258,6 +258,41 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 }
 
 /**
+ * Évalue une règle Publicodes sans calcul salarial local.
+ * Une date ISO éventuelle est convertie au format attendu par le modèle.
+ */
+export async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
+  if (typeof expression !== 'string' || !expression.trim() || expression.length > 200) {
+    throw new TypeError('Une règle Urssaf valide est requise.')
+  }
+  if (!situation || typeof situation !== 'object' || Array.isArray(situation)) {
+    throw new TypeError('La situation de la règle doit être un objet.')
+  }
+
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch
+  if (typeof fetchImpl !== 'function') {
+    throw new Error('La fonction fetch n’est pas disponible dans cet environnement.')
+  }
+
+  const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
+  const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
+  const normalizedSituation = { ...situation }
+  if (typeof normalizedSituation.date === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(normalizedSituation.date)) {
+    normalizedSituation.date = formatDate(normalizedSituation.date)
+  }
+
+  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression])
+  return Object.freeze({
+    expression,
+    value: evaluation.values[0],
+    missingVariables: evaluation.missingVariables,
+    warnings: evaluation.warnings,
+    endpoint,
+    checkedAt: new Date().toISOString()
+  })
+}
+
+/**
  * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
  * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
  * Les assiettes fiscales annuelles sont transmises explicitement : revenu
