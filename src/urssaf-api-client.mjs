@@ -389,9 +389,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     // Les règles fiscales sont annuelles. Le net imposable du salaire retourné
     // par le modèle salarié est mensuel : il faut le convertir explicitement.
     const annualTaxableSalary = finalEvaluation.values[2] * 12
-    if (taxMode !== 'neutre') {
-      finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
-    }
+    finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
 
     // Le taux neutre utilise une entrée distincte : le revenu imposable annuel
     // qui sert d'assiette à sa grille mensuelle officielle.
