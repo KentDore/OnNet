@@ -393,10 +393,15 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
       null, { timeout: 15000 }
     );
-    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[1]);
+    const stored = await page.evaluate(() =>
+      JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios.find(scenario => scenario.brut === 3400)
+    );
+    assert.ok(stored, 'le scénario à 3 400 € doit être conservé');
     assert.equal(stored.mutuelle, 25);
     assert.equal(stored.mutuellePat, 40);
-    const request = calls.bodies.slice(before).find(body => body.situation['salarié . contrat . salaire brut']);
+    const request = calls.bodies.slice(before).find(body =>
+      body.situation['salarié . contrat . salaire brut'] === '3400.00 €/mois'
+    );
     assert.ok(request, 'le nouveau scénario doit être envoyé à l’API');
     assert.equal(request.situation['salarié . cotisations . prévoyances . santé . montant'], '65.000000 €/mois', JSON.stringify(calls.bodies.slice(before).map(body => ({ gross:body.situation['salarié . contrat . salaire brut'], health:body.situation['salarié . cotisations . prévoyances . santé . montant'], rate:body.situation['salarié . cotisations . prévoyances . santé . taux employeur'] }))));
     assert.equal(request.situation['salarié . cotisations . prévoyances . santé . taux employeur'], '61.538462%');
