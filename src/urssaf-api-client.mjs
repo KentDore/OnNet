@@ -68,6 +68,14 @@ function formatDate(value) {
   return `${match[3]}/${match[2]}/${match[1]}`
 }
 
+function publicodesString(value, name, fallback) {
+  const text = String(value ?? fallback ?? '').trim().replace(/\\s+/g, ' ')
+  if (!text || text.length > 80 || /[\\r\\n\\u0000-\\u001f]/.test(text)) {
+    throw new TypeError(`${name} doit être renseignée sur 1 à 80 caractères.`)
+  }
+  return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+}
+
 function buildSituation(input, baseGross, overtimeHours) {
   const employeeHealth = numberInRange(input.mutuelle ?? 0, 'mutuelle', 0, 100000)
   const employerHealth = numberInRange(input.mutuellePat ?? input.mutuelle ?? 0, 'mutuellePat', 0, 100000)
@@ -85,7 +93,7 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . contrat . salaire brut': money(baseGross),
     'salarié . contrat . statut cadre': 'non',
     'salarié . contrat . temps de travail . temps partiel': 'non',
-    'établissement . commune': "'Pacé'",
+    'établissement . commune': publicodesString(input.commune, 'commune', 'Pacé'),
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
