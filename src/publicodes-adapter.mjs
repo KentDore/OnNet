@@ -9,6 +9,8 @@ const RULES = Object.freeze({
   gross: 'salarié . rémunération . brut',
   netBeforeTax: 'salarié . rémunération . net . à payer avant impôt',
   taxableNet: 'salarié . rémunération . net . imposable',
+  netAfterTax: 'salarié . rémunération . net . payé après impôt',
+  incomeTax: 'impôt . montant',
   employeeContributions: 'salarié . cotisations . salarié',
   overtimePay: 'salarié . rémunération . heures supplémentaires',
   employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
@@ -127,6 +129,25 @@ export function calculatePublicodes(input = {}) {
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
+  const taxMode = input.modeImpot === undefined ? 'barème' : String(input.modeImpot)
+  if (!['barème', 'neutre', 'personnalisé'].includes(taxMode)) {
+    throw new TypeError('modeImpot doit être « barème », « neutre » ou « personnalisé ».')
+  }
+  const taxRate = numberInRange(input.tauxPAS ?? 0, 'tauxPAS', 0, 100)
+  if (taxMode === 'personnalisé' && input.tauxPAS === undefined) {
+    throw new TypeError('tauxPAS est requis lorsque le mode d’impôt est personnalisé.')
+  }
+  const family = input.situationFamille === undefined ? 'célibataire' : String(input.situationFamille)
+  if (!['célibataire', 'couple', 'veuf'].includes(family)) {
+    throw new TypeError('situationFamille doit être célibataire, couple ou veuf.')
+  }
+  const children = integerInRange(input.enfantsCharge ?? 0, 'enfantsCharge', 0, 20)
+  const isolatedParent = input.parentIsole === true
+  if (isolatedParent && (family !== 'célibataire' || children === 0)) {
+    throw new TypeError('parentIsole nécessite une situation célibataire avec au moins un enfant à charge.')
+  }
+  const otherTaxableIncome = numberInRange(input.autresRevenusImposables ?? 0, 'autresRevenusImposables', 0, 100000000)
+
   const situation = {
     'salarié': 'oui',
     'salarié . contrat': "'CDI'",
@@ -143,6 +164,12 @@ export function calculatePublicodes(input = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
     'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
     'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
+    'impôt . méthode de calcul': taxMode === 'barème' ? "'barème standard'" : taxMode === 'neutre' ? "'taux neutre'" : "'taux personnalisé'",
+    'impôt . taux personnalisé': percent(taxRate),
+    'impôt . foyer fiscal . situation de famille': "'" + family + "'",
+    'impôt . foyer fiscal . enfants à charge': `${children} enfant`,
+    'impôt . foyer fiscal . parent isolé': isolatedParent ? 'oui' : 'non',
+    'impôt . foyer fiscal . autres revenus imposables': `${otherTaxableIncome.toFixed(2)} €/an`,
     'date': dateForPublicodes(input.date)
   }
 
@@ -178,6 +205,8 @@ export function calculatePublicodes(input = {}) {
   }
   const netBeforeTax = evaluateNumber(engine, RULES.netBeforeTax)
   const taxableNet = evaluateNumber(engine, RULES.taxableNet)
+  const netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
+  const incomeTax = evaluateNumber(engine, RULES.incomeTax)
   const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
   const overtimePay = evaluateNumber(engine, RULES.overtimePay)
   const employeeHealthCalculated = evaluateNumber(engine, RULES.employeeHealth)
@@ -196,6 +225,9 @@ export function calculatePublicodes(input = {}) {
     overtimePay,
     netBeforeTax,
     taxableNet,
+    netAfterTax,
+    incomeTax,
+    taxMode,
     employeeContributions,
     employeeHealth: employeeHealthCalculated,
     employerHealth: employerHealthCalculated
