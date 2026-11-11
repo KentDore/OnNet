@@ -31,7 +31,7 @@ Il faut contrôler le poids du bundle et la compatibilité navigateur avant d'ad
 
 ## Correspondance initiale des données
 
-Les noms ci-dessous sont ceux des règles officielles du modèle salarié.
+Les noms ci-dessous sont ceux des règles officielles du modèle salarié. Les unités d'entrée doivent suivre exactement les exemples du dépôt officiel : `heure/mois` pour les heures supplémentaires dans le moteur (même si les exemples de paramètres d'URL affichent parfois `heures/mois`), `titre-restaurant/mois` pour le nombre et `€/titre-restaurant` pour le montant unitaire. Le prototype utilise aussi `établissement . commune = 'Pacé'` pour expliciter la localisation.
 
 | Donnée OnNet | Situation Publicodes envisagée |
 |---|---|
@@ -45,7 +45,7 @@ Les noms ci-dessous sont ceux des règles officielles du modèle salarié.
 | Prime d'activité | `salarié . rémunération . primes . activité . base` |
 | 13e mois | `salarié . rémunération . primes . fin d'année` |
 
-Le modèle officiel définit les heures supplémentaires en heures par mois. Il propose explicitement 17,33 h/mois pour un contrat à 39 h. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable.
+Le modèle officiel définit les heures supplémentaires en heures par mois. Il propose explicitement 17,33 h/mois pour un contrat à 39 h. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable. Attention : la CI a mis en évidence une erreur de conversion d'unité dans la règle des titres-restaurant (`€.titre-restaurant/titres-restaurant.mois` vers `€/mois`). Le prototype refuse donc explicitement les scénarios avec titres-restaurant plutôt que d'afficher un résultat trompeur. Cette fonction sera réactivée après résolution et tests.
 
 ### Conversion du brut OnNet en 39 h
 
@@ -55,7 +55,7 @@ Il faudra donc convertir le brut total OnNet en salaire de base selon le nombre 
 
 ## Hypothèses et limites à rendre visibles
 
-Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
+Le moteur produit des avertissements de cycles sur certaines règles de l'espace entreprise, sans rapport apparent avec les règles de paie salarié ciblées. Il signale aussi l'erreur de conversion d'unité des titres-restaurant mentionnée ci-dessus. Les tests doivent continuer à capturer ces diagnostics ; la réussite de la CI ne signifie pas que toutes les règles du modèle sont exemptes d'avertissements. Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
 
 Pour une première version, OnNet peut rester limité au CDI privé non-cadre en métropole, sans activité partielle, avec une majoration standard des heures supplémentaires. Les paramètres non saisis doivent être explicitement documentés comme hypothèses. Ne pas présenter cette configuration standard comme un bulletin de paie garanti conforme à toutes les conventions et entreprises.
 
@@ -93,6 +93,6 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 - [x] Modèle npm officiel, licence et interface d'utilisation repérés.
 - [x] Principales règles de saisie salarié, heures supplémentaires et mutuelle identifiées.
 - [ ] Installation et verrouillage des dépendances dans le dépôt.
-- [ ] Prototype bundlé et exécuté localement.
-- [ ] Scénarios de parité testés.
+- [x] Prototype bundlé et exécuté dans GitHub Actions (HTML autonome généré).
+- [ ] Scénarios de parité chiffrés comparés au simulateur officiel.
 - [ ] Migration du moteur de production.
