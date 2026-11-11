@@ -10,11 +10,11 @@ async function main() {
   await fs.mkdir(outputDir, { recursive: true })
 
   const bundle = await esbuild.build({
-    entryPoints: [path.join(root, 'src', 'publicodes-adapter.mjs')],
+    entryPoints: [path.join(root, 'src', 'urssaf-api-client.mjs')],
     bundle: true,
     write: false,
     format: 'iife',
-    globalName: 'OnNetUrssaf',
+    globalName: 'OnNetUrssafApi',
     platform: 'browser',
     target: ['es2020'],
     minify: true,
