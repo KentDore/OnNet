@@ -14,8 +14,6 @@ function mkScenario(over){
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
     treiziemeMoisBase:'base',
-    maintienPct:90, carenceCouverte:false,
-    absenceType:'none', absenceDuree:0
   };
   const scenario = Object.assign(base, over || {});
   // Compatibilité avec les créations historiques : la part employeur suit
@@ -34,7 +32,7 @@ function defaultScenarios(){
 
 // ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -65,7 +63,7 @@ function sanitizeScenario(raw){
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
     valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
-    primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
+    primes:[0,100000000]
   };
   for(const [key, range] of Object.entries(limits)){
     if(clean[key] === undefined) continue;
@@ -85,8 +83,11 @@ function sanitizeScenario(raw){
   delete clean.statut;
   delete clean.rate;
   if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
-  if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
-  clean.carenceCouverte = clean.carenceCouverte === true;
+  // Les scénarios d'absence historiques sont supprimés et ne sont plus calculés.
+  delete clean.absenceType;
+  delete clean.absenceDuree;
+  delete clean.maintienPct;
+  delete clean.carenceCouverte;
   if(!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
@@ -229,7 +230,6 @@ function buildShareUrl(options){
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
     // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
-    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
   }));
 
   const payload = {
@@ -437,8 +437,6 @@ function renderCard(s, r, showRemove){
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">Après impôt : <strong>${fmt(heroPasValue(r))}</strong></div>
     </div>
-    ${s.absenceType === 'arret' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j d'arrêt sur 30, ${s.maintienPct}% maintenus, ${s.carenceCouverte ? 'carence de 3 j couverte' : 'délai de carence de 3 j inclus'}. Ancienneté et convention collective non prises en compte.</span></div>` : ''}
-    ${s.absenceType === 'conges' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j de congés payés sur 30 : salaire de base maintenu, sans titres restaurant sur ces jours.</span></div>` : ''}
 
     <div class="field-row">
       <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
@@ -521,60 +519,27 @@ function renderStack(computed){
   const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
   const maxPx = 240;
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-
   return sorted.map(({s, r}) => {
     const m = r.m;
-    const cotis = m.cotisNettes;
-    const mutuelle = s.mutuelle;
-    const tr = r.tr.totalSalarie;
-    const net = m.netApres;
-    const netSansTR = m.netSocial;
-    const brut = m.brutTotal;
-    const scale = maxPx / maxBrut;
-
-    const delta = net - ref.r.m.netApres;
+    const cotis = m.cotisNettes, mutuelle = s.mutuelle, tr = r.tr.totalSalarie;
+    const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
+    const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
-
-    let barHtml, brutLabel;
-    if(s.absenceType !== 'none'){
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
-      <div class="stack-bar">
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}" role="img" aria-label="Net estimé : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
-      </div>`;
-      brutLabel = s.absenceType === 'arret'
-        ? `${s.absenceDuree} j arrêt, ${s.maintienPct}%`
-        : `${s.absenceDuree} j congés`;
-    } else {
-      const pxCotis = Math.round(cotis * scale);
-      const pxMutuelle = Math.round(mutuelle * scale);
-      const pxTr = Math.round(tr * scale);
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
+    const pxCotis = Math.round(cotis * scale), pxMutuelle = Math.round(mutuelle * scale);
+    const pxTr = Math.round(tr * scale), pxNet = Math.max(22, Math.round(net * scale));
+    const barHtml = `
       <div class="stack-bar">
         <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
         <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
         <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
       </div>`;
-      brutLabel = `brut ${fmt(brut)}`;
-    }
-
-    const isRef = s.id === refId;
     return `
-    <div class="stack-col ${isRef?'is-ref':''} ${s.id === justAddedId ? 'card-enter' : ''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
-      <div class="stack-brut">${brutLabel}</div>
-      ${barHtml}
-      <div class="stack-ref-row">
-        <span class="stack-ref-dot ${isRef?'is-ref':''}" aria-hidden="true"></span>
-        <span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span>
-      </div>
+    <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+      <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
+      <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
       <div class="stack-net">${fmt(net)}</div>
-      ${(s.absenceType === 'none' && tr > 0.5) ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${tr > 0.5 ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -625,15 +590,6 @@ function renderWaterfall(computed){
   const m = r.m;
   const brut = m.brutTotal;
   const pct = v => brut > 0 ? (v/brut)*100 : 0;
-
-  if(s.absenceType !== 'none'){
-    const net = m.netApres;
-    return `
-    <div class="waterfall" role="img" aria-label="Brut habituel ${fmt(brut)}, net estimé pendant l'absence : ${fmt(net)}">
-      ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut habituel', fmt(brut), 100)}
-      ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, 'Net estimé (absence)', fmt(net), pct(net))}
-    </div>`;
-  }
 
   const cotis = m.cotisNettes;
   const mutuelle = s.mutuelle;
@@ -742,7 +698,6 @@ function renderBenchmarks(computed){
     nbMois: 12,
     primes: 0,
     absenceType: 'none',
-    absenceDuree: 0
   };
   const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
   const smicResult = compute(neutralSmicScenario, foyer);
@@ -1287,7 +1242,7 @@ function onInput(e){
   if(key === 'name'){
     s.name = e.target.value;
     updateComputed();
-    if(s.id === refId){ setText('raiseBaseName', s.name); setText('absenceBaseName', s.name); }
+    if(s.id === refId){ setText('raiseBaseName', s.name); }
     document.getElementById('refSelect').innerHTML = scenarios
       .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
     return;
@@ -1857,7 +1812,6 @@ function bindModuleToggle(cardId, toggleId, bodyId){
 bindModuleToggle('foyerModule', 'foyerModuleToggle', 'foyerModuleBody');
 bindFoyerModule();
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
-bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
@@ -1897,7 +1851,6 @@ function addRaiseScenario(type, value){
 function updateRaiseBaseName(){
   const base = findScenario(refId);
   setText('raiseBaseName', base ? base.name : '');
-  setText('absenceBaseName', base ? base.name : '');
 }
 
 document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
@@ -1979,87 +1932,6 @@ function scrollToNewCard(){
     animateScrollLeft(scroller, dest, 380, restoreCardSnap);
   });
 }
-
-let absenceType = 'conges';
-let carenceCouverte = false;
-
-function updateAbsenceUI(){
-  document.querySelectorAll('#absenceTypeToggle button').forEach(b => {
-    b.setAttribute('aria-pressed', b.dataset.atype === absenceType ? 'true' : 'false');
-  });
-  document.getElementById('arretExtraFields').style.display = absenceType === 'arret' ? '' : 'none';
-  document.getElementById('addAbsenceScenario').textContent =
-    absenceType === 'arret' ? 'Ajouter ce salaire en arrêt de travail' : 'Ajouter ce salaire en congés payés';
-  const duree = parseNum(document.getElementById('absenceDuree').value) || 0;
-  const pct = parseNum(document.getElementById('arretPct').value) || 90;
-  setText('absenceHint', absenceType === 'arret'
-    ? `Sur ${duree} j d'arrêt, le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Sur les jours d'arrêt : ${carenceCouverte ? 'la carence est payée, donc tous les jours sont indemnisés' : 'les 3 premiers jours (carence) ne sont pas payés'}, le reste à ${pct} %.`
-    : `Sur ${duree} j de congés, le salaire de base reste maintenu ; le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Aucun titre restaurant sur les jours de congés.`);
-}
-
-document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
-  btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
-});
-document.getElementById('absenceDuree').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
-  const v = e.target.value;
-  const pctRow = document.getElementById('arretPctRow');
-  if(v === 'custom'){
-    pctRow.style.display = '';
-  } else {
-    pctRow.style.display = 'none';
-    document.getElementById('arretPct').value = v;
-  }
-  updateAbsenceUI();
-});
-document.getElementById('arretPct').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.querySelectorAll('#carenceToggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    carenceCouverte = btn.dataset.carence === 'oui';
-    document.querySelectorAll('#carenceToggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
-    updateAbsenceUI();
-  });
-});
-
-function addAbsenceScenario(){
-  const base = findScenario(refId);
-  if(!base) return;
-  const dureeInput = document.getElementById('absenceDuree');
-  if(!validateNumericInput(dureeInput, true)) return;
-  if(absenceType === 'arret' && !validateNumericInput(document.getElementById('arretPct'), true)) return;
-  const duree = clamp(parseNum(dureeInput.value), 0, 30);
-  const clone = Object.assign({}, base);
-  delete clone.id;
-  disableCardSnap();
-
-  let created;
-  if(absenceType === 'arret'){
-    const pct = clamp(parseNum(document.getElementById('arretPct').value), 0, 100);
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
-      absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
-    }));
-    scenarios.push(created);
-  } else {
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (congés ${duree}j)`,
-      absenceType: 'conges', absenceDuree: duree
-    }));
-    scenarios.push(created);
-  }
-  justAddedId = created.id;
-  render();
-  scrollToNewCard();
-}
-
-document.getElementById('addAbsenceScenario').addEventListener('click', addAbsenceScenario);
-updateAbsenceUI();
 
 render();
 // Un hash contenant explicitement un partage mais non restauré doit être signalé.
