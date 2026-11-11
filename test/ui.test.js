@@ -95,7 +95,9 @@ test('présente les deux repères avec le net mensuel en premier et le taux net 
     assert.match(await smicCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Brut mensuel\s*:/);
     assert.match(await medianCard.locator('.benchmark-label').innerText(), /Salaire médian/);
     assert.match(await medianCard.locator('.benchmark-meta').first().innerText(), /Net horaire\s*:.*Référence mensuelle nette/);
-    assert.match(await medianCard.locator('details').innerText(), /brut mensuel correspondant n'est pas affiché/i);
+    const medianDetails = medianCard.locator('details');
+    await medianDetails.locator('summary').click();
+    assert.match(await medianDetails.innerText(), /brut mensuel correspondant n'est pas affiché/i);
   } finally {
     await context.close();
   }
@@ -279,7 +281,7 @@ test('compare les repères en net avant impôt sans modifier le net reçu affich
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net estimé reçu/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre base/);
     assert.equal(await page.locator('.benchmark-details summary').nth(0).innerText(), 'Méthode de calcul');
-    assert.equal(await page.locator('.benchmark-details summary').nth(1).innerText(), 'Estimation à votre durée de travail');
+    assert.equal(await page.locator('.benchmark-details summary').nth(1).innerText(), 'Méthode de calcul');
     assert.equal(await page.locator('.benchmark-details').first().evaluate(el => el.open), false);
     assert.equal(await page.locator('.benchmark-details').nth(1).evaluate(el => el.open), false);
     assert.equal(await page.locator('.benchmark-disclaimer').count(), 0);
