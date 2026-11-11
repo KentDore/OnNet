@@ -18,6 +18,7 @@ const situation = {
   'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': '0 €/titre-restaurant',
   'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': '50%',
   'impôt . méthode de calcul': "'taux personnalisé'",
+  'impôt . revenu imposable': '22610 €/an',
   'impôt . taux personnalisé': '10%',
   'date': '11/11/2026'
 }
@@ -30,7 +31,6 @@ const names = [
   'salarié . rémunération . net . imposable',
   'impôt . méthode de calcul',
   'impôt . taux personnalisé',
-  'impôt . taux d’imposition',
   "impôt . taux d'imposition",
   'impôt . revenu imposable',
   'impôt . montant',
