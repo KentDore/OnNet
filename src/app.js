@@ -758,7 +758,6 @@ function renderBenchmarks(computed){
     ? weeklyHours * 52 / 12
     : 0;
   const userNetBeforeTax = Math.max(0, r.netApres);
-  const userNetBank = Math.max(0, r.netApresImpot);
   const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
 
   // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
@@ -780,9 +779,9 @@ function renderBenchmarks(computed){
       </div>
     </div>
     <div class="benchmark-your-salary">
-      <span>Votre net estimé reçu</span>
-      <strong>${fmt(userNetBank)} <small>/ mois</small></strong>
-      <div class="benchmark-meta benchmark-comparison-base">Votre base : ${fmt(userNetBeforeTax)} € net avant impôt / mois · ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
+      <span>Votre net avant impôt</span>
+      <strong>${fmt(userNetBeforeTax)} <small>/ mois</small></strong>
+      <div class="benchmark-meta benchmark-comparison-base">Net horaire : ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
     </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
