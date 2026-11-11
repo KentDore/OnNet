@@ -123,6 +123,14 @@ function buildSituation(input, baseGross, overtimeHours) {
       situation['impôt . taux personnalisé'] = percent(taxRate)
     }
 
+    // Le taux neutre correspond à la grille de référence d'un célibataire sans enfant.
+    // Renseigner explicitement le foyer évite que le calcul du montant d'impôt
+    // reste à zéro alors que la règle officielle du taux neutre renvoie un taux positif.
+    if (mode === 'neutre') {
+      situation['impôt . foyer fiscal . situation de famille'] = "'célibataire'"
+      situation['impôt . foyer fiscal . enfants à charge'] = '0 enfant'
+    }
+
     if (mode === 'barème') {
       const familyStatus = input.situationFamille
       if (!['célibataire', 'couple', 'veuf'].includes(familyStatus)) {
