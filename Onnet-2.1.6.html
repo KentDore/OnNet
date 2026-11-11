@@ -345,7 +345,7 @@
 
   /* ---- Comparaison secondaire ---- */
   .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
-  .ref-row label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:0;}
+  .ref-row label{font-size:13px; font-weight:600; color:var(--ink-soft); margin:0;}
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
   .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
   .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
@@ -369,7 +369,7 @@
 
   /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
-  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; min-height:44px; padding:10px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
   .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
@@ -490,7 +490,7 @@
 
   .field-row{margin-bottom:14px;}
   .field-row:last-child{margin-bottom:0;}
-  .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
+  .field-row label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
   .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
   .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
@@ -672,6 +672,36 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .benchmark-disclaimer{margin-top:10px;font-size:.72rem;line-height:1.45}
 }
 
+
+/* Recherche et sélection de commune vérifiée */
+.commune-suggestions{position:relative;z-index:5;margin-top:6px;border:1px solid var(--border, #d0d5dd);border-radius:10px;overflow:hidden;background:var(--surface, #fff);box-shadow:0 8px 24px rgba(0,0,0,.08);}
+.commune-suggestions[hidden]{display:none;}
+.commune-option{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--border, #e5e7eb);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer;}
+.commune-option:last-child{border-bottom:0;}
+.commune-option:hover,.commune-option:focus-visible{background:var(--surface-secondary, #f3f4f6);outline:none;}
+.commune-search-status{padding:10px 12px;color:var(--muted, #667085);font-size:.9rem;}
+
+
+/* Statut URSSAF : information discrète, sans alerte permanente. */
+.urssaf-status{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:9px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink-soft);}
+.urssaf-status-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;width:100%;}
+.urssaf-status-main{display:flex;align-items:center;gap:8px;flex:1 1 220px;margin:0;font-size:.78rem;line-height:1.4;color:var(--muted,var(--ink-soft));}
+.urssaf-status-main strong{font-weight:550;}
+.urssaf-status-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#299764;}
+.urssaf-status #urssafCalculateBtn{margin:0;padding:7px 11px;font-size:.76rem;}
+.urssaf-status .result-source{flex:0 0 100%;margin:0;font-size:.72rem;}
+.urssaf-status .result-source summary{cursor:pointer;color:var(--muted,var(--ink-soft));}
+.urssaf-status .result-source ul{max-height:180px;overflow:auto;padding-left:18px;line-height:1.45;}
+.urssaf-status.is-error{padding:12px 14px;border:1px solid var(--warn-line);border-radius:12px;background:var(--warn-soft);color:var(--warn);}
+.urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
+@media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
+
+/* Lisibilité des statuts et périmètre des commandes */
+.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+.chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
@@ -681,7 +711,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
     <div class="header-top">
       <div class="brand-block">
         <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.6</span></div>
-        <div class="eyebrow">Simulateur de paie · cotisations 2026</div>
+        <div class="eyebrow">Simulateur de paie · moteur officiel Urssaf</div>
       </div>
       <div class="header-actions">
         <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
@@ -707,8 +737,20 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   </header>
 
   <main id="contenu">
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
+    <div class="urssaf-status-copy">
+      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués par le moteur officiel de l’Urssaf.</strong></p>
+      <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
+      <details class="result-source" id="urssafWarnings" hidden>
+        <summary>Détails techniques (facultatif)</summary>
+        <ul id="urssafWarningsList"></ul>
+      </details>
+    </div>
+  </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
+    <p class="chart-scope-hint">Graphique présenté en net mensuel ; les bascules Brut/Net et Mensuel/Annuel ci-dessous ne modifient que les cartes.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
@@ -882,86 +924,27 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
         </div>
       </div>
 
-      <div class="module-card" id="absenceModule">
-        <button type="button" class="module-toggle-head" id="absenceModuleToggle" aria-expanded="false" aria-controls="absenceModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 0 0 0-20 0Z"></path><path d="M12 12v8a2 2 0 0 0 4 0"></path><path d="M12 2v1"></path></svg></span>
-          <span class="module-info">
-            <span class="module-name">Simuler une absence</span>
-            <span class="module-desc">Congés payés ou arrêt de travail</span>
-          </span>
-          <span class="module-switch" aria-hidden="true"></span>
-        </button>
-        <div class="module-body" id="absenceModuleBody">
-          <div class="hint">Calculé à partir de <strong id="absenceBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas, sur la base d'un mois de 30 jours.</div>
 
-          <div class="field-row">
-            <label>1. Type d'absence</label>
-            <div class="pill-toggle" id="absenceTypeToggle" role="group" aria-label="Type d'absence" style="width:100%;">
-              <button type="button" data-atype="conges" aria-pressed="true" style="flex:1;">Congés payés</button>
-              <button type="button" data-atype="arret" aria-pressed="false" style="flex:1;">Arrêt de travail</button>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <label for="absenceDuree">2. Durée de l'absence (jours sur le mois)</label>
-            <input type="text" inputmode="decimal" id="absenceDuree" value="5">
-          </div>
-
-          <div id="arretExtraFields" style="display:none;">
-            <div class="field-row">
-              <label for="ancienneteSelect">3. Ancienneté dans l'entreprise</label>
-              <select id="ancienneteSelect">
-                <option value="90">1 an ou plus — maintien à 90 % (loi de mensualisation)</option>
-                <option value="50">Moins d'1 an — indemnités de la Sécu seules (≈ 50 %)</option>
-                <option value="custom">Je connais mon propre taux</option>
-              </select>
-              <div class="sub-hint">Pourcentage du salaire maintenu. Votre convention collective peut prévoir davantage — à vérifier sur votre bulletin de paie.</div>
-            </div>
-            <div class="field-row" id="arretPctRow" style="display:none;">
-              <label for="arretPct">% du salaire maintenu (votre taux)</label>
-              <input type="text" inputmode="decimal" id="arretPct" value="90">
-            </div>
-
-            <div class="field-row">
-              <label>4. Délai de carence (3 premiers jours)</label>
-              <div class="pill-toggle" id="carenceToggle" role="group" aria-label="Délai de carence" style="width:100%;">
-                <button type="button" data-carence="non" aria-pressed="true" style="flex:1;">Non payée (cas général)</button>
-                <button type="button" data-carence="oui" aria-pressed="false" style="flex:1;">Payée par l'employeur</button>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn btn-primary" id="addAbsenceScenario" style="width:100%; margin-top:6px;">Ajouter ce salaire</button>
-
-          <div class="sub-hint" id="absenceHint" style="margin-top:14px; margin-bottom:0;"></div>
-        </div>
-      </div>
 
     </div>
   </section>
 
   <div class="disclaimer reveal">
-    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Pour un chiffre exact, référez-vous à votre bulletin de paie et à votre avis d'imposition. Seul le régime non-cadre du secteur privé est modélisé. En mode « J'ai mon taux », le taux personnel reste constant d'un salaire à l'autre : l'écart entre deux salaires de montants différents y est optimiste.</p>
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés par le moteur officiel Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
     <details class="more">
       <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
-        <div class="section-tag">Cotisations</div>
-        <p>Calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. Le calcul annuel utilise les tranches annuelles (PASS). Seul le régime non-cadre du secteur privé est modélisé : cadres, fonction publique et taux forfaitaire ne le sont plus, pour ne pas disperser la précision du calcul sur plusieurs régimes chacun approximé séparément.</p>
+        <div class="section-tag">Source des calculs</div>
+        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations ni l’impôt. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
-        <div class="section-tag">Heures supplémentaires</div>
-        <p>La réduction de cotisations salariales est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.</p>
+        <div class="section-tag">Hypothèses transmises au moteur</div>
+        <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, sans avantages en nature, primes libres, remboursements de transport spécifiques ni régime particulier (DFS, taux réduits ou impatrié). La commune et le département de l’établissement sont sélectionnés séparément. Le scénario 39 h suppose 4 heures supplémentaires hebdomadaires majorées de 25 %. La mutuelle et les titres-restaurant sont renseignés séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
 
-        <div class="section-tag">Titres restaurant</div>
-        <p>La part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations.</p>
+        <div class="section-tag">Fonctions en cours de raccordement</div>
+        <p>Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore modélisés dans le calculateur principal par l’API. Ces scénarios sont signalés comme non calculables : OnNet n’affiche pas d’estimation issue de l’ancien moteur local.</p>
 
-        <div class="section-tag">Absences</div>
-        <p>Les congés payés sont estimés par maintien du net habituel au prorata des jours, sans comparer la méthode du dixième au maintien de salaire. L'arrêt de travail est estimé par un pourcentage forfaitaire du net, avec un délai de carence de 3 jours par défaut, sur un mois de 30 jours. Ce n'est pas un calcul d'IJSS : le montant réel dépend notamment des salaires de référence, des plafonds, de la durée de l'arrêt, de l'ancienneté et de la convention collective. Ces deux résultats sont indicatifs et ne remplacent pas un bulletin de paie.</p>
-
-        <div class="section-tag">Impôt sur le revenu</div>
-        <p>Par défaut, calculé au barème IR 2026 applicable aux revenus 2025 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
-
-        <div class="section-tag">Ce qui n'est pas modélisé</div>
-        <p>La régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle.</p>
+        <div class="section-tag">Limites du modèle</div>
+        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Certaines règles fiscales du modèle sont expérimentales ou simplifiées. Le net après impôt reste une estimation, pas un avis d’imposition. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
       </div>
     </details>
   </div>
@@ -969,40 +952,527 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 </div>
 
 <script>
+const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'
+const DEFAULT_TIMEOUT_MS = 15000
+const MONTHLY_BASE_HOURS = 151.67
+const MONTHLY_OVERTIME_HOURS_39H = 4 * 52 / 12
+const MAX_GROSS_CALIBRATION_ATTEMPTS = 3
 
+const EXPRESSIONS = Object.freeze({
+  gross: 'salarié . rémunération . brut',
+  netBeforeTax: 'salarié . rémunération . net . à payer avant impôt',
+  taxableNet: 'salarié . rémunération . net . imposable',
+  employeeContributions: 'salarié . cotisations . salarié',
+  overtimePay: 'salarié . rémunération . heures supplémentaires',
+  employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
+  employerHealth: 'salarié . cotisations . prévoyances . santé . employeur',
+  mealTicketAmount: 'salarié . rémunération . frais professionnels . titres-restaurant . montant',
+  mealTicketEmployer: 'salarié . rémunération . frais professionnels . titres-restaurant . employeur',
+  mealTicketNonDeductible: 'salarié . rémunération . frais professionnels . non déductible',
+  netAfterTax: 'salarié . rémunération . net . payé après impôt',
+  incomeTax: 'impôt . montant',
+  taxRate: "impôt . taux d'imposition",
+})
+
+function numberInRange(value, name, min, max) {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw new TypeError(`${name} doit être compris entre ${min} et ${max}.`)
+  }
+  return number
+}
+
+function integerInRange(value, name, min, max) {
+  const number = numberInRange(value, name, min, max)
+  if (!Number.isInteger(number)) {
+    throw new TypeError(`${name} doit être un nombre entier.`)
+  }
+  return number
+}
+
+function money(value) {
+  return `${value.toFixed(6)} €/mois`
+}
+
+function percent(value) {
+  return `${value.toFixed(6)}%`
+}
+
+function formatDate(value) {
+  if (value === undefined || value === null || value === '') {
+    const now = new Date()
+    return [
+      String(now.getDate()).padStart(2, '0'),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      now.getFullYear()
+    ].join('/')
+  }
+
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value))
+  if (!match) {
+    throw new TypeError('date doit respecter le format AAAA-MM-JJ.')
+  }
+
+  const parsed = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== String(value)) {
+    throw new TypeError('date doit être une date calendaire valide au format AAAA-MM-JJ.')
+  }
+
+  return `${match[3]}/${match[2]}/${match[1]}`
+}
+
+function publicodesString(value, name, fallback) {
+  const text = String(value ?? fallback ?? '').trim().replace(/\s+/g, ' ')
+  if (!text || text.length > 80 || /[\r\n\u0000-\u001f]/.test(text)) {
+    throw new TypeError(`${name} doit être renseignée sur 1 à 80 caractères.`)
+  }
+  return `'${text.replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`
+}
+
+function buildSituation(input, baseGross, overtimeHours) {
+  const employeeHealth = numberInRange(input.mutuelle ?? 0, 'mutuelle', 0, 100000)
+  const employerHealth = numberInRange(input.mutuellePat ?? input.mutuelle ?? 0, 'mutuellePat', 0, 100000)
+  const totalHealth = employeeHealth + employerHealth
+  const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
+
+  const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
+  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
+  const employeeMealTicketRate = mealTicketDays > 0
+    ? numberInRange(input.partResto ?? 50, 'partResto', 40, 50)
+    : 50
+  const employerMealTicketRate = 100 - employeeMealTicketRate
+
+  const situation = {
+    'salarié': 'oui',
+    'salarié . contrat': "'CDI'",
+    'salarié . contrat . salaire brut': money(baseGross),
+    'salarié . contrat . statut cadre': 'non',
+    'salarié . contrat . temps de travail . temps partiel': 'non',
+    'établissement . commune': publicodesString(input.commune, 'commune', 'Pacé'),
+    'établissement . commune . département': publicodesString(input.departement, 'département', (!input.commune || input.commune === 'Pacé') ? 'Ille-et-Vilaine' : ''),
+    'salarié . convention collective': "'droit commun'",
+    'salarié . activité partielle': 'non',
+    'dirigeant . indépendant': 'non',
+    'salarié . rémunération . avantages en nature': 'non',
+    'salarié . rémunération . primes . activité . base': '0 €/mois',
+    "salarié . rémunération . primes . fin d'année": 'non',
+    'salarié . régimes spécifiques . taux réduits': 'non',
+    'salarié . régimes spécifiques . DFS': 'non',
+    'salarié . régimes spécifiques . impatriés': 'non',
+    "situation personnelle . domiciliation fiscale à l'étranger": 'non',
+    'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
+    'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
+    'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
+    'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
+    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
+    'date': formatDate(input.date)
+  }
+
+  if (input.modeImpot !== undefined && input.modeImpot !== null && input.modeImpot !== '') {
+    const modes = {
+      'personnalisé': 'taux personnalisé',
+      'neutre': 'taux neutre',
+      'barème': 'barème standard'
+    }
+    const mode = String(input.modeImpot)
+    if (!Object.prototype.hasOwnProperty.call(modes, mode)) {
+      throw new TypeError('modeImpot doit être personnalisé, neutre ou barème.')
+    }
+
+    situation['impôt . méthode de calcul'] = `'${modes[mode]}'`
+
+    if (mode === 'personnalisé') {
+      const taxRate = numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
+      situation['impôt . taux personnalisé'] = percent(taxRate)
+    }
+
+    // Le taux neutre correspond à la grille de référence d'un célibataire sans enfant.
+    // Renseigner explicitement le foyer évite que le calcul du montant d'impôt
+    // reste à zéro alors que la règle officielle du taux neutre renvoie un taux positif.
+    if (mode === 'neutre') {
+      situation['impôt . foyer fiscal . situation de famille'] = "'célibataire'"
+      situation['impôt . foyer fiscal . enfants à charge'] = '0 enfant'
+    }
+
+    if (mode === 'barème') {
+      const familyStatus = input.situationFamille
+      if (!['célibataire', 'couple', 'veuf'].includes(familyStatus)) {
+        throw new TypeError('situationFamille doit être renseignée : célibataire, couple ou veuf.')
+      }
+      if (input.enfantsACharge === undefined || input.enfantsACharge === null) {
+        throw new TypeError('enfantsACharge doit être renseigné pour le calcul au barème.')
+      }
+      const children = integerInRange(input.enfantsACharge, 'enfantsACharge', 0, 20)
+      if (familyStatus === 'célibataire' && children > 0 && typeof input.parentIsole !== 'boolean') {
+        throw new TypeError('parentIsole doit être renseigné pour une personne célibataire avec enfant(s).')
+      }
+      const singleParent = input.parentIsole ?? false
+      if (typeof singleParent !== 'boolean') {
+        throw new TypeError('parentIsole doit être un booléen.')
+      }
+      if (singleParent && (familyStatus !== 'célibataire' || children === 0)) {
+        throw new TypeError('parentIsole exige une personne célibataire avec au moins un enfant à charge.')
+      }
+      situation['impôt . foyer fiscal . situation de famille'] = `'${familyStatus}'`
+      situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
+      if (familyStatus === 'couple') {
+        if (input.autresRevenusImposables === undefined || input.autresRevenusImposables === null) {
+          throw new TypeError('autresRevenusImposables doit être renseigné pour un foyer en couple (indiquer 0 si aucun autre revenu).')
+        }
+        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
+        situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
+      } else if (input.autresRevenusImposables !== undefined && input.autresRevenusImposables !== null) {
+        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
+        if (otherIncome > 0) {
+          situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
+        }
+      }
+      if (singleParent) {
+        situation['impôt . foyer fiscal . parent isolé'] = 'oui'
+      }
+    }
+  }
+
+  return situation
+}
+
+function normalizeMissingVariables(value) {
+  if (Array.isArray(value)) {
+    return value.filter(item => typeof item === 'string')
+  }
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+  }
+  return []
+}
+
+function normalizeWarnings(value) {
+  if (!Array.isArray(value)) return []
+  return [...new Set(value.map(item => {
+    if (typeof item === 'string') return item
+    if (item && typeof item.message === 'string') return item.message
+    return 'Avertissement non détaillé du moteur Urssaf.'
+  }))]
+}
+
+function describeApiFailure(status) {
+  if (status === 400) return 'L’API Urssaf a rejeté la situation transmise (HTTP 400). Vérifier les paramètres du scénario.'
+  if (status === 429) return 'Limite temporaire de requêtes de l’API Urssaf atteinte (HTTP 429). Attendre puis réessayer.'
+  if (status >= 500) return `Le service de calcul Urssaf est temporairement indisponible (HTTP ${status}).`
+  return `L’API Urssaf a répondu avec une erreur HTTP ${status}.`
+}
+
+async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    let response
+    try {
+      response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json'
+        },
+        body: JSON.stringify({ situation, expressions }),
+        signal: controller.signal
+      })
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error(`Délai dépassé : l’API Urssaf n’a pas répondu en ${timeoutMs / 1000} secondes.`)
+      }
+      throw new Error('Impossible de joindre l’API Urssaf. Vérifier la connexion Internet puis réessayer.')
+    }
+
+    if (!response || typeof response.ok !== 'boolean') {
+      throw new Error('Réponse HTTP invalide reçue de l’API Urssaf.')
+    }
+    if (!response.ok) {
+      throw new Error(describeApiFailure(response.status))
+    }
+
+    let payload
+    try {
+      payload = await response.json()
+    } catch {
+      throw new Error('L’API Urssaf a renvoyé une réponse JSON illisible.')
+    }
+
+    if (payload?.error || payload?.situationError) {
+      const message = payload.error?.message ?? payload.situationError?.message
+      throw new Error(typeof message === 'string' && message.trim()
+        ? `Calcul refusé par l’API Urssaf : ${message}`
+        : 'L’API Urssaf n’a pas pu évaluer cette situation.')
+    }
+    if (!Array.isArray(payload?.evaluate) || payload.evaluate.length !== expressions.length) {
+      throw new Error('Réponse incomplète de l’API Urssaf : les expressions demandées ne sont pas toutes présentes.')
+    }
+
+    const noMealTickets = situation['salarié . rémunération . frais professionnels . titres-restaurant'] === 'non'
+    const zeroWhenNoMealTickets = new Set([
+      EXPRESSIONS.mealTicketAmount,
+      EXPRESSIONS.mealTicketEmployer,
+      EXPRESSIONS.mealTicketNonDeductible
+    ])
+    const values = payload.evaluate.map((item, index) => {
+      if (!item) {
+        throw new Error(`L’API Urssaf n’a pas fourni de résultat pour « ${expressions[index]} ».`)
+      }
+      if (!Number.isFinite(item.nodeValue)) {
+        // Sans titres-restaurant déclarés, ces règles ne sont pas applicables :
+        // l'API peut renvoyer null. Le zéro découle alors explicitement de la saisie,
+        // et ne constitue pas un résultat de calcul de remplacement.
+        if (noMealTickets && item.nodeValue === null && zeroWhenNoMealTickets.has(expressions[index])) {
+          return 0
+        }
+        throw new Error(`L’API Urssaf n’a pas fourni de valeur numérique pour « ${expressions[index]} ».`)
+      }
+      return item.nodeValue
+    })
+
+    const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
+    const warnings = normalizeWarnings(payload.warnings)
+    return {
+      values,
+      missingVariables,
+      warnings
+    }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+/**
+ * Évalue une règle Publicodes sans calcul salarial local.
+ * Une date ISO éventuelle est convertie au format attendu par le modèle.
+ */
+async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
+  if (typeof expression !== 'string' || !expression.trim() || expression.length > 200) {
+    throw new TypeError('Une règle Urssaf valide est requise.')
+  }
+  if (!situation || typeof situation !== 'object' || Array.isArray(situation)) {
+    throw new TypeError('La situation de la règle doit être un objet.')
+  }
+
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch
+  if (typeof fetchImpl !== 'function') {
+    throw new Error('La fonction fetch n’est pas disponible dans cet environnement.')
+  }
+
+  const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
+  const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
+  const normalizedSituation = { ...situation }
+  if (typeof normalizedSituation.date === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(normalizedSituation.date)) {
+    normalizedSituation.date = formatDate(normalizedSituation.date)
+  }
+
+  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression])
+  return Object.freeze({
+    expression,
+    value: evaluation.values[0],
+    missingVariables: evaluation.missingVariables,
+    warnings: evaluation.warnings,
+    endpoint,
+    checkedAt: new Date().toISOString()
+  })
+}
+
+/**
+ * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
+ * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
+ * Les assiettes fiscales annuelles sont transmises explicitement : revenu
+ * imposable pour le PAS/taux neutre et revenu d'activité pour le barème.
+ * Le taux d'imposition est demandé directement au modèle officiel : il ne doit
+ * pas être reconstruit à partir de l'écart entre deux montants nets.
+ * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
+ */
+async function calculateWithUrssafApi(input = {}, options = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new TypeError('Un scénario de calcul est requis.')
+  }
+
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch
+  if (typeof fetchImpl !== 'function') {
+    throw new Error('La fonction fetch n’est pas disponible dans cet environnement.')
+  }
+
+  const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
+  const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
+  const grossTarget = numberInRange(input.brut, 'brut', 0, 1000000)
+  if (grossTarget === 0) throw new TypeError('brut doit être strictement supérieur à 0 €.')
+  const durationType = input.dureeType === undefined ? '35' : String(input.dureeType)
+  if (!['35', '39'].includes(durationType)) {
+    throw new TypeError('dureeType doit être égal à 35 ou 39.')
+  }
+
+  const overtimeHours = durationType === '39' ? MONTHLY_OVERTIME_HOURS_39H : 0
+  let baseGross = durationType === '39'
+    // Estimation initiale neutre : le taux réel est calculé par l’API Urssaf.
+    ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours)
+    : grossTarget
+
+  const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
+  const benchmarkOnly = input.benchmarkOnly === true
+  // Les règles de titres-restaurant ne sont pas applicables lorsqu'aucun titre
+  // n'est déclaré : l'API peut omettre leur nodeValue. Ne demander ces règles
+  // que lorsque le scénario active réellement cet avantage.
+  const hasMealTickets = !benchmarkOnly && numberInRange(input.joursResto ?? 0, 'joursResto', 0, 31) > 0
+  const socialExpressions = benchmarkOnly
+    ? [EXPRESSIONS.gross, EXPRESSIONS.netBeforeTax]
+    : [
+        EXPRESSIONS.gross,
+        EXPRESSIONS.netBeforeTax,
+        EXPRESSIONS.taxableNet,
+        EXPRESSIONS.employeeContributions,
+        EXPRESSIONS.overtimePay,
+        EXPRESSIONS.employeeHealth,
+        EXPRESSIONS.employerHealth,
+        ...(hasMealTickets ? [
+          EXPRESSIONS.mealTicketAmount,
+          EXPRESSIONS.mealTicketEmployer,
+          EXPRESSIONS.mealTicketNonDeductible,
+        ] : []),
+      ]
+
+  let finalEvaluation
+  let finalSituation
+  let grossCalculated = NaN
+
+  for (let attempt = 0; attempt < (durationType === '39' ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
+    finalSituation = buildSituation(input, baseGross, overtimeHours)
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions)
+    grossCalculated = evaluation.values[0]
+    finalEvaluation = evaluation
+
+    if (Math.abs(grossCalculated - grossTarget) <= 0.005) break
+    if (grossTarget === 0 || grossCalculated <= 0 || !Number.isFinite(grossCalculated)) {
+      throw new Error('Impossible de reconstituer le brut demandé à partir des heures supplémentaires avec le modèle Urssaf.')
+    }
+    if (attempt === MAX_GROSS_CALIBRATION_ATTEMPTS - 1) {
+      throw new Error(`Le brut calculé par l’API (${grossCalculated.toFixed(2)} €) ne correspond pas au brut demandé (${grossTarget.toFixed(2)} €).`)
+    }
+    baseGross *= grossTarget / grossCalculated
+  }
+
+  if (taxMode !== null) {
+    // Les règles fiscales sont annuelles. Le net imposable du salaire retourné
+    // par le modèle salarié est mensuel : il faut le convertir explicitement.
+    const annualTaxableSalary = finalEvaluation.values[2] * 12
+    finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+
+    // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
+    // annuel puis applique l'abattement fiscal officiel de 10 %.
+    if (taxMode === 'barème') {
+      // Identifiant officiel exact, avec apostrophe ASCII dans le nom de règle.
+      finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
+    }
+
+    // L'API expose le taux neutre comme une règle de barème, mais son mode
+    // "taux neutre" ne produit pas toujours le montant de prélèvement. On récupère
+    // le taux de la grille officielle, puis on laisse l'API calculer le montant
+    // avec ce taux explicite. Aucun calcul fiscal n'est fait localement.
+    let neutralRateEvaluation = null
+    if (taxMode === 'neutre') {
+      neutralRateEvaluation = await evaluateRequest(
+        fetchImpl,
+        endpoint,
+        timeoutMs,
+        finalSituation,
+        ["impôt . taux neutre d'impôt sur le revenu"]
+      )
+      const neutralRate = neutralRateEvaluation.values[0]
+      if (!Number.isFinite(neutralRate) || neutralRate < 0 || neutralRate > 100) {
+        throw new Error('L’API Urssaf n’a pas renvoyé un taux neutre exploitable.')
+      }
+      finalSituation['impôt . méthode de calcul'] = "'taux personnalisé'"
+      finalSituation['impôt . taux personnalisé'] = percent(neutralRate)
+    }
+
+    const taxEvaluation = await evaluateRequest(
+      fetchImpl,
+      endpoint,
+      timeoutMs,
+      finalSituation,
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
+    )
+    finalEvaluation = {
+      values: taxEvaluation.values,
+      missingVariables: [...new Set([
+        ...finalEvaluation.missingVariables,
+        ...(neutralRateEvaluation?.missingVariables ?? []),
+        ...taxEvaluation.missingVariables
+      ])],
+      warnings: [...new Set([
+        ...finalEvaluation.warnings,
+        ...(neutralRateEvaluation?.warnings ?? []),
+        ...taxEvaluation.warnings
+      ])]
+    }
+  }
+
+  const values = finalEvaluation.values
+  if (benchmarkOnly) {
+    return Object.freeze({
+      engine: 'API REST officielle Mon-entreprise / Urssaf',
+      endpoint,
+      date: formatDate(input.date),
+      grossTarget,
+      grossCalculated,
+      grossDifference: grossCalculated - grossTarget,
+      baseGross,
+      overtimeHours,
+      netBeforeTax: values[1],
+      benchmarkOnly: true,
+      missingVariables: finalEvaluation.missingVariables,
+      warnings: finalEvaluation.warnings,
+      checkedAt: new Date().toISOString()
+    })
+  }
+
+  const result = {
+    engine: 'API REST officielle Mon-entreprise / Urssaf',
+    endpoint,
+    date: formatDate(input.date),
+    grossTarget,
+    grossCalculated,
+    grossDifference: grossCalculated - grossTarget,
+    baseGross,
+    overtimeHours,
+    netBeforeTax: values[1],
+    taxableNet: values[2],
+    employeeContributions: values[3],
+    overtimePay: values[4],
+    employeeHealth: values[5],
+    employerHealth: values[6],
+    taxMode,
+    mealTicketAmount: hasMealTickets ? values[7] : 0,
+    mealTicketEmployee: hasMealTickets ? values[7] - values[8] : 0,
+    mealTicketEmployer: hasMealTickets ? values[8] : 0,
+    mealTicketNonDeductible: hasMealTickets ? values[9] : 0,
+    netAfterTax: taxMode === null ? null : values[socialExpressions.length],
+    incomeTax: taxMode === null ? null : values[socialExpressions.length + 1],
+    calculatedTaxRate: taxMode === null ? null : values[socialExpressions.length + 2],
+    missingVariables: finalEvaluation.missingVariables,
+    warnings: finalEvaluation.warnings,
+    checkedAt: new Date().toISOString()
+  }
+
+  return Object.freeze(result)
+}
+
+const urssafApiExpressions = EXPRESSIONS
+
+window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
+
+</script>
+<script>
 "use strict";
 
-// ---------- Paramètres légaux (valeurs 2026, à revoir chaque année) ----------
-/* ONNET_CALC_START — bloc auto-suffisant, extrait et testé par test/calc.test.js */
-const P = {
-  // PMSS 2026 : 4 005 € (PASS 48 060 €). Plafond d'exonération par titre restaurant : 7,32 €.
-  pmss: 4005, plafondTR: 7.32,
-  // CSG 9,20 % (6,80 déductible + 2,40 non déductible) et CRDS 0,50 %,
-  // sur 98,25 % du brut dans la limite de 4 PASS, sans abattement au-delà.
-  csgDed: 6.80, csgNonDed: 2.40, crds: 0.50,
-  vieillessePlaf: 6.90, vieillesseDeplaf: 0.40,
-  rcT1: 3.15, cegT1: 0.86, rcT2: 8.64, cegT2: 1.08, cet: 0.14,
-  majoration: 25, reducHS: 11.31,
-  // Exonération d'impôt sur le revenu des heures supplémentaires :
-  // 7 500 € de net imposable par an et par salarié.
-  plafondExoIR: 7500,
-  // Impôt sur le revenu 2026. Les tranches sont exprimées par part de quotient
-  // familial : [plafond de la tranche, taux].
-  ir: {
-    tranches: [[11600, 0], [29579, 0.11], [84577, 0.30], [181917, 0.41], [Infinity, 0.45]],
-    // Abattement forfaitaire de 10 % pour frais professionnels, encadré.
-    abattementPct: 10, abattementMin: 495, abattementMax: 14171,
-    // Plafonnement des effets du quotient familial, par demi-part additionnelle.
-    plafondDemiPart: 1807,
-    // Plafond spécifique de l'avantage lié au premier enfant à charge d'un
-    // parent isolé (case T), barème 2026 sur revenus 2025.
-    plafondParentIsole: 4262,
-    // Décote sur les impôts modestes : base − taux × impôt brut, sous le seuil.
-    decote: { seuilSeul: 1982, seuilCouple: 3277,
-              baseSeul: 897, baseCouple: 1483, taux: 45.25 }
-  }
-};
-
+// Utilitaires d'interface uniquement. Aucun calcul de cotisations, de net ou d'impôt.
+// Les montants de paie proviennent exclusivement de l'API officielle Mon-entreprise / Urssaf.
 let scenarioDefaults = {
   mutuelle: 30, joursResto: 21, valeurResto: 8,
   partResto: 50, nbMois: 12
@@ -1016,12 +1486,9 @@ const ICON = {
 
 const HEURES_BASE = 151.67;
 
-// ---------- Fonctions utilitaires ----------
 function parseNum(v){
   if(v === null || v === undefined) return 0;
   const s = String(v).replace(/\s/g,'').replace(',', '.');
-  // Refuse les suffixes et formats partiels : parseFloat("3000abc") renvoie
-  // 3000, ce qui peut transformer une saisie invalide en salaire plausible.
   if(!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(s)) return 0;
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
@@ -1031,300 +1498,30 @@ function clamp(n, min, max){
   if(typeof max === 'number' && n > max) return max;
   return n;
 }
-function fmt(n){ return Math.round(n).toLocaleString('fr-FR') + ' €'; }
-function fmtHoraire(n){ return n.toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €/h'; }
+function fmt(n){
+  return Number.isFinite(Number(n)) ? Math.round(Number(n)).toLocaleString('fr-FR') + ' €' : '—';
+}
+function fmtHoraire(n){
+  return Number.isFinite(Number(n))
+    ? Number(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2}) + ' €/h'
+    : '—';
+}
 function fmtHoraireSigned(n){
-  const s = Math.abs(n).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
-  return (n > 0 ? '+' : (n < 0 ? '−' : '')) + s + ' €/h';
+  if(!Number.isFinite(Number(n))) return '—';
+  const value = Number(n);
+  const s = Math.abs(value).toLocaleString('fr-FR', {minimumFractionDigits:2, maximumFractionDigits:2});
+  return (value > 0 ? '+' : (value < 0 ? '−' : '')) + s + ' €/h';
 }
 function fmtSigned(n){
-  const s = Math.round(Math.abs(n)).toLocaleString('fr-FR');
-  return (n > 0 ? '+' : (n < 0 ? '−' : '')) + s + ' €';
+  if(!Number.isFinite(Number(n))) return '—';
+  const value = Number(n);
+  const s = Math.round(Math.abs(value)).toLocaleString('fr-FR');
+  return (value > 0 ? '+' : (value < 0 ? '−' : '')) + s + ' €';
 }
 function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-// ---------- Moteur de calcul des cotisations ----------
-// Cotisations salariales non-cadre. Seul statut modélisé — voir le disclaimer
-// et le README pour la justification (cadre/fonction publique/taux forfaitaire
-// retirés pour ne pas disperser la précision du moteur sur plusieurs régimes
-// approximés séparément).
-function cotisations(assiette, plafond){
-  const l = { csgDed:0, csgNonDed:0, crds:0, vieillessePlaf:0, vieillesseDeplaf:0,
-              rcT1:0, cegT1:0, rcT2:0, cegT2:0, cet:0,
-              retraite:0, total:0, deductible:0, nonDeductible:0 };
-  if(assiette <= 0) return l;
-
-  const T1 = Math.min(assiette, plafond);
-  const T2 = Math.max(0, Math.min(assiette, 8*plafond) - plafond);
-  const baseCSG = Math.min(assiette, 4*plafond) * 0.9825 + Math.max(0, assiette - 4*plafond);
-
-  l.csgDed = baseCSG * P.csgDed/100;
-  l.csgNonDed = baseCSG * P.csgNonDed/100;
-  l.crds = baseCSG * P.crds/100;
-  l.vieillessePlaf = T1 * P.vieillessePlaf/100;
-  l.vieillesseDeplaf = assiette * P.vieillesseDeplaf/100;
-  l.rcT1 = T1 * P.rcT1/100;
-  l.cegT1 = T1 * P.cegT1/100;
-  l.rcT2 = T2 * P.rcT2/100;
-  l.cegT2 = T2 * P.cegT2/100;
-  l.cet = assiette > plafond ? Math.min(assiette, 8*plafond) * P.cet/100 : 0;
-
-  l.retraite = l.vieillessePlaf + l.vieillesseDeplaf + l.rcT1 + l.cegT1 + l.rcT2 + l.cegT2 + l.cet;
-  l.total = l.retraite + l.csgDed + l.csgNonDed + l.crds;
-  l.nonDeductible = l.csgNonDed + l.crds;
-  l.deductible = l.retraite + l.csgDed;
-  return l;
-}
-
-function titresResto(jours, valeur, partSalariePct){
-  const partEmployeurPct = 100 - partSalariePct;
-  const parTitreEmployeur = valeur * partEmployeurPct/100;
-  const totalEmployeur = jours * parTitreEmployeur;
-  const totalSalarie = jours * valeur * partSalariePct/100;
-
-  let reintegre = 0, motif = null;
-  if(partEmployeurPct < 50){
-    reintegre = totalEmployeur;
-    motif = 'sous50';
-  } else {
-    let exces = 0;
-    if(partEmployeurPct > 60){
-      exces = Math.max(exces, jours * valeur * (partEmployeurPct - 60)/100);
-      motif = 'sur60';
-    }
-    if(parTitreEmployeur > P.plafondTR){
-      const excesPlafond = jours * (parTitreEmployeur - P.plafondTR);
-      if(excesPlafond > exces){ exces = excesPlafond; motif = 'plafond'; }
-    }
-    reintegre = exces;
-  }
-  return { partEmployeurPct, parTitreEmployeur, totalEmployeur, totalSalarie, reintegre, motif };
-}
-
-// ---------- Impôt sur le revenu ----------
-
-// Barème progressif appliqué à un revenu ramené à UNE part de quotient familial.
-function baremeIR(revenuParPart){
-  if(revenuParPart <= 0) return 0;
-  let impot = 0, bas = 0;
-  for(const [haut, taux] of P.ir.tranches){
-    if(revenuParPart > bas) impot += (Math.min(revenuParPart, haut) - bas) * taux;
-    bas = haut;
-  }
-  return impot;
-}
-
-// Abattement de 10 % pour frais professionnels : plancher et plafond légaux,
-// le plancher ne pouvant évidemment pas dépasser le revenu lui-même.
-function abattementFraisPro(salaireAnnuel){
-  if(salaireAnnuel <= 0) return 0;
-  const brut = salaireAnnuel * P.ir.abattementPct/100;
-  const plancher = Math.min(P.ir.abattementMin, salaireAnnuel);
-  return Math.min(Math.max(brut, plancher), P.ir.abattementMax);
-}
-
-// Parts de quotient familial. Pour un parent isolé (case T) avec au moins un
-// enfant à charge, la majoration totale liée au premier enfant est d'une part.
-function partsFiscales(couple, personnesCharge, parentIsole){
-  const n = Math.max(0, Math.floor(personnesCharge || 0));
-  const base = couple ? 2 : 1;
-  const partsEnfants = Math.min(n, 2) * 0.5 + Math.max(0, n - 2);
-  const majorationParentIsole = !couple && parentIsole && n > 0 ? 0.5 : 0;
-  return base + partsEnfants + majorationParentIsole;
-}
-
-// Impôt d'un foyer, à partir de son revenu imposable global (déjà abattu).
-function impotFoyer(revenuImposable, couple, personnesCharge, parentIsole){
-  if(revenuImposable <= 0) return 0;
-  const n = Math.max(0, Math.floor(personnesCharge || 0));
-  const parentIsoleActif = !couple && parentIsole === true && n > 0;
-  const parts = partsFiscales(couple, n, parentIsoleActif);
-  const partsBase = couple ? 2 : 1;
-  let impot = baremeIR(revenuImposable / parts) * parts;
-
-  // Plafonnement : le premier enfant d'un parent isolé ouvre une majoration
-  // totale d'une part, plafonnée spécifiquement. Les parts suivantes gardent
-  // le plafond ordinaire par demi-part.
-  if(parts > partsBase){
-    const sansCharges = baremeIR(revenuImposable / partsBase) * partsBase;
-    const partsSupplementaires = parts - partsBase;
-    const plafond = parentIsoleActif
-      ? P.ir.plafondParentIsole + Math.max(0, partsSupplementaires - 1) * 2 * P.ir.plafondDemiPart
-      : P.ir.plafondDemiPart * partsSupplementaires * 2;
-    if(sansCharges - impot > plafond) impot = sansCharges - plafond;
-  }
-
-  // Décote : atténue l'impôt des foyers modestes, jusqu'à l'annuler.
-  const d = P.ir.decote;
-  if(impot < (couple ? d.seuilCouple : d.seuilSeul)){
-    const decote = (couple ? d.baseCouple : d.baseSeul) - impot * d.taux/100;
-    impot -= Math.max(0, decote);
-  }
-  return Math.max(0, impot);
-}
-
-function splitHeures(s){
-  const heuresSemaine = s.dureeType === '39' ? 39 : 35;
-  const heuresSup = Math.max(0, heuresSemaine - 35) * 52 / 12;
-  const totalEquiv = HEURES_BASE + heuresSup * (1 + P.majoration/100);
-  const tauxHoraire = totalEquiv > 0 ? s.brut / totalEquiv : 0;
-  const brutBase = tauxHoraire * HEURES_BASE;
-  return { heuresSup, brutBase, brutHS: Math.max(0, s.brut - brutBase), tauxHoraire };
-}
-
-function periode(brutBase, brutHS, s, plafond, mutSal, mutPat, tr, plafondExoHS){
-  // Pas de rémunération = pas de bulletin de paie : ni cotisations, ni retenue
-  // mutuelle, ni titres restaurant. Sans ce garde-fou, un brut à 0 afficherait
-  // un net négatif égal aux seules retenues.
-  if(brutBase + brutHS <= 0){
-    return { c: cotisations(0, plafond), assiette: 0, reducHS: 0,
-             cotisNettes: 0, brutTotal: 0, netApres: 0, netSocial: 0,
-             netImposable: 0, netImposableAvantExo: 0, exoHS: 0,
-             pouvoirAchat: 0 };
-  }
-
-  const assiette = brutBase + brutHS + tr.reintegre;
-  const c = cotisations(assiette, plafond);
-
-  const tauxMoyenRetraite = assiette > 0 ? (c.retraite / assiette) * 100 : 0;
-  const tauxReduc = Math.min(P.reducHS, tauxMoyenRetraite);
-  const reducHS = brutHS * tauxReduc/100;
-
-  const cotisNettes = Math.max(0, c.total - reducHS);
-  const brutTotal = brutBase + brutHS;
-
-  const netApres = brutTotal - cotisNettes - mutSal - tr.totalSalarie;
-  const netSocial = brutTotal - cotisNettes - mutSal;
-
-  const deductibleNet = Math.max(0, c.deductible - reducHS);
-  // La mutuelle santé n'est pas une cotisation salariale déductible de l'impôt.
-  // Seule la contribution employeur est réintégrée au net imposable.
-  const netImposableAvantExo = Math.max(0, brutTotal + tr.reintegre - deductibleNet + mutPat);
-
-  // Heures supplémentaires : exonérées d'impôt sur le revenu dans la limite d'un
-  // plafond annuel de net imposable. La part de net imposable qui leur est
-  // attribuable est estimée au prorata du brut — approximation assumée, les
-  // cotisations déductibles n'étant pas ventilables exactement entre heures
-  // normales et heures supplémentaires (tranches, plafonds, réduction salariale).
-  const partImposableHS = brutTotal > 0 ? brutHS * (1 - deductibleNet / brutTotal) : 0;
-  const exoHS = Math.min(Math.max(0, partImposableHS), Math.max(0, plafondExoHS || 0));
-  const netImposable = Math.max(0, netImposableAvantExo - exoHS);
-
-  const pouvoirAchat = netApres + tr.totalEmployeur;
-
-  return { c, assiette, reducHS, cotisNettes, brutTotal, netApres, netSocial,
-           netImposable, netImposableAvantExo, exoHS, pouvoirAchat };
-}
-
-// Le foyer fiscal ({ couple, personnesCharge, autresRevenus }) est global : il
-// décrit la personne, pas le salaire. Deux offres comparées ne changent pas le
-// nombre de parts ni les revenus du conjoint.
-function compute(s, foyer){
-  const f = foyer || {};
-  const hasHS = s.dureeType === '39';
-  const split = hasHS ? splitHeures(s) : { heuresSup:0, brutBase:s.brut, brutHS:0, tauxHoraire: s.brut / HEURES_BASE };
-  const tr = titresResto(s.joursResto, s.valeurResto, s.partResto);
-
-  // La part salariale est retenue sur le net payé ; la part patronale est
-  // réintégrée au net imposable. L'ancien modèle supposait les deux parts égales.
-  // On conserve ce comportement pour les scénarios historiques sans mutuellePat.
-  const mutuellePat = Math.max(0, s.mutuellePat === undefined
-    ? (s.mutuelle || 0) : (s.mutuellePat || 0));
-  const mutuelleSal = Math.max(0, s.mutuelle || 0);
-  const m = periode(split.brutBase, split.brutHS, s, P.pmss, mutuelleSal, mutuellePat, tr, P.plafondExoIR/12);
-
-  // Salaire horaire : taux de base (hors majoration heures sup) et net rapporté
-  // aux heures réellement travaillées dans le mois. Calculé avant tout ajustement
-  // d'absence, pour rester le taux "normal" du contrat.
-  const heuresReelles = HEURES_BASE + split.heuresSup;
-  const brutHoraire = split.tauxHoraire;
-  const netHoraire = heuresReelles > 0 ? m.netApres / heuresReelles : 0;
-
-  const nbMois = s.nbMois || 12;
-  const trAnnuel = titresResto(s.joursResto * 12, s.valeurResto, s.partResto);
-  const aBase = split.brutBase * nbMois + (s.primes || 0);
-  // Par défaut, les heures supplémentaires sont annualisées sur 12 mois.
-  // Certains contrats incluent toutefois ces heures dans le 13e/14e mois :
-  // l'option 'ensemble' les annualise alors sur le même nombre de mensualités.
-  const aHS = split.brutHS * (s.treiziemeMoisBase === 'ensemble' ? nbMois : 12);
-  const a = periode(aBase, aHS, s, P.pmss * 12, mutuelleSal * 12, mutuellePat * 12, trAnnuel, P.plafondExoIR);
-
-  // Absence (congés payés / arrêt de travail) : mélange une portion travaillée
-  // normalement et une portion d'absence, sur un mois de référence de 30 jours.
-  // Estimation simplifiée — voir le disclaimer du panneau, pas un vrai calcul d'IJSS.
-  if(s.absenceType === 'conges' || s.absenceType === 'arret'){
-    const duree = Math.max(0, Math.min(30, s.absenceDuree || 0));
-    const netSansTR = m.netApres + tr.totalSalarie; // on retire la déduction des titres restaurant
-    const netTravaille = ((30 - duree) / 30) * m.netApres;
-
-    let netAbsence, joursPayes;
-    if(s.absenceType === 'conges'){
-      netAbsence = (duree / 30) * netSansTR; // salaire de base maintenu, sans titres restaurant
-      joursPayes = duree;                    // intégralement rémunérés
-    } else {
-      const joursCarence = s.carenceCouverte ? 0 : Math.min(3, duree);
-      const joursIndemnises = Math.max(0, duree - joursCarence);
-      const pct = (s.maintienPct || 0) / 100;
-      netAbsence = (joursIndemnises / 30) * netSansTR * pct;
-      joursPayes = joursIndemnises * pct;    // équivalent en jours pleins
-    }
-
-    const perteNet = m.netApres - (netTravaille + netAbsence);
-    // L'assiette imposable ne suit que la rémunération réellement versée : les
-    // titres restaurant n'en font pas partie, ne pas consommer les siens pendant
-    // des congés augmente le net encaissé sans toucher à l'imposable.
-    const ratioSalaire = ((30 - duree) + joursPayes) / 30;
-    const imposableAvant = m.netImposable;
-
-    m.netApres -= perteNet;
-    m.netImposable = imposableAvant * ratioSalaire;
-    // L'absence porte sur UN mois : l'annuel ne perd que ce mois-là. Le mettre
-    // à l'échelle du même ratio reviendrait à répéter l'absence douze fois.
-    a.netApres = Math.max(0, a.netApres - perteNet);
-    a.netImposable = Math.max(0, a.netImposable - (imposableAvant - m.netImposable));
-  }
-
-  // Impôt sur le revenu. Deux modes :
-  // - 'taux' : le taux de prélèvement à la source réel, saisi par l'utilisateur,
-  //   s'applique tel quel au net imposable annuel — exact pour SA situation
-  //   actuelle, mais un taux constant ne rend pas compte de la progressivité :
-  //   comparé à un autre salaire, l'écart affiché est optimiste.
-  // - 'bareme' (par défaut) : l'impôt imputé à CE salaire est l'écart entre
-  //   l'impôt du foyer avec et sans lui — ce que le salaire coûte réellement en
-  //   impôt, à la différence d'un taux moyen qui sous-estimerait toujours
-  //   l'effet d'une augmentation (le taux réel monte avec le revenu).
-  let impotAnnuel, tauxImpot;
-  if(f.mode === 'taux'){
-    tauxImpot = clamp(f.pasRate || 0, 0, 100);
-    impotAnnuel = Math.max(0, a.netImposable) * tauxImpot/100;
-  } else {
-    const couple = !!f.couple;
-    const charges = Math.max(0, f.personnesCharge || 0);
-    const parentIsole = !couple && f.parentIsole === true && charges > 0;
-    const autresRevenus = couple ? Math.max(0, f.autresRevenus || 0) : 0;
-    const baseAutres = autresRevenus - abattementFraisPro(autresRevenus);
-    const baseSalaire = Math.max(0, a.netImposable) - abattementFraisPro(Math.max(0, a.netImposable));
-    impotAnnuel = Math.max(0,
-      impotFoyer(baseAutres + baseSalaire, couple, charges, parentIsole)
-      - impotFoyer(baseAutres, couple, charges, parentIsole));
-    tauxImpot = a.netImposable > 0 ? impotAnnuel / a.netImposable * 100 : 0;
-  }
-  const netApresImpot = Math.max(0, m.netApres - impotAnnuel/12);
-  const annuelNetApresImpot = Math.max(0, a.netApres - impotAnnuel);
-
-  return {
-    hasHS, heuresSup: split.heuresSup, brutHS: split.brutHS,
-    tr, m, a,
-    netApres: m.netApres, netImposable: m.netImposable,
-    annuelNet: a.netApres,
-    netApresImpot, annuelNetApresImpot, impotAnnuel, tauxImpot,
-    brutHoraire, netHoraire,
-    tauxEffectif: s.brut > 0 ? (m.cotisNettes / s.brut) * 100 : 0
-  };
-}
-/* ONNET_CALC_END */
 </script>
 <script>
 "use strict";
@@ -1332,21 +1529,357 @@ function compute(s, foyer){
 
 // ---------- État ----------
 let idCounter = 0;
+
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
+function loadUrssafConsent(){
+  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
+  catch(_){ return false; }
+}
+let urssafConsentGranted = loadUrssafConsent();
+let urssafGeneration = 0;
+let urssafDebounceTimer = null;
+let urssafRequestQueue = Promise.resolve();
+let urssafLastRequestAt = 0;
+const urssafResultCache = new Map();
+const urssafErrorCache = new Map();
+let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+
+function currentCalculationDate(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function taxInputForFoyer(f){
+  if(f.mode === 'taux'){
+    return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
+  }
+  return {
+    modeImpot:'barème',
+    situationFamille:f.couple ? 'couple' : 'célibataire',
+    enfantsACharge:Number(f.personnesCharge) || 0,
+    parentIsole:!f.couple && f.parentIsole === true,
+    autresRevenusImposables:f.couple ? (Number(f.autresRevenus) || 0) : 0
+  };
+}
+
+function scenarioCalculationDate(s){
+  return s.isBenchmark && benchmarks.mode === 'manual' ? benchmarks.smicDate : currentCalculationDate();
+}
+
+function calculationKey(s, f){
+  return JSON.stringify({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto) || 0,
+    nbMois:Number(s.nbMois || 12),
+    primes:Number(s.primes || 0),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
+  });
+}
+
+function unsupportedCalculationReason(s){
+  if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
+    return 'Le salaire brut doit être strictement supérieur à 0 € pour effectuer une simulation.';
+  }
+  if(Number(s.nbMois || 12) !== 12){
+    return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
+  }
+  if(Number(s.primes || 0) > 0){
+    return 'Ce scénario comporte des primes annuelles libres qui ne sont pas encore raccordées à l’API Urssaf.';
+  }
+  if(!String(s.codePostal || '').trim() || !String(s.departement || '').trim()){
+    return 'Sélectionnez une commune dans les suggestions pour renseigner son code postal et son département avant le calcul.';
+  }
+  return null;
+}
+
+function buildUrssafInput(s, f){
+  const reason = unsupportedCalculationReason(s);
+  if(reason) throw new Error(reason);
+  return Object.assign({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    benchmarkOnly:Boolean(s.isBenchmark)
+  }, s.isBenchmark ? {} : taxInputForFoyer(f));
+}
+
+function mapUrssafResultToOnNet(result){
+  if(result.benchmarkOnly){
+    return {
+      engine:result.engine,
+      checkedAt:result.checkedAt,
+      missingVariables:result.missingVariables,
+      warnings:result.warnings,
+      netApres:result.netBeforeTax
+    };
+  }
+  const gross = result.grossCalculated;
+  const overtimeHours = result.overtimeHours;
+  const monthlyHours = HEURES_BASE + overtimeHours;
+  // Le total des cotisations salarié inclut déjà la part salariale de mutuelle.
+  // On isole cette ligne pour conserver la décomposition visuelle sans la compter deux fois.
+  const otherEmployeeContributions = Math.max(0, result.employeeContributions - result.employeeHealth);
+  const monthly = {
+    brutTotal:gross,
+    netApres:result.netBeforeTax,
+    netImposable:result.taxableNet,
+    cotisNettes:otherEmployeeContributions,
+    mutuelle:result.employeeHealth,
+    netSocial:result.netBeforeTax + result.mealTicketEmployee
+  };
+  const annual = {
+    brutTotal:gross * 12,
+    netApres:result.netBeforeTax * 12,
+    netImposable:result.taxableNet * 12
+  };
+  const tr = {
+    totalSalarie:result.mealTicketEmployee,
+    totalEmployeur:result.mealTicketEmployer,
+    reintegre:result.mealTicketNonDeductible,
+    motif:result.mealTicketNonDeductible > 0.005 ? 'api' : null
+  };
+  return {
+    engine:result.engine,
+    checkedAt:result.checkedAt,
+    missingVariables:result.missingVariables,
+    warnings:result.warnings,
+    hasHS:overtimeHours > 0,
+    heuresSup:overtimeHours,
+    brutHS:result.overtimePay,
+    tr,
+    m:monthly,
+    a:annual,
+    netApres:monthly.netApres,
+    netImposable:monthly.netImposable,
+    annuelNet:annual.netApres,
+    netApresImpot:result.netAfterTax,
+    annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
+    impotAnnuel:result.incomeTax,
+    tauxImpot:result.calculatedTaxRate,
+    brutHoraire:result.baseGross / HEURES_BASE,
+    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
+    tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
+  };
+}
+
+function getSmicGross(){
+  if(benchmarks.mode === 'manual') return benchmarks.smicBrut;
+  return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
+}
+
+function buildSmicScenario(base){
+  const amount = getSmicGross();
+  if(!Number.isFinite(amount) || amount <= 0) return null;
+  return Object.assign({}, base, {
+    id:-1, name:'Référence SMIC', brut:amount, dureeType:'35',
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
+    nbMois:12, primes:0, isBenchmark:true
+  });
+}
+
+function getCurrentComputed(){
+  return scenarios.map(s => ({s, r:urssafResultCache.get(calculationKey(s,foyer)) || null}));
+}
+
+function getCalculationError(s, f){
+  const key = calculationKey(s, f || foyer);
+  return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
+}
+
+function getCachedSmicResult(){
+  const base = findScenario(refId) || scenarios[0];
+  if(!base) return null;
+  const scenario = buildSmicScenario(base);
+  if(!scenario) return null;
+  return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
+}
+
+function queuedUrssafFetch(url, options){
+  const request = urssafRequestQueue.then(async () => {
+    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
+    if(delay) await new Promise(resolve => setTimeout(resolve, delay));
+    urssafLastRequestAt = Date.now();
+    return window.fetch(url, options);
+  });
+  urssafRequestQueue = request.catch(() => {});
+  return request;
+}
+
+function updateUrssafStatus(computed){
+  const statusText = document.getElementById('urssafStatusText');
+  const button = document.getElementById('urssafCalculateBtn');
+  if(!statusText || !button) return;
+  const status = document.getElementById('urssafStatus');
+  const rememberConsent = document.getElementById('urssafRememberConsent');
+  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
+  if(status) status.classList.remove('is-error');
+  const diagnostics = document.getElementById('urssafWarnings');
+  const diagnosticsList = document.getElementById('urssafWarningsList');
+  if(diagnostics) diagnostics.hidden = true;
+  if(diagnosticsList) diagnosticsList.innerHTML = '';
+  if(!urssafConsentGranted){
+    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Calculer avec l’Urssaf';
+    return;
+  }
+  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
+  const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicResult = getCachedSmicResult();
+  const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
+  const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
+    (benchmarks.mode === 'official' && officialSmicState.status === 'error');
+  const smicPending = !smicResult && !smicError;
+  const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
+  if(smicPending) pending.push({s:smicScenario,r:null});
+  if(failed.length || smicError){
+    statusText.textContent = 'Le calcul n’a pas abouti. Vérifiez votre connexion puis réessayez.';
+    if(status) status.classList.add('is-error');
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Réessayer les calculs';
+    return;
+  }
+  if(unsupported.length){
+    statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
+    button.hidden = true;
+    return;
+  }
+  if(pending.length){
+    statusText.textContent = 'Mise à jour des calculs…';
+    button.hidden = true;
+    return;
+  }
+  const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
+  if(benchmarks.mode === 'official' && officialSmicState.status === 'ready') ready.push(officialSmicState);
+  const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
+  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
+  const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
+  statusText.textContent = 'Calculs à jour.';
+  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
+    diagnosticsList.innerHTML = [
+      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
+      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
+    ].join('');
+    diagnostics.hidden = false;
+  }
+  button.hidden = true;
+}
+
+async function executeUrssafCalculations(generation, forceRetry){
+  // Le SMIC est une règle officielle, pas une constante copiée dans OnNet.
+  // En cas d'échec, aucun ancien montant codé en dur n'est utilisé en silence.
+  if(benchmarks.mode === 'official' &&
+     (officialSmicState.status !== 'ready' || forceRetry === true)){
+    officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+    updateUrssafStatus(getCurrentComputed());
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
+        throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+      );
+      if(generation !== urssafGeneration) return;
+      if(!Number.isFinite(result.value) || result.value <= 0){
+        throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
+      }
+      officialSmicState = {
+        status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
+      };
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      officialSmicState = {
+        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
+      };
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+
+  const jobs = scenarios.map(s => Object.assign({},s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  if(smicScenario) jobs.push(smicScenario);
+  const seen = new Set();
+  for(const s of jobs){
+    if(generation !== urssafGeneration) return;
+    const key = calculationKey(s,foyer);
+    if(seen.has(key) || urssafResultCache.has(key)) continue;
+    seen.add(key);
+    if(forceRetry) urssafErrorCache.delete(key);
+    if(urssafErrorCache.has(key)) continue;
+    const unsupported = unsupportedCalculationReason(s);
+    if(unsupported) continue;
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.calculateWithUrssafApi !== 'function'){
+        throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
+        buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
+      );
+      if(generation !== urssafGeneration) return;
+      urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+  if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
+}
+
+function scheduleUrssafCalculations(immediate, forceRetry){
+  if(urssafDebounceTimer) clearTimeout(urssafDebounceTimer);
+  const generation = ++urssafGeneration;
+  const computed = getCurrentComputed();
+  updateUrssafStatus(computed);
+  if(!urssafConsentGranted) return;
+  const run = () => executeUrssafCalculations(generation, forceRetry === true);
+  if(immediate) run();
+  else urssafDebounceTimer = setTimeout(run, 300);
+}
+
 // Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
 // une seule fois (effacé à la fin du render() qui l'utilise).
 let justAddedId = null;
 function mkScenario(over){
   const base = {
-    id: idCounter++, name:'Salaire', brut:2800,
+    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
     treiziemeMoisBase:'base',
-    maintienPct:90, carenceCouverte:false,
-    absenceType:'none', absenceDuree:0
   };
   const scenario = Object.assign(base, over || {});
+  if(over && Object.prototype.hasOwnProperty.call(over, 'commune') && over.commune !== 'Pacé' &&
+     !Object.prototype.hasOwnProperty.call(over, 'codePostal') && !Object.prototype.hasOwnProperty.call(over, 'departement')){
+    scenario.codePostal = '';
+    scenario.departement = '';
+  }
   // Compatibilité avec les créations historiques : la part employeur suit
   // la part salarié, sauf lorsqu'une valeur distincte est fournie.
   if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
@@ -1361,9 +1894,9 @@ function defaultScenarios(){
   ];
 }
 
-// ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
+// ---------- Persistance locale (les données de paie ne sont envoyées qu'après consentement) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -1371,16 +1904,18 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
 const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
-const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06-01' });
+const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut:null, smicDate:'', mode:'official' });
 function loadBenchmarks(){
   try{
     const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
-    const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
-    return {
-      smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
-      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
-    };
+    if(!saved || typeof saved !== 'object') return { ...BENCHMARK_DEFAULTS };
+    const smicBrut = Number(saved.smicBrut);
+    const smicDate = typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
+    // Toute configuration antérieure persistée venait d'une saisie manuelle.
+    // On la conserve afin de ne pas écraser un choix explicite de l'utilisateur.
+    if(!Number.isFinite(smicBrut) || smicBrut <= 0 || smicBrut > 100000 ||
+       !/^\d{4}-\d{2}-\d{2}$/.test(smicDate)) return { ...BENCHMARK_DEFAULTS };
+    return { smicBrut, smicDate, mode:'manual' };
   }catch(_){
     return { ...BENCHMARK_DEFAULTS };
   }
@@ -1393,8 +1928,8 @@ function sanitizeScenario(raw){
   const clean = Object.assign({}, raw);
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
-    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
-    primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
+    valeurResto:[0,500], partResto:[0,100], nbMois:[1,24],
+    primes:[0,100000000]
   };
   for(const [key, range] of Object.entries(limits)){
     if(clean[key] === undefined) continue;
@@ -1408,14 +1943,26 @@ function sanitizeScenario(raw){
   if(clean.mutuellePat === undefined){
     clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
   }
+  clean.commune = typeof clean.commune === 'string' && clean.commune.trim()
+    ? clean.commune.trim().replace(/\s+/g, ' ').slice(0, 80)
+    : 'Pacé';
+  if(clean.commune === 'Pacé' && !clean.codePostal && !clean.departement){
+    clean.codePostal = '35740';
+    clean.departement = 'Ille-et-Vilaine';
+  }
+  clean.codePostal = typeof clean.codePostal === 'string' && /^\d{5}$/.test(clean.codePostal) ? clean.codePostal : '';
+  clean.departement = typeof clean.departement === 'string' ? clean.departement.trim().slice(0, 80) : '';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
   delete clean.rate;
   if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
-  if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
-  clean.carenceCouverte = clean.carenceCouverte === true;
+  // Les scénarios d'absence historiques sont supprimés et ne sont plus calculés.
+  delete clean.absenceType;
+  delete clean.absenceDuree;
+  delete clean.maintienPct;
+  delete clean.carenceCouverte;
   if(!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
@@ -1553,12 +2100,12 @@ function buildShareUrl(options){
 
   const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
     // Données essentielles à la comparaison salariale.
-    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, commune:s.commune || 'Pacé',
+    codePostal:s.codePostal || '', departement:s.departement || '',
     nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
     // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
-    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
   }));
 
   const payload = {
@@ -1609,7 +2156,7 @@ function showShareOptionsModal(){
       <legend>Informations facultatives</legend>
       <label class="share-extra-option" for="shareIncludeDetails">
         <input type="checkbox" id="shareIncludeDetails">
-        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur et titres restaurant.</small></span>
       </label>
       <label class="share-extra-option" for="shareIncludeFoyer">
         <input type="checkbox" id="shareIncludeFoyer">
@@ -1710,24 +2257,27 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
+  netApresImpot: 'Le net après prélèvement à la source évalué par le modèle fiscal officiel Mon-entreprise / Urssaf selon les paramètres du foyer transmis.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
 
 function findScenario(id){ return scenarios.find(s => s.id === id); }
 function heroValue(r){
-  if(displayAmt === 'net') return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
+  if(displayAmt === 'net'){
+    const value = displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+    return Number.isFinite(value) ? value : null;
+  }
   return displayPeriod === 'mois' ? r.m.brutTotal : r.a.brutTotal;
 }
 function heroLabel(){
-  return (displayAmt === 'net' ? 'Net' : 'Brut') + ' ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  return 'Net après impôt estimé ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 function heroPasValue(r){
-  return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+  return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
 }
 function heroPasShown(){
-  // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
   return displayAmt === 'net';
 }
 
@@ -1743,16 +2293,20 @@ function num(id, key, uid, value, opts){
 function renderCard(s, r, showRemove){
   const uid = s.id;
   const isRef = s.id === refId;
-
-  const trWarn = r.tr.reintegre > 0.005;
+  const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
+  const calculationError = getCalculationError(s,foyer);
   const trMotifs = {
-    sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-    sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-    plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+    sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+    api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
   };
-
+  const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
+  const resultText = r
+    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
-  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
+  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
     <div class="card-top">
       <button type="button" class="drag-handle" draggable="true" data-drag-handle="${uid}" aria-label="Déplacer la tuile ${esc(s.name)}. Utilisez les flèches gauche et droite pour la réordonner au clavier." aria-keyshortcuts="ArrowLeft ArrowRight" title="Cliquer et glisser pour réorganiser">⠿</button>
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
@@ -1762,19 +2316,19 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="hero">
-      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${fmt(heroValue(r))}</div>
+      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">Après impôt : <strong>${fmt(heroPasValue(r))}</strong></div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
+      <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
+      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
-    ${s.absenceType === 'arret' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j d'arrêt sur 30, ${s.maintienPct}% maintenus, ${s.carenceCouverte ? 'carence de 3 j couverte' : 'délai de carence de 3 j inclus'}. Ancienneté et convention collective non prises en compte.</span></div>` : ''}
-    ${s.absenceType === 'conges' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j de congés payés sur 30 : salaire de base maintenu, sans titres restaurant sur ces jours.</span></div>` : ''}
 
     <div class="field-row">
       <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
       ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
     </div>
 
-    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>
+    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}</div>
 
     <div class="field-row">
       <label>Base horaire</label>
@@ -1782,12 +2336,20 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
+      ${s.dureeType === '39' ? '<div class="sub-hint">Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine. Calcul selon le droit commun, sans prise en compte des RTT.</div>' : ''}
     </div>
 
     <details class="more">
       <summary>Détails avancés</summary>
       <div class="more-body">
-        <div class="section-tag">Mutuelle</div>
+        <div class="section-tag">Lieu de travail</div>
+    <div class="field-row">
+      <label for="f-commune-${uid}">Commune de l’établissement</label>
+      <input type="text" id="f-commune-${uid}" value="${esc(communeLabel(s))}" data-id="${uid}" data-key="commune" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="commune-suggestions-${uid}">
+      <div class="commune-suggestions" id="commune-suggestions-${uid}" role="listbox" hidden></div>
+      <div class="sub-hint" id="commune-hint-${uid}">${s.codePostal && s.departement ? `Lieu identifié : ${esc(s.codePostal)} — ${esc(s.departement)}. Le nom de la commune et son département sont transmis à l’API Urssaf.` : 'Choisissez une suggestion pour confirmer le code postal et le département.'}</div>
+    </div>
+    <div class="section-tag">Mutuelle</div>
         <div class="two-col">
           <div class="field-row">
             <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
@@ -1798,15 +2360,15 @@ function renderCard(s, r, showRemove){
             ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
+        <div class="sub-hint">Les deux parts sont transmises séparément au moteur Urssaf.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
-          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
-          <div class="field-row"><label for="f-part-${uid}">Part (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
+          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:500})}</div>
+          <div class="field-row"><label for="f-part-${uid}">Part salarié (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:40,max:50})}</div>
         </div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
-          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
+          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? (trMotifs[r.tr.motif] || trMotifs.api) : ''}</span>
         </div>
         <div class="section-tag">Mensualités &amp; primes</div>
         <div class="two-col">
@@ -1819,15 +2381,7 @@ function renderCard(s, r, showRemove){
             ${num(`f-primes-${uid}`,'primes',uid,s.primes,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
-        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
-          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
-          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
-            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
-            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
-          </select>
-          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
-        </div>
+        <div class="sub-hint">La version actuelle calcule 12 mensualités sans prime libre. Un scénario avec 13ᵉ/14ᵉ mois ou prime reste indisponible tant que cette donnée n'est pas raccordée à l'API Urssaf.</div>
       </div>
     </details>
   </div>`;
@@ -1850,60 +2404,27 @@ function renderStack(computed){
   const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
   const maxPx = 240;
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-
   return sorted.map(({s, r}) => {
     const m = r.m;
-    const cotis = m.cotisNettes;
-    const mutuelle = s.mutuelle;
-    const tr = r.tr.totalSalarie;
-    const net = m.netApres;
-    const netSansTR = m.netSocial;
-    const brut = m.brutTotal;
-    const scale = maxPx / maxBrut;
-
-    const delta = net - ref.r.m.netApres;
+    const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
+    const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
+    const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
-
-    let barHtml, brutLabel;
-    if(s.absenceType !== 'none'){
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
-      <div class="stack-bar">
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}" role="img" aria-label="Net estimé : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
-      </div>`;
-      brutLabel = s.absenceType === 'arret'
-        ? `${s.absenceDuree} j arrêt, ${s.maintienPct}%`
-        : `${s.absenceDuree} j congés`;
-    } else {
-      const pxCotis = Math.round(cotis * scale);
-      const pxMutuelle = Math.round(mutuelle * scale);
-      const pxTr = Math.round(tr * scale);
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
+    const pxCotis = Math.round(cotis * scale), pxMutuelle = Math.round(mutuelle * scale);
+    const pxTr = Math.round(tr * scale), pxNet = Math.max(22, Math.round(net * scale));
+    const barHtml = `
       <div class="stack-bar">
         <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
         <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
         <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
       </div>`;
-      brutLabel = `brut ${fmt(brut)}`;
-    }
-
-    const isRef = s.id === refId;
     return `
-    <div class="stack-col ${isRef?'is-ref':''} ${s.id === justAddedId ? 'card-enter' : ''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
-      <div class="stack-brut">${brutLabel}</div>
-      ${barHtml}
-      <div class="stack-ref-row">
-        <span class="stack-ref-dot ${isRef?'is-ref':''}" aria-hidden="true"></span>
-        <span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span>
-      </div>
+    <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+      <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
+      <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
       <div class="stack-net">${fmt(net)}</div>
-      ${(s.absenceType === 'none' && tr > 0.5) ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${tr > 0.5 ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -1955,17 +2476,8 @@ function renderWaterfall(computed){
   const brut = m.brutTotal;
   const pct = v => brut > 0 ? (v/brut)*100 : 0;
 
-  if(s.absenceType !== 'none'){
-    const net = m.netApres;
-    return `
-    <div class="waterfall" role="img" aria-label="Brut habituel ${fmt(brut)}, net estimé pendant l'absence : ${fmt(net)}">
-      ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut habituel', fmt(brut), 100)}
-      ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, 'Net estimé (absence)', fmt(net), pct(net))}
-    </div>`;
-  }
-
   const cotis = m.cotisNettes;
-  const mutuelle = s.mutuelle;
+  const mutuelle = m.mutuelle;
   const tr = r.tr.totalSalarie;
   const net = m.netApres;
   const netSansTR = m.netSocial;
@@ -2057,28 +2569,22 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
+  const smicResult = getCachedSmicResult();
+  if(!smicResult && benchmarks.mode === 'official' && officialSmicState.status === 'error'){
+    return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
+  }
+  if(!r) return '';
+  if(!smicResult){
+    return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
+  }
 
   // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
   // strictement la durée et les montants du contrat saisi.
-  const neutralScenario = {
-    ...s,
-    dureeType: '35',
-    mutuelle: 0,
-    mutuellePat: 0,
-    joursResto: 0,
-    valeurResto: 0,
-    partResto: 0,
-    nbMois: 12,
-    primes: 0,
-    absenceType: 'none',
-    absenceDuree: 0
-  };
-  const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
-  const smicResult = compute(neutralSmicScenario, foyer);
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
   const smicMonthlyHours = HEURES_BASE;
   const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
-  const smicHourlyGross = benchmarks.smicBrut / smicMonthlyHours;
+  const smicGross = getSmicGross();
+  const smicHourlyGross = smicGross / smicMonthlyHours;
 
   // Comparaison en net avant impôt par heure réellement travaillée.
   // Aucun recalcul du salaire de l'utilisateur à 35 h.
@@ -2116,11 +2622,12 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(benchmarks.smicBrut)}</div>
+        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(smicGross)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel est la valeur officielle renseignée ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient ${benchmarks.mode === 'official' ? 'de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf' : 'de votre saisie manuelle'} ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          ${benchmarks.mode === 'official' && officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
           <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
@@ -2139,9 +2646,9 @@ function renderBenchmarks(computed){
     </div>
     <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
-      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net avant impôt est une estimation du simulateur ; le taux horaire brut est calculé à partir du brut mensuel.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
@@ -2154,13 +2661,14 @@ function bindBenchmarkSettings(){
       showToastImpl('Montant ou date du SMIC invalide.');
       return;
     }
-    benchmarks = { smicBrut: amount, smicDate: date };
+    benchmarks = { smicBrut: amount, smicDate: date, mode:'manual' };
     try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
     render();
     showToastImpl('Repère SMIC actualisé.');
   });
   if(reset) reset.addEventListener('click', () => {
     benchmarks = { ...BENCHMARK_DEFAULTS };
+    officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
     try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
     render();
   });
@@ -2168,23 +2676,44 @@ function bindBenchmarkSettings(){
 
 // ---------- Rendu ----------
 function render(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+  const computed = getCurrentComputed();
+  const isSingle = computed.length === 1;
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const comparePanel = document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden = false;
+  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
+  if(chartContent){
+    const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
+    chartElements.forEach(selector => {
+      const element = comparePanel.querySelector(selector);
+      if(element) element.hidden = !allReady;
+    });
+  }
 
   updateRaiseBaseName();
-  const isSingle = computed.length === 1;
-  document.getElementById('stackHint').textContent = isSingle
-    ? 'Du brut au net, étape par étape.'
-    : 'Cliquez sur une carte pour la définir comme référence.';
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('stackHint').textContent = isSingle
+      ? 'Du brut au net, étape par étape.'
+      : 'Cliquez sur une carte pour la définir comme référence.';
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+  }
   bindRefPickers();
-  document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -2194,9 +2723,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  // Nettoie la classe d'animation une fois jouée : les mises à jour légères
-  // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
-  // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
   document.querySelectorAll('#cardsBody .card-enter, #stackChart .card-enter').forEach(el => {
     el.addEventListener('animationend', () => el.classList.remove('card-enter'), { once:true });
   });
@@ -2222,7 +2748,9 @@ function render(){
   updateNavButtons();
   saveState();
   suppressAutosave = false;
-  justAddedId = null; // l'animation d'entrée ne doit jouer qu'une fois
+  justAddedId = null;
+  updateUrssafStatus(computed);
+  scheduleUrssafCalculations(false,false);
 }
 
 function bindCardDragAndDrop(){
@@ -2363,7 +2891,8 @@ function foyerResume(){
 // L'impôt affiché dans le module suit le salaire de référence.
 function updateFoyerImpot(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-  if(ref) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${ref.r.tauxImpot.toFixed(1)} %)`);
+  if(ref && ref.r) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${Number(ref.r.tauxImpot || 0).toFixed(1)} %)`);
+  else setText('foyerImpot', '—');
 }
 
 function syncFoyerUI(){
@@ -2409,8 +2938,8 @@ function syncFoyerUI(){
   if(desc) desc.classList.toggle('is-warn', alerte);
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
-    ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    ? `Le taux personnalisé transmis à l’Urssaf s’applique selon les règles de son modèle fiscal. Ce taux est constant dans vos scénarios : il peut donc limiter la pertinence d’une comparaison entre salaires très différents.`
+    : `Estimation calculée par le modèle fiscal officiel Mon-entreprise / Urssaf à partir du foyer renseigné. Le modèle est simplifié et certaines règles sont signalées comme expérimentales ; ce résultat ne remplace pas un avis d’imposition. Vérifiez les avertissements éventuels du moteur.`);
 }
 
 function bindFoyerModule(){
@@ -2474,17 +3003,28 @@ function setText(id, txt){ const el = document.getElementById(id); if(el) el.tex
 function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
 function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
 
-function updateComputed(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
+function updateComputed(options = {}){
+  const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+  }
   bindRefPickers();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -2494,26 +3034,43 @@ function updateComputed(){
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
     if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
-    setText(`c-hero-${u}`, fmt(heroValue(r)));
+    setText(`c-hero-${u}`, r && heroValue(r) !== null ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
+    setHTML(`c-heropas-${u}`, r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —');
     setShown(`c-heropas-${u}`, heroPasShown());
 
     const hint = document.getElementById(`rate-hint-${u}`);
-    if(hint) hint.innerHTML = `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut`;
+    if(hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —';
 
-    const trWarn = r.tr.reintegre > 0.005;
+    const state = document.getElementById(`c-result-state-${u}`);
+    const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
+    const error = getCalculationError(s,foyer);
+    if(state) state.textContent = r
+      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      : (error || 'Calcul en attente de validation par l’API Urssaf.');
+    if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
+    const warnings = document.getElementById(`c-result-warnings-${u}`);
+    if(warnings){
+      warnings.hidden = !(r && r.warnings && r.warnings.length);
+      warnings.innerHTML = r && r.warnings && r.warnings.length
+        ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>`
+        : '';
+    }
+    const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
     setShown(`c-trwarn-${u}`, trWarn);
     if(trWarn){
       const motifs = {
-        sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-        sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-        plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+        sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+        api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
       };
-      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || '');
+      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || motifs.api);
     }
   });
+  updateUrssafStatus(computed);
   saveState();
+  if(!options.skipUrssafSchedule) scheduleUrssafCalculations(false,false);
 }
 
 // ---------- Navigation du rail de cartes horizontal ----------
@@ -2608,15 +3165,83 @@ function validateNumericInput(el, finalCheck){
   return true;
 }
 
+function communeLabel(s){
+  if(s && s.codePostal && s.departement) return String(s.commune) + ' — ' + String(s.codePostal) + ' (' + String(s.departement) + ')';
+  return String(s && s.commune || 'Commune') + ' — sélection requise';
+}
+
+const communeSearchTimers = new Map();
+const communeSearchSequences = new Map();
+async function searchCommunes(id, query){
+  const input = document.getElementById('f-commune-' + id);
+  const list = document.getElementById('commune-suggestions-' + id);
+  if(!input || !list) return;
+  if(communeSearchTimers.has(id)) clearTimeout(communeSearchTimers.get(id));
+  const term = String(query || '').trim();
+  if(term.length < 2){ list.hidden = true; list.innerHTML = ''; return; }
+  const sequence = (communeSearchSequences.get(id) || 0) + 1;
+  communeSearchSequences.set(id, sequence);
+  list.hidden = false;
+  list.innerHTML = '<div class="commune-search-status">Recherche des communes…</div>';
+  const timer = setTimeout(async () => {
+    try{
+      const params = new URLSearchParams({ fields:'nom,code,codesPostaux,departement,codeDepartement', limit:'8' });
+      if(/^\d{2,5}$/.test(term)) params.set('codePostal', term);
+      else { params.set('nom', term); params.set('boost', 'population'); }
+      const response = await fetch('https://geo.api.gouv.fr/communes?' + params.toString(), { headers:{ Accept:'application/json' } });
+      if(!response.ok) throw new Error('Service géographique indisponible');
+      const data = await response.json();
+      if(communeSearchSequences.get(id) !== sequence) return;
+      const options = [];
+      for(const item of Array.isArray(data) ? data : []){
+        const department = item.departement && item.departement.nom;
+        const postcodes = Array.isArray(item.codesPostaux) ? item.codesPostaux : [];
+        if(!item.nom || !department || !postcodes.length) continue;
+        for(const codePostal of postcodes){
+          options.push({ commune:item.nom, codePostal, departement:department, codeCommune:item.code, codeDepartement:item.codeDepartement });
+          if(options.length >= 8) break;
+        }
+        if(options.length >= 8) break;
+      }
+      list._communeOptions = options;
+      list.innerHTML = options.length ? options.map((option, index) => '<button type="button" class="commune-option" role="option" data-commune-index="' + index + '">' + esc(option.commune) + ' — ' + esc(option.codePostal) + ' (' + esc(option.departement) + ')</button>').join('') : '<div class="commune-search-status">Aucune commune trouvée. Essayez un code postal ou un nom plus précis.</div>';
+      list.querySelectorAll('.commune-option').forEach(button => button.addEventListener('click', () => {
+        const selected = list._communeOptions && list._communeOptions[Number(button.dataset.communeIndex)];
+        const scenario = findScenario(id);
+        if(!selected || !scenario) return;
+        Object.assign(scenario, selected);
+        scenario.locationSelectionPending = false;
+        list.hidden = true;
+        render();
+        updateComputed();
+      }));
+    }catch(error){
+      if(communeSearchSequences.get(id) !== sequence) return;
+      list.innerHTML = '<div class="commune-search-status">Impossible de vérifier la commune. Réessayez avant de calculer.</div>';
+    }
+  }, 250);
+  communeSearchTimers.set(id, timer);
+}
+
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    if(e.target.value !== communeLabel(s)){
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = true;
+    }
+    searchCommunes(id, e.target.value);
+    return;
+  }
   if(key === 'name'){
     s.name = e.target.value;
     updateComputed();
-    if(s.id === refId){ setText('raiseBaseName', s.name); setText('absenceBaseName', s.name); }
+    if(s.id === refId){ setText('raiseBaseName', s.name); }
     document.getElementById('refSelect').innerHTML = scenarios
       .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
     return;
@@ -2632,6 +3257,23 @@ function onBlurClamp(e){
   const id = parseInt(e.target.dataset.id, 10);
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    if(e.relatedTarget?.classList?.contains('commune-option')) return;
+    const list = document.getElementById('commune-suggestions-' + id);
+    if(list) list.hidden = true;
+    if(s.locationSelectionPending){
+      const typed = e.target.value.trim().slice(0, 80);
+      if(typed) s.commune = typed;
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = false;
+      updateComputed();
+      return;
+    }
+    e.target.value = communeLabel(s);
+    return;
+  }
   if(!validateNumericInput(e.target, true)) return;
   const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
   const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
@@ -2658,7 +3300,8 @@ async function addScenario(){
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    dureeType:last.dureeType
+    dureeType:last.dureeType,
+    commune:last.commune || 'Pacé'
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
@@ -2877,11 +3520,17 @@ const ONBOARDING_MUTUELLE_DEFAUT = 30;
 // nouveau salaire, pour ne jamais deviner silencieusement ces montants.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="field-row">
-          <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
-          <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          <div class="sub-hint">Par défaut : ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
+        <div class="two-col">
+          <div class="field-row">
+            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
+          <div class="field-row">
+            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
         </div>
+        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
           <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
@@ -2892,7 +3541,7 @@ function renderMutuelleTrFields(idPrefix){
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>`;
@@ -2902,6 +3551,7 @@ function renderMutuelleTrFields(idPrefix){
 // lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
 function bindMutuelleTrFields(overlay, idPrefix){
   const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+  const mutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
@@ -2921,12 +3571,21 @@ function bindMutuelleTrFields(overlay, idPrefix){
   });
 
   return () => {
-    const mutuelleRaw = mutuelleInput.value.trim();
+    // Relire le DOM au moment de la validation : les modales partagent leur
+    // conteneur et peuvent remplacer leur contenu entre deux ouvertures.
+    const currentMutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+    const currentMutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
+    if(!currentMutuelleInput || !currentMutuellePatInput){
+      throw new Error('Les deux champs de mutuelle sont introuvables dans la modale.');
+    }
+    const mutuelleRaw = currentMutuelleInput.value.trim();
+    const mutuellePatRaw = currentMutuellePatInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
+    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
-      result.valeurResto = Math.max(0, parseNum(valeurInput.value));
+      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
     return result;
@@ -3079,7 +3738,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     const v = parseNum(input.value);
     if(!(v > 0)) return;
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
+    const benefits = readMutuelleTr();
+    // Lire les deux champs visibles au dernier moment de la validation :
+    // la modale est réutilisée par plusieurs parcours de l'application.
+    const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
+    const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
+    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -3186,7 +3852,6 @@ function bindModuleToggle(cardId, toggleId, bodyId){
 bindModuleToggle('foyerModule', 'foyerModuleToggle', 'foyerModuleBody');
 bindFoyerModule();
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
-bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
@@ -3226,7 +3891,6 @@ function addRaiseScenario(type, value){
 function updateRaiseBaseName(){
   const base = findScenario(refId);
   setText('raiseBaseName', base ? base.name : '');
-  setText('absenceBaseName', base ? base.name : '');
 }
 
 document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
@@ -3249,7 +3913,7 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 });
 renderRaiseChips();
 
-// ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
+// ---------- Animation du rail de cartes ----------
 // Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
 // "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
 // dépassait et laissait la carte tout juste créée à peine visible.
@@ -3291,8 +3955,8 @@ function scrollToNewCard(){
     const target = cards[cards.length - 1];
     if(!target){ restoreCardSnap(); return; }
     const scroller = document.getElementById('cardsScroll');
-    // Un ajout lancé depuis les modules d'augmentation ou d'absence, situés plus
-    // bas dans la page, faisait défiler le rail hors de vue : on ne voyait pas
+    // Un ajout lancé depuis le module d'augmentation, situé plus bas dans la page,
+    // faisait défiler le rail hors de vue : on ne voyait pas
     // le salaire créé. On remonte d'abord sur la liste si elle n'est pas visible.
     const rail = scroller.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
@@ -3309,86 +3973,22 @@ function scrollToNewCard(){
   });
 }
 
-let absenceType = 'conges';
-let carenceCouverte = false;
-
-function updateAbsenceUI(){
-  document.querySelectorAll('#absenceTypeToggle button').forEach(b => {
-    b.setAttribute('aria-pressed', b.dataset.atype === absenceType ? 'true' : 'false');
-  });
-  document.getElementById('arretExtraFields').style.display = absenceType === 'arret' ? '' : 'none';
-  document.getElementById('addAbsenceScenario').textContent =
-    absenceType === 'arret' ? 'Ajouter ce salaire en arrêt de travail' : 'Ajouter ce salaire en congés payés';
-  const duree = parseNum(document.getElementById('absenceDuree').value) || 0;
-  const pct = parseNum(document.getElementById('arretPct').value) || 90;
-  setText('absenceHint', absenceType === 'arret'
-    ? `Sur ${duree} j d'arrêt, le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Sur les jours d'arrêt : ${carenceCouverte ? 'la carence est payée, donc tous les jours sont indemnisés' : 'les 3 premiers jours (carence) ne sont pas payés'}, le reste à ${pct} %.`
-    : `Sur ${duree} j de congés, le salaire de base reste maintenu ; le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Aucun titre restaurant sur les jours de congés.`);
-}
-
-document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
-  btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
-});
-document.getElementById('absenceDuree').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
-  const v = e.target.value;
-  const pctRow = document.getElementById('arretPctRow');
-  if(v === 'custom'){
-    pctRow.style.display = '';
-  } else {
-    pctRow.style.display = 'none';
-    document.getElementById('arretPct').value = v;
+document.getElementById('urssafRememberConsent').addEventListener('change', e => {
+  try{
+    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
+    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(_){
+    e.target.checked = false;
+    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
   }
-  updateAbsenceUI();
 });
-document.getElementById('arretPct').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.querySelectorAll('#carenceToggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    carenceCouverte = btn.dataset.carence === 'oui';
-    document.querySelectorAll('#carenceToggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
-    updateAbsenceUI();
-  });
-});
-
-function addAbsenceScenario(){
-  const base = findScenario(refId);
-  if(!base) return;
-  const dureeInput = document.getElementById('absenceDuree');
-  if(!validateNumericInput(dureeInput, true)) return;
-  if(absenceType === 'arret' && !validateNumericInput(document.getElementById('arretPct'), true)) return;
-  const duree = clamp(parseNum(dureeInput.value), 0, 30);
-  const clone = Object.assign({}, base);
-  delete clone.id;
-  disableCardSnap();
-
-  let created;
-  if(absenceType === 'arret'){
-    const pct = clamp(parseNum(document.getElementById('arretPct').value), 0, 100);
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
-      absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
-    }));
-    scenarios.push(created);
-  } else {
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (congés ${duree}j)`,
-      absenceType: 'conges', absenceDuree: duree
-    }));
-    scenarios.push(created);
+document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
+  urssafConsentGranted = true;
+  if(document.getElementById('urssafRememberConsent').checked){
+    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
   }
-  justAddedId = created.id;
-  render();
-  scrollToNewCard();
-}
-
-document.getElementById('addAbsenceScenario').addEventListener('click', addAbsenceScenario);
-updateAbsenceUI();
+  scheduleUrssafCalculations(true,true);
+});
 
 render();
 // Un hash contenant explicitement un partage mais non restauré doit être signalé.

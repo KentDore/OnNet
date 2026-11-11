@@ -6,7 +6,7 @@
 <title>Onnet — Simulateur brut → net</title>
 <style>
 @@ONNET_STYLES@@
-.urssaf-status{align-items:flex-start;gap:12px;margin:0 0 16px;display:flex}.urssaf-status-copy{flex:1;min-width:0}.urssaf-status-copy p{margin:6px 0 0;line-height:1.5}.urssaf-status-copy button{margin-top:12px}.result-source{font-size:11px;color:var(--muted,#697386);margin-top:6px}.result-error{margin-top:8px;font-size:13px;color:#9b2929}.calculation-meta{font-size:11px;color:var(--muted,#697386);margin-top:8px}
+.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
@@ -42,20 +42,20 @@
   </header>
 
   <main id="contenu">
-  <section class="alert alert-info urssaf-status" id="urssafStatus" role="status" aria-live="polite">
-    <span aria-hidden="true">ⓘ</span>
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
     <div class="urssaf-status-copy">
-      <strong>Source des calculs : moteur officiel Mon-entreprise de l’Urssaf.</strong>
-      <p id="urssafStatusText">Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf pour obtenir les résultats. Aucun calcul local de cotisations ou d’impôt n’est utilisé.</p>
+      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués par le moteur officiel de l’Urssaf.</strong></p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Avertissements et variables par défaut du moteur</summary>
+        <summary>Détails techniques (facultatif)</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
+    <p class="chart-scope-hint">Graphique présenté en net mensuel ; les bascules Brut/Net et Mensuel/Annuel ci-dessous ne modifient que les cartes.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>

@@ -345,7 +345,7 @@
 
   /* ---- Comparaison secondaire ---- */
   .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
-  .ref-row label{font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin:0;}
+  .ref-row label{font-size:13px; font-weight:600; color:var(--ink-soft); margin:0;}
   .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
   .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
   .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
@@ -369,7 +369,7 @@
 
   /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
   .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
-  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; padding:8px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; min-height:44px; padding:10px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
   .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
   .pill-toggle.small button{padding:7px 12px; font-size:12px;}
 
@@ -490,7 +490,7 @@
 
   .field-row{margin-bottom:14px;}
   .field-row:last-child{margin-bottom:0;}
-  .field-row label{display:block; font-size:11.5px; font-weight:600; text-transform:uppercase; letter-spacing:.04em; color:var(--ink-soft); margin-bottom:6px;}
+  .field-row label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
   .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
   .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
   .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
@@ -681,7 +681,27 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .commune-option:hover,.commune-option:focus-visible{background:var(--surface-secondary, #f3f4f6);outline:none;}
 .commune-search-status{padding:10px 12px;color:var(--muted, #667085);font-size:.9rem;}
 
-.urssaf-status{align-items:flex-start;gap:12px;margin:0 0 16px;display:flex}.urssaf-status-copy{flex:1;min-width:0}.urssaf-status-copy p{margin:6px 0 0;line-height:1.5}.urssaf-status-copy button{margin-top:12px}.result-source{font-size:11px;color:var(--muted,#697386);margin-top:6px}.result-error{margin-top:8px;font-size:13px;color:#9b2929}.calculation-meta{font-size:11px;color:var(--muted,#697386);margin-top:8px}
+
+/* Statut URSSAF : information discrète, sans alerte permanente. */
+.urssaf-status{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:9px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink-soft);}
+.urssaf-status-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;width:100%;}
+.urssaf-status-main{display:flex;align-items:center;gap:8px;flex:1 1 220px;margin:0;font-size:.78rem;line-height:1.4;color:var(--muted,var(--ink-soft));}
+.urssaf-status-main strong{font-weight:550;}
+.urssaf-status-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#299764;}
+.urssaf-status #urssafCalculateBtn{margin:0;padding:7px 11px;font-size:.76rem;}
+.urssaf-status .result-source{flex:0 0 100%;margin:0;font-size:.72rem;}
+.urssaf-status .result-source summary{cursor:pointer;color:var(--muted,var(--ink-soft));}
+.urssaf-status .result-source ul{max-height:180px;overflow:auto;padding-left:18px;line-height:1.45;}
+.urssaf-status.is-error{padding:12px 14px;border:1px solid var(--warn-line);border-radius:12px;background:var(--warn-soft);color:var(--warn);}
+.urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
+@media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
+
+/* Lisibilité des statuts et périmètre des commandes */
+.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+.chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
@@ -717,20 +737,20 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   </header>
 
   <main id="contenu">
-  <section class="alert alert-info urssaf-status" id="urssafStatus" role="status" aria-live="polite">
-    <span aria-hidden="true">ⓘ</span>
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
     <div class="urssaf-status-copy">
-      <strong>Source des calculs : moteur officiel Mon-entreprise de l’Urssaf.</strong>
-      <p id="urssafStatusText">Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf pour obtenir les résultats. Aucun calcul local de cotisations ou d’impôt n’est utilisé.</p>
+      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués par le moteur officiel de l’Urssaf.</strong></p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Avertissements et variables par défaut du moteur</summary>
+        <summary>Détails techniques (facultatif)</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
+    <p class="chart-scope-hint">Graphique présenté en net mensuel ; les bascules Brut/Net et Mensuel/Annuel ci-dessous ne modifient que les cartes.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
@@ -1036,9 +1056,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . rémunération . avantages en nature': 'non',
     'salarié . rémunération . primes . activité . base': '0 €/mois',
     "salarié . rémunération . primes . fin d'année": 'non',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant': '0 €/mois',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant': '0 €/an',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . prime de transport . montant': '0 €/an',
     'salarié . régimes spécifiques . taux réduits': 'non',
     'salarié . régimes spécifiques . DFS': 'non',
     'salarié . régimes spécifiques . impatriés': 'non',
@@ -1217,10 +1234,11 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
     })
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
+    const warnings = normalizeWarnings(payload.warnings)
     return {
       values,
       missingVariables,
-      warnings: normalizeWarnings(payload.warnings)
+      warnings
     }
   } finally {
     clearTimeout(timeoutId)
@@ -1512,7 +1530,12 @@ function esc(s){
 // ---------- État ----------
 let idCounter = 0;
 
-let urssafConsentGranted = false;
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
+function loadUrssafConsent(){
+  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
+  catch(_){ return false; }
+}
+let urssafConsentGranted = loadUrssafConsent();
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 let urssafRequestQueue = Promise.resolve();
@@ -1703,12 +1726,16 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
+  const status = document.getElementById('urssafStatus');
+  const rememberConsent = document.getElementById('urssafRememberConsent');
+  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
+  if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf. Aucun calcul local de cotisations ou d’impôt ne sera utilisé.';
+    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Calculer avec l’Urssaf';
@@ -1726,19 +1753,20 @@ function updateUrssafStatus(computed){
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(smicPending) pending.push({s:smicScenario,r:null});
   if(failed.length || smicError){
-    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' appel(s) à l’API Urssaf ont échoué. Consultez les détails puis réessayez. Aucun résultat local de remplacement n’est fourni.';
+    statusText.textContent = 'Le calcul n’a pas abouti. Vérifiez votre connexion puis réessayez.';
+    if(status) status.classList.add('is-error');
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Réessayer les calculs';
     return;
   }
   if(unsupported.length){
-    statusText.textContent = unsupported.length + ' scénario(s) ne sont pas encore pris en charge. Consultez les messages dans les cartes, puis modifiez les paramètres concernés ; aucun calcul local n’est effectué.';
+    statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
     button.hidden = true;
     return;
   }
   if(pending.length){
-    statusText.textContent = 'Calcul des salaires et du repère SMIC par l’API officielle Mon-entreprise / Urssaf. Les résultats affichés sont recalculés dès que les paramètres changent.';
+    statusText.textContent = 'Mise à jour des calculs…';
     button.hidden = true;
     return;
   }
@@ -1747,11 +1775,7 @@ function updateUrssafStatus(computed){
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
-  let message = 'Calcul terminé avec le moteur officiel Mon-entreprise de l’Urssaf.';
-  if(checkedAt) message += ' Dernière réponse reçue le ' + new Date(checkedAt).toLocaleString('fr-FR') + '.';
-  if(missing.length) message += ' Variables non renseignées utilisant une valeur par défaut (' + missing.length + ') : ' + missing.slice(0,4).join(', ') + (missing.length > 4 ? '…' : '') + '.';
-  if(warnings.length) message += ' Le moteur a émis ' + warnings.length + ' avertissement(s). Consultez le détail.';
-  statusText.textContent = message;
+  statusText.textContent = 'Calculs à jour.';
   if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
     diagnosticsList.innerHTML = [
       ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
@@ -2295,7 +2319,7 @@ function renderCard(s, r, showRemove){
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
-      <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
+      <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
@@ -2656,6 +2680,16 @@ function render(){
   const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
   const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const comparePanel = document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden = false;
+  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
+  if(chartContent){
+    const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
+    chartElements.forEach(selector => {
+      const element = comparePanel.querySelector(selector);
+      if(element) element.hidden = !allReady;
+    });
+  }
 
   updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
@@ -3939,8 +3973,20 @@ function scrollToNewCard(){
   });
 }
 
+document.getElementById('urssafRememberConsent').addEventListener('change', e => {
+  try{
+    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
+    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(_){
+    e.target.checked = false;
+    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
+  }
+});
 document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
   urssafConsentGranted = true;
+  if(document.getElementById('urssafRememberConsent').checked){
+    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
+  }
   scheduleUrssafCalculations(true,true);
 });
 
