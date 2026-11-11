@@ -1,6 +1,6 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #168 (11/11/2026, run 43028512580) est entièrement vert, y compris les parcours navigateur simulés et le smoke-test réel Chromium (CORS, SMIC, salaires 35 h et 39 h).
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #177 (11/11/2026, run 43030595694) est entièrement vert, y compris les parcours navigateur simulés et le smoke-test réel Chromium (CORS, SMIC, net avant impôt du repère SMIC, salaires 35 h et 39 h).
 
 ## Décision d'architecture
 
@@ -48,7 +48,8 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Vérifier la conversion des 4 heures supplémentaires hebdomadaires en heures mensuelles et retirer le taux de majoration du calcul local d'initialisation du brut.
 - [x] Afficher sous le choix 39 h l’hypothèse de calcul : contrat de 35 h + 4 h supplémentaires rémunérées par semaine, droit commun, sans prise en compte des RTT.
 - [ ] Permettre ou bloquer explicitement les conventions collectives spécifiques : le scénario 39 h force actuellement le droit commun, donc il ne doit pas être présenté comme adapté à toutes les conventions.
-- [ ] Vérifier les cas limites : salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
+- [x] Refuser explicitement un brut nul : l’API ne fournit pas toutes les expressions nécessaires pour une situation sans salaire ; OnNet bloque cette saisie avant l’appel réseau.
+- [ ] Vérifier les cas limites : très faibles salaires positifs, seuil PMSS, hauts salaires et valeurs extrêmes. Les réponses partielles de l’API doivent rester bloquantes, sans fabriquer les valeurs manquantes.
 
 ### Phase B — client API officiel
 - [x] Implémenter le client REST dédié à `https://mon-entreprise.urssaf.fr/api/v1/evaluate`.
@@ -58,7 +59,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
 - [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
 - [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
-- [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #168.
+- [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #177.
 - [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
 
