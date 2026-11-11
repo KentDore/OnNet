@@ -177,18 +177,25 @@ function updateUrssafStatus(computed){
     button.textContent = 'Calculer avec l’Urssaf';
     return;
   }
-  const failed = computed.filter(({s,r}) => !r && getCalculationError(s));
+  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
+  const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base) : null;
   const smicResult = getCachedSmicResult();
-  const smicError = smicScenario && !smicResult ? getCalculationError(smicScenario,foyer) : null;
+  const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
+  const smicError = smicScenario && !smicResult && urssafErrorCache.has(smicKey);
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(!smicResult && !smicError) pending.push({s:smicScenario,r:null});
   if(failed.length || smicError){
-    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' calcul(s) indisponible(s). Consultez le message affiché dans chaque carte ou sous les repères. Aucun résultat de remplacement calculé localement n’est fourni.';
+    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' appel(s) à l’API Urssaf ont échoué. Consultez les détails puis réessayez. Aucun résultat local de remplacement n’est fourni.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Réessayer les calculs';
+    return;
+  }
+  if(unsupported.length){
+    statusText.textContent = unsupported.length + ' scénario(s) ne sont pas encore pris en charge. Consultez les messages dans les cartes, puis modifiez les paramètres concernés ; aucun calcul local n’est effectué.';
+    button.hidden = true;
     return;
   }
   if(pending.length){
@@ -228,10 +235,7 @@ async function executeUrssafCalculations(generation, forceRetry){
     if(forceRetry) urssafErrorCache.delete(key);
     if(urssafErrorCache.has(key)) continue;
     const unsupported = unsupportedCalculationReason(s);
-    if(unsupported){
-      urssafErrorCache.set(key,unsupported);
-      continue;
-    }
+    if(unsupported) continue;
     try{
       if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.calculateWithUrssafApi !== 'function'){
         throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
