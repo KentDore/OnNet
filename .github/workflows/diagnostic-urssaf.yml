@@ -25,5 +25,6 @@ jobs:
       # Les erreurs métier sont consignées par scénario ; les erreurs 429/5xx interrompent la campagne.
       # Relancer après correction des variables fiscales du modèle social.
       # Relancer avec la règle de taux neutre distincte.
+      # Syntaxe corrigée : guillemets doubles autour de l'apostrophe ASCII.
       - name: Exécuter la matrice diagnostique contre l’API officielle
         run: npm run compare:urssaf-api
