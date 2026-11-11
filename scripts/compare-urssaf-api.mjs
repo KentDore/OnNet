@@ -93,6 +93,18 @@ for (const scenario of scenarios) {
 
   try {
     remote = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
+    if (scenario.input.joursResto > 0) {
+      for (const [label, value] of [
+        ['montant total des titres-restaurant', remote.mealTicketAmount],
+        ['part salarié des titres-restaurant', remote.mealTicketEmployee],
+        ['part employeur des titres-restaurant', remote.mealTicketEmployer],
+        ['part non déductible des titres-restaurant', remote.mealTicketNonDeductible]
+      ]) {
+        if (!Number.isFinite(value)) {
+          throw new Error(`Valeur API absente ou non numérique pour ${label} dans « ${scenario.name} ».`)
+        }
+      }
+    }
     entry.api = Object.fromEntries(comparisons.map(([label, key]) => [label, Number.isFinite(remote[key]) ? round(remote[key]) : null]))
     entry.missingVariables = remote.missingVariables
     entry.warnings = remote.warnings
