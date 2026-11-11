@@ -574,6 +574,8 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .benchmark-your-salary>span{font-size:.92rem;color:var(--ink-soft)}
 .benchmark-your-salary>strong{font-size:clamp(1.35rem,3vw,1.8rem);font-weight:750;white-space:nowrap}
 .benchmark-your-salary small{font-size:.78rem;color:var(--ink-soft);font-weight:500}
+.benchmark-your-salary{flex-wrap:wrap}
+.benchmark-comparison-base{flex:1 0 100%;margin-top:-6px}
 .benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
 .benchmark-item{
   min-width:0;padding:20px;
