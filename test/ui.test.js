@@ -226,6 +226,33 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
   }
 });
 
+test('transmet la commune propre à chaque salaire et la conserve dans le lien partagé', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    await card.locator('[data-key="commune"]').fill('Rennes');
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calcul terminé'),
+      null, { timeout: 15000 }
+    );
+    assert.ok(calls.bodies.some(body => body.situation['établissement . commune'] === "'Rennes'"));
+
+    await page.locator('#shareBtn').click();
+    await page.locator('#shareCreateBtn').click();
+    const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
+    const payload = await page.evaluate(url => {
+      const encoded = new URL(url).hash.slice('#share='.length).replace(/-/g, '+').replace(/_/g, '/');
+      const padded = encoded + '='.repeat((4 - encoded.length % 4) % 4);
+      return JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(padded), c => c.charCodeAt(0))));
+    }, shareUrl);
+    assert.equal(payload.scenarios[0].commune, 'Rennes');
+  } finally {
+    await context.close();
+  }
+});
+
 test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', async () => {
   const { context, page } = await openApp({
     warnings: [{ message: 'Une règle expérimentale a été utilisée.' }],
