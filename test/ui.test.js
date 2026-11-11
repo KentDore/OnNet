@@ -188,7 +188,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.equal(calls.count, 0);
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /moteur officiel de l’Urssaf/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
     const notice = await page.locator('.urssaf-data-notice').innerText();
     assert.match(notice, /rémunération.*horaires.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
     assert.match(notice, /recalculées automatiquement/);
