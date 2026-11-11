@@ -1,6 +1,6 @@
 # Feuille de route — migration complète OnNet vers le moteur Urssaf
 
-Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #177 (11/11/2026, run 43030595694) est entièrement vert, y compris les parcours navigateur simulés et le smoke-test réel Chromium (CORS, SMIC, net avant impôt du repère SMIC, salaires 35 h et 39 h).
+Statut : le calculateur principal de la branche `migration/publicodes-urssaf` est raccordé à l’API Urssaf. La branche `main` et la production n’ont pas été modifiées. Le workflow CI #182 (11/11/2026, run 43032047839) est vert après ajout explicite des tests du client API au workflow ; il comprend les tests de calcul, le build, les parcours navigateur simulés et le smoke-test réel Chromium. Cela valide la couverture technique exécutée, pas encore la justesse indépendante de tous les calculs.
 
 ## Décision d'architecture
 
@@ -58,6 +58,7 @@ OnNet ne propose plus de module de simulation d’absence. Le périmètre raccor
 - [x] Gérer le délai maximal, les erreurs réseau, les statuts HTTP 400/429/5xx et les réponses JSON invalides.
 - [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
 - [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
+- [x] Exécuter explicitement `test/urssaf-api-client.test.mjs` dans le workflow `quality.yml` : la CI #182 passe les 15 tests du client API, après correction d’une assertion trop stricte sur l’arrondi flottant du calibrage 39 h.
 - [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
 - [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #177.
 - [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
