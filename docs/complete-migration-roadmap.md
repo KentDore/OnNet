@@ -41,7 +41,7 @@ Les limites historiques documentées — absence de modélisation complète des 
 
 ### Phase A — fiabiliser les entrées OnNet
 - [x] Contrôler la validité des dates et le nombre entier de titres-restaurant.
-- [ ] Cartographier tous les champs OnNet vers les règles Publicodes officielles et leurs unités.
+- [ ] Cartographier tous les champs OnNet vers les règles Publicodes officielles et leurs unités, notamment mensualités, primes, absences et revenu annuel du conjoint.
 - [ ] Vérifier les hypothèses 35 h/39 h, les heures supplémentaires et les majorations conventionnelles.
 - [ ] Vérifier les cas limites : salaire nul, très faibles salaires, seuil PMSS, hauts salaires et valeurs extrêmes.
 
@@ -50,8 +50,8 @@ Les limites historiques documentées — absence de modélisation complète des 
 - [x] Confirmer que `/api/v1/evaluate` utilise le modèle `modele-social` et que le catalogue officiel expose les trois méthodes fiscales.
 - [x] Valider la structure de réponse, les valeurs numériques, les avertissements et les variables manquantes.
 - [x] Gérer le délai maximal, les erreurs réseau, les statuts HTTP 400/429/5xx et les réponses JSON invalides.
-- [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème et ne pas supposer le statut de parent isolé.
-- [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et trois cas fiscaux.
+- [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
+- [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
 - [x] Exécuter le workflow CI complet : tests des deux moteurs, comparaisons API, diagnostics et build autonome. Résultat vert le 11/11/2026 : https://github.com/KentDore/OnNet/actions/runs/43006306044.
 - [ ] Tester l'appel de bout en bout depuis un navigateur réel et confirmer la compatibilité CORS.
 - [x] Faire un smoke-test réel des trois méthodes fiscales via l'API (personnalisé 10 %, neutre, barème célibataire sans enfant) : valeurs de net après impôt, montant et taux effectif calculé obtenues sans erreur. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
@@ -59,7 +59,7 @@ Les limites historiques documentées — absence de modélisation complète des 
 ### Phase C — parité et qualité
 - [x] Comparer en CI neuf scénarios sociaux entre l'API et le paquet npm local, avec une tolérance de 0,03 € ; tous les écarts observés étaient nuls lors du run vert du 11/11/2026.
 - [ ] Comparer les cas de référence avec le simulateur web public, indépendamment du paquet npm local.
-- [x] Ajouter 9 tests simulés dédiés au client API, en plus des 12 tests de l'adaptateur local ; les deux suites passent dans le workflow vert.
+- [x] Ajouter 10 tests simulés dédiés au client API, en plus des 12 tests de l'adaptateur local ; les deux suites passent dans le workflow vert.
 - [x] Ajouter des tests de non-régression pour heures supplémentaires, mutuelle, titres-restaurant, date, erreurs API, limites de débit et entrées fiscales.
 - [ ] Ne pas utiliser les comparaisons API comme seule preuve de conformité.
 
