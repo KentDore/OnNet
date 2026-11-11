@@ -1994,15 +1994,15 @@ function renderMutuelleTrFields(idPrefix){
         <details class="onboarding-optional">
           <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
           <div class="onboarding-optional-body">
-            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Un champ vide est compté à 0 € dans la simulation.</p>
+            <p class="sub-hint">Répartition par défaut : 30 € au total, soit 15 € salarié et 15 € employeur. Ajustez ces montants selon votre bulletin.</p>
             <div class="two-col onboarding-mutuelle-fields">
               <div class="field-row">
                 <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="Ex. 30" autocomplete="off">
+                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" value="15" placeholder="Ex. 15" autocomplete="off">
               </div>
               <div class="field-row">
                 <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="Ex. 30" autocomplete="off">
+                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" value="15" placeholder="Ex. 15" autocomplete="off">
               </div>
             </div>
             <div class="field-row" style="margin-bottom:0;">
