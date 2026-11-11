@@ -53,6 +53,9 @@ function calculationKey(s, f){
 }
 
 function unsupportedCalculationReason(s){
+  if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
+    return 'Le salaire brut doit être strictement supérieur à 0 € pour effectuer une simulation.';
+  }
   if(Number(s.nbMois || 12) !== 12){
     return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
   }
