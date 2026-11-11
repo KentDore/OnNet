@@ -81,7 +81,7 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . contrat': "'CDI'",
     'salarié . contrat . salaire brut': money(baseGross),
     'salarié . contrat . statut cadre': 'non',
-    'salarié . contrat . temps partiel': 'non',
+    'salarié . contrat . temps de travail . temps partiel': 'non',
     'établissement . commune': "'Pacé'",
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
@@ -257,7 +257,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours * overtimeFactor)
     : grossTarget
 
-  const taxMode = input.modeImpot ?? null
+  const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
   const expressions = [
     EXPRESSIONS.gross,
     EXPRESSIONS.netBeforeTax,
