@@ -1,6 +1,19 @@
 import { calculatePublicodes } from '../src/publicodes-adapter.mjs'
 import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
 
+// Les scénarios sont exécutés en série, mais le client peut effectuer plusieurs
+// requêtes par scénario (notamment pour calibrer les 39 h puis calculer le PAS).
+// On espace donc tous les appels pour limiter le risque de HTTP 429 lors d'une
+// campagne de diagnostic manuelle. Aucun retry automatique n'est effectué.
+const REQUEST_INTERVAL_MS = 350
+let lastRequestAt = 0
+async function throttledFetch(url, options) {
+  const delay = Math.max(0, REQUEST_INTERVAL_MS - (Date.now() - lastRequestAt))
+  if (delay) await new Promise(resolve => setTimeout(resolve, delay))
+  lastRequestAt = Date.now()
+  return fetch(url, options)
+}
+
 const scenarios = [
   { name: '2300 € brut, 39 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '39', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
   { name: '2300 € brut, 35 h, mutuelle 30/30, sans titres', input: { brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30, joursResto: 0, valeurResto: 0, date: '2026-11-11' } },
@@ -36,7 +49,7 @@ const results = []
 
 for (const scenario of scenarios) {
   const local = calculatePublicodes(scenario.input)
-  const remote = await calculateWithUrssafApi(scenario.input)
+  const remote = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
   const values = comparisons.map(([label, key]) => {
     const localValue = local[key]
     const urssafValue = remote[key]
@@ -68,7 +81,7 @@ const fiscalScenarios = [
 
 const fiscalResults = []
 for (const scenario of fiscalScenarios) {
-  const result = await calculateWithUrssafApi(scenario.input)
+  const result = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
   for (const [name, value] of [
     ['net après impôt', result.netAfterTax],
     ['impôt', result.incomeTax],
