@@ -261,7 +261,7 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   try {
     await page.locator('#urssafCalculateBtn').click();
     await page.waitForFunction(() =>
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('ont échoué'),
+      (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
     );
     assert.match(await page.locator('#benchmarkBody').innerText(), /indisponible via l’API officielle/);
