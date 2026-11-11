@@ -168,6 +168,52 @@ test('configure le barème avec le foyer fiscal et rejette un parent isolé inco
   )
 })
 
+test('transmet les autres revenus imposables du foyer en couple et exige une valeur explicite', async () => {
+  let request
+  await calculateWithUrssafApi(scenario({
+    modeImpot: 'barème',
+    situationFamille: 'couple',
+    enfantsACharge: 1,
+    autresRevenusImposables: 24000
+  }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response(apiResponse(body.expressions))
+    })
+  })
+
+  assert.equal(
+    request.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
+    '24000.00 €/an'
+  )
+
+  await assert.rejects(
+    calculateWithUrssafApi(scenario({
+      modeImpot: 'barème',
+      situationFamille: 'couple',
+      enfantsACharge: 0
+    }), {
+      fetchImpl: mockFetch(() => response(apiResponse([])))
+    }),
+    /autresRevenusImposables doit être renseigné/
+  )
+
+  await calculateWithUrssafApi(scenario({
+    modeImpot: 'barème',
+    situationFamille: 'couple',
+    enfantsACharge: 0,
+    autresRevenusImposables: 0
+  }), {
+    fetchImpl: mockFetch(body => {
+      assert.equal(
+        body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
+        '0.00 €/an'
+      )
+      return response(apiResponse(body.expressions))
+    })
+  })
+})
+
 test('remonte les variables par défaut et avertissements de l’API', async () => {
   const result = await calculateWithUrssafApi(scenario(), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions, {
