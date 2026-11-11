@@ -89,7 +89,7 @@ export function calculatePublicodes(input = {}) {
 
   // OnNet conserve un brut global ; le modèle officiel attend la base 35 h
   // hors heures supplémentaires. On inverse la décomposition à 25 % d'OnNet.
-  const baseGross = durationType === '39'
+  let baseGross = durationType === '39'
     ? brut * HEURES_BASE_MENSUELLES /
       (HEURES_BASE_MENSUELLES + overtimeHours * overtimeFactor)
     : brut
