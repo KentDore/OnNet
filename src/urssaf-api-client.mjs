@@ -312,7 +312,8 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
 
   const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
   const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
-  const grossTarget = numberInRange(input.brut, 'brut', Number.MIN_VALUE, 1000000)
+  const grossTarget = numberInRange(input.brut, 'brut', 0, 1000000)
+  if (grossTarget === 0) throw new TypeError('brut doit être strictement supérieur à 0 €.')
   const durationType = input.dureeType === undefined ? '35' : String(input.dureeType)
   if (!['35', '39'].includes(durationType)) {
     throw new TypeError('dureeType doit être égal à 35 ou 39.')
