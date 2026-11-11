@@ -19,15 +19,19 @@ La migration doit rester progressive. Le moteur actuel ne sera pas supprimé tan
 
 Le modèle officiel `modele-social@11.1.0` est sous licence MIT et déclare `publicodes` comme peer dependency (`^1.0.4`). La branche OnNet utilise actuellement `modele-social@11.1.0` et `publicodes@1.10.4`, versions exactes déclarées dans `package.json`. Le `package-lock.json` est commité et l'intégration continue utilise `npm ci` pour installer l'arbre verrouillé. Le dépôt officiel déclare de son côté `publicodes` en `^1.8.1` dans son application API.
 
-## Architecture cible
+## Architecture cible — API officielle comme source unique
 
-1. Les règles et le moteur sont installés comme dépendances de développement/runtime de compilation.
-2. Un adaptateur OnNet transforme les scénarios existants en situation Publicodes et récupère les valeurs numériques via `evaluate(...).nodeValue`.
-3. La compilation produit un bundle JavaScript local intégré dans le HTML autonome.
-4. Aucun appel à l'API distante de Mon-entreprise n'est nécessaire au calcul de l'application. L'API officielle est appelée uniquement par un contrôle de parité dans GitHub Actions ; OnNet doit continuer à calculer hors ligne et les données salariales doivent rester dans le navigateur.
-5. L'interface, les comparaisons multi-offres, les sauvegardes locales et le partage restent indépendants du moteur de calcul.
+Décision retenue : les résultats de calcul affichés par OnNet doivent provenir de l'API officielle Mon-entreprise / Urssaf (`POST /api/v1/evaluate`). Aucun calcul local de cotisations ou d'impôt, aucune formule fiscale maison et aucun repli vers un moteur local ne sont autorisés pour produire un résultat utilisateur.
 
-Il faut contrôler le poids du bundle et la compatibilité navigateur avant d'adopter définitivement cette architecture. Le dépôt actuel utilise un script de compilation maison et ne contient pas encore de `package.json` à sa racine.
+1. L'adaptateur OnNet convertit les champs saisis en situation Publicodes avec les identifiants et unités officiels.
+2. L'API officielle évalue les règles et renvoie les valeurs affichées : brut calculé, net avant impôt, net imposable, cotisations et, si demandé, net après impôt, montant d'impôt et taux.
+3. Le paquet local `modele-social` / `publicodes` reste réservé aux tests de parité et diagnostics de développement. Il ne doit jamais remplacer silencieusement l'API dans l'application.
+4. En cas d'indisponibilité, de réponse incomplète ou de variables manquantes bloquantes, OnNet doit expliquer que le calcul n'a pas pu être confirmé, plutôt que produire une estimation locale présentée comme officielle.
+5. Les comparaisons, sauvegardes et données personnelles restent côté navigateur autant que possible. Les données nécessaires au calcul sont toutefois transmises à l'API Urssaf : l'interface devra l'indiquer clairement avant le calcul.
+
+Les seules opérations locales tolérées sont des conversions d'unités ou de représentation nécessaires pour construire la situation (par exemple convertir un brut total 39 h en salaire de base + heures supplémentaires, ou annualiser une rémunération mensuelle récurrente si la règle fiscale attend une assiette annuelle). Ces transformations doivent être documentées, testées et ne doivent jamais remplacer une règle de calcul Urssaf. Les hypothèses de saisie (statut cadre, convention collective, majoration, situation familiale, etc.) doivent être explicites et modifiables lorsque pertinentes.
+
+**Limite importante :** utiliser l'API officielle ne garantit pas un résultat exhaustif pour toutes les situations. Le modèle fiscal comporte des règles signalées comme expérimentales/simplifiées. OnNet devra exposer les avertissements du moteur et ne pas présenter le résultat comme un avis d'imposition ni comme un bulletin de paie garanti conforme.
 
 ## Correspondance initiale des données
 
