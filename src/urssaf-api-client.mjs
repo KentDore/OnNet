@@ -291,6 +291,10 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     : grossTarget
 
   const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
+  // Les règles de titres-restaurant sont non applicables lorsque le salarié
+  // n'en reçoit pas : l'API peut alors omettre leur nodeValue. Ne demander ces
+  // expressions que si le scénario active réellement cet avantage.
+  const hasMealTickets = numberInRange(input.joursResto ?? 0, 'joursResto', 0, 31) > 0
   const socialExpressions = [
     EXPRESSIONS.gross,
     EXPRESSIONS.netBeforeTax,
@@ -299,9 +303,11 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     EXPRESSIONS.overtimePay,
     EXPRESSIONS.employeeHealth,
     EXPRESSIONS.employerHealth,
-    EXPRESSIONS.mealTicketAmount,
-    EXPRESSIONS.mealTicketEmployer,
-    EXPRESSIONS.mealTicketNonDeductible,
+    ...(hasMealTickets ? [
+      EXPRESSIONS.mealTicketAmount,
+      EXPRESSIONS.mealTicketEmployer,
+      EXPRESSIONS.mealTicketNonDeductible,
+    ] : []),
   ]
 
   let finalEvaluation
@@ -374,13 +380,13 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     employeeHealth: values[5],
     employerHealth: values[6],
     taxMode,
-    mealTicketAmount: values[7],
-    mealTicketEmployee: values[7] - values[8],
-    mealTicketEmployer: values[8],
-    mealTicketNonDeductible: values[9],
-    netAfterTax: taxMode === null ? null : values[10],
-    incomeTax: taxMode === null ? null : values[11],
-    calculatedTaxRate: taxMode === null ? null : values[12],
+    mealTicketAmount: hasMealTickets ? values[7] : 0,
+    mealTicketEmployee: hasMealTickets ? values[7] - values[8] : 0,
+    mealTicketEmployer: hasMealTickets ? values[8] : 0,
+    mealTicketNonDeductible: hasMealTickets ? values[9] : 0,
+    netAfterTax: taxMode === null ? null : values[socialExpressions.length],
+    incomeTax: taxMode === null ? null : values[socialExpressions.length + 1],
+    calculatedTaxRate: taxMode === null ? null : values[socialExpressions.length + 2],
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: new Date().toISOString()
