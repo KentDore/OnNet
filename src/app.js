@@ -209,7 +209,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
+    statusText.textContent = 'Les résultats sont calculés via l’API officielle Mon-entreprise de l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Calculer avec l’Urssaf';
@@ -777,7 +777,7 @@ function renderCard(s, r, showRemove){
   };
   const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
   const resultText = r
-    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
     : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
   <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
@@ -1122,7 +1122,7 @@ function renderBenchmarks(computed){
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
       <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé via l’API officielle Mon-entreprise (Urssaf) ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
@@ -1179,7 +1179,7 @@ function render(){
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   } else {
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
     document.getElementById('insightBox').innerHTML = '';
     stackChartEl.className = '';
     stackChartEl.innerHTML = '';
@@ -1496,7 +1496,7 @@ function updateComputed(options = {}){
     document.getElementById('stackLegend').innerHTML = '';
     document.getElementById('barsBody').innerHTML = '';
     document.getElementById('barsAlerts').innerHTML = '';
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
@@ -1520,7 +1520,7 @@ function updateComputed(options = {}){
     const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
     const error = getCalculationError(s,foyer);
     if(state) state.textContent = r
-      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
       : (error || 'Calcul en attente de validation par l’API Urssaf.');
     if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
     const warnings = document.getElementById(`c-result-warnings-${u}`);
@@ -1988,37 +1988,39 @@ function showShareModal(url){
   });
 }
 
-const ONBOARDING_MUTUELLE_DEFAUT = 30;
-
-// Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
-// nouveau salaire, pour ne jamais deviner silencieusement ces montants.
+// Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="two-col">
-          <div class="field-row">
-            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+        <details class="onboarding-optional">
+          <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
+          <div class="onboarding-optional-body">
+            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Un champ vide est compté à 0 € dans la simulation.</p>
+            <div class="two-col onboarding-mutuelle-fields">
+              <div class="field-row">
+                <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="Ex. 30" autocomplete="off">
+              </div>
+              <div class="field-row">
+                <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="Ex. 30" autocomplete="off">
+              </div>
+            </div>
+            <div class="field-row" style="margin-bottom:0;">
+              <label>Avez-vous des titres-restaurant ?</label>
+              <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
+                <button type="button" data-tr="non" aria-pressed="true">Non</button>
+                <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+              </div>
+            </div>
+            <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
+              <div class="three-col">
+                <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+                <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+                <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+              </div>
+            </div>
           </div>
-          <div class="field-row">
-            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          </div>
-        </div>
-        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>Avez-vous des titres restaurant ?</label>
-          <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
-            <button type="button" data-tr="non" aria-pressed="true">Non</button>
-            <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-          </div>
-        </div>
-        <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-          <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-          </div>
-        </div>`;
+        </details>`;
 }
 
 // Branche les interactions du bloc ci-dessus et renvoie une fonction de
@@ -2054,8 +2056,8 @@ function bindMutuelleTrFields(overlay, idPrefix){
     }
     const mutuelleRaw = currentMutuelleInput.value.trim();
     const mutuellePatRaw = currentMutuellePatInput.value.trim();
-    const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    const mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
@@ -2068,7 +2070,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
 function showOnboardingModal(){
   const html = `
-    <p id="modalMsg" class="modal-msg">Commencez par votre salaire actuel — vous pourrez en ajouter d'autres à comparer ensuite.</p>
+    <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2217,8 +2219,8 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     // la modale est réutilisée par plusieurs parcours de l'application.
     const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
     const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
-    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    benefits.mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };

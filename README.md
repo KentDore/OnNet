@@ -12,7 +12,7 @@ La branche `migration/publicodes-urssaf-final` raccorde le calculateur principal
 
 Les montants de brut reconstitué, de net avant impôt, de net imposable, de cotisations et de prélèvement à la source proviennent de l’API officielle Urssaf. OnNet ne calcule pas localement les cotisations ni l’impôt et ne bascule pas vers un ancien moteur en cas d’échec.
 
-Avant l’envoi, l’utilisateur doit cliquer sur **« Calculer avec l’Urssaf »**. Les données nécessaires (rémunération, horaires, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale) sont alors transmises à l’API. Une connexion Internet est indispensable. Les scénarios, réglages et liens de partage restent gérés dans le navigateur.
+Avant le premier envoi, l’utilisateur doit cliquer sur **« Calculer avec l’Urssaf »**. L’interface précise les données transmises : rémunération, horaires, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Après cet accord, les modifications sont recalculées automatiquement. Si l’utilisateur coche l’option de mémorisation, son choix est conservé sur cet appareil. Une connexion Internet est indispensable. Les scénarios, réglages et liens de partage restent gérés dans le navigateur.
 
 Les résultats restent des estimations : le modèle fiscal Urssaf comporte des règles simplifiées ou expérimentales. Les montants ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Les avertissements et variables recevant une valeur par défaut sont signalés.
 

@@ -133,31 +133,33 @@ async function openApp(options = {}) {
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.stack || error.message));
-  await page.addInitScript(() => {
-    if (!localStorage.getItem('onnet.state.v1')) {
-      localStorage.setItem('onnet.state.v1', JSON.stringify({
-        v: 1,
-        scenarios: [{
-          id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
-          mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
-          partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
-          maintienPct: 90, carenceCouverte: false,
-          absenceType: 'arret', absenceDuree: 5
-        }],
-        refId: 0,
-        metric: 'netHoraire',
-        displayAmt: 'net',
-        displayPeriod: 'mois'
-      }));
-    }
-  });
+  if (!options.emptyStorage) {
+    await page.addInitScript(() => {
+      if (!localStorage.getItem('onnet.state.v1')) {
+        localStorage.setItem('onnet.state.v1', JSON.stringify({
+          v: 1,
+          scenarios: [{
+            id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
+            mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
+            partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
+            maintienPct: 90, carenceCouverte: false,
+            absenceType: 'arret', absenceDuree: 5
+          }],
+          refId: 0,
+          metric: 'netHoraire',
+          displayAmt: 'net',
+          displayPeriod: 'mois'
+        }));
+      }
+    });
+  }
   await page.goto(baseUrl);
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
   }
 
-  if (options.consent !== false) {
+  if (options.consent !== false && !options.emptyStorage) {
     await page.locator('#urssafCalculateBtn').click();
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
@@ -186,7 +188,10 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.equal(calls.count, 0);
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /moteur officiel de l’Urssaf/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
+    const notice = await page.locator('.urssaf-data-notice').innerText();
+    assert.match(notice, /rémunération.*horaires.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
+    assert.match(notice, /recalculées automatiquement/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
@@ -195,7 +200,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       null, { timeout: 20000 }
     );
     assert.ok(calls.count >= 3);
-    assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /moteur officiel Mon-entreprise \/ Urssaf/);
+    assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /API officielle Mon-entreprise \(Urssaf\)/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
 
     const legacy = await page.evaluate(() => {
@@ -403,6 +408,7 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     const before = calls.count;
     await page.locator('#addScenario').click();
     await page.locator('#modalAddInput').fill('3400');
+    await page.locator('#modalOverlay .onboarding-optional summary').click();
     await page.locator('#modalAddMutuelle').fill('25');
     await page.locator('#modalAddMutuellePat').fill('40');
     assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25');
@@ -629,6 +635,29 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
       assert.equal(sizes.cards.length, 2);
       assert.ok(sizes.cards.every(card => card > 0 && card < sizes.panel));
     }
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('l’onboarding garde les paramètres secondaires repliés et ne suppose aucune mutuelle', async () => {
+  const { context, page } = await openApp({ emptyStorage: true });
+  try {
+    const modal = page.locator('#modalOverlay');
+    await modal.waitFor({ state: 'visible' });
+    assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
+    assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '');
+    assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '');
+    await modal.locator('#modalOnboardingInput').fill('2500');
+    await modal.locator('#modalOnboardingSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.brut === 2500;
+    });
+    const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.scenarios[0].mutuelle, 0);
+    assert.equal(state.scenarios[0].mutuellePat, 0);
   } finally {
     await context.close();
   }

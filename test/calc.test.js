@@ -29,7 +29,7 @@ test('le build utilise l’API officielle et n’embarque pas l’ancien fichier
 });
 
 test('le résultat principal indique la source Urssaf et requiert un clic avant transmission', () => {
-  assert.match(template, /Calculs effectués par le moteur officiel de l’Urssaf/);
+  assert.match(template, /Calculs effectués via l’API officielle Mon-entreprise de l’Urssaf/);
   assert.match(template, /Détails techniques \(facultatif\)/);
   assert.match(template, /id="urssafCalculateBtn"/);
   assert.match(app, /urssafConsentGranted\s*=\s*true/);

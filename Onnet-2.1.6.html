@@ -117,6 +117,27 @@
   header p{color:var(--ink-soft); font-size:14.5px; line-height:1.55; max-width:60ch; margin:0 0 18px;}
   .header-top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
   .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+
+  /* Actions d'en-tête : compacter sur mobile pour éviter une troisième ligne. */
+  @media (max-width:639px){
+    .header-actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      width:100%;
+    }
+    .header-actions .print-btn{
+      min-width:0;
+      min-height:44px;
+      justify-content:center;
+      gap:5px;
+      padding:8px 5px;
+      font-size:clamp(10px,2.8vw,12px);
+      white-space:nowrap;
+    }
+    .header-actions .print-btn svg{width:13px;height:13px;}
+  }
+
   .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
   .share-banner[hidden]{display:none;}
   .toast{
@@ -148,6 +169,19 @@
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
+
+  /* Onboarding : les paramètres secondaires restent repliés pour garder
+     le premier écran court, surtout sur mobile. */
+  .onboarding-optional{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;}
+  .onboarding-optional > summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:13px;font-weight:650;color:var(--ink-soft);padding:4px 0;}
+  .onboarding-optional > summary::-webkit-details-marker{display:none;}
+  .onboarding-optional > summary::before{content:"+";font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:15px;}
+  .onboarding-optional[open] > summary::before{content:"–";}
+  .onboarding-optional .optional-label{margin-left:auto;font-size:11px;font-weight:500;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 8px;}
+  .onboarding-optional-body{padding-top:12px;}
+  .onboarding-optional-body > .sub-hint{margin:0 0 12px;}
+  @media(max-width:480px){.onboarding-mutuelle-fields{grid-template-columns:1fr;}}
+
   .modal-share-row{display:flex; gap:8px; margin:2px 0 18px;}
   .modal-share-row .btn{width:auto; flex:none;}
   .modal-share-input{
@@ -698,6 +732,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
 /* Lisibilité des statuts et périmètre des commandes */
 .consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.urssaf-data-notice{flex:1 1 100%;margin:0;color:var(--ink-soft);font-size:12px;line-height:1.45;}
 .consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
 .chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
 
@@ -711,7 +746,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
     <div class="header-top">
       <div class="brand-block">
         <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.6</span></div>
-        <div class="eyebrow">Simulateur de paie · moteur officiel Urssaf</div>
+        <div class="eyebrow">Simulateur de paie · API officielle Mon-entreprise</div>
       </div>
       <div class="header-actions">
         <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
@@ -739,7 +774,8 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   <main id="contenu">
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
     <div class="urssaf-status-copy">
-      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués par le moteur officiel de l’Urssaf.</strong></p>
+      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
+      <p class="urssaf-data-notice">En cliquant sur « Calculer avec l’Urssaf », les données nécessaires à vos simulations (rémunération, horaires, commune, mutuelle, titres-restaurant et situation fiscale) sont transmises à l’API officielle Mon-entreprise de l’Urssaf. Après votre accord, les modifications sont recalculées automatiquement.</p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
       <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
       <details class="result-source" id="urssafWarnings" hidden>
@@ -930,7 +966,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   </section>
 
   <div class="disclaimer reveal">
-    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés par le moteur officiel Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
     <details class="more">
       <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
@@ -1735,7 +1771,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Les résultats sont calculés par le moteur officiel de l’Urssaf.';
+    statusText.textContent = 'Les résultats sont calculés via l’API officielle Mon-entreprise de l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
     button.textContent = 'Calculer avec l’Urssaf';
@@ -2303,7 +2339,7 @@ function renderCard(s, r, showRemove){
   };
   const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
   const resultText = r
-    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
     : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
   <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
@@ -2648,7 +2684,7 @@ function renderBenchmarks(computed){
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
       <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé via l’API officielle Mon-entreprise (Urssaf) ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
@@ -2705,7 +2741,7 @@ function render(){
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   } else {
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
     document.getElementById('insightBox').innerHTML = '';
     stackChartEl.className = '';
     stackChartEl.innerHTML = '';
@@ -3022,7 +3058,7 @@ function updateComputed(options = {}){
     document.getElementById('stackLegend').innerHTML = '';
     document.getElementById('barsBody').innerHTML = '';
     document.getElementById('barsAlerts').innerHTML = '';
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
@@ -3046,7 +3082,7 @@ function updateComputed(options = {}){
     const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
     const error = getCalculationError(s,foyer);
     if(state) state.textContent = r
-      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      ? 'Calculé via l’API officielle Mon-entreprise (Urssaf).'
       : (error || 'Calcul en attente de validation par l’API Urssaf.');
     if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
     const warnings = document.getElementById(`c-result-warnings-${u}`);
@@ -3514,37 +3550,39 @@ function showShareModal(url){
   });
 }
 
-const ONBOARDING_MUTUELLE_DEFAUT = 30;
-
-// Bloc mutuelle/TR réutilisé par la pop-up d'onboarding et par l'ajout d'un
-// nouveau salaire, pour ne jamais deviner silencieusement ces montants.
+// Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="two-col">
-          <div class="field-row">
-            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+        <details class="onboarding-optional">
+          <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
+          <div class="onboarding-optional-body">
+            <p class="sub-hint">Renseignez ces éléments si vous les connaissez. Un champ vide est compté à 0 € dans la simulation.</p>
+            <div class="two-col onboarding-mutuelle-fields">
+              <div class="field-row">
+                <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="Ex. 30" autocomplete="off">
+              </div>
+              <div class="field-row">
+                <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
+                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="Ex. 30" autocomplete="off">
+              </div>
+            </div>
+            <div class="field-row" style="margin-bottom:0;">
+              <label>Avez-vous des titres-restaurant ?</label>
+              <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
+                <button type="button" data-tr="non" aria-pressed="true">Non</button>
+                <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+              </div>
+            </div>
+            <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
+              <div class="three-col">
+                <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+                <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+                <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+              </div>
+            </div>
           </div>
-          <div class="field-row">
-            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
-            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          </div>
-        </div>
-        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
-        <div class="field-row" style="margin-bottom:0;">
-          <label>Avez-vous des titres restaurant ?</label>
-          <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
-            <button type="button" data-tr="non" aria-pressed="true">Non</button>
-            <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-          </div>
-        </div>
-        <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-          <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-          </div>
-        </div>`;
+        </details>`;
 }
 
 // Branche les interactions du bloc ci-dessus et renvoie une fonction de
@@ -3580,8 +3618,8 @@ function bindMutuelleTrFields(overlay, idPrefix){
     }
     const mutuelleRaw = currentMutuelleInput.value.trim();
     const mutuellePatRaw = currentMutuellePatInput.value.trim();
-    const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    const mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
@@ -3594,7 +3632,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
 function showOnboardingModal(){
   const html = `
-    <p id="modalMsg" class="modal-msg">Commencez par votre salaire actuel — vous pourrez en ajouter d'autres à comparer ensuite.</p>
+    <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -3743,8 +3781,8 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     // la modale est réutilisée par plusieurs parcours de l'application.
     const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
     const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
-    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    benefits.mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
     closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };

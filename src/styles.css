@@ -110,6 +110,27 @@
   header p{color:var(--ink-soft); font-size:14.5px; line-height:1.55; max-width:60ch; margin:0 0 18px;}
   .header-top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
   .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+
+  /* Actions d'en-tête : compacter sur mobile pour éviter une troisième ligne. */
+  @media (max-width:639px){
+    .header-actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      width:100%;
+    }
+    .header-actions .print-btn{
+      min-width:0;
+      min-height:44px;
+      justify-content:center;
+      gap:5px;
+      padding:8px 5px;
+      font-size:clamp(10px,2.8vw,12px);
+      white-space:nowrap;
+    }
+    .header-actions .print-btn svg{width:13px;height:13px;}
+  }
+
   .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
   .share-banner[hidden]{display:none;}
   .toast{
@@ -141,6 +162,19 @@
   }
   .modal-overlay.show .modal{transform:translateY(0) scale(1);}
   .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
+
+  /* Onboarding : les paramètres secondaires restent repliés pour garder
+     le premier écran court, surtout sur mobile. */
+  .onboarding-optional{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;}
+  .onboarding-optional > summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:13px;font-weight:650;color:var(--ink-soft);padding:4px 0;}
+  .onboarding-optional > summary::-webkit-details-marker{display:none;}
+  .onboarding-optional > summary::before{content:"+";font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:15px;}
+  .onboarding-optional[open] > summary::before{content:"–";}
+  .onboarding-optional .optional-label{margin-left:auto;font-size:11px;font-weight:500;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 8px;}
+  .onboarding-optional-body{padding-top:12px;}
+  .onboarding-optional-body > .sub-hint{margin:0 0 12px;}
+  @media(max-width:480px){.onboarding-mutuelle-fields{grid-template-columns:1fr;}}
+
   .modal-share-row{display:flex; gap:8px; margin:2px 0 18px;}
   .modal-share-row .btn{width:auto; flex:none;}
   .modal-share-input{
@@ -691,5 +725,6 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
 /* Lisibilité des statuts et périmètre des commandes */
 .consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
+.urssaf-data-notice{flex:1 1 100%;margin:0;color:var(--ink-soft);font-size:12px;line-height:1.45;}
 .consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
 .chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
