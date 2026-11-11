@@ -52,9 +52,9 @@ OnNet fournit une **estimation**, pas un bulletin de paie. Le moteur modélise u
 
 Le coût employeur n'est pas calculé : une majoration forfaitaire du brut donnerait une estimation trompeuse, notamment autour du SMIC.
 
-## Dernière correction — 2.1.5
+## Dernière correction — 2.1.6
 
-Les deux cartes de repères affichent le net mensuel avant impôt en valeur principale et le taux horaire net en complément. Le brut mensuel est affiché pour le SMIC ; il n'est pas inventé pour le salaire médian INSEE, dont la donnée utilisée est uniquement nette. Correction complémentaire : suppression d'un symbole € en double dans le libellé de la base salariale et mise à jour des tests pour vérifier l'absence de conversion du salaire à 35 h.
+Dans le comparatif des repères, le net avant impôt devient la valeur principale. Le net après impôt estimé au barème n'est plus présenté comme un montant reçu sur le compte bancaire lorsque l'utilisateur n'a pas renseigné son taux de prélèvement à la source. Le taux horaire et la durée réelle du contrat restent visibles.
 
 ## Développement et versionnage
 
