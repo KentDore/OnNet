@@ -154,7 +154,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
             expressions: [
               'salarié . rémunération . brut',
               'salarié . rémunération . net . à payer avant impôt',
-              'salarié . rémunération . net imposable',
+              'salarié . rémunération . net . imposable',
               'salarié . cotisations . salarié'
             ],
             situation: {
