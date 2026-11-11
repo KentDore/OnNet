@@ -16,7 +16,7 @@ const EXPRESSIONS = Object.freeze({
   mealTicketEmployee: 'salarié . rémunération . frais professionnels . titres-restaurant . salarié',
   mealTicketEmployer: 'salarié . rémunération . frais professionnels . titres-restaurant . employeur',
   mealTicketNonDeductible: 'salarié . rémunération . frais professionnels . non déductible',
-  netSocial: 'salarié . rémunération . net social',
+  netSocial: 'salarié . rémunération . montant net social',
   netAfterTax: 'salarié . rémunération . net . payé après impôt',
   incomeTax: 'impôt . montant',
   taxRate: "impôt . taux d'imposition",
