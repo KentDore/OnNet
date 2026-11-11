@@ -1,0 +1,325 @@
+const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'
+const DEFAULT_TIMEOUT_MS = 15000
+const MONTHLY_BASE_HOURS = 151.67
+const MONTHLY_OVERTIME_HOURS_39H = 4 * 52 / 12
+const DEFAULT_OVERTIME_PREMIUM = 25
+const MAX_GROSS_CALIBRATION_ATTEMPTS = 3
+
+const EXPRESSIONS = Object.freeze({
+  gross: 'salarié . rémunération . brut',
+  netBeforeTax: 'salarié . rémunération . net . à payer avant impôt',
+  taxableNet: 'salarié . rémunération . net . imposable',
+  employeeContributions: 'salarié . cotisations . salarié',
+  overtimePay: 'salarié . rémunération . heures supplémentaires',
+  employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
+  employerHealth: 'salarié . cotisations . prévoyances . santé . employeur',
+  netAfterTax: 'salarié . rémunération . net . payé après impôt',
+  incomeTax: 'impôt . montant',
+  calculatedTaxRate: "impôt . taux d'imposition"
+})
+
+function numberInRange(value, name, min, max) {
+  const number = Number(value)
+  if (!Number.isFinite(number) || number < min || number > max) {
+    throw new TypeError(`${name} doit être compris entre ${min} et ${max}.`)
+  }
+  return number
+}
+
+function integerInRange(value, name, min, max) {
+  const number = numberInRange(value, name, min, max)
+  if (!Number.isInteger(number)) {
+    throw new TypeError(`${name} doit être un nombre entier.`)
+  }
+  return number
+}
+
+function money(value) {
+  return `${value.toFixed(6)} €/mois`
+}
+
+function percent(value) {
+  return `${value.toFixed(6)}%`
+}
+
+function formatDate(value) {
+  if (value === undefined || value === null || value === '') {
+    const now = new Date()
+    return [
+      String(now.getDate()).padStart(2, '0'),
+      String(now.getMonth() + 1).padStart(2, '0'),
+      now.getFullYear()
+    ].join('/')
+  }
+
+  const match = /^(\\d{4})-(\\d{2})-(\\d{2})$/.exec(String(value))
+  if (!match) {
+    throw new TypeError('date doit respecter le format AAAA-MM-JJ.')
+  }
+
+  const parsed = new Date(`${match[1]}-${match[2]}-${match[3]}T00:00:00Z`)
+  if (Number.isNaN(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== String(value)) {
+    throw new TypeError('date doit être une date calendaire valide au format AAAA-MM-JJ.')
+  }
+
+  return `${match[3]}/${match[2]}/${match[1]}`
+}
+
+function buildSituation(input, baseGross, overtimeHours) {
+  const employeeHealth = numberInRange(input.mutuelle ?? 0, 'mutuelle', 0, 100000)
+  const employerHealth = numberInRange(input.mutuellePat ?? input.mutuelle ?? 0, 'mutuellePat', 0, 100000)
+  const totalHealth = employeeHealth + employerHealth
+  const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
+
+  const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
+  const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
+  const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
+  const employerMealTicketRate = 100 - employeeMealTicketRate
+
+  const situation = {
+    'salarié': 'oui',
+    'salarié . contrat': "'CDI'",
+    'salarié . contrat . salaire brut': money(baseGross),
+    'salarié . contrat . statut cadre': 'non',
+    'salarié . contrat . temps partiel': 'non',
+    'établissement . commune': "'Pacé'",
+    'salarié . convention collective': "'droit commun'",
+    'salarié . activité partielle': 'non',
+    'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
+    'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
+    'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
+    'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
+    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
+    'date': formatDate(input.date)
+  }
+
+  if (input.modeImpot !== undefined && input.modeImpot !== null && input.modeImpot !== '') {
+    const modes = {
+      'personnalisé': 'taux personnalisé',
+      'neutre': 'taux neutre',
+      'barème': 'barème standard'
+    }
+    const mode = String(input.modeImpot)
+    if (!Object.prototype.hasOwnProperty.call(modes, mode)) {
+      throw new TypeError('modeImpot doit être personnalisé, neutre ou barème.')
+    }
+
+    situation['impôt . méthode de calcul'] = `'${modes[mode]}'`
+
+    if (mode === 'personnalisé') {
+      const taxRate = numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
+      situation['impôt . taux personnalisé'] = percent(taxRate)
+    }
+
+    if (mode === 'barème') {
+      const familyStatus = input.situationFamille ?? 'célibataire'
+      if (!['célibataire', 'couple', 'veuf'].includes(familyStatus)) {
+        throw new TypeError('situationFamille doit être célibataire, couple ou veuf.')
+      }
+      const children = integerInRange(input.enfantsACharge ?? 0, 'enfantsACharge', 0, 20)
+      const singleParent = input.parentIsole ?? false
+      if (typeof singleParent !== 'boolean') {
+        throw new TypeError('parentIsole doit être un booléen.')
+      }
+      if (singleParent && (familyStatus !== 'célibataire' || children === 0)) {
+        throw new TypeError('parentIsole exige une personne célibataire avec au moins un enfant à charge.')
+      }
+      situation['impôt . foyer fiscal . situation de famille'] = `'${familyStatus}'`
+      situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
+      if (singleParent) {
+        situation['impôt . foyer fiscal . parent isolé'] = 'oui'
+      }
+    }
+  }
+
+  return situation
+}
+
+function normalizeMissingVariables(value) {
+  if (Array.isArray(value)) {
+    return value.filter(item => typeof item === 'string')
+  }
+  if (value && typeof value === 'object') {
+    return Object.keys(value)
+  }
+  return []
+}
+
+function normalizeWarnings(value) {
+  if (!Array.isArray(value)) return []
+  return value.map(item => {
+    if (typeof item === 'string') return item
+    if (item && typeof item.message === 'string') return item.message
+    return 'Avertissement non détaillé du moteur Urssaf.'
+  })
+}
+
+function describeApiFailure(status) {
+  if (status === 400) return 'L’API Urssaf a rejeté la situation transmise (HTTP 400). Vérifier les paramètres du scénario.'
+  if (status === 429) return 'Limite temporaire de requêtes de l’API Urssaf atteinte (HTTP 429). Attendre puis réessayer.'
+  if (status >= 500) return `Le service de calcul Urssaf est temporairement indisponible (HTTP ${status}).`
+  return `L’API Urssaf a répondu avec une erreur HTTP ${status}.`
+}
+
+async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions) {
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
+
+  try {
+    let response
+    try {
+      response = await fetchImpl(endpoint, {
+        method: 'POST',
+        headers: {
+          'content-type': 'application/json',
+          accept: 'application/json'
+        },
+        body: JSON.stringify({ situation, expressions }),
+        signal: controller.signal
+      })
+    } catch (error) {
+      if (error?.name === 'AbortError') {
+        throw new Error(`Délai dépassé : l’API Urssaf n’a pas répondu en ${timeoutMs / 1000} secondes.`)
+      }
+      throw new Error('Impossible de joindre l’API Urssaf. Vérifier la connexion Internet puis réessayer.')
+    }
+
+    if (!response || typeof response.ok !== 'boolean') {
+      throw new Error('Réponse HTTP invalide reçue de l’API Urssaf.')
+    }
+    if (!response.ok) {
+      throw new Error(describeApiFailure(response.status))
+    }
+
+    let payload
+    try {
+      payload = await response.json()
+    } catch {
+      throw new Error('L’API Urssaf a renvoyé une réponse JSON illisible.')
+    }
+
+    if (payload?.error || payload?.situationError) {
+      const message = payload.error?.message ?? payload.situationError?.message
+      throw new Error(typeof message === 'string' && message.trim()
+        ? `Calcul refusé par l’API Urssaf : ${message}`
+        : 'L’API Urssaf n’a pas pu évaluer cette situation.')
+    }
+    if (!Array.isArray(payload?.evaluate) || payload.evaluate.length !== expressions.length) {
+      throw new Error('Réponse incomplète de l’API Urssaf : les expressions demandées ne sont pas toutes présentes.')
+    }
+
+    const values = payload.evaluate.map((item, index) => {
+      if (!item || !Number.isFinite(item.nodeValue)) {
+        throw new Error(`L’API Urssaf n’a pas fourni de valeur numérique pour « ${expressions[index]} ».`)
+      }
+      return item.nodeValue
+    })
+
+    const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
+    return {
+      values,
+      missingVariables,
+      warnings: normalizeWarnings(payload.warnings)
+    }
+  } finally {
+    clearTimeout(timeoutId)
+  }
+}
+
+/**
+ * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
+ * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
+ * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
+ */
+export async function calculateWithUrssafApi(input = {}, options = {}) {
+  if (!input || typeof input !== 'object' || Array.isArray(input)) {
+    throw new TypeError('Un scénario de calcul est requis.')
+  }
+
+  const fetchImpl = options.fetchImpl ?? globalThis.fetch
+  if (typeof fetchImpl !== 'function') {
+    throw new Error('La fonction fetch n’est pas disponible dans cet environnement.')
+  }
+
+  const endpoint = options.endpoint ?? DEFAULT_ENDPOINT
+  const timeoutMs = numberInRange(options.timeoutMs ?? DEFAULT_TIMEOUT_MS, 'timeoutMs', 1000, 60000)
+  const grossTarget = numberInRange(input.brut, 'brut', 0, 1000000)
+  const durationType = input.dureeType === undefined ? '35' : String(input.dureeType)
+  if (!['35', '39'].includes(durationType)) {
+    throw new TypeError('dureeType doit être égal à 35 ou 39.')
+  }
+
+  const overtimeHours = durationType === '39' ? MONTHLY_OVERTIME_HOURS_39H : 0
+  const overtimeFactor = 1 + DEFAULT_OVERTIME_PREMIUM / 100
+  let baseGross = durationType === '39'
+    ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours * overtimeFactor)
+    : grossTarget
+
+  const taxMode = input.modeImpot ?? null
+  const expressions = [
+    EXPRESSIONS.gross,
+    EXPRESSIONS.netBeforeTax,
+    EXPRESSIONS.taxableNet,
+    EXPRESSIONS.employeeContributions,
+    EXPRESSIONS.overtimePay,
+    EXPRESSIONS.employeeHealth,
+    EXPRESSIONS.employerHealth
+  ]
+  if (taxMode !== null) {
+    expressions.push(
+      EXPRESSIONS.netAfterTax,
+      EXPRESSIONS.incomeTax,
+      EXPRESSIONS.calculatedTaxRate
+    )
+  }
+
+  let finalEvaluation
+  let grossCalculated = NaN
+
+  for (let attempt = 0; attempt < (durationType === '39' ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
+    const situation = buildSituation(input, baseGross, overtimeHours)
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions)
+    grossCalculated = evaluation.values[0]
+    finalEvaluation = evaluation
+
+    if (Math.abs(grossCalculated - grossTarget) <= 0.005) break
+    if (grossTarget === 0 || grossCalculated <= 0 || !Number.isFinite(grossCalculated)) {
+      throw new Error('Impossible de reconstituer le brut demandé à partir des heures supplémentaires avec le modèle Urssaf.')
+    }
+    if (attempt === MAX_GROSS_CALIBRATION_ATTEMPTS - 1) {
+      throw new Error(`Le brut calculé par l’API (${grossCalculated.toFixed(2)} €) ne correspond pas au brut demandé (${grossTarget.toFixed(2)} €).`)
+    }
+    baseGross *= grossTarget / grossCalculated
+  }
+
+  const values = finalEvaluation.values
+  const result = {
+    engine: 'API REST officielle Mon-entreprise / Urssaf',
+    endpoint,
+    date: formatDate(input.date),
+    grossTarget,
+    grossCalculated,
+    grossDifference: grossCalculated - grossTarget,
+    baseGross,
+    overtimeHours,
+    netBeforeTax: values[1],
+    taxableNet: values[2],
+    employeeContributions: values[3],
+    overtimePay: values[4],
+    employeeHealth: values[5],
+    employerHealth: values[6],
+    taxMode,
+    netAfterTax: taxMode === null ? null : values[7],
+    incomeTax: taxMode === null ? null : values[8],
+    calculatedTaxRate: taxMode === null ? null : values[9],
+    missingVariables: finalEvaluation.missingVariables,
+    warnings: finalEvaluation.warnings,
+    checkedAt: new Date().toISOString()
+  }
+
+  return Object.freeze(result)
+}
+
+export const urssafApiExpressions = EXPRESSIONS
