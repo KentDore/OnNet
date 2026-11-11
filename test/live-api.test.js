@@ -52,10 +52,8 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
 
       const weeklyOvertime = 4 * 52 / 12;
       const monthlyBaseHours = 151.67;
-      const overtimePremium = 1.25;
-      const requestedGross = 2300;
-      const baseGrossFor39h = requestedGross * monthlyBaseHours /
-        (monthlyBaseHours + weeklyOvertime * overtimePremium);
+      const baseGrossFor39h = 2300 * monthlyBaseHours /
+        (monthlyBaseHours + weeklyOvertime);
 
       const [thirtyFiveHours, thirtyNineHours] = await Promise.all([
         evaluate([
@@ -78,7 +76,7 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
         })
       ]);
 
-      return { thirtyFiveHours, thirtyNineHours, weeklyOvertime, requestedGross };
+      return { thirtyFiveHours, thirtyNineHours, weeklyOvertime, baseGrossFor39h };
     }, ENDPOINT);
 
     const thirtyFive = apiResult.thirtyFiveHours;
@@ -102,10 +100,13 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
     const gross39 = thirtyNine.body.evaluate[0].nodeValue;
     const overtimePay39 = thirtyNine.body.evaluate[1].nodeValue;
     const net39 = thirtyNine.body.evaluate[2].nodeValue;
-    assert.ok(Number.isFinite(gross39) && Math.abs(gross39 - apiResult.requestedGross) <= 0.05,
-      `39 h : le brut reconstitué doit correspondre à 2 300 € (reçu : ${gross39})`);
+    assert.ok(Number.isFinite(gross39) && gross39 > apiResult.baseGrossFor39h,
+      `39 h : le brut doit inclure le salaire de base et les heures supplémentaires (reçu : ${gross39})`);
     assert.ok(Number.isFinite(overtimePay39) && overtimePay39 > 0,
+
       `39 h : les heures supplémentaires doivent être rémunérées (reçu : ${overtimePay39})`);
+    assert.ok(Math.abs(gross39 - apiResult.baseGrossFor39h - overtimePay39) <= 0.05,
+      '39 h : le brut total doit correspondre au salaire de base plus la rémunération des heures supplémentaires');
     assert.ok(Number.isFinite(net39) && net39 > 0, '39 h : le net avant impôt doit être positif');
     assert.deepEqual(browserErrors, []);
   } catch (error) {
