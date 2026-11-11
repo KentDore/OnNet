@@ -6,7 +6,7 @@ OnNet compare plusieurs scénarios de rémunération pour le secteur privé fran
 
 ## État de la migration
 
-La branche `migration/publicodes-urssaf` raccorde le calculateur principal à l’API REST officielle **Mon-entreprise / Urssaf**. Cette migration n’est pas encore publiée : `main`, `index.html` et la version actuellement accessible sur GitHub Pages restent inchangés jusqu’à validation et approbation explicite.
+La branche `migration/publicodes-urssaf-final` raccorde le calculateur principal à l’API REST officielle **Mon-entreprise / Urssaf**. Cette migration n’est pas encore publiée : `main`, `index.html` et la version actuellement accessible sur GitHub Pages restent inchangés jusqu’à validation et approbation explicite.
 
 ## Source des calculs et confidentialité
 
@@ -43,7 +43,7 @@ Les scénarios enregistrés localement restent dans le navigateur. Un lien de pa
 
 ## Développement
 
-Le client API est dans `src/urssaf-api-client.mjs`. `src/ui-utils.js` ne contient que des utilitaires de présentation. Le build autonome embarque le client API et ne charge pas l’ancien calculateur `src/calc.js`. Le paquet local `modele-social` / `publicodes` est conservé pour les diagnostics et tests de parité, pas pour calculer les résultats présentés à l’utilisateur.
+Le client API est dans `src/urssaf-api-client.mjs`. `src/ui-utils.js` ne contient que des utilitaires de présentation. Le build autonome embarque le client API et ne charge pas l’ancien calculateur `src/calc.js`. Le paquet local `modele-social` / `publicodes` est conservé pour les diagnostics comparatifs uniquement, pas pour calculer les résultats présentés à l’utilisateur. Le smoke test `node scripts/smoke-urssaf-api.mjs` vérifie directement les réponses de l’API (scénarios 35 h / 39 h, mutuelle, titres-restaurant et modes fiscaux) sans comparer les montants au moteur local. Le workflow `Diagnostic API Urssaf` peut être lancé manuellement ou par un commit portant le marqueur `[run-urssaf-smoke]`. Le diagnostic du simulateur officiel est séparé (`[probe-simulator]`).
 
 Construire un HTML de test sans modifier les fichiers de production :
 
