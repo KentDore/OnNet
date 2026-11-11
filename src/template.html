@@ -44,8 +44,9 @@
   <main id="contenu">
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
     <div class="urssaf-status-copy">
-      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong id="urssafStatusText">Calculs effectués via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
-      <p class="urssaf-data-notice">En cliquant sur « Calculer avec l’Urssaf », les données nécessaires à vos simulations (rémunération, horaires, commune, mutuelle, titres-restaurant et situation fiscale) sont transmises à l’API officielle Mon-entreprise de l’Urssaf. Après votre accord, les modifications sont recalculées automatiquement.</p>
+      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong>Source des calculs : moteur officiel Mon-entreprise de l’Urssaf.</strong></p>
+      <p class="urssaf-data-notice">Avant le calcul, les paramètres nécessaires à la simulation (salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API officielle de l’Urssaf. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
+      <p class="urssaf-status-main urssaf-status-secondary"><strong id="urssafStatusText">En attente de votre accord pour lancer le calcul.</strong></p>
       <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
       <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
       <details class="result-source" id="urssafWarnings" hidden>
