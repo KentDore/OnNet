@@ -33,7 +33,7 @@ const P = {
 };
 
 let scenarioDefaults = {
-  mutuelle: 15, joursResto: 21, valeurResto: 8,
+  mutuelle: 30, joursResto: 21, valeurResto: 8,
   partResto: 50, nbMois: 12
 };
 
