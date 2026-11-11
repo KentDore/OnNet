@@ -398,7 +398,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
 
     // Le taux neutre est une règle distincte ; `impôt . taux d'imposition` correspond au taux effectif du barème standard.
     const taxRateExpression = taxMode === 'neutre'
-      ? 'impôt . taux neutre d’impôt sur le revenu'
+      ? 'impôt . taux neutre d'impôt sur le revenu'
       : EXPRESSIONS.taxRate
     const taxEvaluation = await evaluateRequest(
       fetchImpl,
