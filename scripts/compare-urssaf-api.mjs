@@ -148,6 +148,9 @@ for (const scenario of fiscalScenarios) {
         throw new Error(`Résultat fiscal API absent ou non numérique (${name}).`)
       }
     }
+    if (result.calculatedTaxRate <= 0 || result.calculatedTaxRate > 100) {
+      throw new Error(`Taux d’imposition officiel incohérent pour « ${scenario.name} » : ${result.calculatedTaxRate} %.`)
+    }
     if (result.incomeTax <= 0 || result.netAfterTax >= result.netBeforeTax) {
       throw new Error(`Le scénario fiscal ne produit aucun prélèvement positif : ${JSON.stringify({
         netBeforeTax: result.netBeforeTax,
