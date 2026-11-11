@@ -102,9 +102,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . rémunération . avantages en nature': 'non',
     'salarié . rémunération . primes . activité . base': '0 €/mois',
     "salarié . rémunération . primes . fin d'année": 'non',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant': '0 €/mois',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant': '0 €/an',
-    'salarié . rémunération . frais professionnels . trajets domicile travail . prime de transport . montant': '0 €/an',
     'salarié . régimes spécifiques . taux réduits': 'non',
     'salarié . régimes spécifiques . DFS': 'non',
     'salarié . régimes spécifiques . impatriés': 'non',
@@ -283,10 +280,15 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
     })
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
+    const warnings = normalizeWarnings(payload.warnings)
+    const engineErrors = warnings.filter(warning => /\\bEngineError\\b/i.test(warning))
+    if (engineErrors.length) {
+      throw new Error(`Le moteur Publicodes a signalé une erreur interne : ${engineErrors.join(' | ')}`)
+    }
     return {
       values,
       missingVariables,
-      warnings: normalizeWarnings(payload.warnings)
+      warnings
     }
   } finally {
     clearTimeout(timeoutId)
