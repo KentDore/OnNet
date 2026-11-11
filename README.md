@@ -24,7 +24,7 @@ Les résultats restent des estimations : le modèle fiscal Urssaf comporte des r
 - Saisie séparée des parts salariale et employeur de mutuelle.
 - Titres-restaurant : nombre, valeur et part salariale.
 - Impôt au barème standard du modèle ou taux de prélèvement personnalisé.
-- Repère SMIC : net avant impôt calculé via l’API Urssaf. Le montant brut de référence est modifiable.
+- Repère SMIC : le montant brut est récupéré via la règle officielle `SMIC` de l’API Mon-entreprise / Urssaf ; le net avant impôt est ensuite calculé par cette même API. Une saisie manuelle reste possible et n’est jamais écrasée automatiquement. Si l’API est indisponible, OnNet signale l’erreur au lieu d’afficher une valeur codée en dur comme actuelle.
 - Repère de salaire médian privé : référence INSEE 2024 (2 190 € net mensuel en EQTP).
 - Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 
