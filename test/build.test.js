@@ -40,9 +40,9 @@ test('la restauration renumérote les scénarios et conserve les références va
   const end = app.indexOf('\nfunction sanitizeFoyer(raw){', start);
   assert.notEqual(start, -1, 'sanitizeScenario doit être présent');
   assert.notEqual(end, -1, 'le bloc de normalisation doit être délimité');
-  const factory = new Function(app.slice(start, end) +
+  const factory = new Function('scenarioDefaults', app.slice(start, end) +
     '\nreturn { sanitizeScenario, normalizeScenarioIds };');
-  const { sanitizeScenario, normalizeScenarioIds } = factory();
+  const { sanitizeScenario, normalizeScenarioIds } = factory({ mutuelle:30 });
 
   const restored = [
     { id: 9007199254740992, name: 'Identifiant non sûr', brut: 2800, mutuelle: 30 },
@@ -64,8 +64,8 @@ test('la restauration neutralise les paramètres d’absence des anciennes sauve
   const app = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js'), 'utf8');
   const start = app.indexOf('function sanitizeScenario(raw){');
   const end = app.indexOf('\nfunction sanitizeFoyer(raw){', start);
-  const factory = new Function(app.slice(start, end) + '\nreturn sanitizeScenario;');
-  const sanitizeScenario = factory();
+  const factory = new Function('scenarioDefaults', app.slice(start, end) + '\nreturn sanitizeScenario;');
+  const sanitizeScenario = factory({ mutuelle:30 });
   const restored = sanitizeScenario({
     id: 2, name: 'Ancien scénario', brut: 3000,
     absenceType: 'arret', absenceDuree: 5, maintienPct: 90, carenceCouverte: false
@@ -80,9 +80,9 @@ test('la restauration utilise le premier scénario si la référence est invalid
   const app = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js'), 'utf8');
   const start = app.indexOf('function sanitizeScenario(raw){');
   const end = app.indexOf('\nfunction sanitizeFoyer(raw){', start);
-  const factory = new Function(app.slice(start, end) +
+  const factory = new Function('scenarioDefaults', app.slice(start, end) +
     '\nreturn { sanitizeScenario, normalizeScenarioIds };');
-  const { sanitizeScenario, normalizeScenarioIds } = factory();
+  const { sanitizeScenario, normalizeScenarioIds } = factory({ mutuelle:30 });
 
   const restored = [
     { id: Number.MAX_SAFE_INTEGER, name: 'A', brut: 2800, mutuelle: 30 },
