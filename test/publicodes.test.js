@@ -73,11 +73,17 @@ test('la mutuelle salariale et patronale sont bien distinguées', () => {
   near(result.employerHealth, 36, 0.01, 'part employeur mutuelle')
 })
 
-test('refuse explicitement les titres-restaurant tant que la règle upstream est en erreur', () => {
-  assert.throws(
-    () => calculatePublicodes(scenario({ joursResto: 21, valeurResto: 8 })),
-    /titres-restaurant sont temporairement désactivés/
-  )
+test('les titres-restaurant réduisent le net du montant de la part salariale', () => {
+  const withoutTickets = calculatePublicodes(scenario({
+    joursResto: 0,
+    valeurResto: 0
+  }))
+  const withTickets = calculatePublicodes(scenario({
+    joursResto: 21,
+    valeurResto: 8,
+    partResto: 50
+  }))
+  near(withoutTickets.netBeforeTax - withTickets.netBeforeTax, 84, 0.03, 'retenue titres-restaurant')
 })
 
 test('rejette les valeurs de saisie hors limites et les durées inconnues', () => {
