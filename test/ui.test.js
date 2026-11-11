@@ -529,6 +529,59 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
   }
 });
 
+test('la recherche de commune confirme le département transmis à Urssaf', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify([{
+        nom: 'Rennes',
+        code: '35238',
+        codesPostaux: ['35000', '35200'],
+        codeDepartement: '35',
+        departement: { nom: 'Ille-et-Vilaine', code: '35' }
+      }])
+    }));
+    const before = calls.count;
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    const commune = card.locator('[data-key="commune"]');
+    await commune.fill('Rennes');
+    await page.waitForSelector('.commune-option', { timeout: 5000 });
+    await page.locator('.commune-option').first().click();
+    await waitForCalls(calls, before + 1, 15000);
+    const request = calls.bodies.slice(before).find(body =>
+      body.situation['établissement . commune'] === "'Rennes'" &&
+      body.situation['établissement . commune . département'] === "'Ille-et-Vilaine'"
+    );
+    assert.ok(request, 'la commune et le département confirmés doivent être transmis ensemble');
+    assert.match(await page.locator('#cardsBody [data-key="commune"]').first().inputValue(), /Rennes.*35000.*Ille-et-Vilaine/);
+  } finally {
+    await context.close();
+  }
+});
+
+test('une commune saisie sans sélection bloque le calcul API', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const before = calls.count;
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    const commune = card.locator('[data-key="commune"]');
+    await commune.fill('Ville inventée');
+    await commune.blur();
+    await page.waitForFunction(() =>
+      document.querySelector('#cardsBody [data-card]')?.dataset.resultState === 'error'
+    );
+    await new Promise(resolve => setTimeout(resolve, 400));
+    assert.equal(calls.count, before, 'une commune non confirmée ne doit pas déclencher de calcul');
+    assert.match(await page.locator('#cardsBody [data-card] .result-source').first().innerText(), /Sélectionnez une commune/);
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', async () => {
   const { context, page } = await openApp();
   try {
