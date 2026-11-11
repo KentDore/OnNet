@@ -641,14 +641,14 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
 });
 
 
-test('l’onboarding garde les paramètres secondaires repliés et applique 30 € de mutuelle répartis à 50/50', async () => {
+test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
     assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '30');
-    assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '15');
+    assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '30');
     await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() => {
