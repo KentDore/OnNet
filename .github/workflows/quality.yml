@@ -28,7 +28,11 @@ jobs:
       # Le build synthétique reste hors du dépôt : les tests de calcul doivent lire l'artefact livré.
       - name: Construire le HTML autonome
         run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
-      - name: Tester les calculs
+      - name: Tester le client API Urssaf (moteur de production)
+        run: npm run test:urssaf-api
+      - name: Tester le modèle Publicodes (diagnostics uniquement)
+        run: npm run test:publicodes
+      - name: Tester les anciens scénarios locaux (non utilisés en production)
         run: node --test test/calc.test.js
       - name: Tester le build
         run: node --test test/build.test.js
