@@ -227,7 +227,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
   const { context, page, calls } = await openApp();
   try {
     assert.match(await page.locator('#cardsBody').first().innerText(), /Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
-    assert.match(await page.locator('#cardsBody').first().innerText(), /sans prise en compte des RTT/);
+    assert.match(await page.locator('#cardsBody').first().innerText(), /Les RTT ne sont pas pris en compte/);
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
