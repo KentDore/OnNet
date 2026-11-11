@@ -6,6 +6,7 @@ on:
       - migration/publicodes-urssaf
     paths:
       - 'package.json'
+      - 'package-lock.json'
       - 'src/publicodes-adapter.mjs'
       - 'scripts/build-publicodes.js'
       - 'scripts/publicodes-scenarios.mjs'
@@ -27,7 +28,7 @@ on:
       - '.github/workflows/publicodes-prototype.yml'
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   validate:
@@ -39,18 +40,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Generate dependency lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
-      - name: Commit generated lockfile
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package-lock.json
-          if ! git diff --cached --quiet; then
-            git commit -m "build: add npm dependency lockfile"
-            git push origin HEAD:${GITHUB_REF_NAME}
-          fi
-      - name: Install locked dependencies
+      - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test Publicodes adapter
         run: npm run test:prototype
@@ -68,13 +58,6 @@ jobs:
         run: |
           test -s dist/Onnet-publicodes-prototype.html
           ! grep -q 'PUBLICODES_BUNDLE' dist/Onnet-publicodes-prototype.html
-      - name: Upload generated lockfile
-        uses: actions/upload-artifact@v4
-        with:
-          name: onnet-package-lock
-          path: package-lock.json
-          if-no-files-found: error
-          retention-days: 3
       - name: Upload standalone prototype
         uses: actions/upload-artifact@v4
         with:
