@@ -28,6 +28,10 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . heures supplémentaires': 0,
     'salarié . cotisations . prévoyances . santé . salarié': 30,
     'salarié . cotisations . prévoyances . santé . employeur': 30,
+    'salarié . rémunération . frais professionnels . titres-restaurant . salarié': 84,
+    'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 84,
+    'salarié . rémunération . frais professionnels . non déductible': 0,
+    'salarié . rémunération . net social': 1894,
     'salarié . rémunération . net . payé après impôt': 1700,
     'impôt . montant': 1320,
     "impôt . taux d'imposition": 10
@@ -80,6 +84,10 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
   assert.equal(result.netBeforeTax, 1810)
   assert.equal(result.taxableNet, 1880)
+  assert.equal(result.mealTicketEmployee, 84)
+  assert.equal(result.mealTicketEmployer, 84)
+  assert.equal(result.mealTicketNonDeductible, 0)
+  assert.equal(result.netSocial, 1894)
   assert.equal(result.missingVariables.length, 0)
 })
 
@@ -133,6 +141,7 @@ test('active le taux personnalisé après annualisation du net imposable', async
   assert.equal(result.netAfterTax, 1700)
   assert.equal(result.incomeTax, 1320)
   assert.equal(result.calculatedTaxRate, 10)
+  assert.equal(result.mealTicketEmployee, 84)
 })
 
 test('alimente l’assiette annuelle officielle du taux neutre', async () => {
