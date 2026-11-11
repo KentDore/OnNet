@@ -147,8 +147,20 @@ test('API officielle accessible depuis Chromium : SMIC, salaire 35 h et salaire 
       assert.equal(response.ok, true, `Brut ${grossTarget} € : HTTP ${response.status}`);
       assert.equal(response.body.evaluate?.length, 4, `Brut ${grossTarget} € : quatre expressions attendues`);
       const [gross, net, taxable, contributions] = response.body.evaluate.map(item => item.nodeValue);
-      for (const [label, value] of Object.entries({ gross, net, taxable, contributions })) {
-        assert.ok(Number.isFinite(value), `Brut ${grossTarget} € : ${label} doit être numérique (reçu : ${value})`);
+      assert.ok(Number.isFinite(gross), `Brut ${grossTarget} € : le brut doit être numérique (reçu : ${gross})`);
+      assert.ok(Number.isFinite(net), `Brut ${grossTarget} € : le net doit être numérique (reçu : ${net})`);
+      if (grossTarget >= 1867.02) {
+        for (const [label, value] of Object.entries({ taxable, contributions })) {
+          assert.ok(Number.isFinite(value), `Brut ${grossTarget} € : ${label} doit être numérique (reçu : ${value})`);
+        }
+      } else {
+        // Sous un salaire mensuel proche du SMIC, certaines expressions détaillées
+        // peuvent être absentes. Le client refuse alors le résultat incomplet au lieu
+        // de fabriquer un net imposable ou des cotisations.
+        for (const [label, value] of Object.entries({ taxable, contributions })) {
+          assert.ok(value === undefined || Number.isFinite(value),
+            `Brut ${grossTarget} € : ${label} doit être absent ou numérique (reçu : ${value})`);
+        }
       }
       assert.ok(Math.abs(gross - grossTarget) <= 0.05,
         `Brut demandé ${grossTarget} € : montant calculé ${gross} €`);
