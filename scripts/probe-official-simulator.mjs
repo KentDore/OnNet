@@ -65,7 +65,18 @@ try {
         .filter(element => element.value.includes('simulateurs/salaire-brut-net'))
     )
   }
+  await page.keyboard.press('Escape')
+  await page.waitForTimeout(500)
+  let payslipLines = []
+  const payslipButton = page.getByRole('button', { name: /afficher la fiche de paie/i })
+  if (await payslipButton.count()) {
+    await payslipButton.first().click()
+    await page.waitForTimeout(1000)
+  }
   const body = await page.locator('body').innerText({ timeout: 15000 })
+  payslipLines = body.split('\n')
+    .filter(line => /mutuelle|santé|prévoyance|CSG|CRDS|cotisations|contribution|net imposable|net à payer|retraite|retenue/i.test(line))
+    .slice(0, 80)
   const labels = [
     'Salaire brut',
     'Salaire net',
@@ -86,6 +97,7 @@ try {
     fieldValues,
     shareDialog,
     shareValues,
+    payslipLines,
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
