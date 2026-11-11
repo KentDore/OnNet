@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - migration/publicodes-urssaf
+      - migration/publicodes-urssaf-final
     paths:
       - 'package.json'
       - 'package-lock.json'
