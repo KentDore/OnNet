@@ -705,3 +705,33 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     await context.close();
   }
 });
+
+
+test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de salaire', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#addScenario').click();
+    const hint = page.locator('#modalAdd39Hint');
+    assert.equal(await hint.isVisible(), false);
+    await page.locator('#modalAddDuree [data-duree="39"]').click();
+    assert.equal(await hint.isVisible(), true);
+    assert.match(await hint.innerText(), /majorées à 25 %.*accord collectif.*RTT/);
+    await page.locator('#modalAddDuree [data-duree="35"]').click();
+    assert.equal(await hint.isVisible(), false);
+    await page.locator('#modalAddDuree [data-duree="39"]').click();
+    await page.locator('#modalAddInput').fill('3300');
+    await page.locator('#modalAddSubmit').click();
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
+      null, { timeout: 15000 }
+    );
+    const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.scenarios[1].dureeType, '39');
+    await page.locator('#addScenario').click();
+    assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await hint.isVisible(), true);
+    await page.locator('#modalAddCancel').click();
+  } finally {
+    await context.close();
+  }
+});
