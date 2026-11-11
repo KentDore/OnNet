@@ -215,6 +215,7 @@ function updateUrssafStatus(computed){
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
+  if(benchmarks.mode === 'official' && officialSmicState.status === 'ready') ready.push(officialSmicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
@@ -1054,7 +1055,8 @@ function renderBenchmarks(computed){
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel est la valeur officielle renseignée ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient ${benchmarks.mode === 'official' ? 'de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf' : 'de votre saisie manuelle'} ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          ${benchmarks.mode === 'official' && officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
           <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
