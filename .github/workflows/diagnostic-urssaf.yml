@@ -35,5 +35,6 @@ jobs:
         run: npm install --no-save --no-package-lock playwright@1.55.1
       - name: Installer Chromium
         run: npx playwright install chromium
+      # La comparaison du simulateur web reste diagnostique et hors CI standard.
       - name: Inspecter le simulateur web officiel (cas synthétique)
         run: node scripts/probe-official-simulator.mjs
