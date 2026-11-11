@@ -276,8 +276,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
   if (taxMode !== null) {
     expressions.push(
       EXPRESSIONS.netAfterTax,
-      EXPRESSIONS.incomeTax,
-      EXPRESSIONS.calculatedTaxRate
+      EXPRESSIONS.incomeTax
     )
   }
 
@@ -319,7 +318,13 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     taxMode,
     netAfterTax: taxMode === null ? null : values[7],
     incomeTax: taxMode === null ? null : values[8],
-    calculatedTaxRate: taxMode === null ? null : values[9],
+    calculatedTaxRate: taxMode === null
+      ? null
+      : taxMode === 'personnalisé'
+        ? numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
+        : values[2] > 0
+          ? Math.max(0, ((values[1] - values[7]) / values[2]) * 100)
+          : null,
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: new Date().toISOString()
