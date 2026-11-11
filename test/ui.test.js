@@ -642,7 +642,7 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
     assert.equal(await overtimeHint.isVisible(), true);
-    assert.match(await overtimeHint.innerText(), /majorées à 25 %.*accord collectif.*RTT/);
+    assert.match(await overtimeHint.innerText(), /droit commun.*majorées à 25 %.*conventions collectives ne sont pas prises en compte.*RTT/);
     await modal.locator('#modalOnboardingDuree [data-duree="35"]').click();
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingInput').fill('2500');
@@ -718,7 +718,7 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
     assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
     assert.equal(await hint.isVisible(), true);
-    assert.match(await hint.innerText(), /majorées à 25 %.*accord collectif.*RTT/);
+    assert.match(await hint.innerText(), /droit commun.*majorées à 25 %.*conventions collectives ne sont pas prises en compte.*RTT/);
     await page.locator('#modalAddDuree [data-duree="35"]').click();
     assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
