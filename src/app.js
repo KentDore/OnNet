@@ -687,7 +687,7 @@ function renderCard(s, r, showRemove){
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Après impôt : —'}</div>
       <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
-      ${r && r.warnings && r.warnings.length ? `<details class="result-source"><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}
+      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
     <div class="field-row">
@@ -1384,11 +1384,18 @@ function updateComputed(options = {}){
     if(hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —';
 
     const state = document.getElementById(`c-result-state-${u}`);
-    if(state){
-      const error = getCalculationError(s,foyer);
-      state.textContent = r
-        ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
-        : (error || 'Calcul en attente de validation par l’API Urssaf.');
+    const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
+    const error = getCalculationError(s,foyer);
+    if(state) state.textContent = r
+      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      : (error || 'Calcul en attente de validation par l’API Urssaf.');
+    if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
+    const warnings = document.getElementById(`c-result-warnings-${u}`);
+    if(warnings){
+      warnings.hidden = !(r && r.warnings && r.warnings.length);
+      warnings.innerHTML = r && r.warnings && r.warnings.length
+        ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>`
+        : '';
     }
     const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
     setShown(`c-trwarn-${u}`, trWarn);
