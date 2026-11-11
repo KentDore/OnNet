@@ -636,3 +636,28 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
     await context.close();
   }
 });
+
+
+test('l’onboarding garde les paramètres secondaires repliés et ne suppose aucune mutuelle', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.evaluate(() => localStorage.removeItem('onnet.state.v1'));
+    await page.reload();
+    const modal = page.locator('#modalOverlay');
+    await modal.waitFor({ state: 'visible' });
+    assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
+    assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '');
+    assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '');
+    await modal.locator('#modalOnboardingInput').fill('2500');
+    await modal.locator('#modalOnboardingSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.brut === 2500;
+    });
+    const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(state.scenarios[0].mutuelle, 0);
+    assert.equal(state.scenarios[0].mutuellePat, 0);
+  } finally {
+    await context.close();
+  }
+});
