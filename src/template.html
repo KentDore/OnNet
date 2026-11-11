@@ -6,6 +6,7 @@
 <title>Onnet — Simulateur brut → net</title>
 <style>
 @@ONNET_STYLES@@
+.urssaf-status{align-items:flex-start;gap:12px;margin:0 0 16px;display:flex}.urssaf-status-copy{flex:1;min-width:0}.urssaf-status-copy p{margin:6px 0 0;line-height:1.5}.urssaf-status-copy button{margin-top:12px}.result-source{font-size:11px;color:var(--muted,#697386);margin-top:6px}.result-error{margin-top:8px;font-size:13px;color:#9b2929}.calculation-meta{font-size:11px;color:var(--muted,#697386);margin-top:8px}
 </style>
 </head>
 <body>
@@ -15,7 +16,7 @@
     <div class="header-top">
       <div class="brand-block">
         <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v@@ONNET_VERSION@@</span></div>
-        <div class="eyebrow">Simulateur de paie · cotisations 2026</div>
+        <div class="eyebrow">Simulateur de paie · moteur officiel Urssaf</div>
       </div>
       <div class="header-actions">
         <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
@@ -41,6 +42,18 @@
   </header>
 
   <main id="contenu">
+  <section class="alert alert-info urssaf-status" id="urssafStatus" role="status" aria-live="polite">
+    <span aria-hidden="true">ⓘ</span>
+    <div class="urssaf-status-copy">
+      <strong>Source des calculs : moteur officiel Mon-entreprise de l’Urssaf.</strong>
+      <p id="urssafStatusText">Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf pour obtenir les résultats. Aucun calcul local de cotisations ou d’impôt n’est utilisé.</p>
+      <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
+      <details class="result-source" id="urssafWarnings" hidden>
+        <summary>Avertissements et variables par défaut du moteur</summary>
+        <ul id="urssafWarningsList"></ul>
+      </details>
+    </div>
+  </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire ?</h2>
     <div class="hint" id="stackHint"></div>
@@ -216,86 +229,27 @@
         </div>
       </div>
 
-      <div class="module-card" id="absenceModule">
-        <button type="button" class="module-toggle-head" id="absenceModuleToggle" aria-expanded="false" aria-controls="absenceModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12a10.06 10.06 0 0 0-20 0Z"></path><path d="M12 12v8a2 2 0 0 0 4 0"></path><path d="M12 2v1"></path></svg></span>
-          <span class="module-info">
-            <span class="module-name">Simuler une absence</span>
-            <span class="module-desc">Congés payés ou arrêt de travail</span>
-          </span>
-          <span class="module-switch" aria-hidden="true"></span>
-        </button>
-        <div class="module-body" id="absenceModuleBody">
-          <div class="hint">Calculé à partir de <strong id="absenceBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas, sur la base d'un mois de 30 jours.</div>
 
-          <div class="field-row">
-            <label>1. Type d'absence</label>
-            <div class="pill-toggle" id="absenceTypeToggle" role="group" aria-label="Type d'absence" style="width:100%;">
-              <button type="button" data-atype="conges" aria-pressed="true" style="flex:1;">Congés payés</button>
-              <button type="button" data-atype="arret" aria-pressed="false" style="flex:1;">Arrêt de travail</button>
-            </div>
-          </div>
-
-          <div class="field-row">
-            <label for="absenceDuree">2. Durée de l'absence (jours sur le mois)</label>
-            <input type="text" inputmode="decimal" id="absenceDuree" value="5">
-          </div>
-
-          <div id="arretExtraFields" style="display:none;">
-            <div class="field-row">
-              <label for="ancienneteSelect">3. Ancienneté dans l'entreprise</label>
-              <select id="ancienneteSelect">
-                <option value="90">1 an ou plus — maintien à 90 % (loi de mensualisation)</option>
-                <option value="50">Moins d'1 an — indemnités de la Sécu seules (≈ 50 %)</option>
-                <option value="custom">Je connais mon propre taux</option>
-              </select>
-              <div class="sub-hint">Pourcentage du salaire maintenu. Votre convention collective peut prévoir davantage — à vérifier sur votre bulletin de paie.</div>
-            </div>
-            <div class="field-row" id="arretPctRow" style="display:none;">
-              <label for="arretPct">% du salaire maintenu (votre taux)</label>
-              <input type="text" inputmode="decimal" id="arretPct" value="90">
-            </div>
-
-            <div class="field-row">
-              <label>4. Délai de carence (3 premiers jours)</label>
-              <div class="pill-toggle" id="carenceToggle" role="group" aria-label="Délai de carence" style="width:100%;">
-                <button type="button" data-carence="non" aria-pressed="true" style="flex:1;">Non payée (cas général)</button>
-                <button type="button" data-carence="oui" aria-pressed="false" style="flex:1;">Payée par l'employeur</button>
-              </div>
-            </div>
-          </div>
-
-          <button type="button" class="btn btn-primary" id="addAbsenceScenario" style="width:100%; margin-top:6px;">Ajouter ce salaire</button>
-
-          <div class="sub-hint" id="absenceHint" style="margin-top:14px; margin-bottom:0;"></div>
-        </div>
-      </div>
 
     </div>
   </section>
 
   <div class="disclaimer reveal">
-    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Pour un chiffre exact, référez-vous à votre bulletin de paie et à votre avis d'imposition. Seul le régime non-cadre du secteur privé est modélisé. En mode « J'ai mon taux », le taux personnel reste constant d'un salaire à l'autre : l'écart entre deux salaires de montants différents y est optimiste.</p>
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés par le moteur officiel Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
     <details class="more">
       <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
-        <div class="section-tag">Cotisations</div>
-        <p>Calculées ligne par ligne sur les assiettes réelles : tranche 1 jusqu'au PMSS, tranche 2 au-delà, CSG/CRDS sur 98,25 % du brut. Le calcul annuel utilise les tranches annuelles (PASS). Seul le régime non-cadre du secteur privé est modélisé : cadres, fonction publique et taux forfaitaire ne le sont plus, pour ne pas disperser la précision du calcul sur plusieurs régimes chacun approximé séparément.</p>
+        <div class="section-tag">Source des calculs</div>
+        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations ni l’impôt. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
-        <div class="section-tag">Heures supplémentaires</div>
-        <p>La réduction de cotisations salariales est plafonnée au taux paramétré <em>et</em> aux cotisations vieillesse et retraite complémentaire effectivement dues. Ces heures sont également exonérées d'impôt sur le revenu dans la limite de 7 500 € de net imposable par an : la part de net imposable qui leur revient est estimée au prorata du brut, les cotisations déductibles n'étant pas ventilables exactement entre heures normales et heures supplémentaires.</p>
+        <div class="section-tag">Hypothèses transmises au moteur</div>
+        <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, sans avantages en nature, primes libres, remboursements de transport spécifiques ni régime particulier (DFS, taux réduits ou impatrié). La commune et le département de l’établissement sont sélectionnés séparément. Le scénario 39 h suppose 4 heures supplémentaires hebdomadaires majorées de 25 %. La mutuelle et les titres-restaurant sont renseignés séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
 
-        <div class="section-tag">Titres restaurant</div>
-        <p>La part patronale doit être comprise entre 50 % et 60 % de la valeur faciale <em>et</em> ne pas dépasser le plafond par titre, sous peine de réintégration dans l'assiette des cotisations.</p>
+        <div class="section-tag">Fonctions en cours de raccordement</div>
+        <p>Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore modélisés dans le calculateur principal par l’API. Ces scénarios sont signalés comme non calculables : OnNet n’affiche pas d’estimation issue de l’ancien moteur local.</p>
 
-        <div class="section-tag">Absences</div>
-        <p>Les congés payés sont estimés par maintien du net habituel au prorata des jours, sans comparer la méthode du dixième au maintien de salaire. L'arrêt de travail est estimé par un pourcentage forfaitaire du net, avec un délai de carence de 3 jours par défaut, sur un mois de 30 jours. Ce n'est pas un calcul d'IJSS : le montant réel dépend notamment des salaires de référence, des plafonds, de la durée de l'arrêt, de l'ancienneté et de la convention collective. Ces deux résultats sont indicatifs et ne remplacent pas un bulletin de paie.</p>
-
-        <div class="section-tag">Impôt sur le revenu</div>
-        <p>Par défaut, calculé au barème IR 2026 applicable aux revenus 2025 : abattement de 10 % pour frais professionnels (plancher 495 €, plafond 14 171 €), quotient familial avec plafonnement à 1 807 € par demi-part additionnelle, et décote. Le montant affiché est le <em>supplément</em> d'impôt imputable à ce salaire, c'est-à-dire l'écart entre l'impôt du foyer avec et sans lui — c'est ce qui compte pour comparer deux salaires, un taux moyen unique sous-estimant toujours l'effet d'une augmentation. En couple, renseignez les autres revenus du foyer, faute de quoi l'impôt sera très sous-estimé. Le bloc Foyer fiscal permet aussi de saisir directement son taux de prélèvement à la source réel plutôt que de dépendre du barème reconstitué : ce taux est exact pour la situation actuelle, mais reste constant d'un salaire à l'autre alors que le taux réel augmente avec le revenu — l'écart entre deux salaires de montants différents y est donc optimiste, une alerte le rappelle dans ce cas. Ne sont en revanche pas pris en compte : les crédits et réductions d'impôt, les revenus fonciers ou de capitaux mobiliers, les pensions, le taux neutre ou individualisé, les acomptes, les régularisations en cours d'année et la contribution exceptionnelle sur les hauts revenus.</p>
-
-        <div class="section-tag">Ce qui n'est pas modélisé</div>
-        <p>La régularisation progressive du plafond en cours d'année, le temps partiel, la prévoyance et les régimes Alsace-Moselle.</p>
+        <div class="section-tag">Limites du modèle</div>
+        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Certaines règles fiscales du modèle sont expérimentales ou simplifiées. Le net après impôt reste une estimation, pas un avis d’imposition. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
       </div>
     </details>
   </div>
@@ -303,7 +257,10 @@
 </div>
 
 <script>
-@@ONNET_CALC@@
+@@ONNET_API@@
+</script>
+<script>
+@@ONNET_UTILS@@
 </script>
 <script>
 @@ONNET_APP@@

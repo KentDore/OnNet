@@ -10,13 +10,17 @@ async function main(){
   const root = path.resolve(__dirname, '..');
   const template = await fs.readFile(path.join(root, 'src', 'template.html'), 'utf8');
   const styles = await fs.readFile(path.join(root, 'src', 'styles.css'), 'utf8');
-  const calc = await fs.readFile(path.join(root, 'src', 'calc.js'), 'utf8');
+  const apiSource = await fs.readFile(path.join(root, 'src', 'urssaf-api-client.mjs'), 'utf8');
+  const api = apiSource.replace(/^export\s+/gm, '') +
+    '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n';
+  const utils = await fs.readFile(path.join(root, 'src', 'ui-utils.js'), 'utf8');
   const app = await fs.readFile(path.join(root, 'src', 'app.js'), 'utf8');
   let html = template;
   for(const [token, value] of [
     ['@@ONNET_VERSION@@', version],
     ['@@ONNET_STYLES@@', styles],
-    ['@@ONNET_CALC@@', calc],
+    ['@@ONNET_API@@', api],
+    ['@@ONNET_UTILS@@', utils],
     ['@@ONNET_APP@@', app]
   ]){
     if(!html.includes(token)) throw new Error('Template marker missing: ' + token);

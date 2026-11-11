@@ -1,0 +1,28 @@
+{
+  "name": "onnet",
+  "version": "2.1.6",
+  "private": true,
+  "description": "Prototype de migration du calcul salarial vers Publicodes / modèle Urssaf",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build:publicodes": "node scripts/build-publicodes.js",
+    "test:publicodes": "node --test test/publicodes.test.js",
+    "test:prototype": "npm run test:all",
+    "scenarios:publicodes": "node scripts/publicodes-scenarios.mjs",
+    "compare:urssaf-api": "node scripts/compare-urssaf-api.mjs",
+    "diagnose:urssaf-meal-tickets": "node scripts/diagnose-urssaf-meal-tickets.mjs",
+    "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs",
+    "diagnose:publicodes-tax": "node scripts/diagnose-publicodes-tax.mjs",
+    "test:urssaf-api": "node --test test/urssaf-api-client.test.mjs",
+    "test:all": "npm run test:publicodes && npm run test:urssaf-api"
+  },
+  "dependencies": {
+    "modele-social": "11.1.0",
+    "publicodes": "1.10.4"
+  },
+  "devDependencies": {
+    "esbuild": "0.28.2"
+  }
+}

@@ -1,0 +1,64 @@
+name: Diagnostic API Urssaf (validation production)
+# Le diagnostic navigateur du simulateur officiel peut être déclenché par [probe-simulator].
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [migration/publicodes-urssaf-final]
+
+concurrency:
+  group: onnet-urssaf-production-diagnostic
+  cancel-in-progress: false
+
+jobs:
+  compare:
+    if: contains(github.event.head_commit.message, '[run-urssaf-matrix]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances du projet
+        run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
+      - name: Comparer l'API aux diagnostics Publicodes (non bloquant pour la production)
+        run: npm run compare:urssaf-api
+
+  smoke:
+    if: github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[run-urssaf-smoke]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances du projet
+        run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
+      - name: Vérifier les réponses réelles de l’API Urssaf
+        run: node scripts/smoke-urssaf-api.mjs
+
+  probe-simulator:
+    if: contains(github.event.head_commit.message, '[probe-simulator]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Installer les dépendances du projet
+        run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
+      - name: Installer Playwright pour le simulateur officiel
+        run: npm install --no-save --no-package-lock playwright@1.55.1
+      - name: Installer Chromium
+        run: npx playwright install chromium
+      - name: Inspecter le simulateur web officiel (cas synthétique)
+        run: node scripts/probe-official-simulator.mjs

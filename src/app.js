@@ -3,21 +3,351 @@
 
 // ---------- État ----------
 let idCounter = 0;
+
+let urssafConsentGranted = false;
+let urssafGeneration = 0;
+let urssafDebounceTimer = null;
+let urssafRequestQueue = Promise.resolve();
+let urssafLastRequestAt = 0;
+const urssafResultCache = new Map();
+const urssafErrorCache = new Map();
+let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+
+function currentCalculationDate(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function taxInputForFoyer(f){
+  if(f.mode === 'taux'){
+    return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
+  }
+  return {
+    modeImpot:'barème',
+    situationFamille:f.couple ? 'couple' : 'célibataire',
+    enfantsACharge:Number(f.personnesCharge) || 0,
+    parentIsole:!f.couple && f.parentIsole === true,
+    autresRevenusImposables:f.couple ? (Number(f.autresRevenus) || 0) : 0
+  };
+}
+
+function scenarioCalculationDate(s){
+  return s.isBenchmark && benchmarks.mode === 'manual' ? benchmarks.smicDate : currentCalculationDate();
+}
+
+function calculationKey(s, f){
+  return JSON.stringify({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto) || 0,
+    nbMois:Number(s.nbMois || 12),
+    primes:Number(s.primes || 0),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
+  });
+}
+
+function unsupportedCalculationReason(s){
+  if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
+    return 'Le salaire brut doit être strictement supérieur à 0 € pour effectuer une simulation.';
+  }
+  if(Number(s.nbMois || 12) !== 12){
+    return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
+  }
+  if(Number(s.primes || 0) > 0){
+    return 'Ce scénario comporte des primes annuelles libres qui ne sont pas encore raccordées à l’API Urssaf.';
+  }
+  if(!String(s.codePostal || '').trim() || !String(s.departement || '').trim()){
+    return 'Sélectionnez une commune dans les suggestions pour renseigner son code postal et son département avant le calcul.';
+  }
+  return null;
+}
+
+function buildUrssafInput(s, f){
+  const reason = unsupportedCalculationReason(s);
+  if(reason) throw new Error(reason);
+  return Object.assign({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    benchmarkOnly:Boolean(s.isBenchmark)
+  }, s.isBenchmark ? {} : taxInputForFoyer(f));
+}
+
+function mapUrssafResultToOnNet(result){
+  if(result.benchmarkOnly){
+    return {
+      engine:result.engine,
+      checkedAt:result.checkedAt,
+      missingVariables:result.missingVariables,
+      warnings:result.warnings,
+      netApres:result.netBeforeTax
+    };
+  }
+  const gross = result.grossCalculated;
+  const overtimeHours = result.overtimeHours;
+  const monthlyHours = HEURES_BASE + overtimeHours;
+  // Le total des cotisations salarié inclut déjà la part salariale de mutuelle.
+  // On isole cette ligne pour conserver la décomposition visuelle sans la compter deux fois.
+  const otherEmployeeContributions = Math.max(0, result.employeeContributions - result.employeeHealth);
+  const monthly = {
+    brutTotal:gross,
+    netApres:result.netBeforeTax,
+    netImposable:result.taxableNet,
+    cotisNettes:otherEmployeeContributions,
+    mutuelle:result.employeeHealth,
+    netSocial:result.netBeforeTax + result.mealTicketEmployee
+  };
+  const annual = {
+    brutTotal:gross * 12,
+    netApres:result.netBeforeTax * 12,
+    netImposable:result.taxableNet * 12
+  };
+  const tr = {
+    totalSalarie:result.mealTicketEmployee,
+    totalEmployeur:result.mealTicketEmployer,
+    reintegre:result.mealTicketNonDeductible,
+    motif:result.mealTicketNonDeductible > 0.005 ? 'api' : null
+  };
+  return {
+    engine:result.engine,
+    checkedAt:result.checkedAt,
+    missingVariables:result.missingVariables,
+    warnings:result.warnings,
+    hasHS:overtimeHours > 0,
+    heuresSup:overtimeHours,
+    brutHS:result.overtimePay,
+    tr,
+    m:monthly,
+    a:annual,
+    netApres:monthly.netApres,
+    netImposable:monthly.netImposable,
+    annuelNet:annual.netApres,
+    netApresImpot:result.netAfterTax,
+    annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
+    impotAnnuel:result.incomeTax,
+    tauxImpot:result.calculatedTaxRate,
+    brutHoraire:result.baseGross / HEURES_BASE,
+    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
+    tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
+  };
+}
+
+function getSmicGross(){
+  if(benchmarks.mode === 'manual') return benchmarks.smicBrut;
+  return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
+}
+
+function buildSmicScenario(base){
+  const amount = getSmicGross();
+  if(!Number.isFinite(amount) || amount <= 0) return null;
+  return Object.assign({}, base, {
+    id:-1, name:'Référence SMIC', brut:amount, dureeType:'35',
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
+    nbMois:12, primes:0, isBenchmark:true
+  });
+}
+
+function getCurrentComputed(){
+  return scenarios.map(s => ({s, r:urssafResultCache.get(calculationKey(s,foyer)) || null}));
+}
+
+function getCalculationError(s, f){
+  const key = calculationKey(s, f || foyer);
+  return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
+}
+
+function getCachedSmicResult(){
+  const base = findScenario(refId) || scenarios[0];
+  if(!base) return null;
+  const scenario = buildSmicScenario(base);
+  if(!scenario) return null;
+  return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
+}
+
+function queuedUrssafFetch(url, options){
+  const request = urssafRequestQueue.then(async () => {
+    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
+    if(delay) await new Promise(resolve => setTimeout(resolve, delay));
+    urssafLastRequestAt = Date.now();
+    return window.fetch(url, options);
+  });
+  urssafRequestQueue = request.catch(() => {});
+  return request;
+}
+
+function updateUrssafStatus(computed){
+  const statusText = document.getElementById('urssafStatusText');
+  const button = document.getElementById('urssafCalculateBtn');
+  if(!statusText || !button) return;
+  const diagnostics = document.getElementById('urssafWarnings');
+  const diagnosticsList = document.getElementById('urssafWarningsList');
+  if(diagnostics) diagnostics.hidden = true;
+  if(diagnosticsList) diagnosticsList.innerHTML = '';
+  if(!urssafConsentGranted){
+    statusText.textContent = 'Avant le calcul, OnNet vous informe que les paramètres nécessaires (salaire, durée, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API Urssaf. Aucun calcul local de cotisations ou d’impôt ne sera utilisé.';
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Calculer avec l’Urssaf';
+    return;
+  }
+  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
+  const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicResult = getCachedSmicResult();
+  const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
+  const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
+    (benchmarks.mode === 'official' && officialSmicState.status === 'error');
+  const smicPending = !smicResult && !smicError;
+  const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
+  if(smicPending) pending.push({s:smicScenario,r:null});
+  if(failed.length || smicError){
+    statusText.textContent = (failed.length + (smicError ? 1 : 0)) + ' appel(s) à l’API Urssaf ont échoué. Consultez les détails puis réessayez. Aucun résultat local de remplacement n’est fourni.';
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Réessayer les calculs';
+    return;
+  }
+  if(unsupported.length){
+    statusText.textContent = unsupported.length + ' scénario(s) ne sont pas encore pris en charge. Consultez les messages dans les cartes, puis modifiez les paramètres concernés ; aucun calcul local n’est effectué.';
+    button.hidden = true;
+    return;
+  }
+  if(pending.length){
+    statusText.textContent = 'Calcul des salaires et du repère SMIC par l’API officielle Mon-entreprise / Urssaf. Les résultats affichés sont recalculés dès que les paramètres changent.';
+    button.hidden = true;
+    return;
+  }
+  const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
+  if(benchmarks.mode === 'official' && officialSmicState.status === 'ready') ready.push(officialSmicState);
+  const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
+  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
+  const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
+  let message = 'Calcul terminé avec le moteur officiel Mon-entreprise de l’Urssaf.';
+  if(checkedAt) message += ' Dernière réponse reçue le ' + new Date(checkedAt).toLocaleString('fr-FR') + '.';
+  if(missing.length) message += ' Variables non renseignées utilisant une valeur par défaut (' + missing.length + ') : ' + missing.slice(0,4).join(', ') + (missing.length > 4 ? '…' : '') + '.';
+  if(warnings.length) message += ' Le moteur a émis ' + warnings.length + ' avertissement(s). Consultez le détail.';
+  statusText.textContent = message;
+  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
+    diagnosticsList.innerHTML = [
+      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
+      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
+    ].join('');
+    diagnostics.hidden = false;
+  }
+  button.hidden = true;
+}
+
+async function executeUrssafCalculations(generation, forceRetry){
+  // Le SMIC est une règle officielle, pas une constante copiée dans OnNet.
+  // En cas d'échec, aucun ancien montant codé en dur n'est utilisé en silence.
+  if(benchmarks.mode === 'official' &&
+     (officialSmicState.status !== 'ready' || forceRetry === true)){
+    officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+    updateUrssafStatus(getCurrentComputed());
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
+        throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+      );
+      if(generation !== urssafGeneration) return;
+      if(!Number.isFinite(result.value) || result.value <= 0){
+        throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
+      }
+      officialSmicState = {
+        status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
+      };
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      officialSmicState = {
+        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
+      };
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+
+  const jobs = scenarios.map(s => Object.assign({},s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  if(smicScenario) jobs.push(smicScenario);
+  const seen = new Set();
+  for(const s of jobs){
+    if(generation !== urssafGeneration) return;
+    const key = calculationKey(s,foyer);
+    if(seen.has(key) || urssafResultCache.has(key)) continue;
+    seen.add(key);
+    if(forceRetry) urssafErrorCache.delete(key);
+    if(urssafErrorCache.has(key)) continue;
+    const unsupported = unsupportedCalculationReason(s);
+    if(unsupported) continue;
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.calculateWithUrssafApi !== 'function'){
+        throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
+        buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
+      );
+      if(generation !== urssafGeneration) return;
+      urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
+    }catch(error){
+      if(generation !== urssafGeneration) return;
+      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+    }
+    updateUrssafStatus(getCurrentComputed());
+  }
+  if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
+}
+
+function scheduleUrssafCalculations(immediate, forceRetry){
+  if(urssafDebounceTimer) clearTimeout(urssafDebounceTimer);
+  const generation = ++urssafGeneration;
+  const computed = getCurrentComputed();
+  updateUrssafStatus(computed);
+  if(!urssafConsentGranted) return;
+  const run = () => executeUrssafCalculations(generation, forceRetry === true);
+  if(immediate) run();
+  else urssafDebounceTimer = setTimeout(run, 300);
+}
+
 // Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
 // une seule fois (effacé à la fin du render() qui l'utilise).
 let justAddedId = null;
 function mkScenario(over){
   const base = {
-    id: idCounter++, name:'Salaire', brut:2800,
+    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
     mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
     joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
     partResto:scenarioDefaults.partResto,
     dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
     treiziemeMoisBase:'base',
-    maintienPct:90, carenceCouverte:false,
-    absenceType:'none', absenceDuree:0
   };
   const scenario = Object.assign(base, over || {});
+  if(over && Object.prototype.hasOwnProperty.call(over, 'commune') && over.commune !== 'Pacé' &&
+     !Object.prototype.hasOwnProperty.call(over, 'codePostal') && !Object.prototype.hasOwnProperty.call(over, 'departement')){
+    scenario.codePostal = '';
+    scenario.departement = '';
+  }
   // Compatibilité avec les créations historiques : la part employeur suit
   // la part salarié, sauf lorsqu'une valeur distincte est fournie.
   if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
@@ -32,9 +362,9 @@ function defaultScenarios(){
   ];
 }
 
-// ---------- Persistance (localStorage uniquement — rien ne quitte le navigateur) ----------
+// ---------- Persistance locale (les données de paie ne sont envoyées qu'après consentement) ----------
 const STORAGE_KEY = 'onnet.state.v1';
-const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes','maintienPct','absenceDuree'];
+const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto','partResto','nbMois','primes'];
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
@@ -42,16 +372,18 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
 const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
-const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut: 1867.02, smicDate: '2026-06-01' });
+const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut:null, smicDate:'', mode:'official' });
 function loadBenchmarks(){
   try{
     const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    const smicBrut = saved ? Number(saved.smicBrut) : NaN;
-    const smicDate = saved && typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
-    return {
-      smicBrut: Number.isFinite(smicBrut) && smicBrut >= 0 && smicBrut <= 100000 ? smicBrut : BENCHMARK_DEFAULTS.smicBrut,
-      smicDate: /^\d{4}-\d{2}-\d{2}$/.test(smicDate) ? smicDate : BENCHMARK_DEFAULTS.smicDate
-    };
+    if(!saved || typeof saved !== 'object') return { ...BENCHMARK_DEFAULTS };
+    const smicBrut = Number(saved.smicBrut);
+    const smicDate = typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
+    // Toute configuration antérieure persistée venait d'une saisie manuelle.
+    // On la conserve afin de ne pas écraser un choix explicite de l'utilisateur.
+    if(!Number.isFinite(smicBrut) || smicBrut <= 0 || smicBrut > 100000 ||
+       !/^\d{4}-\d{2}-\d{2}$/.test(smicDate)) return { ...BENCHMARK_DEFAULTS };
+    return { smicBrut, smicDate, mode:'manual' };
   }catch(_){
     return { ...BENCHMARK_DEFAULTS };
   }
@@ -64,8 +396,8 @@ function sanitizeScenario(raw){
   const clean = Object.assign({}, raw);
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
-    valeurResto:[0,1000], partResto:[0,100], nbMois:[1,24],
-    primes:[0,100000000], maintienPct:[0,100], absenceDuree:[0,30]
+    valeurResto:[0,500], partResto:[0,100], nbMois:[1,24],
+    primes:[0,100000000]
   };
   for(const [key, range] of Object.entries(limits)){
     if(clean[key] === undefined) continue;
@@ -79,14 +411,26 @@ function sanitizeScenario(raw){
   if(clean.mutuellePat === undefined){
     clean.mutuellePat = clean.mutuelle === undefined ? scenarioDefaults.mutuelle : clean.mutuelle;
   }
+  clean.commune = typeof clean.commune === 'string' && clean.commune.trim()
+    ? clean.commune.trim().replace(/\s+/g, ' ').slice(0, 80)
+    : 'Pacé';
+  if(clean.commune === 'Pacé' && !clean.codePostal && !clean.departement){
+    clean.codePostal = '35740';
+    clean.departement = 'Ille-et-Vilaine';
+  }
+  clean.codePostal = typeof clean.codePostal === 'string' && /^\d{5}$/.test(clean.codePostal) ? clean.codePostal : '';
+  clean.departement = typeof clean.departement === 'string' ? clean.departement.trim().slice(0, 80) : '';
   if(!['base','ensemble'].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = 'base';
   if(typeof clean.name !== 'string' || !clean.name.trim()) clean.name = 'Salaire';
   clean.name = clean.name.trim().slice(0, 80);
   delete clean.statut;
   delete clean.rate;
   if(clean.dureeType !== '35' && clean.dureeType !== '39') clean.dureeType = '35';
-  if(!['none','conges','arret'].includes(clean.absenceType)) clean.absenceType = 'none';
-  clean.carenceCouverte = clean.carenceCouverte === true;
+  // Les scénarios d'absence historiques sont supprimés et ne sont plus calculés.
+  delete clean.absenceType;
+  delete clean.absenceDuree;
+  delete clean.maintienPct;
+  delete clean.carenceCouverte;
   if(!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
@@ -224,12 +568,12 @@ function buildShareUrl(options){
 
   const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
     // Données essentielles à la comparaison salariale.
-    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType,
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, commune:s.commune || 'Pacé',
+    codePostal:s.codePostal || '', departement:s.departement || '',
     nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
     // que laisser les valeurs par défaut du navigateur destinataire s'appliquer.
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:50,
-    absenceType:'none', absenceDuree:0, maintienPct:90, carenceCouverte:false
   }));
 
   const payload = {
@@ -280,7 +624,7 @@ function showShareOptionsModal(){
       <legend>Informations facultatives</legend>
       <label class="share-extra-option" for="shareIncludeDetails">
         <input type="checkbox" id="shareIncludeDetails">
-        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur et titres restaurant.</small></span>
       </label>
       <label class="share-extra-option" for="shareIncludeFoyer">
         <input type="checkbox" id="shareIncludeFoyer">
@@ -381,24 +725,27 @@ if(initialSource){
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net une fois l\'impôt estimé au barème IR 2026 (revenus 2025) — pour les revenus 2026, le barème 2027 n\'est pas encore connu.',
+  netApresImpot: 'Le net après prélèvement à la source évalué par le modèle fiscal officiel Mon-entreprise / Urssaf selon les paramètres du foyer transmis.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
 
 function findScenario(id){ return scenarios.find(s => s.id === id); }
 function heroValue(r){
-  if(displayAmt === 'net') return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
+  if(displayAmt === 'net'){
+    const value = displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+    return Number.isFinite(value) ? value : null;
+  }
   return displayPeriod === 'mois' ? r.m.brutTotal : r.a.brutTotal;
 }
 function heroLabel(){
-  return (displayAmt === 'net' ? 'Net' : 'Brut') + ' ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  return 'Net après impôt estimé ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 function heroPasValue(r){
-  return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+  return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
 }
 function heroPasShown(){
-  // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
   return displayAmt === 'net';
 }
 
@@ -414,16 +761,20 @@ function num(id, key, uid, value, opts){
 function renderCard(s, r, showRemove){
   const uid = s.id;
   const isRef = s.id === refId;
-
-  const trWarn = r.tr.reintegre > 0.005;
+  const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
+  const calculationError = getCalculationError(s,foyer);
   const trMotifs = {
-    sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-    sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-    plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+    sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+    plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+    api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
   };
-
+  const resultState = r ? 'ready' : (calculationError ? 'error' : 'pending');
+  const resultText = r
+    ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+    : (calculationError || 'Calcul en attente de validation par l’API Urssaf.');
   return `
-  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}">
+  <div class="card ${isRef ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" data-card="${uid}" data-result-state="${resultState}">
     <div class="card-top">
       <button type="button" class="drag-handle" draggable="true" data-drag-handle="${uid}" aria-label="Déplacer la tuile ${esc(s.name)}. Utilisez les flèches gauche et droite pour la réordonner au clavier." aria-keyshortcuts="ArrowLeft ArrowRight" title="Cliquer et glisser pour réorganiser">⠿</button>
       <label class="sr-only" for="f-name-${uid}">Nom du salaire</label>
@@ -433,19 +784,19 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="hero">
-      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${fmt(heroValue(r))}</div>
+      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">Après impôt : <strong>${fmt(heroPasValue(r))}</strong></div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
+      <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
+      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
-    ${s.absenceType === 'arret' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j d'arrêt sur 30, ${s.maintienPct}% maintenus, ${s.carenceCouverte ? 'carence de 3 j couverte' : 'délai de carence de 3 j inclus'}. Ancienneté et convention collective non prises en compte.</span></div>` : ''}
-    ${s.absenceType === 'conges' ? `<div class="alert alert-info" style="margin:-6px 0 14px;"><span>${ICON.info}</span><span>${s.absenceDuree} j de congés payés sur 30 : salaire de base maintenu, sans titres restaurant sur ces jours.</span></div>` : ''}
 
     <div class="field-row">
       <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
       ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
     </div>
 
-    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut</div>
+    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}</div>
 
     <div class="field-row">
       <label>Base horaire</label>
@@ -453,12 +804,20 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
+      ${s.dureeType === '39' ? '<div class="sub-hint">Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine. Calcul selon le droit commun, sans prise en compte des RTT.</div>' : ''}
     </div>
 
     <details class="more">
       <summary>Détails avancés</summary>
       <div class="more-body">
-        <div class="section-tag">Mutuelle</div>
+        <div class="section-tag">Lieu de travail</div>
+    <div class="field-row">
+      <label for="f-commune-${uid}">Commune de l’établissement</label>
+      <input type="text" id="f-commune-${uid}" value="${esc(communeLabel(s))}" data-id="${uid}" data-key="commune" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="commune-suggestions-${uid}">
+      <div class="commune-suggestions" id="commune-suggestions-${uid}" role="listbox" hidden></div>
+      <div class="sub-hint" id="commune-hint-${uid}">${s.codePostal && s.departement ? `Lieu identifié : ${esc(s.codePostal)} — ${esc(s.departement)}. Le nom de la commune et son département sont transmis à l’API Urssaf.` : 'Choisissez une suggestion pour confirmer le code postal et le département.'}</div>
+    </div>
+    <div class="section-tag">Mutuelle</div>
         <div class="two-col">
           <div class="field-row">
             <label for="f-mutuelle-${uid}">Part salarié (€ / mois)</label>
@@ -469,15 +828,15 @@ function renderCard(s, r, showRemove){
             ${num(`f-mutuelle-pat-${uid}`,'mutuellePat',uid,s.mutuellePat,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">La part employeur est réintégrée au net imposable. Reprenez les deux montants de votre bulletin de paie.</div>
+        <div class="sub-hint">Les deux parts sont transmises séparément au moteur Urssaf.</div>
         <div class="section-tag">Titres restaurant</div>
         <div class="three-col">
           <div class="field-row"><label for="f-jours-${uid}">Jours/mois</label>${num(`f-jours-${uid}`,'joursResto',uid,s.joursResto,{min:0,max:31})}</div>
-          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0})}</div>
-          <div class="field-row"><label for="f-part-${uid}">Part (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:0,max:100})}</div>
+          <div class="field-row"><label for="f-valeur-${uid}">Valeur (€)</label>${num(`f-valeur-${uid}`,'valeurResto',uid,s.valeurResto,{min:0,max:500})}</div>
+          <div class="field-row"><label for="f-part-${uid}">Part salarié (%)</label>${num(`f-part-${uid}`,'partResto',uid,s.partResto,{min:40,max:50})}</div>
         </div>
         <div class="alert alert-warn" id="c-trwarn-${uid}" style="${trWarn ? '' : 'display:none;'}">
-          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? trMotifs[r.tr.motif] : ''}</span>
+          <span>${ICON.warn}</span><span id="c-trwarn-text-${uid}">${trWarn ? (trMotifs[r.tr.motif] || trMotifs.api) : ''}</span>
         </div>
         <div class="section-tag">Mensualités &amp; primes</div>
         <div class="two-col">
@@ -490,15 +849,7 @@ function renderCard(s, r, showRemove){
             ${num(`f-primes-${uid}`,'primes',uid,s.primes,{min:0})}
           </div>
         </div>
-        <div class="sub-hint">Utilisés uniquement pour le <strong>net annuel</strong> : 12 pour un salaire classique, 13 ou 14 pour un 13ᵉ/14ᵉ mois. Les primes s'ajoutent une seule fois sur l'année, hors mensualités.</div>
-        <div class="field-row" id="c-13m-basis-row-${uid}" style="margin-top:12px;${s.dureeType === '39' && s.nbMois > 12 ? '' : 'display:none;'}">
-          <label for="f-treizieme-base-${uid}">Base du 13ᵉ/14ᵉ mois</label>
-          <select id="f-treizieme-base-${uid}" data-id="${uid}" data-key="treiziemeMoisBase">
-            <option value="base" ${s.treiziemeMoisBase === 'base' ? 'selected' : ''}>Salaire de base uniquement</option>
-            <option value="ensemble" ${s.treiziemeMoisBase === 'ensemble' ? 'selected' : ''}>Salaire de base + heures supplémentaires</option>
-          </select>
-          <div class="sub-hint">À adapter selon votre contrat ou convention collective.</div>
-        </div>
+        <div class="sub-hint">La version actuelle calcule 12 mensualités sans prime libre. Un scénario avec 13ᵉ/14ᵉ mois ou prime reste indisponible tant que cette donnée n'est pas raccordée à l'API Urssaf.</div>
       </div>
     </details>
   </div>`;
@@ -521,60 +872,27 @@ function renderStack(computed){
   const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
   const maxPx = 240;
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-
   return sorted.map(({s, r}) => {
     const m = r.m;
-    const cotis = m.cotisNettes;
-    const mutuelle = s.mutuelle;
-    const tr = r.tr.totalSalarie;
-    const net = m.netApres;
-    const netSansTR = m.netSocial;
-    const brut = m.brutTotal;
-    const scale = maxPx / maxBrut;
-
-    const delta = net - ref.r.m.netApres;
+    const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
+    const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
+    const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
-
-    let barHtml, brutLabel;
-    if(s.absenceType !== 'none'){
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
-      <div class="stack-bar">
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Estimation nette : ${fmt(net)}" role="img" aria-label="Net estimé : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
-      </div>`;
-      brutLabel = s.absenceType === 'arret'
-        ? `${s.absenceDuree} j arrêt, ${s.maintienPct}%`
-        : `${s.absenceDuree} j congés`;
-    } else {
-      const pxCotis = Math.round(cotis * scale);
-      const pxMutuelle = Math.round(mutuelle * scale);
-      const pxTr = Math.round(tr * scale);
-      const pxNet = Math.max(22, Math.round(net * scale));
-      barHtml = `
+    const pxCotis = Math.round(cotis * scale), pxMutuelle = Math.round(mutuelle * scale);
+    const pxTr = Math.round(tr * scale), pxNet = Math.max(22, Math.round(net * scale));
+    const barHtml = `
       <div class="stack-bar">
         <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
         <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
         <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}">
-          <span class="stack-net-tag">net</span>
-        </div>
+        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
       </div>`;
-      brutLabel = `brut ${fmt(brut)}`;
-    }
-
-    const isRef = s.id === refId;
     return `
-    <div class="stack-col ${isRef?'is-ref':''} ${s.id === justAddedId ? 'card-enter' : ''}" ${!isRef ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
-      <div class="stack-brut">${brutLabel}</div>
-      ${barHtml}
-      <div class="stack-ref-row">
-        <span class="stack-ref-dot ${isRef?'is-ref':''}" aria-hidden="true"></span>
-        <span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span>
-      </div>
+    <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
+      <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
+      <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
       <div class="stack-net">${fmt(net)}</div>
-      ${(s.absenceType === 'none' && tr > 0.5) ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${tr > 0.5 ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -626,17 +944,8 @@ function renderWaterfall(computed){
   const brut = m.brutTotal;
   const pct = v => brut > 0 ? (v/brut)*100 : 0;
 
-  if(s.absenceType !== 'none'){
-    const net = m.netApres;
-    return `
-    <div class="waterfall" role="img" aria-label="Brut habituel ${fmt(brut)}, net estimé pendant l'absence : ${fmt(net)}">
-      ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut habituel', fmt(brut), 100)}
-      ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, 'Net estimé (absence)', fmt(net), pct(net))}
-    </div>`;
-  }
-
   const cotis = m.cotisNettes;
-  const mutuelle = s.mutuelle;
+  const mutuelle = m.mutuelle;
   const tr = r.tr.totalSalarie;
   const net = m.netApres;
   const netSansTR = m.netSocial;
@@ -728,28 +1037,22 @@ function renderBenchmarks(computed){
   const item = computed.find(x => x.s.id === refId);
   if(!item) return '';
   const { s, r } = item;
+  const smicResult = getCachedSmicResult();
+  if(!smicResult && benchmarks.mode === 'official' && officialSmicState.status === 'error'){
+    return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
+  }
+  if(!r) return '';
+  if(!smicResult){
+    return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
+  }
 
   // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
   // strictement la durée et les montants du contrat saisi.
-  const neutralScenario = {
-    ...s,
-    dureeType: '35',
-    mutuelle: 0,
-    mutuellePat: 0,
-    joursResto: 0,
-    valeurResto: 0,
-    partResto: 0,
-    nbMois: 12,
-    primes: 0,
-    absenceType: 'none',
-    absenceDuree: 0
-  };
-  const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
-  const smicResult = compute(neutralSmicScenario, foyer);
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
   const smicMonthlyHours = HEURES_BASE;
   const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
-  const smicHourlyGross = benchmarks.smicBrut / smicMonthlyHours;
+  const smicGross = getSmicGross();
+  const smicHourlyGross = smicGross / smicMonthlyHours;
 
   // Comparaison en net avant impôt par heure réellement travaillée.
   // Aucun recalcul du salaire de l'utilisateur à 35 h.
@@ -787,11 +1090,12 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC · net avant impôt</div>
         <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(benchmarks.smicBrut)}</div>
+        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(smicGross)}</div>
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel est la valeur officielle renseignée ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient ${benchmarks.mode === 'official' ? 'de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf' : 'de votre saisie manuelle'} ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          ${benchmarks.mode === 'official' && officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
           <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
@@ -810,9 +1114,9 @@ function renderBenchmarks(computed){
     </div>
     <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
       <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
-      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${benchmarks.smicBrut.toFixed(2)}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.smicDate)}"></div></div>
+      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
       <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net avant impôt est une estimation du simulateur ; le taux horaire brut est calculé à partir du brut mensuel.</p>
+      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé par le moteur officiel Mon-entreprise / Urssaf ; le taux horaire brut est un ratio du brut saisi.</p>
     </div></details>`;
 }
 function bindBenchmarkSettings(){
@@ -825,13 +1129,14 @@ function bindBenchmarkSettings(){
       showToastImpl('Montant ou date du SMIC invalide.');
       return;
     }
-    benchmarks = { smicBrut: amount, smicDate: date };
+    benchmarks = { smicBrut: amount, smicDate: date, mode:'manual' };
     try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
     render();
     showToastImpl('Repère SMIC actualisé.');
   });
   if(reset) reset.addEventListener('click', () => {
     benchmarks = { ...BENCHMARK_DEFAULTS };
+    officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
     try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
     render();
   });
@@ -839,23 +1144,34 @@ function bindBenchmarkSettings(){
 
 // ---------- Rendu ----------
 function render(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+  const computed = getCurrentComputed();
+  const isSingle = computed.length === 1;
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
 
   updateRaiseBaseName();
-  const isSingle = computed.length === 1;
-  document.getElementById('stackHint').textContent = isSingle
-    ? 'Du brut au net, étape par étape.'
-    : 'Cliquez sur une carte pour la définir comme référence.';
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('stackHint').textContent = isSingle
+      ? 'Du brut au net, étape par étape.'
+      : 'Cliquez sur une carte pour la définir comme référence.';
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+  }
   bindRefPickers();
-  document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -865,9 +1181,6 @@ function render(){
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
   bindCardDragAndDrop();
-  // Nettoie la classe d'animation une fois jouée : les mises à jour légères
-  // (updateComputed, sur chaque frappe) ne reconstruisent pas ces cartes,
-  // la classe resterait donc collée indéfiniment sur un nœud DOM inerte sinon.
   document.querySelectorAll('#cardsBody .card-enter, #stackChart .card-enter').forEach(el => {
     el.addEventListener('animationend', () => el.classList.remove('card-enter'), { once:true });
   });
@@ -893,7 +1206,9 @@ function render(){
   updateNavButtons();
   saveState();
   suppressAutosave = false;
-  justAddedId = null; // l'animation d'entrée ne doit jouer qu'une fois
+  justAddedId = null;
+  updateUrssafStatus(computed);
+  scheduleUrssafCalculations(false,false);
 }
 
 function bindCardDragAndDrop(){
@@ -1034,7 +1349,8 @@ function foyerResume(){
 // L'impôt affiché dans le module suit le salaire de référence.
 function updateFoyerImpot(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
-  if(ref) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${ref.r.tauxImpot.toFixed(1)} %)`);
+  if(ref && ref.r) setText('foyerImpot', `${fmt(ref.r.impotAnnuel/12)} / mois (${Number(ref.r.tauxImpot || 0).toFixed(1)} %)`);
+  else setText('foyerImpot', '—');
 }
 
 function syncFoyerUI(){
@@ -1080,8 +1396,8 @@ function syncFoyerUI(){
   if(desc) desc.classList.toggle('is-warn', alerte);
 
   setHTML('foyerImpotHint', foyer.mode === 'taux'
-    ? `Le taux saisi s'applique tel quel au net imposable annuel du salaire de référence, sans recalcul ni progressivité.`
-    : `Barème IR 2026 — revenus 2025 : abattement de 10 %, quotient familial (plafonné), décote. Pour estimer des revenus 2026, ce barème est une approximation : le barème applicable à ces revenus sera celui de 2027 et n'est pas encore connu. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.`);
+    ? `Le taux personnalisé transmis à l’Urssaf s’applique selon les règles de son modèle fiscal. Ce taux est constant dans vos scénarios : il peut donc limiter la pertinence d’une comparaison entre salaires très différents.`
+    : `Estimation calculée par le modèle fiscal officiel Mon-entreprise / Urssaf à partir du foyer renseigné. Le modèle est simplifié et certaines règles sont signalées comme expérimentales ; ce résultat ne remplace pas un avis d’imposition. Vérifiez les avertissements éventuels du moteur.`);
 }
 
 function bindFoyerModule(){
@@ -1145,17 +1461,28 @@ function setText(id, txt){ const el = document.getElementById(id); if(el) el.tex
 function setHTML(id, html){ const el = document.getElementById(id); if(el) el.innerHTML = html; }
 function setShown(id, shown){ const el = document.getElementById(id); if(el) el.style.display = shown ? '' : 'none'; }
 
-function updateComputed(){
-  const computed = scenarios.map(s => ({ s, r: compute(s, foyer) }));
+function updateComputed(options = {}){
+  const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
-  document.getElementById('insightBox').innerHTML = renderInsight(computed);
+  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
   const stackChartEl = document.getElementById('stackChart');
-  stackChartEl.className = isSingle ? '' : 'stack-chart';
-  stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-  if(isSingle) fixWaterfallLabelFit();
+  if(allReady){
+    document.getElementById('insightBox').innerHTML = renderInsight(computed);
+    stackChartEl.className = isSingle ? '' : 'stack-chart';
+    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
+    if(isSingle) fixWaterfallLabelFit();
+    document.getElementById('barsBody').innerHTML = renderBars(computed);
+    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
+  } else {
+    document.getElementById('insightBox').innerHTML = '';
+    stackChartEl.className = '';
+    stackChartEl.innerHTML = '';
+    document.getElementById('stackLegend').innerHTML = '';
+    document.getElementById('barsBody').innerHTML = '';
+    document.getElementById('barsAlerts').innerHTML = '';
+    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par le moteur officiel Urssaf.';
+  }
   bindRefPickers();
-  document.getElementById('barsBody').innerHTML = renderBars(computed);
-  document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   bindBenchmarkSettings();
   updateFoyerImpot(computed);
@@ -1165,26 +1492,43 @@ function updateComputed(){
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
     if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
-    setText(`c-hero-${u}`, fmt(heroValue(r)));
+    setText(`c-hero-${u}`, r && heroValue(r) !== null ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>`);
+    setHTML(`c-heropas-${u}`, r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —');
     setShown(`c-heropas-${u}`, heroPasShown());
 
     const hint = document.getElementById(`rate-hint-${u}`);
-    if(hint) hint.innerHTML = `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut`;
+    if(hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —';
 
-    const trWarn = r.tr.reintegre > 0.005;
+    const state = document.getElementById(`c-result-state-${u}`);
+    const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
+    const error = getCalculationError(s,foyer);
+    if(state) state.textContent = r
+      ? 'Calculé par le moteur officiel Mon-entreprise / Urssaf.'
+      : (error || 'Calcul en attente de validation par l’API Urssaf.');
+    if(card) card.dataset.resultState = r ? 'ready' : (error ? 'error' : 'pending');
+    const warnings = document.getElementById(`c-result-warnings-${u}`);
+    if(warnings){
+      warnings.hidden = !(r && r.warnings && r.warnings.length);
+      warnings.innerHTML = r && r.warnings && r.warnings.length
+        ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>`
+        : '';
+    }
+    const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
     setShown(`c-trwarn-${u}`, trWarn);
     if(trWarn){
       const motifs = {
-        sous50: `Part patronale sous 50 % : la totalité de la participation employeur redevient soumise aux cotisations.`,
-        sur60: `Part patronale au-delà de 60 % : la fraction excédentaire redevient soumise aux cotisations.`,
-        plafond: `Part patronale au-delà du plafond par titre : la fraction excédentaire redevient soumise aux cotisations.`
+        sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
+        plafond: 'Le moteur Urssaf identifie une fraction de titres-restaurant non déductible.',
+        api: 'Le moteur Urssaf identifie une part non déductible des frais professionnels transmis.'
       };
-      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || '');
+      setHTML(`c-trwarn-text-${u}`, motifs[r.tr.motif] || motifs.api);
     }
   });
+  updateUrssafStatus(computed);
   saveState();
+  if(!options.skipUrssafSchedule) scheduleUrssafCalculations(false,false);
 }
 
 // ---------- Navigation du rail de cartes horizontal ----------
@@ -1279,15 +1623,83 @@ function validateNumericInput(el, finalCheck){
   return true;
 }
 
+function communeLabel(s){
+  if(s && s.codePostal && s.departement) return String(s.commune) + ' — ' + String(s.codePostal) + ' (' + String(s.departement) + ')';
+  return String(s && s.commune || 'Commune') + ' — sélection requise';
+}
+
+const communeSearchTimers = new Map();
+const communeSearchSequences = new Map();
+async function searchCommunes(id, query){
+  const input = document.getElementById('f-commune-' + id);
+  const list = document.getElementById('commune-suggestions-' + id);
+  if(!input || !list) return;
+  if(communeSearchTimers.has(id)) clearTimeout(communeSearchTimers.get(id));
+  const term = String(query || '').trim();
+  if(term.length < 2){ list.hidden = true; list.innerHTML = ''; return; }
+  const sequence = (communeSearchSequences.get(id) || 0) + 1;
+  communeSearchSequences.set(id, sequence);
+  list.hidden = false;
+  list.innerHTML = '<div class="commune-search-status">Recherche des communes…</div>';
+  const timer = setTimeout(async () => {
+    try{
+      const params = new URLSearchParams({ fields:'nom,code,codesPostaux,departement,codeDepartement', limit:'8' });
+      if(/^\d{2,5}$/.test(term)) params.set('codePostal', term);
+      else { params.set('nom', term); params.set('boost', 'population'); }
+      const response = await fetch('https://geo.api.gouv.fr/communes?' + params.toString(), { headers:{ Accept:'application/json' } });
+      if(!response.ok) throw new Error('Service géographique indisponible');
+      const data = await response.json();
+      if(communeSearchSequences.get(id) !== sequence) return;
+      const options = [];
+      for(const item of Array.isArray(data) ? data : []){
+        const department = item.departement && item.departement.nom;
+        const postcodes = Array.isArray(item.codesPostaux) ? item.codesPostaux : [];
+        if(!item.nom || !department || !postcodes.length) continue;
+        for(const codePostal of postcodes){
+          options.push({ commune:item.nom, codePostal, departement:department, codeCommune:item.code, codeDepartement:item.codeDepartement });
+          if(options.length >= 8) break;
+        }
+        if(options.length >= 8) break;
+      }
+      list._communeOptions = options;
+      list.innerHTML = options.length ? options.map((option, index) => '<button type="button" class="commune-option" role="option" data-commune-index="' + index + '">' + esc(option.commune) + ' — ' + esc(option.codePostal) + ' (' + esc(option.departement) + ')</button>').join('') : '<div class="commune-search-status">Aucune commune trouvée. Essayez un code postal ou un nom plus précis.</div>';
+      list.querySelectorAll('.commune-option').forEach(button => button.addEventListener('click', () => {
+        const selected = list._communeOptions && list._communeOptions[Number(button.dataset.communeIndex)];
+        const scenario = findScenario(id);
+        if(!selected || !scenario) return;
+        Object.assign(scenario, selected);
+        scenario.locationSelectionPending = false;
+        list.hidden = true;
+        render();
+        updateComputed();
+      }));
+    }catch(error){
+      if(communeSearchSequences.get(id) !== sequence) return;
+      list.innerHTML = '<div class="commune-search-status">Impossible de vérifier la commune. Réessayez avant de calculer.</div>';
+    }
+  }, 250);
+  communeSearchTimers.set(id, timer);
+}
+
 function onInput(e){
   const id = parseInt(e.target.dataset.id, 10);
   const key = e.target.dataset.key;
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    if(e.target.value !== communeLabel(s)){
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = true;
+    }
+    searchCommunes(id, e.target.value);
+    return;
+  }
   if(key === 'name'){
     s.name = e.target.value;
     updateComputed();
-    if(s.id === refId){ setText('raiseBaseName', s.name); setText('absenceBaseName', s.name); }
+    if(s.id === refId){ setText('raiseBaseName', s.name); }
     document.getElementById('refSelect').innerHTML = scenarios
       .map(x => `<option value="${x.id}" ${x.id===refId?'selected':''}>${esc(x.name)}</option>`).join('');
     return;
@@ -1303,6 +1715,23 @@ function onBlurClamp(e){
   const id = parseInt(e.target.dataset.id, 10);
   const s = findScenario(id);
   if(!s) return;
+  if(key === 'commune'){
+    if(e.relatedTarget?.classList?.contains('commune-option')) return;
+    const list = document.getElementById('commune-suggestions-' + id);
+    if(list) list.hidden = true;
+    if(s.locationSelectionPending){
+      const typed = e.target.value.trim().slice(0, 80);
+      if(typed) s.commune = typed;
+      s.codePostal = '';
+      s.departement = '';
+      s.codeCommune = '';
+      s.locationSelectionPending = false;
+      updateComputed();
+      return;
+    }
+    e.target.value = communeLabel(s);
+    return;
+  }
   if(!validateNumericInput(e.target, true)) return;
   const min = e.target.dataset.min !== undefined ? parseFloat(e.target.dataset.min) : undefined;
   const max = e.target.dataset.max !== undefined ? parseFloat(e.target.dataset.max) : undefined;
@@ -1329,7 +1758,8 @@ async function addScenario(){
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
-    dureeType:last.dureeType
+    dureeType:last.dureeType,
+    commune:last.commune || 'Pacé'
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
@@ -1548,11 +1978,17 @@ const ONBOARDING_MUTUELLE_DEFAUT = 30;
 // nouveau salaire, pour ne jamais deviner silencieusement ces montants.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <div class="field-row">
-          <label for="${idPrefix}Mutuelle">Mutuelle (€ / mois)</label>
-          <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
-          <div class="sub-hint">Par défaut : ${ONBOARDING_MUTUELLE_DEFAUT} €/mois.</div>
+        <div class="two-col">
+          <div class="field-row">
+            <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
+          <div class="field-row">
+            <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€ / mois)</label>
+            <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" placeholder="${ONBOARDING_MUTUELLE_DEFAUT}" autocomplete="off">
+          </div>
         </div>
+        <div class="sub-hint">À renseigner séparément depuis le bulletin. Valeur par défaut de ${ONBOARDING_MUTUELLE_DEFAUT} € pour chacune si le champ reste vide.</div>
         <div class="field-row" style="margin-bottom:0;">
           <label>Avez-vous des titres restaurant ?</label>
           <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres restaurant">
@@ -1563,7 +1999,7 @@ function renderMutuelleTrFields(idPrefix){
         <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
             <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>`;
@@ -1573,6 +2009,7 @@ function renderMutuelleTrFields(idPrefix){
 // lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
 function bindMutuelleTrFields(overlay, idPrefix){
   const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+  const mutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
@@ -1592,12 +2029,21 @@ function bindMutuelleTrFields(overlay, idPrefix){
   });
 
   return () => {
-    const mutuelleRaw = mutuelleInput.value.trim();
+    // Relire le DOM au moment de la validation : les modales partagent leur
+    // conteneur et peuvent remplacer leur contenu entre deux ouvertures.
+    const currentMutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
+    const currentMutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
+    if(!currentMutuelleInput || !currentMutuellePatInput){
+      throw new Error('Les deux champs de mutuelle sont introuvables dans la modale.');
+    }
+    const mutuelleRaw = currentMutuelleInput.value.trim();
+    const mutuellePatRaw = currentMutuellePatInput.value.trim();
     const mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
-    const result = { mutuelle, mutuellePat:mutuelle, joursResto: 0 };
+    const mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    const result = { mutuelle, mutuellePat, joursResto: 0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
-      result.valeurResto = Math.max(0, parseNum(valeurInput.value));
+      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
       result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
     }
     return result;
@@ -1750,7 +2196,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     const v = parseNum(input.value);
     if(!(v > 0)) return;
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
+    const benefits = readMutuelleTr();
+    // Lire les deux champs visibles au dernier moment de la validation :
+    // la modale est réutilisée par plusieurs parcours de l'application.
+    const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
+    const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
+    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -1857,7 +2310,6 @@ function bindModuleToggle(cardId, toggleId, bodyId){
 bindModuleToggle('foyerModule', 'foyerModuleToggle', 'foyerModuleBody');
 bindFoyerModule();
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
-bindModuleToggle('absenceModule', 'absenceModuleToggle', 'absenceModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
@@ -1897,7 +2349,6 @@ function addRaiseScenario(type, value){
 function updateRaiseBaseName(){
   const base = findScenario(refId);
   setText('raiseBaseName', base ? base.name : '');
-  setText('absenceBaseName', base ? base.name : '');
 }
 
 document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
@@ -1920,7 +2371,7 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 });
 renderRaiseChips();
 
-// ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
+// ---------- Animation du rail de cartes ----------
 // Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
 // "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
 // dépassait et laissait la carte tout juste créée à peine visible.
@@ -1962,8 +2413,8 @@ function scrollToNewCard(){
     const target = cards[cards.length - 1];
     if(!target){ restoreCardSnap(); return; }
     const scroller = document.getElementById('cardsScroll');
-    // Un ajout lancé depuis les modules d'augmentation ou d'absence, situés plus
-    // bas dans la page, faisait défiler le rail hors de vue : on ne voyait pas
+    // Un ajout lancé depuis le module d'augmentation, situé plus bas dans la page,
+    // faisait défiler le rail hors de vue : on ne voyait pas
     // le salaire créé. On remonte d'abord sur la liste si elle n'est pas visible.
     const rail = scroller.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
@@ -1980,86 +2431,10 @@ function scrollToNewCard(){
   });
 }
 
-let absenceType = 'conges';
-let carenceCouverte = false;
-
-function updateAbsenceUI(){
-  document.querySelectorAll('#absenceTypeToggle button').forEach(b => {
-    b.setAttribute('aria-pressed', b.dataset.atype === absenceType ? 'true' : 'false');
-  });
-  document.getElementById('arretExtraFields').style.display = absenceType === 'arret' ? '' : 'none';
-  document.getElementById('addAbsenceScenario').textContent =
-    absenceType === 'arret' ? 'Ajouter ce salaire en arrêt de travail' : 'Ajouter ce salaire en congés payés';
-  const duree = parseNum(document.getElementById('absenceDuree').value) || 0;
-  const pct = parseNum(document.getElementById('arretPct').value) || 90;
-  setText('absenceHint', absenceType === 'arret'
-    ? `Sur ${duree} j d'arrêt, le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Sur les jours d'arrêt : ${carenceCouverte ? 'la carence est payée, donc tous les jours sont indemnisés' : 'les 3 premiers jours (carence) ne sont pas payés'}, le reste à ${pct} %.`
-    : `Sur ${duree} j de congés, le salaire de base reste maintenu ; le reste du mois (${Math.max(0,30-duree)} j) est payé normalement. Aucun titre restaurant sur les jours de congés.`);
-}
-
-document.querySelectorAll('#absenceTypeToggle button').forEach(btn => {
-  btn.addEventListener('click', () => { absenceType = btn.dataset.atype; updateAbsenceUI(); });
+document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
+  urssafConsentGranted = true;
+  scheduleUrssafCalculations(true,true);
 });
-document.getElementById('absenceDuree').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.getElementById('ancienneteSelect').addEventListener('change', (e) => {
-  const v = e.target.value;
-  const pctRow = document.getElementById('arretPctRow');
-  if(v === 'custom'){
-    pctRow.style.display = '';
-  } else {
-    pctRow.style.display = 'none';
-    document.getElementById('arretPct').value = v;
-  }
-  updateAbsenceUI();
-});
-document.getElementById('arretPct').addEventListener('input', (e) => {
-  if(validateNumericInput(e.target, false)) updateAbsenceUI();
-});
-
-document.querySelectorAll('#carenceToggle button').forEach(btn => {
-  btn.addEventListener('click', () => {
-    carenceCouverte = btn.dataset.carence === 'oui';
-    document.querySelectorAll('#carenceToggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
-    updateAbsenceUI();
-  });
-});
-
-function addAbsenceScenario(){
-  const base = findScenario(refId);
-  if(!base) return;
-  const dureeInput = document.getElementById('absenceDuree');
-  if(!validateNumericInput(dureeInput, true)) return;
-  if(absenceType === 'arret' && !validateNumericInput(document.getElementById('arretPct'), true)) return;
-  const duree = clamp(parseNum(dureeInput.value), 0, 30);
-  const clone = Object.assign({}, base);
-  delete clone.id;
-  disableCardSnap();
-
-  let created;
-  if(absenceType === 'arret'){
-    const pct = clamp(parseNum(document.getElementById('arretPct').value), 0, 100);
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (arrêt ${duree}j, ${pct}%)`,
-      absenceType: 'arret', absenceDuree: duree, maintienPct: pct, carenceCouverte
-    }));
-    scenarios.push(created);
-  } else {
-    created = mkScenario(Object.assign(clone, {
-      name: `${base.name} (congés ${duree}j)`,
-      absenceType: 'conges', absenceDuree: duree
-    }));
-    scenarios.push(created);
-  }
-  justAddedId = created.id;
-  render();
-  scrollToNewCard();
-}
-
-document.getElementById('addAbsenceScenario').addEventListener('click', addAbsenceScenario);
-updateAbsenceUI();
 
 render();
 // Un hash contenant explicitement un partage mais non restauré doit être signalé.

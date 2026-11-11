@@ -3,7 +3,7 @@ name: Vérifications
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, migration/publicodes-urssaf]
 
 jobs:
   test:
@@ -17,17 +17,23 @@ jobs:
           node-version: 22
       - name: Installer Playwright
         run: |
-          npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.0
-          npx --no-install playwright install --with-deps chromium
+          npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1
+          # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
+          npx --no-install playwright install chromium
       - name: Vérifier la syntaxe JavaScript
         run: |
-          node --check src/calc.js
+          node --check src/urssaf-api-client.mjs
+          node --check src/ui-utils.js
           node --check src/app.js
           node --check scripts/build.js
       # Le build synthétique reste hors du dépôt : les tests de calcul doivent lire l'artefact livré.
       - name: Construire le HTML autonome
         run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
-      - name: Tester les calculs
+      - name: Tester le client API Urssaf (moteur de production)
+        run: npm run test:urssaf-api
+      - name: Tester le modèle Publicodes (diagnostics uniquement)
+        run: npm run test:publicodes
+      - name: Tester les anciens scénarios locaux (non utilisés en production)
         run: node --test test/calc.test.js
       - name: Tester le build
         run: node --test test/build.test.js
