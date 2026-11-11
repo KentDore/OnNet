@@ -55,13 +55,27 @@ Il faudra donc convertir le brut total OnNet en salaire de base selon le nombre 
 
 ## Hypothèses et limites à rendre visibles
 
-Le moteur produit des avertissements de cycles sur certaines règles de l'espace entreprise, sans rapport apparent avec les règles de paie salarié ciblées. Il signale aussi l'erreur de conversion d'unité des titres-restaurant mentionnée ci-dessus. Les tests doivent continuer à capturer ces diagnostics ; la réussite de la CI ne signifie pas que toutes les règles du modèle sont exemptes d'avertissements. Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
+Le moteur produit encore de nombreux avertissements de cycles sur des règles de l'espace entreprise et sur certaines règles de prévoyance. Ils ne font pas échouer les tests de scénarios ciblés, mais doivent être qualifiés avant la production. L'erreur de conversion d'unité des titres-restaurant est contournée temporairement en refusant cette entrée. Les tests doivent continuer à capturer ces diagnostics ; la réussite de la CI ne signifie pas que toutes les règles du modèle sont exemptes d'avertissements. Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
 
 Pour une première version, OnNet peut rester limité au CDI privé non-cadre en métropole, sans activité partielle, avec une majoration standard des heures supplémentaires. Les paramètres non saisis doivent être explicitement documentés comme hypothèses. Ne pas présenter cette configuration standard comme un bulletin de paie garanti conforme à toutes les conventions et entreprises.
 
 La mutuelle doit être convertie depuis les deux montants existants vers un montant total et un taux employeur. Il faudra avertir lorsque la part employeur est inférieure au minimum modélisé de 50 %, et vérifier le cas où le montant total est nul.
 
 L'impôt sur le revenu doit être traité dans une phase séparée : le net avant impôt et le net effectivement payé après PAS sont deux résultats distincts. Ne pas remplacer le calcul fiscal actuel par une valeur par défaut Publicodes sans avoir choisi explicitement la méthode et les hypothèses de foyer fiscal.
+
+## Premiers résultats techniques (11/11/2026)
+
+Exécution reproductible dans GitHub Actions avec le modèle daté du 11 novembre 2026, CDI privé non-cadre, commune de Pacé, sans titres-restaurant :
+
+| Scénario | Brut calculé | Net avant impôt | Net imposable |
+|---|---:|---:|---:|
+| 2 300 € brut, 39 h, mutuelle 30 € salarié + 30 € employeur | 2 300,01 € | 1 820,28 € | 1 648,86 € |
+| 2 300 € brut, 35 h, mutuelle 30 € + 30 € | 2 300,00 € | 1 787,76 € | 1 884,17 € |
+| 2 300 € brut, 39 h, sans mutuelle | 2 300,01 € | 1 853,19 € | 1 650,90 € |
+
+Le brut reconstitué à 39 h présente un écart d'arrondi de 0,01 €. Il faut le traiter proprement dans l'adaptateur (arrondi et précision) avant d'intégrer ce calcul au comparateur.
+
+Ces chiffres sont des sorties du moteur local `modele-social` avec les hypothèses ci-dessus ; ils ne constituent pas encore une comparaison indépendante validée avec l'interface web de l'Urssaf. Les valeurs de mutuelle et l'absence de titres-restaurant sont des paramètres de test, pas une représentation exhaustive d'une fiche de paie réelle.
 
 ## Stratégie de validation
 
@@ -94,5 +108,7 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 - [x] Principales règles de saisie salarié, heures supplémentaires et mutuelle identifiées.
 - [ ] Installation et verrouillage des dépendances dans le dépôt.
 - [x] Prototype bundlé et exécuté dans GitHub Actions (HTML autonome généré).
-- [ ] Scénarios de parité chiffrés comparés au simulateur officiel.
+- [ ] Comparaison indépendante des scénarios avec le simulateur web officiel, à paramètres identiques.
+- [ ] Résolution du calcul des titres-restaurant.
+- [ ] Explication/qualification des avertissements de cycles du modèle.
 - [ ] Migration du moteur de production.
