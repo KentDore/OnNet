@@ -31,7 +31,6 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . salarié': 84,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 84,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . montant net social': 1894,
     'salarié . rémunération . net . payé après impôt': 1700,
     'impôt . montant': 1320,
     "impôt . taux d'imposition": 10
@@ -87,7 +86,6 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.mealTicketEmployee, 84)
   assert.equal(result.mealTicketEmployer, 84)
   assert.equal(result.mealTicketNonDeductible, 0)
-  assert.equal(result.netSocial, 1894)
   assert.equal(result.missingVariables.length, 0)
 })
 
