@@ -17,7 +17,7 @@ La migration doit rester progressive. Le moteur actuel ne sera pas supprimé tan
 - Documentation de l'API Publicodes : https://publi.codes/docs/api/publicodes/classes/engine
 - Configuration du simulateur salarié officiel : https://github.com/betagouv/mon-entreprise/blob/master/site/source/pages/simulateurs/salari%C3%A9/simulationConfig.ts
 
-Le modèle officiel `modele-social@11.1.0` est sous licence MIT et déclare `publicodes` comme peer dependency (`^1.0.4`). La branche OnNet utilise actuellement `modele-social@11.1.0` et `publicodes@1.10.4`, versions exactes déclarées dans `package.json`. Le `package-lock.json` n'est pas encore commité : la reproductibilité complète de l'arbre des dépendances reste donc à terminer. Le dépôt officiel déclare de son côté `publicodes` en `^1.8.1` dans son application API.
+Le modèle officiel `modele-social@11.1.0` est sous licence MIT et déclare `publicodes` comme peer dependency (`^1.0.4`). La branche OnNet utilise actuellement `modele-social@11.1.0` et `publicodes@1.10.4`, versions exactes déclarées dans `package.json`. Le `package-lock.json` est commité et l'intégration continue utilise `npm ci` pour installer l'arbre verrouillé. Le dépôt officiel déclare de son côté `publicodes` en `^1.8.1` dans son application API.
 
 ## Architecture cible
 
@@ -38,14 +38,14 @@ Les noms ci-dessous sont ceux des règles officielles du modèle salarié. Les u
 | Statut non-cadre | `salarié . contrat . statut cadre = non` |
 | Contrat privé standard | `salarié = 'CDI'` |
 | Brut mensuel à 35 h | `salarié . contrat . salaire brut` |
-| Heures sup d'un 39 h | `salarié . temps de travail . heures supplémentaires = 17.33 heure/mois` |
+| Heures sup d'un 39 h | `salarié . temps de travail . heures supplémentaires = 4 × 52 / 12 heure/mois` |
 | Part mutuelle salarié + employeur | `salarié . cotisations . prévoyances . santé . montant` = total des deux parts |
 | Part employeur mutuelle | `salarié . cotisations . prévoyances . santé . taux employeur` = part employeur / montant total |
 | Titres-restaurant | `salarié . rémunération . frais professionnels . titres-restaurant . nombre`, `. montant unitaire` et `. taux employeur` |
 | Prime d'activité | `salarié . rémunération . primes . activité . base` |
 | 13e mois | `salarié . rémunération . primes . fin d'année` |
 
-Le modèle officiel définit les heures supplémentaires en heures par mois. Il propose explicitement 17,33 h/mois pour un contrat à 39 h. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable. Le calcul des titres-restaurant est maintenant actif dans le prototype. Le premier essai local avait remonté une erreur d'unité et des diagnostics de cycles avec la configuration par défaut de Publicodes. L'adaptateur utilise désormais les mêmes options de moteur que l'API officielle (`deprecatedSyntax: false`, `cyclicReferences: false`) ; le scénario avec 21 titres à 8 € et une participation employeur de 50 % passe en local et correspond à l'API.
+Le modèle officiel définit les heures supplémentaires en heures par mois. Pour rester cohérent avec l'ancien calcul OnNet, le prototype transmet désormais 4 × 52 / 12, soit 17,333333… h/mois pour un contrat à 39 h ; 17,33 h/mois est l'arrondi usuel affiché. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable. Le calcul des titres-restaurant est maintenant actif dans le prototype. Le premier essai local avait remonté une erreur d'unité et des diagnostics de cycles avec la configuration par défaut de Publicodes. L'adaptateur utilise désormais les mêmes options de moteur que l'API officielle (`deprecatedSyntax: false`, `cyclicReferences: false`) ; le scénario avec 21 titres à 8 € et une participation employeur de 50 % passe en local et correspond à l'API.
 
 ### Conversion du brut OnNet en 39 h
 
@@ -130,7 +130,7 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 - [x] Branche de migration créée à partir de l'état actuel de la branche principale.
 - [x] Modèle npm officiel, licence et interface d'utilisation repérés.
 - [x] Principales règles de saisie salarié, heures supplémentaires et mutuelle identifiées.
-- [x] Installation des dépendances ; [ ] ajout du `package-lock.json` pour verrouiller l'arbre complet.
+- [x] Installation des dépendances et verrouillage de l'arbre avec `package-lock.json` ; installation CI via `npm ci`.
 - [x] Prototype bundlé et exécuté dans GitHub Actions (HTML autonome généré).
 - [x] Comparaison automatisée de neuf scénarios avec l'API officielle (63 sorties comparées, écart nul au centime affiché).
 - [x] Scénarios de paie sous/proches du SMIC, de part et d'autre du PMSS 2026 (4 005 €/mois), et au-dessus du PMSS pour tester la tranche 2.
