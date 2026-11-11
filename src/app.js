@@ -708,7 +708,7 @@ function heroValue(r){
 }
 function heroLabel(){
   if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
-  return 'Net après impôt ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  return 'Net après impôt estimé ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 function heroPasValue(r){
   return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
