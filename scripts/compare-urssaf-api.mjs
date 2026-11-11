@@ -36,8 +36,10 @@ const results = []
 for (const scenario of scenarios) {
   const { input } = scenario
   const local = calculatePublicodes(input)
-  const totalHealth = input.mutuelle + input.mutuellePat
-  const employerHealthRate = totalHealth > 0 ? input.mutuellePat / totalHealth * 100 : 50
+  const employeeHealth = input.mutuelle ?? 0
+  const employerHealth = input.mutuellePat ?? employeeHealth
+  const totalHealth = employeeHealth + employerHealth
+  const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
   const ticketDays = input.joursResto ?? 0
   const ticketValue = input.valeurResto ?? 0
   const employerTicketRate = 100 - (input.partResto ?? 50)
