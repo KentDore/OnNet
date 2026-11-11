@@ -278,7 +278,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     : grossTarget
 
   const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
-  const expressions = [
+  const socialExpressions = [
     EXPRESSIONS.gross,
     EXPRESSIONS.netBeforeTax,
     EXPRESSIONS.taxableNet,
@@ -287,19 +287,14 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     EXPRESSIONS.employeeHealth,
     EXPRESSIONS.employerHealth
   ]
-  if (taxMode !== null) {
-    expressions.push(
-      EXPRESSIONS.netAfterTax,
-      EXPRESSIONS.incomeTax
-    )
-  }
 
   let finalEvaluation
+  let finalSituation
   let grossCalculated = NaN
 
   for (let attempt = 0; attempt < (durationType === '39' ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
-    const situation = buildSituation(input, baseGross, overtimeHours)
-    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions)
+    finalSituation = buildSituation(input, baseGross, overtimeHours)
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions)
     grossCalculated = evaluation.values[0]
     finalEvaluation = evaluation
 
@@ -311,6 +306,32 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
       throw new Error(`Le brut calculé par l’API (${grossCalculated.toFixed(2)} €) ne correspond pas au brut demandé (${grossTarget.toFixed(2)} €).`)
     }
     baseGross *= grossTarget / grossCalculated
+  }
+
+  if (taxMode !== null) {
+    // Les règles fiscales sont annuelles. Le net imposable du salaire retourné
+    // par le modèle salarié est mensuel : il faut le convertir explicitement.
+    const annualTaxableSalary = finalEvaluation.values[2] * 12
+    finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
+
+    // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
+    // annuel puis applique l'abattement fiscal officiel de 10 %.
+    if (taxMode === 'barème') {
+      finalSituation['paramètres . impôt . revenu d’activité'] = `${annualTaxableSalary.toFixed(2)} €/an`
+    }
+
+    const taxEvaluation = await evaluateRequest(
+      fetchImpl,
+      endpoint,
+      timeoutMs,
+      finalSituation,
+      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax]
+    )
+    finalEvaluation = {
+      values: taxEvaluation.values,
+      missingVariables: [...new Set([...finalEvaluation.missingVariables, ...taxEvaluation.missingVariables])],
+      warnings: [...new Set([...finalEvaluation.warnings, ...taxEvaluation.warnings])]
+    }
   }
 
   const values = finalEvaluation.values
