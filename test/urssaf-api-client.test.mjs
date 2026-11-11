@@ -183,6 +183,23 @@ test('prépare les paramètres de mutuelle et titres-restaurant sans inverser le
   assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur'], '60.000000%')
 })
 
+test('accepte une valeur unitaire de titre-restaurant jusqu’à 1 000 €', async () => {
+  let request
+  await calculateWithUrssafApi(scenario({ joursResto: 1, valeurResto: 1000 }), {
+    fetchImpl: mockFetch(body => {
+      request = body
+      return response(apiResponse(body.expressions))
+    })
+  })
+  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '1000.00 €')
+})
+
+test('refuse une valeur unitaire de titre-restaurant supérieure à 1 000 €', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario({ valeurResto: 1000.01 }), {
+    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
+  }), /valeurResto doit être compris entre 0 et 1000/)
+})
+
 test('reconstitue le brut total 39 h sans supposer localement un taux de majoration', async () => {
   const requests = []
   const result = await calculateWithUrssafApi(scenario({ dureeType: '39', joursResto: 0 }), {
