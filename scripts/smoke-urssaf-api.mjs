@@ -53,8 +53,11 @@ async function runSocial(name, input) {
       ['net imposable', result.taxableNet],
       ['cotisations salariales', result.employeeContributions]
     ]) assertFinite(label, value)
-    if (Math.abs(result.grossCalculated - input.brut) > 0.01) {
-      throw new Error(`Brut retourné (${result.grossCalculated}) différent du brut demandé (${input.brut}).`)
+    const expectedGross = input.allowGrossReintegration
+      ? input.brut + result.mealTicketNonDeductible
+      : input.brut
+    if (Math.abs(result.grossCalculated - expectedGross) > 0.01) {
+      throw new Error(`Brut retourné (${result.grossCalculated}) différent du brut attendu (${expectedGross}).`)
     }
     if (result.netBeforeTax <= 0 || result.netBeforeTax > result.grossCalculated) {
       throw new Error(`Net avant impôt incohérent : ${result.netBeforeTax} €.`)
@@ -150,7 +153,7 @@ const social39WithTickets = await runSocial('2300 € brut, 39 h, mutuelle 30/30
 })
 const highValueTickets = await runSocial('21 titres de 15 €, part employeur 60 % (contrôle du plafond)', {
   brut: 2300, dureeType: '35', mutuelle: 30, mutuellePat: 30,
-  joursResto: 21, valeurResto: 15, partResto: 40
+  joursResto: 21, valeurResto: 15, partResto: 40, allowGrossReintegration: true
 })
 if (highValueTickets && Math.abs(highValueTickets.mealTicketNonDeductible - 35.28) > 0.03) {
   failures.push({
