@@ -133,24 +133,26 @@ async function openApp(options = {}) {
   const page = await context.newPage();
   const pageErrors = [];
   page.on('pageerror', error => pageErrors.push(error.stack || error.message));
-  await page.addInitScript(() => {
-    if (!localStorage.getItem('onnet.state.v1')) {
-      localStorage.setItem('onnet.state.v1', JSON.stringify({
-        v: 1,
-        scenarios: [{
-          id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
-          mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
-          partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
-          maintienPct: 90, carenceCouverte: false,
-          absenceType: 'arret', absenceDuree: 5
-        }],
-        refId: 0,
-        metric: 'netHoraire',
-        displayAmt: 'net',
-        displayPeriod: 'mois'
-      }));
-    }
-  });
+  if (!options.emptyStorage) {
+    await page.addInitScript(() => {
+      if (!localStorage.getItem('onnet.state.v1')) {
+        localStorage.setItem('onnet.state.v1', JSON.stringify({
+          v: 1,
+          scenarios: [{
+            id: 0, name: 'Poste actuel', brut: 2300, dureeType: '39',
+            mutuelle: 30, mutuellePat: 30, joursResto: 21, valeurResto: 8,
+            partResto: 50, nbMois: 12, primes: 0, treiziemeMoisBase: 'base',
+            maintienPct: 90, carenceCouverte: false,
+            absenceType: 'arret', absenceDuree: 5
+          }],
+          refId: 0,
+          metric: 'netHoraire',
+          displayAmt: 'net',
+          displayPeriod: 'mois'
+        }));
+      }
+    });
+  }
   await page.goto(baseUrl);
   if (pageErrors.length) {
     await context.close();
@@ -639,10 +641,8 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
 
 
 test('l’onboarding garde les paramètres secondaires repliés et ne suppose aucune mutuelle', async () => {
-  const { context, page } = await openApp();
+  const { context, page } = await openApp({ emptyStorage: true });
   try {
-    await page.evaluate(() => localStorage.removeItem('onnet.state.v1'));
-    await page.reload();
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
