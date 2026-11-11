@@ -17,14 +17,14 @@ La migration doit rester progressive. Le moteur actuel ne sera pas supprimé tan
 - Documentation de l'API Publicodes : https://publi.codes/docs/api/publicodes/classes/engine
 - Configuration du simulateur salarié officiel : https://github.com/betagouv/mon-entreprise/blob/master/site/source/pages/simulateurs/salari%C3%A9/simulationConfig.ts
 
-Au moment de l'étude, npm affiche `modele-social@11.1.0` (licence MIT). Son `package.json` déclare `publicodes` comme peer dependency avec la plage `^1.0.4`. npm affiche `publicodes@1.10.1` comme version courante. Ces versions sont des candidates à verrouiller dans le lockfile après un test d'installation et de compilation ; elles ne sont pas encore validées dans OnNet.
+Le modèle officiel `modele-social@11.1.0` est sous licence MIT et déclare `publicodes` comme peer dependency (`^1.0.4`). La branche OnNet utilise actuellement `modele-social@11.1.0` et `publicodes@1.10.4`, versions exactes déclarées dans `package.json`. Le `package-lock.json` n'est pas encore commité : la reproductibilité complète de l'arbre des dépendances reste donc à terminer. Le dépôt officiel déclare de son côté `publicodes` en `^1.8.1` dans son application API.
 
 ## Architecture cible
 
 1. Les règles et le moteur sont installés comme dépendances de développement/runtime de compilation.
 2. Un adaptateur OnNet transforme les scénarios existants en situation Publicodes et récupère les valeurs numériques via `evaluate(...).nodeValue`.
 3. La compilation produit un bundle JavaScript local intégré dans le HTML autonome.
-4. Aucun appel à l'API distante de Mon-entreprise n'est nécessaire au calcul. L'application doit continuer à fonctionner hors ligne et les données salariales restent dans le navigateur.
+4. Aucun appel à l'API distante de Mon-entreprise n'est nécessaire au calcul de l'application. L'API officielle est appelée uniquement par un contrôle de parité dans GitHub Actions ; OnNet doit continuer à calculer hors ligne et les données salariales doivent rester dans le navigateur.
 5. L'interface, les comparaisons multi-offres, les sauvegardes locales et le partage restent indépendants du moteur de calcul.
 
 Il faut contrôler le poids du bundle et la compatibilité navigateur avant d'adopter définitivement cette architecture. Le dépôt actuel utilise un script de compilation maison et ne contient pas encore de `package.json` à sa racine.
@@ -38,14 +38,14 @@ Les noms ci-dessous sont ceux des règles officielles du modèle salarié. Les u
 | Statut non-cadre | `salarié . contrat . statut cadre = non` |
 | Contrat privé standard | `salarié = 'CDI'` |
 | Brut mensuel à 35 h | `salarié . contrat . salaire brut` |
-| Heures sup d'un 39 h | `salarié . temps de travail . heures supplémentaires = 17.33 heures/mois` |
+| Heures sup d'un 39 h | `salarié . temps de travail . heures supplémentaires = 17.33 heure/mois` |
 | Part mutuelle salarié + employeur | `salarié . cotisations . prévoyances . santé . montant` = total des deux parts |
 | Part employeur mutuelle | `salarié . cotisations . prévoyances . santé . taux employeur` = part employeur / montant total |
 | Titres-restaurant | `salarié . rémunération . frais professionnels . titres-restaurant . nombre`, `. montant unitaire` et `. taux employeur` |
 | Prime d'activité | `salarié . rémunération . primes . activité . base` |
 | 13e mois | `salarié . rémunération . primes . fin d'année` |
 
-Le modèle officiel définit les heures supplémentaires en heures par mois. Il propose explicitement 17,33 h/mois pour un contrat à 39 h. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable. Attention : la CI a mis en évidence une erreur de conversion d'unité dans la règle des titres-restaurant (`€.titre-restaurant/titres-restaurant.mois` vers `€/mois`). Le prototype refuse donc explicitement les scénarios avec titres-restaurant plutôt que d'afficher un résultat trompeur. Cette fonction sera réactivée après résolution et tests.
+Le modèle officiel définit les heures supplémentaires en heures par mois. Il propose explicitement 17,33 h/mois pour un contrat à 39 h. Il applique par défaut 25 % sur les huit premières heures supplémentaires hebdomadaires, puis 50 % au-delà, sauf règle conventionnelle applicable. Le calcul des titres-restaurant est maintenant actif dans le prototype. Le premier essai local avait remonté une erreur d'unité et des diagnostics de cycles avec la configuration par défaut de Publicodes. L'adaptateur utilise désormais les mêmes options de moteur que l'API officielle (`deprecatedSyntax: false`, `cyclicReferences: false`) ; le scénario avec 21 titres à 8 € et une participation employeur de 50 % passe en local et correspond à l'API.
 
 ### Conversion du brut OnNet en 39 h
 
@@ -55,7 +55,7 @@ Il faudra donc convertir le brut total OnNet en salaire de base selon le nombre 
 
 ## Hypothèses et limites à rendre visibles
 
-Le moteur produit encore de nombreux avertissements de cycles sur des règles de l'espace entreprise et sur certaines règles de prévoyance. Ils ne font pas échouer les tests de scénarios ciblés, mais doivent être qualifiés avant la production. L'erreur de conversion d'unité des titres-restaurant est contournée temporairement en refusant cette entrée. Les tests doivent continuer à capturer ces diagnostics ; la réussite de la CI ne signifie pas que toutes les règles du modèle sont exemptes d'avertissements. Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
+L'API officielle renvoie encore des avertissements sur certaines règles marquées expérimentales (notamment des branches BTP, convention collective ou activité partielle). Le moteur local suit les options de diagnostic de l'API, qui désactivent les avertissements de syntaxe obsolète et de références cycliques. La réussite des scénarios ciblés ne signifie pas que toutes les règles du modèle sont exemptes d'avertissements. Le modèle officiel couvre beaucoup plus de paramètres qu'OnNet n'en demande aujourd'hui. Les résultats dépendent notamment de la date du calcul, du temps de travail, du statut cadre, de la localisation de l'établissement, de la convention collective, de certaines caractéristiques de l'entreprise et des éléments variables de rémunération.
 
 Pour une première version, OnNet peut rester limité au CDI privé non-cadre en métropole, sans activité partielle, avec une majoration standard des heures supplémentaires. Les paramètres non saisis doivent être explicitement documentés comme hypothèses. Ne pas présenter cette configuration standard comme un bulletin de paie garanti conforme à toutes les conventions et entreprises.
 
@@ -63,19 +63,28 @@ La mutuelle doit être convertie depuis les deux montants existants vers un mont
 
 L'impôt sur le revenu doit être traité dans une phase séparée : le net avant impôt et le net effectivement payé après PAS sont deux résultats distincts. Ne pas remplacer le calcul fiscal actuel par une valeur par défaut Publicodes sans avoir choisi explicitement la méthode et les hypothèses de foyer fiscal.
 
-## Premiers résultats techniques (11/11/2026)
+## Résultats et parité API officielle (11/11/2026)
 
-Exécution reproductible dans GitHub Actions avec le modèle daté du 11 novembre 2026, CDI privé non-cadre, commune de Pacé, sans titres-restaurant :
+Exécution reproductible dans GitHub Actions avec le modèle daté du 11 novembre 2026, CDI privé non-cadre, commune de Pacé :
 
 | Scénario | Brut calculé | Net avant impôt | Net imposable |
 |---|---:|---:|---:|
-| 2 300 € brut, 39 h, mutuelle 30 € salarié + 30 € employeur | 2 300,01 € | 1 820,28 € | 1 648,86 € |
-| 2 300 € brut, 35 h, mutuelle 30 € + 30 € | 2 300,00 € | 1 787,76 € | 1 884,17 € |
-| 2 300 € brut, 39 h, sans mutuelle | 2 300,01 € | 1 853,19 € | 1 650,90 € |
+| 2 300 € brut, 39 h, mutuelle 30 € + 30 €, sans titres | 2 300,01 € | 1 820,28 € | 1 648,86 € |
+| 2 300 € brut, 35 h, mutuelle 30 € + 30 €, sans titres | 2 300,00 € | 1 787,76 € | 1 884,17 € |
+| 2 300 € brut, 39 h, sans mutuelle ni titres | 2 300,01 € | 1 853,19 € | 1 650,90 € |
+| 2 300 € brut, 39 h, mutuelle 30 € + 30 €, 21 titres de 8 € à 50/50 | 2 300,01 € | 1 736,28 € | 1 648,86 € |
 
-Le brut reconstitué à 39 h présente un écart d'arrondi de 0,01 €. Il faut le traiter proprement dans l'adaptateur (arrondi et précision) avant d'intégrer ce calcul au comparateur.
+### Comparaison avec le service officiel
 
-Ces chiffres sont des sorties du moteur local `modele-social` avec les hypothèses ci-dessus ; ils ne constituent pas encore une comparaison indépendante validée avec l'interface web de l'Urssaf. Les valeurs de mutuelle et l'absence de titres-restaurant sont des paramètres de test, pas une représentation exhaustive d'une fiche de paie réelle.
+Le script `scripts/compare-urssaf-api.mjs` interroge `POST https://mon-entreprise.urssaf.fr/api/v1/evaluate`, endpoint documenté dans `api/source/openapi.yaml` du dépôt officiel. Il transmet les mêmes situations au moteur local et à l'API distante puis compare sept valeurs : brut, net avant impôt, net imposable, cotisations salariales, rémunération des heures supplémentaires, part salariale de mutuelle et part employeur de mutuelle.
+
+Résultat au 11/11/2026 : **28 valeurs sur 28 identiques au centime près** sur les quatre scénarios ci-dessus. Le test est automatisé dans GitHub Actions et échoue si un écart dépasse 0,03 €.
+
+Le scénario avec titres-restaurant donne un net avant impôt de 1 736,28 €, contre 1 820,28 € sans titres, soit 84 € de retenue salariale (21 × 8 € × 50 %). Le montant et la participation employeur respectent les paramètres de ce test.
+
+Le brut reconstitué à 39 h ressort à 2 300,01 € côté moteur local comme côté API officielle, pour une entrée OnNet de 2 300 €. C'est un écart d'arrondi commun aux deux moteurs dans cette inversion de salaire de base ; il n'affecte pas les sept écarts comparés, mais il faudra décider comment l'afficher et le documenter.
+
+Ces scénarios démontrent une parité entre la version npm installée et l'API officielle pour les cas testés. Ils ne constituent pas une preuve générale pour toutes les situations de paie ni une validation complète de toutes les règles. Les calculs officiels sont eux-mêmes présentés comme indicatifs et ne couvrent pas toutes les situations ou conventions collectives.
 
 ## Stratégie de validation
 
@@ -86,7 +95,7 @@ Avant toute bascule :
 - tester le brut sous, proche et au-dessus du plafond de sécurité sociale ;
 - tester les parts de mutuelle distinctes et les titres-restaurant ;
 - vérifier le net avant impôt et le détail de chaque retenue ;
-- comparer chaque situation à Mon-entreprise avec des paramètres strictement identiques ;
+- étendre les tests de parité API à plusieurs niveaux de brut (notamment sous, proche et au-dessus du plafond de sécurité sociale) ;
 - ajouter des tests de non-régression pour le stockage, le partage, le rendu et la compilation HTML autonome ;
 - vérifier que le HTML produit ne dépend d'aucun CDN ni d'une connexion Internet.
 
@@ -106,9 +115,10 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 - [x] Branche de migration créée à partir de l'état actuel de la branche principale.
 - [x] Modèle npm officiel, licence et interface d'utilisation repérés.
 - [x] Principales règles de saisie salarié, heures supplémentaires et mutuelle identifiées.
-- [ ] Installation et verrouillage des dépendances dans le dépôt.
+- [x] Installation des dépendances ; [ ] ajout du `package-lock.json` pour verrouiller l'arbre complet.
 - [x] Prototype bundlé et exécuté dans GitHub Actions (HTML autonome généré).
-- [ ] Comparaison indépendante des scénarios avec le simulateur web officiel, à paramètres identiques.
-- [ ] Résolution du calcul des titres-restaurant.
-- [ ] Explication/qualification des avertissements de cycles du modèle.
+- [x] Comparaison automatisée de quatre scénarios avec l'API officielle (28 sorties comparées).
+- [x] Calcul des titres-restaurant réactivé et testé localement + API.
+- [ ] Tests de brut sous, proche et au-dessus du plafond de sécurité sociale.
+- [ ] Vérification sur l'interface web du simulateur, avec saisie manuelle indépendante.
 - [ ] Migration du moteur de production.
