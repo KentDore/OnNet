@@ -93,3 +93,14 @@ test('rejette les valeurs de saisie hors limites et les durées inconnues', () =
   assert.throws(() => calculatePublicodes(scenario({ dureeType: '42' })), /dureeType/)
   assert.throws(() => calculatePublicodes(scenario({ partResto: 150 })), /partResto/)
 })
+
+test('rejette un nombre fractionnaire de titres-restaurant', () => {
+  assert.throws(() => calculatePublicodes(scenario({ joursResto: 20.5 })), /entier/)
+})
+
+test('rejette une date impossible plutôt que de la transmettre au moteur', () => {
+  assert.throws(
+    () => calculatePublicodes(scenario({ date: '2026-02-31' })),
+    /date calendaire valide/
+  )
+})
