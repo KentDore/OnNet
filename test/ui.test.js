@@ -226,7 +226,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.match(await page.locator('#cardsBody').first().innerText(), /Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine/);
+    assert.match(await page.locator('#cardsBody').first().innerText(), /Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
     assert.match(await page.locator('#cardsBody').first().innerText(), /sans prise en compte des RTT/);
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
