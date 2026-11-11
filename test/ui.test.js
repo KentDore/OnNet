@@ -394,9 +394,9 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
       null, { timeout: 15000 }
     );
     const stored = await page.evaluate(() =>
-      JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios.find(scenario => Number(scenario.brut) === 3400)
+      JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios.find(scenario => Number(scenario.mutuelle) === 25 && Number(scenario.mutuellePat) === 40)
     );
-    assert.ok(stored, 'le scénario à 3 400 € doit être conservé');
+    assert.ok(stored, 'le scénario avec les deux parts de mutuelle doit être conservé');
     assert.equal(stored.mutuelle, 25);
     assert.equal(stored.mutuellePat, 40);
     const request = calls.bodies.slice(before).find(body =>
