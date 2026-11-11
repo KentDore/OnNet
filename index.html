@@ -918,7 +918,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
         <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations ni l’impôt. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
         <div class="section-tag">Hypothèses transmises au moteur</div>
-        <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, avec une commune d’établissement renseignée pour chaque poste, et une majoration par défaut de 25 % pour les heures supplémentaires du scénario à 39 h. Les paramètres de mutuelle et de titres-restaurant sont transmis séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
+        <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, sans avantages en nature, primes libres, remboursements de transport spécifiques ni régime particulier (DFS, taux réduits ou impatrié). La commune et le département de l’établissement sont sélectionnés séparément. Le scénario 39 h suppose 4 heures supplémentaires hebdomadaires majorées de 25 %. La mutuelle et les titres-restaurant sont renseignés séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
 
         <div class="section-tag">Fonctions en cours de raccordement</div>
         <p>Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore modélisés dans le calculateur principal par l’API. Ces scénarios sont signalés comme non calculables : OnNet n’affiche pas d’estimation issue de l’ancien moteur local.</p>
@@ -1032,6 +1032,17 @@ function buildSituation(input, baseGross, overtimeHours) {
     'établissement . commune . département': publicodesString(input.departement, 'département', (!input.commune || input.commune === 'Pacé') ? 'Ille-et-Vilaine' : ''),
     'salarié . convention collective': "'droit commun'",
     'salarié . activité partielle': 'non',
+    'dirigeant . indépendant': 'non',
+    'salarié . rémunération . avantages en nature': 'non',
+    'salarié . rémunération . primes . activité . base': '0 €/mois',
+    'salarié . rémunération . primes . fin d'année': 'non',
+    'salarié . rémunération . frais professionnels . trajets domicile travail . transports publics . montant': '0 €/mois',
+    'salarié . rémunération . frais professionnels . trajets domicile travail . forfait mobilités durables . montant': '0 €/an',
+    'salarié . rémunération . frais professionnels . trajets domicile travail . prime de transport . montant': '0 €/an',
+    'salarié . régimes spécifiques . taux réduits': 'non',
+    'salarié . régimes spécifiques . DFS': 'non',
+    'salarié . régimes spécifiques . impatriés': 'non',
+    'situation personnelle . domiciliation fiscale à l'étranger': 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
