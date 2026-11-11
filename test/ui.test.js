@@ -419,6 +419,23 @@ test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local
   }
 });
 
+test('ne propose pas de réessayer pour les paramètres hors périmètre', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await card.locator('details.more summary').click();
+    await card.locator('[data-key="nbMois"]').fill('13');
+    await card.locator('[data-key="nbMois"]').blur();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('ne sont pas encore pris en charge')
+    );
+    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
+    assert.equal(calls.count, 3, 'aucun nouvel appel API pour un scénario non pris en charge');
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', async () => {
   const { context, page } = await openApp();
   try {
