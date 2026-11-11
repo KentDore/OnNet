@@ -325,18 +325,21 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     : grossTarget
 
   const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
-  const socialExpressions = [
-    EXPRESSIONS.gross,
-    EXPRESSIONS.netBeforeTax,
-    EXPRESSIONS.taxableNet,
-    EXPRESSIONS.employeeContributions,
-    EXPRESSIONS.overtimePay,
-    EXPRESSIONS.employeeHealth,
-    EXPRESSIONS.employerHealth,
-    EXPRESSIONS.mealTicketAmount,
-    EXPRESSIONS.mealTicketEmployer,
-    EXPRESSIONS.mealTicketNonDeductible,
-  ]
+  const benchmarkOnly = input.benchmarkOnly === true
+  const socialExpressions = benchmarkOnly
+    ? [EXPRESSIONS.gross, EXPRESSIONS.netBeforeTax]
+    : [
+        EXPRESSIONS.gross,
+        EXPRESSIONS.netBeforeTax,
+        EXPRESSIONS.taxableNet,
+        EXPRESSIONS.employeeContributions,
+        EXPRESSIONS.overtimePay,
+        EXPRESSIONS.employeeHealth,
+        EXPRESSIONS.employerHealth,
+        EXPRESSIONS.mealTicketAmount,
+        EXPRESSIONS.mealTicketEmployer,
+        EXPRESSIONS.mealTicketNonDeductible,
+      ]
 
   let finalEvaluation
   let finalSituation
@@ -392,6 +395,24 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
   }
 
   const values = finalEvaluation.values
+  if (benchmarkOnly) {
+    return Object.freeze({
+      engine: 'API REST officielle Mon-entreprise / Urssaf',
+      endpoint,
+      date: formatDate(input.date),
+      grossTarget,
+      grossCalculated,
+      grossDifference: grossCalculated - grossTarget,
+      baseGross,
+      overtimeHours,
+      netBeforeTax: values[1],
+      benchmarkOnly: true,
+      missingVariables: finalEvaluation.missingVariables,
+      warnings: finalEvaluation.warnings,
+      checkedAt: new Date().toISOString()
+    })
+  }
+
   const result = {
     engine: 'API REST officielle Mon-entreprise / Urssaf',
     endpoint,
