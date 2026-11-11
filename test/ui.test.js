@@ -535,8 +535,8 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', async (
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
     const part = card.locator('[data-key="partResto"]');
-    assert.equal(await part.getAttribute('min'), '40');
-    assert.equal(await part.getAttribute('max'), '50');
+    assert.equal(await part.getAttribute('data-min'), '40');
+    assert.equal(await part.getAttribute('data-max'), '50');
   } finally {
     await context.close();
   }
