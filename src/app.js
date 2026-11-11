@@ -2034,7 +2034,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     const v = parseNum(input.value);
     if(!(v > 0)) return;
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
+    const benefits = readMutuelleTr();
+    // Lire les deux champs visibles au dernier moment de la validation :
+    // la modale est réutilisée par plusieurs parcours de l'application.
+    const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
+    const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
+    benefits.mutuelle = mutuelleRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuelleRaw));
+    benefits.mutuellePat = mutuellePatRaw === '' ? ONBOARDING_MUTUELLE_DEFAUT : Math.max(0, parseNum(mutuellePatRaw));
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
