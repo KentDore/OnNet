@@ -159,6 +159,8 @@ for (const scenario of fiscalScenarios) {
     }
     fiscalResults.push({
       scenario: scenario.name,
+      netBeforeTax: round(result.netBeforeTax),
+      taxableNet: round(result.taxableNet),
       netAfterTax: round(result.netAfterTax),
       incomeTax: round(result.incomeTax),
       calculatedTaxRate: round(result.calculatedTaxRate),
