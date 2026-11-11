@@ -282,8 +282,9 @@ test('alimente l’assiette annuelle officielle du taux neutre', async () => {
   })
 
   assert.equal(requests.length, 2)
-  assert.equal(requests[1].situation['impôt . revenu imposable'], undefined)
   assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
+  assert.equal(requests[1].situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
+  assert.equal(requests[1].situation['impôt . foyer fiscal . enfants à charge'], '0 enfant')
   assert.ok(requests[1].expressions.includes("impôt . taux neutre d'impôt sur le revenu"))
   assert.equal((await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
