@@ -700,17 +700,20 @@ const metricHints = {
 
 function findScenario(id){ return scenarios.find(s => s.id === id); }
 function heroValue(r){
-  if(displayAmt === 'net') return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
+  if(displayAmt === 'net'){
+    const value = displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+    return Number.isFinite(value) ? value : null;
+  }
   return displayPeriod === 'mois' ? r.m.brutTotal : r.a.brutTotal;
 }
 function heroLabel(){
-  return (displayAmt === 'net' ? 'Net' : 'Brut') + ' ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  return 'Net après impôt ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 function heroPasValue(r){
-  return displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+  return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
 }
 function heroPasShown(){
-  // L'impôt est désormais calculé, plus saisi : la ligne est toujours pertinente.
   return displayAmt === 'net';
 }
 
@@ -749,9 +752,9 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="hero">
-      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r ? fmt(heroValue(r)) : '—'}</div>
+      <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Après impôt : —'}</div>
+      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
       <div class="result-source" id="c-result-state-${uid}" role="status">${esc(resultText)}</div>
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
@@ -1455,9 +1458,9 @@ function updateComputed(options = {}){
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
     if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
-    setText(`c-hero-${u}`, r ? fmt(heroValue(r)) : '—');
+    setText(`c-hero-${u}`, r && heroValue(r) !== null ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, r ? `Après impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Après impôt : —');
+    setHTML(`c-heropas-${u}`, r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —');
     setShown(`c-heropas-${u}`, heroPasShown());
 
     const hint = document.getElementById(`rate-hint-${u}`);
