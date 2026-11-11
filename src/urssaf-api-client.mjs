@@ -133,6 +133,18 @@ function buildSituation(input, baseGross, overtimeHours) {
       }
       situation['impôt . foyer fiscal . situation de famille'] = `'${familyStatus}'`
       situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
+      if (familyStatus === 'couple') {
+        if (input.autresRevenusImposables === undefined || input.autresRevenusImposables === null) {
+          throw new TypeError('autresRevenusImposables doit être renseigné pour un foyer en couple (indiquer 0 si aucun autre revenu).')
+        }
+        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
+        situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
+      } else if (input.autresRevenusImposables !== undefined && input.autresRevenusImposables !== null) {
+        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
+        if (otherIncome > 0) {
+          situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
+        }
+      }
       if (singleParent) {
         situation['impôt . foyer fiscal . parent isolé'] = 'oui'
       }
