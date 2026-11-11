@@ -1,4 +1,5 @@
 import { chromium } from 'playwright'
+import { calculateWithUrssafApi } from '../src/urssaf-api-client.mjs'
 
 const params = new URLSearchParams({
   'salaire-brut': '2300€/mois',
@@ -8,6 +9,18 @@ const params = new URLSearchParams({
   'impôt . taux personnalisé': '10%'
 })
 const url = `https://mon-entreprise.urssaf.fr/simulateurs/salaire-brut-net?${params.toString()}`
+
+function currentDateInParis() {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/Paris',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit'
+    }).formatToParts(new Date()).map(part => [part.type, part.value])
+  )
+  return `${parts.year}-${parts.month}-${parts.day}`
+}
 const browser = await chromium.launch({ headless: true })
 try {
   const page = await browser.newPage({ locale: 'fr-FR' })
@@ -97,6 +110,17 @@ try {
     const index = body.indexOf(label)
     return [label, index < 0 ? null : body.slice(Math.max(0, index - 100), Math.min(body.length, index + 300))]
   }))
+  const apiResult = await calculateWithUrssafApi({
+    brut: 2300,
+    dureeType: '35',
+    mutuelle: 20,
+    mutuellePat: 20,
+    joursResto: 0,
+    valeurResto: 0,
+    date: currentDateInParis(),
+    modeImpot: 'personnalisé',
+    tauxPAS: 10
+  })
   console.log(JSON.stringify({
     status: response?.status() ?? null,
     title: await page.title(),
@@ -108,6 +132,16 @@ try {
     shareValues,
     payslipLines,
     payslipContext,
+    apiComparison: {
+      netBeforeTax: Number(apiResult.netBeforeTax.toFixed(2)),
+      taxableNet: Number(apiResult.taxableNet.toFixed(2)),
+      netAfterTax: Number(apiResult.netAfterTax.toFixed(2)),
+      incomeTaxAnnual: Number(apiResult.incomeTax.toFixed(2)),
+      incomeTaxMonthly: Number((apiResult.incomeTax / 12).toFixed(2)),
+      calculatedTaxRate: apiResult.calculatedTaxRate,
+      missingVariables: apiResult.missingVariables,
+      warnings: apiResult.warnings
+    },
     diagnostics: body.split('\n').filter(line => /pas pu être appliqués|erreur|indisponible|pas encore défini|salaire net après impôt/i.test(line)).slice(0, 20)
   }, null, 2))
 } finally {
