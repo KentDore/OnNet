@@ -186,7 +186,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.equal(calls.count, 0);
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /transmis à l’API Urssaf/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /moteur officiel de l’Urssaf/);
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
@@ -405,6 +405,8 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     await page.locator('#modalAddInput').fill('3400');
     await page.locator('#modalAddMutuelle').fill('25');
     await page.locator('#modalAddMutuellePat').fill('40');
+    assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25');
+    assert.equal(await page.locator('#modalAddMutuellePat').inputValue(), '40');
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
@@ -537,7 +539,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
     await card.locator('[data-key="nbMois"]').fill('13');
     await card.locator('[data-key="nbMois"]').blur();
     await page.waitForFunction(() =>
-      (document.getElementById('urssafStatusText')?.textContent || '').includes('ne sont pas encore pris en charge')
+      document.querySelector('#cardsBody [data-card] .result-source')?.textContent.includes('nombre de mensualités différent de 12')
     );
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
     assert.equal(calls.count, before, 'aucun nouvel appel API pour un scénario non pris en charge');
