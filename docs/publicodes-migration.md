@@ -74,6 +74,19 @@ Exécution reproductible dans GitHub Actions avec le modèle daté du 11 novembr
 | 2 300 € brut, 39 h, sans mutuelle ni titres | 2 300,01 € | 1 853,19 € | 1 650,90 € |
 | 2 300 € brut, 39 h, mutuelle 30 € + 30 €, 21 titres de 8 € à 50/50 | 2 300,01 € | 1 736,28 € | 1 648,86 € |
 
+### Extension des scénarios de seuil (11/11/2026)
+
+La matrice automatisée compte maintenant neuf scénarios, soit 63 valeurs comparées à l'API officielle, avec un écart de 0 sur les valeurs arrondies à deux décimales :
+
+- 1 800 € et 1 900 € brut mensuel à 35 h ;
+- 3 990 € et 4 020 € brut mensuel, de part et d'autre du plafond mensuel de Sécurité sociale 2026 (4 005 €) ;
+- 8 000 € brut mensuel pour solliciter la tranche 2 de retraite complémentaire ;
+- les quatre scénarios déjà testés, dont 39 h avec heures supplémentaires et titres-restaurant.
+
+**Précaution :** le scénario à 1 800 € est uniquement un point de test mathématique situé sous le SMIC mensuel de référence ; ce n'est pas une recommandation de rémunération légale pour un temps plein. Le SMIC horaire applicable en métropole est de 12,31 € à la date de cette vérification, soit environ 1 867 € brut mensuel pour 151,67 h. Source : [simulateur officiel Urssaf](https://mon-entreprise.urssaf.fr/simulateurs/salaire-brut-net). Le plafond mensuel de Sécurité sociale 2026 est de 4 005 € : [source Urssaf](https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/plafonds-securite-sociale.html).
+
+Le test des heures supplémentaires vérifie également la formule de rémunération à 25 % sur le scénario 39 h. Il ne valide pas la majoration à 50 %, car l'interface actuelle ne permet que 35 h ou 39 h.
+
 ### Comparaison avec le service officiel
 
 Le script `scripts/compare-urssaf-api.mjs` interroge `POST https://mon-entreprise.urssaf.fr/api/v1/evaluate`, endpoint documenté dans `api/source/openapi.yaml` du dépôt officiel. Il transmet les mêmes situations au moteur local et à l'API distante puis compare sept valeurs : brut, net avant impôt, net imposable, cotisations salariales, rémunération des heures supplémentaires, part salariale de mutuelle et part employeur de mutuelle.
@@ -117,7 +130,10 @@ Les tests doivent couvrir les règles à la date courante du modèle, puis être
 - [x] Principales règles de saisie salarié, heures supplémentaires et mutuelle identifiées.
 - [x] Installation des dépendances ; [ ] ajout du `package-lock.json` pour verrouiller l'arbre complet.
 - [x] Prototype bundlé et exécuté dans GitHub Actions (HTML autonome généré).
-- [x] Comparaison automatisée de quatre scénarios avec l'API officielle (28 sorties comparées).
+- [x] Comparaison automatisée de neuf scénarios avec l'API officielle (63 sorties comparées, écart nul au centime affiché).
+- [x] Scénarios de paie sous/proches du SMIC, de part et d'autre du PMSS 2026 (4 005 €/mois), et au-dessus du PMSS pour tester la tranche 2.
+- [x] Test explicite de la formule des heures supplémentaires à 25 % pour le scénario 39 h.
+- [ ] Tester les majorations à 50 % : le prototype actuel n'accepte que 35 h et 39 h, donc ne couvre pas plus de 8 heures supplémentaires hebdomadaires.
 - [x] Calcul des titres-restaurant réactivé et testé localement + API.
 - [ ] Tests de brut sous, proche et au-dessus du plafond de sécurité sociale.
 - [ ] Vérification sur l'interface web du simulateur, avec saisie manuelle indépendante.
