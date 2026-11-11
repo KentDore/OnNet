@@ -1534,10 +1534,8 @@ function onInput(e){
   const s = findScenario(id);
   if(!s) return;
   if(key === 'commune'){
-    const commune = e.target.value.trim().replace(/\s+/g, ' ').slice(0, 80);
-    if(!commune) return;
-    s.commune = commune;
-    updateComputed();
+    // La commune est validée à la perte de focus : ne pas lancer une requête
+    // Urssaf à chaque frappe.
     return;
   }
   if(key === 'name'){
@@ -1561,9 +1559,11 @@ function onBlurClamp(e){
   if(!s) return;
   if(key === 'commune'){
     const commune = e.target.value.trim().replace(/\s+/g, ' ').slice(0, 80) || s.commune || 'Pacé';
-    s.commune = commune;
     e.target.value = commune;
-    updateComputed();
+    if(s.commune !== commune){
+      s.commune = commune;
+      updateComputed();
+    }
     return;
   }
   if(!validateNumericInput(e.target, true)) return;
