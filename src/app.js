@@ -748,7 +748,7 @@ function renderBenchmarks(computed){
   const neutralSmicScenario = { ...neutralScenario, brut: benchmarks.smicBrut };
   const smicResult = compute(neutralSmicScenario, foyer);
   const smicNetBeforeTax = Math.max(0, smicResult.netApres);
-  const smicHourlyGross = benchmarks.smicBrut / (HEURES_BASE * 52 / 12);
+  const smicHourlyGross = benchmarks.smicBrut / (35 * 52 / 12);
 
   const brut35 = Math.max(0, r.brutHoraire * HEURES_BASE);
   // Recalcul complet à 35 h : ne pas proratiser un net calculé sur 39 h.
