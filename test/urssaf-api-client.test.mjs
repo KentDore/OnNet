@@ -159,6 +159,12 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.missingVariables.length, 0)
 })
 
+test('refuse une participation salariale titres-restaurant hors limites', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario({ joursResto:21, partResto:30 }), {
+    fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
+  }), /partResto doit être comprise entre 40 et 50/)
+})
+
 test('refuse une commune sans département confirmé', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ commune:'Commune inconnue', departement:'' }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
@@ -167,7 +173,7 @@ test('refuse une commune sans département confirmé', async () => {
 
 test('transmet la commune de l’établissement et échappe les apostrophes', async () => {
   let request
-  await calculateWithUrssafApi(scenario({ commune: "L'Haÿ-les-Roses" }), {
+  await calculateWithUrssafApi(scenario({ commune: "L'Haÿ-les-Roses", departement:'Val-de-Marne' }), {
     fetchImpl: mockFetch(body => {
       request = body
       return response(apiResponse(body.expressions))
