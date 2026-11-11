@@ -4,6 +4,7 @@ on:
   pull_request:
   push:
     branches: [main, migration/publicodes-urssaf]
+  workflow_dispatch:
 
 jobs:
   test:
@@ -41,3 +42,7 @@ jobs:
       # Test réel distinct : valide l'accès cross-origin au service officiel.
       - name: Vérifier l'API Urssaf réelle depuis Chromium
         run: node --test test/live-api.test.js
+      # Diagnostic manuel uniquement : plusieurs appels réels, jamais dans la CI standard.
+      - name: Comparer la matrice complète API / modèle local (manuel)
+        if: github.event_name == 'workflow_dispatch'
+        run: npm run compare:urssaf-api
