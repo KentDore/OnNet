@@ -11,7 +11,8 @@
     "test:publicodes": "node --test test/publicodes.test.js",
     "test:prototype": "npm run test:publicodes",
     "scenarios:publicodes": "node scripts/publicodes-scenarios.mjs",
-    "compare:urssaf-api": "node scripts/compare-urssaf-api.mjs"
+    "compare:urssaf-api": "node scripts/compare-urssaf-api.mjs",
+    "diagnose:urssaf-meal-tickets": "node scripts/diagnose-urssaf-meal-tickets.mjs"
   },
   "dependencies": {
     "modele-social": "11.1.0",
