@@ -175,6 +175,17 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.missingVariables.length, 0)
 })
 
+test('refuse une mutuelle obligatoire financée à moins de 50 % par l’employeur avant tout appel réseau', async () => {
+  let calls = 0
+  await assert.rejects(calculateWithUrssafApi(scenario({ mutuelle: 36, mutuellePat: 24 }), {
+    fetchImpl: mockFetch(() => {
+      calls += 1
+      return response(apiResponse([]))
+    })
+  }), /part employeur.*au moins 50 %/)
+  assert.equal(calls, 0)
+})
+
 test('refuse une participation salariale titres-restaurant hors limites', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto:21, partResto:30 }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
