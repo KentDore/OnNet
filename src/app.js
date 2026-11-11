@@ -87,6 +87,7 @@ function mapUrssafResultToOnNet(result){
     netApres:result.netBeforeTax,
     netImposable:result.taxableNet,
     cotisNettes:otherEmployeeContributions,
+    mutuelle:result.employeeHealth,
     netSocial:result.netBeforeTax + result.mealTicketEmployee
   };
   const annual = {
@@ -525,7 +526,7 @@ function showShareOptionsModal(){
       <legend>Informations facultatives</legend>
       <label class="share-extra-option" for="shareIncludeDetails">
         <input type="checkbox" id="shareIncludeDetails">
-        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur, titres restaurant et paramètres d'absence.</small></span>
+        <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur et titres restaurant.</small></span>
       </label>
       <label class="share-extra-option" for="shareIncludeFoyer">
         <input type="checkbox" id="shareIncludeFoyer">
@@ -835,7 +836,7 @@ function renderWaterfall(computed){
   const pct = v => brut > 0 ? (v/brut)*100 : 0;
 
   const cotis = m.cotisNettes;
-  const mutuelle = s.mutuelle;
+  const mutuelle = m.mutuelle;
   const tr = r.tr.totalSalarie;
   const net = m.netApres;
   const netSansTR = m.netSocial;
@@ -2137,7 +2138,7 @@ document.getElementById('addRaiseScenario').addEventListener('click', () => {
 });
 renderRaiseChips();
 
-// ---------- Simulateur d'absence (congés payés / arrêt de travail) ----------
+// ---------- Animation du rail de cartes ----------
 // Fait défiler jusqu'à la dernière carte réelle (pas la carte fantôme
 // "Ajouter un salaire" qui la suit) — scroller jusqu'à scrollWidth la
 // dépassait et laissait la carte tout juste créée à peine visible.
@@ -2179,8 +2180,8 @@ function scrollToNewCard(){
     const target = cards[cards.length - 1];
     if(!target){ restoreCardSnap(); return; }
     const scroller = document.getElementById('cardsScroll');
-    // Un ajout lancé depuis les modules d'augmentation ou d'absence, situés plus
-    // bas dans la page, faisait défiler le rail hors de vue : on ne voyait pas
+    // Un ajout lancé depuis le module d'augmentation, situé plus bas dans la page,
+    // faisait défiler le rail hors de vue : on ne voyait pas
     // le salaire créé. On remonte d'abord sur la liste si elle n'est pas visible.
     const rail = scroller.getBoundingClientRect();
     const vh = window.innerHeight || document.documentElement.clientHeight;
