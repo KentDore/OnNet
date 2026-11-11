@@ -226,7 +226,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.match(await page.locator('#cardsBody').first().innerText(), /Hypothèse : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
+    assert.match(await page.locator('#cardsBody').first().innerText(), /Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
     assert.match(await page.locator('#cardsBody').first().innerText(), /Les RTT ne sont pas pris en compte/);
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
@@ -642,7 +642,7 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
     assert.equal(await overtimeHint.isVisible(), true);
-    assert.match(await overtimeHint.innerText(), /droit commun.*majorées à 25 %.*conventions collectives ne sont pas prises en compte.*RTT/);
+    assert.match(await overtimeHint.innerText(), /droit commun.*majorées à 25 %.*taux particuliers des conventions collectives ne sont pas pris en compte.*RTT/);
     await modal.locator('#modalOnboardingDuree [data-duree="35"]').click();
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingInput').fill('2500');
@@ -718,7 +718,7 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
     assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
     assert.equal(await hint.isVisible(), true);
-    assert.match(await hint.innerText(), /droit commun.*majorées à 25 %.*conventions collectives ne sont pas prises en compte.*RTT/);
+    assert.match(await hint.innerText(), /droit commun.*majorées à 25 %.*taux particuliers des conventions collectives ne sont pas pris en compte.*RTT/);
     await page.locator('#modalAddDuree [data-duree="35"]').click();
     assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
