@@ -1855,7 +1855,7 @@ async function refreshOfficialSmic(forceRetry){
 async function executeUrssafCalculations(generation, forceRetry){
   if(officialSmicState.status !== 'ready'){
     await refreshOfficialSmic(forceRetry === true);
-    if(generation !== urssafGeneration || officialSmicState.status !== 'ready') return;
+    if(generation !== urssafGeneration) return;
   }
 
   const jobs = scenarios.map(s => Object.assign({},s));
