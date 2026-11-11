@@ -268,21 +268,24 @@ async function executeUrssafCalculations(generation, forceRetry){
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
         'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
       );
-      if(generation !== urssafGeneration) return;
       if(!Number.isFinite(result.value) || result.value <= 0){
         throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       }
+      // Le montant officiel reste réutilisable même si l'interface a changé
+      // pendant l'appel ; la génération protège uniquement le rendu.
       officialSmicState = {
         status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
       };
     }catch(error){
-      if(generation !== urssafGeneration) return;
-      officialSmicState = {
-        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
-        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
-      };
+      if(generation === urssafGeneration){
+        officialSmicState = {
+          status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+          error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
+        };
+      }
     }
+    if(generation !== urssafGeneration) return;
     updateUrssafStatus(getCurrentComputed());
   }
 
@@ -307,13 +310,18 @@ async function executeUrssafCalculations(generation, forceRetry){
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
         buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
       );
-      if(generation !== urssafGeneration) return;
+      // Une réponse valide reste réutilisable pour ses paramètres exacts,
+      // même si une saisie plus récente a rendu son affichage obsolète.
       urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      urssafErrorCache.delete(key);
       if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
     }catch(error){
-      if(generation !== urssafGeneration) return;
-      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      // Une erreur obsolète ne doit pas bloquer une prochaine tentative.
+      if(generation === urssafGeneration){
+        urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      }
     }
+    if(generation !== urssafGeneration) return;
     updateUrssafStatus(getCurrentComputed());
   }
   if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
