@@ -1104,9 +1104,10 @@ function render(){
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
   const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
-  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
+  const allReady = hasSalaryResults && !!getCachedSmicResult();
   const comparePanel = document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden = !allReady;
+  if(comparePanel) comparePanel.hidden = !hasSalaryResults;
   const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
   if(chartContent){
     const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
@@ -1272,11 +1273,9 @@ function bindScenarioInputs(){
       const id = parseInt(btn.dataset.id, 10);
       const s = findScenario(id);
       if(!s) return;
+      if(s.dureeType === btn.dataset.duree) return;
       s.dureeType = btn.dataset.duree;
-      document.querySelectorAll(`[data-durree-group="${id}"] button`).forEach(b => {
-        b.setAttribute('aria-pressed', b.dataset.duree === s.dureeType ? 'true' : 'false');
-      });
-      updateComputed();
+      render();
     });
   });
 }
@@ -1430,7 +1429,10 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 function updateComputed(options = {}){
   const computed = getCurrentComputed();
   const isSingle = computed.length === 1;
-  const allReady = computed.length > 0 && computed.every(x => !!x.r) && !!getCachedSmicResult();
+  const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
+  const allReady = hasSalaryResults && !!getCachedSmicResult();
+  const comparePanel = document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden = !hasSalaryResults;
   const stackChartEl = document.getElementById('stackChart');
   if(allReady){
     document.getElementById('insightBox').innerHTML = renderInsight(computed);
