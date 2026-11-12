@@ -155,7 +155,6 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
-  await page.locator('.advanced-scenarios > summary').evaluate(el => { el.parentElement.open = true; });
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
@@ -866,6 +865,24 @@ test('le consentement indique explicitement les données envoyées à l’Urssaf
   }
 });
 
+
+
+test('les fiches de salaire et leurs contrôles restent visibles sans action préalable', async () => {
+  const { context, page } = await openApp();
+  try {
+    assert.equal(await page.locator('.cards-bar').isVisible(), true);
+    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
+    assert.equal(await page.locator('#amtToggle').isVisible(), true);
+    assert.equal(await page.locator('#periodToggle').isVisible(), true);
+    const card = page.locator('#cardsBody [data-card]').first();
+    assert.equal(await card.isVisible(), true);
+    await card.locator('details.more > summary').click();
+    assert.equal(await card.locator('details.more').evaluate(el => el.open), true);
+    assert.equal(await card.locator('[data-key="brut"]').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
 
 test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
   const { context, page } = await openApp();
