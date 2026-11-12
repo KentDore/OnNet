@@ -1019,87 +1019,94 @@ function benchmarkDelta(value, reference){
   return { amount: sign + fmt(Math.abs(delta)), pct: (delta > 0 ? '+' : '') + pct.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1}) + ' %', positive: delta >= 0 };
 }
 function renderBenchmarks(computed){
-  const item = computed.find(x => x.s.id === refId);
+  const item=computed.find(x=>x.s.id===refId);
   if(!item) return '';
-  const { s, r } = item;
-  const smicResult = getCachedSmicResult();
-  if(!smicResult && officialSmicState.status === 'error'){
-    return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
-  }
+  const {s,r}=item;
+  const smicResult=getCachedSmicResult();
+  if(!smicResult && officialSmicState.status==='error') return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error||'erreur inconnue')}. Réessayez le calcul.</p>`;
   if(!r) return '';
-  if(!smicResult){
-    return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
-  }
-
-  // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
-  // strictement la durée et les montants du contrat saisi.
-  const smicNetBeforeTax = Math.max(0, smicResult.netApres);
-  const smicMonthlyHours = HEURES_BASE;
-  const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
-  const smicGross = getSmicGross();
-  const smicHourlyGross = smicGross / smicMonthlyHours;
-
-  // Comparaison en net avant impôt par heure réellement travaillée.
-  // Aucun recalcul du salaire de l'utilisateur à 35 h.
-  const weeklyHours = Number(s.dureeType);
-  const userMonthlyHours = Number.isFinite(weeklyHours) && weeklyHours > 0
-    ? weeklyHours * 52 / 12
-    : 0;
-  const userNetBeforeTax = Math.max(0, r.netApres);
-  const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
-
-  // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
-  // Aucun brut médian n'est déduit faute de donnée source équivalente.
-  const medianNetBeforeTax = 2190;
-  const medianNetHourly = medianNetBeforeTax / HEURES_BASE;
-
-  const smic = benchmarkDelta(userNetHourly, smicNetHourly);
-  const median = benchmarkDelta(userNetHourly, medianNetHourly);
-  const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
-  const durationLabel = Number.isFinite(weeklyHours) && weeklyHours > 0
-    ? weeklyHours.toLocaleString('fr-FR') + ' h'
-    : 'durée non renseignée';
+  if(!smicResult) return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
+  const weeklyHours=Number(s.dureeType), userMonthlyHours=weeklyHours*52/12;
+  const userNetBeforeTax=Math.max(0,r.netApres), userNetHourly=userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0;
+  const smicNetBeforeTax=Math.max(0,smicResult.netApres), smicNetHourly=smicNetBeforeTax/HEURES_BASE;
+  const smicGross=getSmicGross(), smicHourlyGross=smicGross/HEURES_BASE;
+  const medianNetBeforeTax=2238, medianNetHourly=medianNetBeforeTax/HEURES_BASE;
+  const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?userMonthlyHours*12:userMonthlyHours;
+  const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
+  const format=maquetteComparisonPeriod==='hour'?fmtHoraire:fmt;
+  const userValue=userNetHourly*factor, smicValue=smicNetHourly*factor, medianValue=medianNetHourly*factor;
+  const smicGap=userValue-smicValue, medianGap=userValue-medianValue;
+  const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+' / '+unit;
+  const gapClass=value=>value>=0?'benchmark-positive':'benchmark-negative';
+  const durationLabel=weeklyHours.toLocaleString('fr-FR')+' h';
   return `
-    <div class="benchmark-heading">
-      <div>
-        <h2 class="bars-title">Votre salaire face aux repères</h2>
-        <p class="hint">Comparaison en net avant impôt par heure. Votre salaire reste calculé selon la durée réelle de votre contrat ; le SMIC et le salaire médian servent de références horaires.</p>
-      </div>
-    </div>
-    <div class="benchmark-your-salary">
-      <span>Votre net avant impôt</span>
-      <strong>${fmt(userNetBeforeTax)} <small>/ mois</small></strong>
-      <div class="benchmark-meta benchmark-comparison-base">Net horaire : ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
-    </div>
     <div class="benchmark-grid">
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC · net avant impôt</div>
-        <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(smicGross)}</div>
-        <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
-        <details class="benchmark-details">
-          <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
-          ${officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
-          <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
+        <div class="benchmark-label">SMIC net</div><div class="benchmark-value">${format(smicValue)}</div>
+        <div class="benchmark-meta">Par ${unit} · équivalent 35 h</div>
+        <div class="benchmark-result ${gapClass(smicGap)}">${gapText(smicGap)}</div>
+        <details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
+          <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf, sur une base de 35 h. Pour les périodes mensuelle et annuelle, le repère est ramené à la durée de votre contrat (${durationLabel}). Il est calculé sans mutuelle ni titres-restaurant.</p>
+          <p>Brut mensuel de référence : ${fmt(smicGross)}. Taux horaire brut : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
       </article>
       <article class="benchmark-item">
-        <div class="benchmark-label">Salaire médian privé · net avant impôt</div>
-        <div class="benchmark-value">${fmt(medianNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(medianNetHourly)} · Référence mensuelle nette INSEE 2024</div>
-        <div class="benchmark-result ${signedClass(median)}">${fmtHoraireSigned(userNetHourly - medianNetHourly)} <small>/h (${median.pct})</small></div>
-        <details class="benchmark-details">
-          <summary>Méthode de calcul</summary>
-          <p>La référence INSEE publiée est de 2 190 € net mensuel en équivalent temps plein. Son taux horaire est calculé sur 151,67 h/mois. Le brut mensuel correspondant n'est pas affiché, car il ne figure pas dans cette donnée source.</p>
-          <p>Votre contrat : ${durationLabel} · ${fmt(userNetBeforeTax)} € net avant impôt estimés / mois, soit ${fmtHoraire(userNetHourly)}.</p>
+        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div><div class="benchmark-value">${format(medianValue)}</div>
+        <div class="benchmark-meta">Par ${unit} · INSEE 2025 · France</div>
+        <div class="benchmark-result ${gapClass(medianGap)}">${gapText(medianGap)}</div>
+        <details class="benchmark-details"><summary>Que signifie la médiane ?</summary>
+          <p>L’Données INSEE 2025 · publiées en 2026 · France. La médiane publiée est de 2 238 € nets mensuels en EQTP. Le taux horaire est ramené à 151,67 h/mois ; les périodes mensuelle et annuelle sont ajustées à la durée du contrat comparé (${durationLabel}).</p>
+          <p>Le champ couvre les salariés du privé en France, y compris alternants, stagiaires et contrats aidés ; il exclut l’agriculture et les particuliers employeurs. Il est plus large que le périmètre CDI non-cadre d’OnNet.</p>
+          <p>Source : <a href="https://www.insee.fr/fr/statistiques/9087193" target="_blank" rel="noopener noreferrer">INSEE, salaires dans le secteur privé en 2025</a>.</p>
         </details>
       </article>
-    </div>
-`
+    </div>`;
 }
 // ---------- Rendu ----------
+let maquetteComparisonPeriod='hour';
+function renderMaquetteControls(){
+  const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
+  const benchmarkMount=document.getElementById('benchmarkMount');
+  if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
+  const tabs=document.getElementById('maquetteOfferTabs');
+  if(!tabs) return;
+  tabs.replaceChildren();
+  scenarios.forEach((scenario,index)=>{
+    const button=document.createElement('button');
+    button.type='button';button.className='offer-tab'+(scenario.id===refId?' active':'');
+    button.setAttribute('aria-pressed',String(scenario.id===refId));
+    button.append(document.createTextNode(scenario.name));
+    const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
+    button.addEventListener('click',()=>{refId=scenario.id;render();});
+    tabs.append(button);
+  });
+  const selected=findScenario(refId)||scenarios[0];
+  document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
+  const period=document.getElementById('mainSalaryPeriod');
+  const gross=document.getElementById('mainSalaryGross');
+  const hours=document.getElementById('mainSalaryHours');
+  if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
+    period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+  }
+  const computed=getCurrentComputed().find(x=>x.s.id===refId);
+  const mutuelleText=document.getElementById('mainSalaryMutuelleText');
+  if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
+  const summary=document.getElementById('maquetteYourSalary');
+  if(summary){
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après autorisation de transmission à l’Urssaf.</div></div>';}
+    else{
+      const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
+      const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
+      const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:selected.dureeType*52/12;
+      const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
+      const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
+      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h · mutuelle salarié : '+fmt(selected.mutuelle||0)+' / mois</div></div>';
+    }
+  }
+  const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
+  if(status && mount && status.parentElement!==mount) mount.appendChild(status);
+}
 function render(){
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
   const computed = getCurrentComputed();
@@ -1141,6 +1148,7 @@ function render(){
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  renderMaquetteControls();
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
@@ -1175,6 +1183,7 @@ function render(){
   suppressAutosave = false;
   justAddedId = null;
   updateUrssafStatus(computed);
+  renderMaquetteControls();
   scheduleUrssafCalculations(false,false);
 }
 
@@ -2412,6 +2421,37 @@ if(!loadedFromShare && location.hash &&
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
-    render();
+    
+// Liaison de la maquette V33 aux scénarios et calculs réels OnNet.
+const maquettePeriodButtons=[...document.querySelectorAll('[data-maquette-period]')];
+maquettePeriodButtons.forEach(button=>button.addEventListener('click',()=>{
+  const period=button.dataset.maquettePeriod;
+  maquetteComparisonPeriod=period;
+  maquettePeriodButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
+  render();
+  metric='netHoraire';
+  const computed=getCurrentComputed();
+  const selected=computed.find(x=>x.s.id===refId);
+  const summary=document.getElementById('maquetteYourSalary');
+  if(summary && selected && selected.r){
+    const s=selected.s, monthlyHours=Number(s.dureeType)*52/12;
+    const value=period==='hour'?selected.r.netApres/monthlyHours:period==='year'?selected.r.netApres*12:selected.r.netApres;
+    const unit=period==='hour'?'heure':period==='year'?'an':'mois';
+    const strong=summary.querySelector('.benchmark-your-salary>strong');
+    if(strong) strong.innerHTML=(period==='hour'?fmtHoraire(value):fmt(value))+' <small>/ '+unit+'</small>';
+  }
+}));
+document.getElementById('updateDeclaredSalary')?.addEventListener('click',()=>{
+  const scenario=findScenario(refId)||scenarios[0];
+  const raw=Number(document.getElementById('mainSalaryGross')?.value);
+  const period=document.getElementById('mainSalaryPeriod')?.value;
+  const hours=document.getElementById('mainSalaryHours')?.value;
+  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){document.getElementById('mainSalaryGross')?.focus();return;}
+  scenario.brut=period==='year'?Math.round(raw/12*100)/100:raw;
+  scenario.dureeType=hours==='39'?'39':'35';
+  render();
+});
+document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
+render();
   });
 }
