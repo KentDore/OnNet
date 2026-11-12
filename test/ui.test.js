@@ -504,20 +504,32 @@ test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async 
   }
 });
 
-test('le concubinage conserve une imposition séparée et exclut les revenus du partenaire', async () => {
+test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', async () => {
   const { context, page, calls } = await openApp();
   try {
     await page.locator('#foyerModuleToggle').click();
     await page.locator('#foyerSituation [data-foyer="commun"]').click();
     await page.locator('#foyerConjoint').fill('24000');
-    const beforeConcubinage = calls.count;
-    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
-    await waitForCalls(calls, beforeConcubinage + 2, 15000);
+    await waitForCalls(calls, 7, 15000);
 
+    const callsBeforeConcubinage = calls.count;
+    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
+    await page.waitForFunction(() =>
+      document.getElementById('foyerConcubinageInfo')?.style.display !== 'none' &&
+      document.getElementById('foyerConjointRow')?.style.display === 'none'
+    );
+    await page.waitForTimeout(1500);
+
+    assert.equal(calls.count, callsBeforeConcubinage,
+      'le concubinage doit réutiliser le résultat individuel déjà calculé, sans requête avec les revenus du partenaire');
     assert.ok(calls.bodies.some(body =>
       body.situation['impôt . foyer fiscal . situation de famille'] === "'célibataire'" &&
       !Object.hasOwn(body.situation, 'impôt . foyer fiscal . revenu imposable . autres revenus imposables')
-    ), 'le concubinage doit être transmis comme une imposition individuelle, sans revenu du partenaire');
+    ), 'le calcul individuel ne doit pas inclure les revenus du partenaire');
+    assert.ok(calls.bodies.some(body =>
+      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
+      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
+    ), 'le test doit également confirmer que les revenus sont transmis pour un foyer marié/PACSé');
     assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
     assert.equal(await page.locator('#foyerConjointRow').isVisible(), false);
   } finally {
