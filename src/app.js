@@ -1946,7 +1946,7 @@ function renderMutuelleTrFields(idPrefix){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
         </span>
         <span class="onboarding-mutuelle-label">Mutuelle</span>
-        <strong>30 € déduits / mois</strong>
+        <strong>30 € salarié · 30 € employeur</strong>
       </div>
       <details class="onboarding-optional">
         <summary><span>Titres-restaurant</span><span class="optional-label">Facultatif</span></summary>
