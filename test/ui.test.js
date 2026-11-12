@@ -242,12 +242,14 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
     assert.equal(await page.locator('#printBtn').isVisible(), true);
     await page.locator('#headerMenu summary').press('Escape');
     assert.equal(await page.locator('#headerMenu').evaluate(el => el.open), false);
-    const header = await page.locator('.header-top').boundingBox();
-    const brand = await page.locator('.brand-block').boundingBox();
-    const actions = await page.locator('.header-actions').boundingBox();
-    assert.ok(header && brand && actions);
+    const header = await page.locator('.maquette-top').boundingBox();
+    const brand = await page.locator('.maquette-top > .brand').boundingBox();
+    const actions = await page.locator('.maquette-top > .header-actions').boundingBox();
+    assert.ok(header && brand && actions, 'la barre supérieure, la marque et les actions doivent être présentes');
     assert.ok(actions.y < brand.y + brand.height + 2,
       'les actions doivent rester alignées dans la même rangée que le logo sur mobile');
+    assert.ok(actions.x + actions.width <= header.x + header.width + 1,
+      'les actions doivent rester dans la barre supérieure');
   } finally {
     await context.close();
   }
