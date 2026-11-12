@@ -444,17 +444,15 @@ test('limite la valeur unitaire des titres-restaurant à 500 € dans la carte',
     await context.close();
   }
 });
-test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () => {
+test('transmet les deux parts de mutuelle par défaut lors de l’ajout', async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
     await page.locator('#addScenario').click();
     await page.locator('#modalAddInput').fill('3400');
-    await page.locator('#modalOverlay .onboarding-optional summary').click();
-    await page.locator('#modalAddMutuelle').fill('25');
-    await page.locator('#modalAddMutuellePat').fill('40');
-    assert.equal(await page.locator('#modalAddMutuelle').inputValue(), '25');
-    assert.equal(await page.locator('#modalAddMutuellePat').inputValue(), '40');
+    assert.equal(await page.locator('.onboarding-mutuelle-note').innerText(), 'Mutuelle\n30 € salarié · 30 € employeur');
+    assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
+    assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
@@ -462,25 +460,17 @@ test('transmet les deux parts de mutuelle saisies lors de l’ajout', async () =
     );
     const storedState = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     const stored = storedState.scenarios.find(scenario =>
-      Number(scenario.mutuelle) === 25 && Number(scenario.mutuellePat) === 40
+      Number(scenario.brut) === 3400
     );
-    assert.ok(stored, 'scénarios persistés : ' + JSON.stringify(storedState.scenarios.map(scenario => ({
-      id: scenario.id, brut: scenario.brut, dureeType: scenario.dureeType,
-      mutuelle: scenario.mutuelle, mutuellePat: scenario.mutuellePat
-    }))));
-    assert.equal(stored.mutuelle, 25);
-    assert.equal(stored.mutuellePat, 40);
+    assert.ok(stored, 'le nouveau scénario doit être persisté');
+    assert.equal(stored.mutuelle, 30);
+    assert.equal(stored.mutuellePat, 30);
     const request = calls.bodies.slice(before).find(body =>
-      body.situation['salarié . cotisations . prévoyances . santé . montant'] === '65.000000 €/mois'
+      body.situation['salarié . contrat . salaire brut'] === '3400.000000 €/mois'
     );
-    assert.ok(request, 'l’API doit recevoir les deux parts de mutuelle : ' +
-      JSON.stringify(calls.bodies.slice(before).map(body => ({
-        gross: body.situation['salarié . contrat . salaire brut'],
-        health: body.situation['salarié . cotisations . prévoyances . santé . montant'],
-        employerRate: body.situation['salarié . cotisations . prévoyances . santé . taux employeur']
-      }))));
-    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . montant'], '65.000000 €/mois', JSON.stringify(calls.bodies.slice(before).map(body => ({ gross:body.situation['salarié . contrat . salaire brut'], health:body.situation['salarié . cotisations . prévoyances . santé . montant'], rate:body.situation['salarié . cotisations . prévoyances . santé . taux employeur'] }))));
-    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . taux employeur'], '61.538462%');
+    assert.ok(request, 'la requête Urssaf du nouveau scénario doit exister');
+    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . montant'], '60.000000 €/mois');
+    assert.equal(request.situation['salarié . cotisations . prévoyances . santé . taux employeur'], '50.000000%');
   } finally {
     await context.close();
   }
