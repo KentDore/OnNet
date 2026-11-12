@@ -37,7 +37,7 @@ function taxInputForFoyer(f){
 }
 
 function scenarioCalculationDate(s){
-  return s.isBenchmark && benchmarks.mode === 'manual' ? benchmarks.smicDate : currentCalculationDate();
+  return currentCalculationDate();
 }
 
 function calculationKey(s, f){
@@ -154,7 +154,6 @@ function mapUrssafResultToOnNet(result){
 }
 
 function getSmicGross(){
-  if(benchmarks.mode === 'manual') return benchmarks.smicBrut;
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
 
@@ -222,7 +221,7 @@ function updateUrssafStatus(computed){
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
   const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
-    (benchmarks.mode === 'official' && officialSmicState.status === 'error');
+    (officialSmicState.status === 'error');
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(smicPending) pending.push({s:smicScenario,r:null});
@@ -245,7 +244,7 @@ function updateUrssafStatus(computed){
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
-  if(benchmarks.mode === 'official' && officialSmicState.status === 'ready') ready.push(officialSmicState);
+  if(officialSmicState.status === 'ready') ready.push(officialSmicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
@@ -260,13 +259,13 @@ function updateUrssafStatus(computed){
   button.hidden = true;
 }
 
-async function executeUrssafCalculations(generation, forceRetry){
-  // Le SMIC est une règle officielle, pas une constante copiée dans OnNet.
-  // En cas d'échec, aucun ancien montant codé en dur n'est utilisé en silence.
-  if(benchmarks.mode === 'official' &&
-     (officialSmicState.status !== 'ready' || forceRetry === true)){
-    officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
-    updateUrssafStatus(getCurrentComputed());
+let officialSmicPromise = null;
+async function refreshOfficialSmic(forceRetry){
+  if(officialSmicPromise) return officialSmicPromise;
+  if(officialSmicState.status === 'ready' && !forceRetry) return officialSmicState;
+  officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+  updateUrssafStatus(getCurrentComputed());
+  officialSmicPromise = (async () => {
     try{
       if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
         throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
@@ -274,22 +273,26 @@ async function executeUrssafCalculations(generation, forceRetry){
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
         'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
       );
-      if(generation !== urssafGeneration) return;
-      if(!Number.isFinite(result.value) || result.value <= 0){
-        throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
-      }
-      officialSmicState = {
-        status:'ready', amount:result.value, checkedAt:result.checkedAt,
-        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null
-      };
+      if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
+      officialSmicState = { status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null };
     }catch(error){
-      if(generation !== urssafGeneration) return;
-      officialSmicState = {
-        status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
-        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.'
-      };
+      officialSmicState = { status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' };
+    }finally{
+      officialSmicPromise = null;
+      updateComputed({skipUrssafSchedule:true});
+      if(urssafConsentGranted && officialSmicState.status === 'ready') scheduleUrssafCalculations(true,false);
     }
-    updateUrssafStatus(getCurrentComputed());
+    return officialSmicState;
+  })();
+  return officialSmicPromise;
+}
+
+async function executeUrssafCalculations(generation, forceRetry){
+  if(officialSmicState.status !== 'ready'){
+    await refreshOfficialSmic(forceRetry === true);
+    if(generation !== urssafGeneration) return;
   }
 
   const jobs = scenarios.map(s => Object.assign({},s));
@@ -377,26 +380,6 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
 const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
-const BENCHMARK_STORAGE_KEY = 'onnet.benchmarks.v1';
-const BENCHMARK_DEFAULTS = Object.freeze({ smicBrut:null, smicDate:'', mode:'official' });
-function loadBenchmarks(){
-  try{
-    const saved = JSON.parse(localStorage.getItem(BENCHMARK_STORAGE_KEY) || 'null');
-    if(!saved || typeof saved !== 'object') return { ...BENCHMARK_DEFAULTS };
-    const smicBrut = Number(saved.smicBrut);
-    const smicDate = typeof saved.smicDate === 'string' ? saved.smicDate.trim().slice(0, 30) : '';
-    // Toute configuration antérieure persistée venait d'une saisie manuelle.
-    // On la conserve afin de ne pas écraser un choix explicite de l'utilisateur.
-    if(!Number.isFinite(smicBrut) || smicBrut <= 0 || smicBrut > 100000 ||
-       !/^\d{4}-\d{2}-\d{2}$/.test(smicDate)) return { ...BENCHMARK_DEFAULTS };
-    return { smicBrut, smicDate, mode:'manual' };
-  }catch(_){
-    return { ...BENCHMARK_DEFAULTS };
-  }
-}
-let benchmarks = loadBenchmarks();
-
-
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
@@ -810,7 +793,7 @@ function renderCard(s, r, showRemove){
         <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
         <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
       </div>
-      ${s.dureeType === '39' ? '<div class="sub-hint">Le mode 39 h suppose un contrat de 35 h avec 4 h supplémentaires rémunérées par semaine. Calcul selon le droit commun, sans prise en compte des RTT.</div>' : ''}
+      ${s.dureeType === '39' ? '<div class="sub-hint">Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>' : ''}
     </div>
 
     <details class="more">
@@ -1044,7 +1027,7 @@ function renderBenchmarks(computed){
   if(!item) return '';
   const { s, r } = item;
   const smicResult = getCachedSmicResult();
-  if(!smicResult && benchmarks.mode === 'official' && officialSmicState.status === 'error'){
+  if(!smicResult && officialSmicState.status === 'error'){
     return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
   }
   if(!r) return '';
@@ -1100,8 +1083,8 @@ function renderBenchmarks(computed){
         <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
         <details class="benchmark-details">
           <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient ${benchmarks.mode === 'official' ? 'de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf' : 'de votre saisie manuelle'} ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
-          ${benchmarks.mode === 'official' && officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
+          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
+          ${officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
           <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>
@@ -1118,36 +1101,8 @@ function renderBenchmarks(computed){
         </details>
       </article>
     </div>
-    <details class="benchmark-settings"><summary>Actualiser le montant du SMIC</summary><div class="benchmark-settings-body">
-      <p>Renseignez le SMIC brut mensuel officiel à 35 h et sa date d'effet. La valeur est enregistrée uniquement dans ce navigateur.</p>
-      <div class="benchmark-fields"><div class="field-row"><label for="benchmarkSmicBrut">SMIC brut mensuel, 35 h (€)</label><input id="benchmarkSmicBrut" type="number" min="0.01" max="100000" step="0.01" value="${Number.isFinite(getSmicGross()) ? getSmicGross().toFixed(2) : ''}"></div><div class="field-row"><label for="benchmarkSmicDate">Date d’effet</label><input id="benchmarkSmicDate" type="date" value="${esc(benchmarks.mode === 'manual' ? benchmarks.smicDate : '')}"></div></div>
-      <div class="benchmark-actions"><button type="button" class="btn btn-primary" id="saveBenchmarkSettings">Enregistrer</button><button type="button" class="btn modal-btn-cancel" id="resetBenchmarkSettings">Réinitialiser</button></div>
-      <p class="benchmark-source">Source officielle : <a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Urssaf — montant du SMIC</a>. Le net de référence est calculé via l’API officielle Mon-entreprise (Urssaf) ; le taux horaire brut est un ratio du brut saisi.</p>
-    </div></details>`;
+`
 }
-function bindBenchmarkSettings(){
-  const save = document.getElementById('saveBenchmarkSettings');
-  const reset = document.getElementById('resetBenchmarkSettings');
-  if(save) save.addEventListener('click', () => {
-    const amount = Number(document.getElementById('benchmarkSmicBrut').value);
-    const date = document.getElementById('benchmarkSmicDate').value;
-    if(!Number.isFinite(amount) || amount <= 0 || amount > 100000 || !/^\d{4}-\d{2}-\d{2}$/.test(date)){
-      showToastImpl('Montant ou date du SMIC invalide.');
-      return;
-    }
-    benchmarks = { smicBrut: amount, smicDate: date, mode:'manual' };
-    try{ localStorage.setItem(BENCHMARK_STORAGE_KEY, JSON.stringify(benchmarks)); }catch(_){}
-    render();
-    showToastImpl('Repère SMIC actualisé.');
-  });
-  if(reset) reset.addEventListener('click', () => {
-    benchmarks = { ...BENCHMARK_DEFAULTS };
-    officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
-    try{ localStorage.removeItem(BENCHMARK_STORAGE_KEY); }catch(_){}
-    render();
-  });
-}
-
 // ---------- Rendu ----------
 function render(){
   if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
@@ -1189,7 +1144,6 @@ function render(){
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
-  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
@@ -1500,7 +1454,6 @@ function updateComputed(options = {}){
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
-  bindBenchmarkSettings();
   updateFoyerImpot(computed);
   syncFoyerUI();
 
@@ -1994,7 +1947,7 @@ function renderMutuelleTrFields(idPrefix){
         <details class="onboarding-optional">
           <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
           <div class="onboarding-optional-body">
-            <p class="sub-hint">Valeurs par défaut : 30 € par mois côté salarié et 30 € côté employeur. Ajustez-les selon votre bulletin.</p>
+            <p class="sub-hint">30 € de mutuelle sont déduits du salaire chaque mois. Ajustez le montant selon votre bulletin.</p>
             <div class="two-col onboarding-mutuelle-fields">
               <div class="field-row">
                 <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
@@ -2089,6 +2042,7 @@ function showOnboardingModal(){
         <button type="button" data-duree="35" aria-pressed="true">35 h</button>
         <button type="button" data-duree="39" aria-pressed="false">39 h</button>
       </div>
+      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding')}
@@ -2120,10 +2074,12 @@ function showOnboardingModal(){
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
+  const dureeHint = overlay.querySelector('#modalOnboarding39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
@@ -2164,6 +2120,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
         <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
         <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
       </div>
+      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalAdd')}
@@ -2203,10 +2160,12 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
+  const dureeHint = overlay.querySelector('#modalAdd39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+      dureeHint.hidden = dureeType !== '39';
     });
   });
 
@@ -2467,6 +2426,8 @@ document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
 });
 
 render();
+// Actualisation du repère SMIC à chaque ouverture, sans transmettre les données de paie.
+refreshOfficialSmic(false);
 // Un hash contenant explicitement un partage mais non restauré doit être signalé.
 // Le repli vers la sauvegarde locale ou l'onboarding reste inchangé.
 if(!loadedFromShare && location.hash &&

@@ -4,61 +4,55 @@
 
 OnNet compare plusieurs scénarios de rémunération pour le secteur privé français.
 
-## État de la migration
+## État du projet
 
-La branche `migration/publicodes-urssaf-final` raccorde le calculateur principal à l’API REST officielle **Mon-entreprise / Urssaf**. Cette migration n’est pas encore publiée : `main`, `index.html` et la version actuellement accessible sur GitHub Pages restent inchangés jusqu’à validation et approbation explicite.
+La branche de migration raccorde le calculateur à l’API REST officielle **Mon-entreprise / Urssaf**. Elle n’est pas publiée : tant qu’elle n’est pas fusionnée dans `main`, la version GitHub Pages reste inchangée.
 
-## Source des calculs et confidentialité
+## Calculs et données transmises
 
-Les montants de brut reconstitué, de net avant impôt, de net imposable, de cotisations et de prélèvement à la source proviennent de l’API officielle Urssaf. OnNet ne calcule pas localement les cotisations ni l’impôt et ne bascule pas vers un ancien moteur en cas d’échec.
+Les calculs de cotisations et de prélèvement à la source sont effectués par l’API Mon-entreprise / Urssaf. OnNet ne reprend pas un ancien moteur local si l’API échoue. L’application effectue localement certaines opérations de présentation et de mise en forme des résultats ; elle ne recalcule pas les cotisations ni l’impôt.
 
-Avant le premier envoi, l’utilisateur doit cliquer sur **« Calculer avec l’Urssaf »**. L’interface précise les données transmises : rémunération, horaires, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Après cet accord, les modifications sont recalculées automatiquement. Si l’utilisateur coche l’option de mémorisation, son choix est conservé sur cet appareil. Une connexion Internet est indispensable. Les scénarios, réglages et liens de partage restent gérés dans le navigateur.
+À l’ouverture, OnNet interroge la règle officielle `SMIC` avec la date du jour. Cet appel récupère le repère brut et ne transmet aucune donnée de paie. Le calcul du repère net avant impôt, comme les simulations salariales, nécessite ensuite le consentement explicite de l’utilisateur.
 
-Les résultats restent des estimations : le modèle fiscal Urssaf comporte des règles simplifiées ou expérimentales. Les montants ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Les avertissements et variables recevant une valeur par défaut sont signalés.
+Avant le premier calcul salarial, l’interface présente les paramètres envoyés à l’API : salaire, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun scénario salarial n’est envoyé avant cet accord. Après accord, les modifications sont recalculées automatiquement. Le consentement peut être mémorisé sur l’appareil. Une connexion Internet est nécessaire.
 
-## Fonctionnalités raccordées
+Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Le modèle fiscal Mon-entreprise comporte des règles simplifiées ou expérimentales ; les avertissements et valeurs par défaut doivent être examinés.
 
-- Comparaison de plusieurs salaires, graphiques, réorganisation des cartes et simulation d’augmentation.
-- Saisie du brut mensuel, en 35 h ou 39 h. Le mode 39 h suppose explicitement un contrat de 35 h avec 4 heures supplémentaires rémunérées par semaine (environ 17,33 h/mois) ; le calcul est fait selon le droit commun, sans prise en compte des RTT. Les accords/conventions spécifiques ne sont pas paramétrables dans OnNet.
-- CDI du secteur privé non-cadre, droit commun, avec recherche de commune via l’API officielle geo.api.gouv.fr, code postal et département confirmés (Pacé par défaut). Le nom de la commune et le département sont transmis au modèle Urssaf ; le code postal sert à lever les ambiguïtés.
-- Saisie séparée des parts salariale et employeur de mutuelle.
-- Titres-restaurant : nombre, valeur et part salariale (40 à 50 %, pour respecter la participation employeur de 50 à 60 % du modèle Urssaf).
-- Impôt au barème standard du modèle ou taux de prélèvement personnalisé.
-- Repère SMIC : le montant brut est récupéré via la règle officielle `SMIC` de l’API Mon-entreprise / Urssaf ; le net avant impôt est ensuite calculé par cette même API. Une saisie manuelle reste possible et n’est jamais écrasée automatiquement. Si l’API est indisponible, OnNet signale l’erreur au lieu d’afficher une valeur codée en dur comme actuelle.
-- Repère de salaire médian privé : référence INSEE 2024 (2 190 € net mensuel en EQTP).
+## Fonctionnalités et périmètre
+
+- Comparaison de plusieurs scénarios de salaire, graphiques, réorganisation des cartes et simulation d’augmentation.
+- CDI du secteur privé, non-cadre, à temps plein.
+- Scénarios 35 h et 39 h. Le scénario 39 h représente 35 h auxquelles s’ajoutent 4 heures supplémentaires rémunérées par semaine, selon le droit commun avec une majoration de 25 %. Les taux propres aux conventions collectives et les RTT ne sont pas pris en compte.
+- Recherche et confirmation de la commune de l’établissement via l’API officielle geo.api.gouv.fr (Pacé par défaut).
+- Mutuelle saisie séparément pour le salarié et l’employeur. Valeur initiale : 30 € par part, soit 30 € déduits du salaire chaque mois et 30 € financés par l’employeur. Le modèle impose une participation employeur d’au moins 50 % pour une complémentaire santé non nulle ; les exemptions et régimes particuliers ne sont pas gérés.
+- Titres-restaurant paramétrables en nombre, valeur et part salariale. Le modèle accepte une participation salariale de 40 à 50 % (participation employeur de 50 à 60 %).
+- Prélèvement à la source selon le barème du modèle fiscal ou selon un taux personnalisé. Le taux personnalisé reste constant dans les scénarios comparés.
+- Foyer fiscal : personne seule, parent isolé, couple marié ou pacsé avec revenus complémentaires renseignables, ou concubinage. En concubinage, les revenus du partenaire ne sont pas intégrés au calcul de l’utilisateur.
+- Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net avant impôt est calculé par la même API après consentement.
 - Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 
-## Limites actuelles
+## Limites connues
 
-- Le périmètre raccordé est limité au CDI privé non-cadre, à temps plein, en droit commun et aux durées 35 h / 39 h. Les conventions particulières, le temps partiel, les cadres, la fonction publique et certains régimes territoriaux ne sont pas couverts par cette première version. Les avantages en nature, primes libres, remboursements de transport spécifiques, DFS, taux réduits particuliers et régime des impatriés ne sont pas paramétrables ; le calcul suppose explicitement qu’ils sont absents.
-- Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés : un scénario qui les utilise est bloqué au lieu de recevoir une estimation locale.
-- Le net annuel affiché est le net mensuel Urssaf multiplié par 12 ; ce n’est pas une évaluation annuelle indépendante. Le salaire brut annuel saisi à l’onboarding est divisé par 12.
-- La commune par défaut est Pacé. Pour changer de lieu, sélectionnez une suggestion géographique afin de confirmer code postal et département ; une saisie libre non confirmée bloque le calcul.
-- Le salaire médian est une référence nationale, pas un repère spécifique au métier ou à la région.
-- Le module de simulation d’absence a été retiré.
+- Les conventions collectives particulières, le temps partiel, les cadres, la fonction publique et certains régimes spécifiques ne sont pas couverts.
+- Le scénario 39 h repose sur l’hypothèse de droit commun : il ne représente pas nécessairement les règles applicables au contrat réel.
+- Les avantages en nature, primes libres, 13e/14e mois, remboursements de transport spécifiques, DFS et taux réduits particuliers ne sont pas paramétrables. Les scénarios incompatibles avec le périmètre sont bloqués plutôt que calculés avec l’ancien moteur.
+- Le modèle fiscal est une estimation. Le barème dépend des informations de foyer renseignées ; en concubinage, le revenu du partenaire n’est pas intégré. Le taux personnalisé est appliqué de façon constante aux scénarios et peut donc fausser une comparaison si le taux réel évoluerait avec le salaire.
+- Le net annuel affiché correspond au net mensuel multiplié par 12 ; il ne s’agit pas d’une simulation annuelle indépendante.
+- Le partage par URL encode les données sélectionnées dans le fragment de l’adresse. Elles ne sont ni chiffrées ni protégées par mot de passe : ne partagez que les informations nécessaires.
 
-## Données partagées
+## Développement et tests
 
-Les scénarios enregistrés localement restent dans le navigateur. Un lien de partage encode les données sélectionnées dans le fragment de l’URL ; ce contenu n’est ni chiffré ni protégé par mot de passe. N’incluez les détails de paie et la situation fiscale que si nécessaire.
+Le client API se trouve dans `src/urssaf-api-client.mjs`. Le fichier autonome `index.html` est généré par le build et embarque ce client : il ne doit pas être modifié indépendamment des sources.
 
-## Développement
-
-Le client API est dans `src/urssaf-api-client.mjs`. `src/ui-utils.js` ne contient que des utilitaires de présentation. Le build autonome embarque le client API et ne charge pas l’ancien calculateur `src/calc.js`. Le paquet local `modele-social` / `publicodes` est conservé pour les diagnostics comparatifs uniquement, pas pour calculer les résultats présentés à l’utilisateur. Le smoke test `node scripts/smoke-urssaf-api.mjs` vérifie directement les réponses de l’API (scénarios 35 h / 39 h, mutuelle, titres-restaurant et modes fiscaux) sans comparer les montants au moteur local. Il contrôle aussi que la part salariale des titres-restaurant est déduite une seule fois du net avant impôt et que le net après impôt correspond au prélèvement annuel ramené au mois. Il vérifie également le dépassement du plafond d’exonération : 21 titres de 15 € financés à 60 % doivent produire 35,28 € de part non déductible par mois. La sélection d’une commune utilise `https://geo.api.gouv.fr/communes` et exige un résultat choisi ; le nom et le département sont transmis à Urssaf, tandis que le code postal sert à désambiguïser la sélection. La participation employeur aux titres-restaurant reste dans la plage 50–60 %. Le workflow `Diagnostic API Urssaf` peut être lancé manuellement ou par un commit portant le marqueur `[run-urssaf-smoke]`. Le diagnostic du simulateur officiel est séparé (`[probe-simulator]`).
-
-Construire un HTML de test sans modifier les fichiers de production :
+Tests automatisés :
 
 ```sh
 npm ci
-node scripts/build.js 2.1.6 /tmp/Onnet-migration.html
-```
-
-Tests :
-
-```sh
-npm run test:prototype
-node --test test/calc.test.js
-node --test test/build.test.js
+npm run test:all
 node --test test/ui.test.js
+node --test test/build.test.js
 ```
 
-Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement.
+Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement. `npm run test:all` couvre les tests du client API et du prototype Publicodes ; les tests UI et build sont lancés séparément par les deux commandes suivantes.
+
+Le smoke test `node scripts/smoke-urssaf-api.mjs` interroge réellement l’API et contrôle plusieurs scénarios (SMIC, 35 h / 39 h, mutuelle, titres-restaurant et paramètres fiscaux). Il vérifie des cohérences internes, mais ne constitue pas une validation indépendante de l’exactitude des montants. Le diagnostic comparatif avec le moteur Publicodes local est distinct et ne prouve pas la conformité réglementaire.

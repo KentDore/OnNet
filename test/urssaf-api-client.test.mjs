@@ -40,10 +40,16 @@ function apiResponse(expressions, overrides = {}) {
     "impôt . taux neutre d'impôt sur le revenu": 4.1
   }
   return {
-    evaluate: expressions.map(expression => ({
-      nodeValue: nodeValues[expression] ?? 0,
-      missingVariables: []
-    })),
+    evaluate: expressions.map(expression => {
+      assert.ok(
+        Object.hasOwn(nodeValues, expression),
+        `Expression API non définie dans le mock de test : ${expression}`
+      )
+      return {
+        nodeValue: nodeValues[expression],
+        missingVariables: []
+      }
+    }),
     warnings: [],
     ...overrides
   }
@@ -175,6 +181,17 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.missingVariables.length, 0)
 })
 
+test('refuse une mutuelle obligatoire financée à moins de 50 % par l’employeur avant tout appel réseau', async () => {
+  let calls = 0
+  await assert.rejects(calculateWithUrssafApi(scenario({ mutuelle: 36, mutuellePat: 24 }), {
+    fetchImpl: mockFetch(() => {
+      calls += 1
+      return response(apiResponse([]))
+    })
+  }), /part employeur.*au moins 50 %/)
+  assert.equal(calls, 0)
+})
+
 test('refuse une participation salariale titres-restaurant hors limites', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto:21, partResto:30 }), {
     fetchImpl: mockFetch(body => response(apiResponse(body.expressions)))
@@ -223,7 +240,7 @@ test('accepte une valeur unitaire de titre-restaurant de 500 €', async () => {
       return response(apiResponse(body.expressions))
     })
   })
-  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '500.00 €/titre-restaurant')
+  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '500.00 €/titres-restaurant')
 })
 
 test('refuse une valeur unitaire de titre-restaurant supérieure à 500 €', async () => {
@@ -276,6 +293,8 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
   })
 
   assert.equal(requests[0].situation['salarié . temps de travail . heures supplémentaires'], `${4 * 52 / 12} heure/mois`)
+  assert.equal(requests[0].situation['salarié . convention collective'], "'droit commun'",
+    'le scénario 39 h doit demander explicitement la majoration de droit commun au modèle Urssaf')
   assert.equal(result.overtimeHours, 4 * 52 / 12)
   assert.ok(Math.abs(result.grossCalculated - 2300) <= 0.005, 'Le brut reconstitué doit respecter la tolérance API de 0,005 €')
   assert.ok(result.baseGross < 2300, 'Le salaire de base 35 h doit être inférieur au brut total 39 h')
@@ -480,3 +499,54 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ date: '2026-02-31' }), { fetchImpl }), /date calendaire valide/)
   assert.equal(calls, 0)
 })
+
+
+test('traduit les erreurs HTTP 400 et 503 sans résultat de substitution', async () => {
+  for (const [status, expected] of [
+    [400, /rejeté la situation transmise/],
+    [503, /temporairement indisponible/]
+  ]) {
+    let calls = 0;
+    await assert.rejects(calculateWithUrssafApi(scenario(), {
+      fetchImpl: mockFetch(() => {
+        calls += 1;
+        return response({}, status);
+      })
+    }), expected);
+    assert.equal(calls, 1, `aucune nouvelle tentative implicite pour HTTP ${status}`);
+  }
+});
+
+test('refuse une réponse JSON illisible ou un nombre de résultats incomplet', async () => {
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl: mockFetch(() => ({
+      ok: true,
+      status: 200,
+      json: async () => { throw new SyntaxError('invalid json'); }
+    }))
+  }), /JSON illisible/);
+
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl: mockFetch(body => response({
+      evaluate: body.expressions.slice(0, -1).map(() => ({ nodeValue: 1, missingVariables: [] }))
+    }))
+  }), /Réponse incomplète/);
+});
+
+test('interrompt une requête qui dépasse le délai configuré', async () => {
+  let receivedSignal;
+  const fetchImpl = (_url, options) => new Promise((resolve, reject) => {
+    receivedSignal = options.signal;
+    options.signal.addEventListener('abort', () => {
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      reject(error);
+    }, { once: true });
+  });
+
+  await assert.rejects(calculateWithUrssafApi(scenario(), {
+    fetchImpl,
+    timeoutMs: 1000
+  }), /Délai dépassé/);
+  assert.equal(receivedSignal.aborted, true);
+});

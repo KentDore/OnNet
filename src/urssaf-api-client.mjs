@@ -80,6 +80,9 @@ function buildSituation(input, baseGross, overtimeHours) {
   const employerHealth = numberInRange(input.mutuellePat ?? input.mutuelle ?? 0, 'mutuellePat', 0, 100000)
   const totalHealth = employeeHealth + employerHealth
   const employerHealthRate = totalHealth > 0 ? employerHealth / totalHealth * 100 : 0
+  if (totalHealth > 0 && employerHealthRate < 50) {
+    throw new TypeError('La part employeur de la complémentaire santé obligatoire doit être d’au moins 50 %.')
+  }
 
   const mealTicketDays = integerInRange(input.joursResto ?? 0, 'joursResto', 0, 31)
   const mealTicketValue = numberInRange(input.valeurResto ?? 0, 'valeurResto', 0, 500)
@@ -110,8 +113,8 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
     'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
-    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
-    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titres-restaurant/mois`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titres-restaurant`,
     'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
     'date': formatDate(input.date)
   }
@@ -281,6 +284,10 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
     const warnings = normalizeWarnings(payload.warnings)
+    const engineErrors = warnings.filter(warning => /\[\s*EngineError\s*\]/i.test(warning))
+    if (engineErrors.length) {
+      throw new Error(`Le moteur Urssaf a signalé une erreur de calcul : ${engineErrors.map(warning => warning.replace(/\s+/g, ' ').trim()).join(' | ')}`)
+    }
     return {
       values,
       missingVariables,

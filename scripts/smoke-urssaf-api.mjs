@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 import { calculateWithUrssafApi, evaluateUrssafExpression } from '../src/urssaf-api-client.mjs'
 
 // Smoke test de production : valide la cohérence interne des réponses API.
@@ -37,6 +38,13 @@ function assertFinite(label, value) {
   if (!Number.isFinite(value)) throw new Error(`${label} absent ou non numérique.`)
 }
 
+function assertNoEngineErrors(name, warnings = []) {
+  const errors = warnings.filter(warning => /\[\s*EngineError\s*\]/i.test(String(warning)))
+  if (errors.length) {
+    throw new Error(`${errors.length} erreur(s) du moteur Publicodes dans les avertissements API : ${errors.map(error => String(error).replace(/\s+/g, ' ').slice(0, 500)).join(' | ')}`)
+  }
+}
+
 function assertLocationResolved(result) {
   const missing = (result.missingVariables || []).filter(name => String(name).startsWith('établissement . commune . département'))
   if (missing.length) throw new Error('Le département de l’établissement reste non résolu par le modèle Urssaf : ' + missing.join(', '))
@@ -47,6 +55,7 @@ async function runSocial(name, input) {
   try {
     const result = await calculateWithUrssafApi({ commune: 'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     assertLocationResolved(result)
+    assertNoEngineErrors(name, result.warnings)
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
       ['net avant impôt', result.netBeforeTax],
@@ -97,6 +106,7 @@ async function runTax(name, input) {
   try {
     const result = await calculateWithUrssafApi({ commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     assertLocationResolved(result)
+    assertNoEngineErrors(name, result.warnings)
     for (const [label, value] of [
       ['net avant impôt', result.netBeforeTax],
       ['net après impôt', result.netAfterTax],
@@ -193,8 +203,23 @@ await runTax('barème standard, couple avec 24 000 € autres revenus', {
   brut: 2300, dureeType: '35', modeImpot: 'barème',
   situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000
 })
+await runTax('barème standard, parent isolé avec un enfant', {
+  brut: 2300, dureeType: '35', modeImpot: 'barème',
+  situationFamille: 'célibataire', enfantsACharge: 1, parentIsole: true
+})
 
-console.log(JSON.stringify({ date, references, checks, failures }, null, 2))
+const report = {
+  schemaVersion: 1,
+  capturedAt: new Date().toISOString(),
+  date,
+  source: 'API Mon-entreprise / Urssaf',
+  purpose: 'Contrôles de cohérence interne ; ne constitue pas une validation indépendante des montants.',
+  references,
+  checks,
+  failures
+}
+await writeFile('urssaf-smoke-results.json', `${JSON.stringify(report, null, 2)}\n`, 'utf8')
+console.log(JSON.stringify(report, null, 2))
 if (failures.length) {
   throw new Error(`Validation API incomplète : ${JSON.stringify(failures)}`)
 }
