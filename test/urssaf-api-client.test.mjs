@@ -240,7 +240,7 @@ test('accepte une valeur unitaire de titre-restaurant de 500 €', async () => {
       return response(apiResponse(body.expressions))
     })
   })
-  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '500.00 €/titre-restaurant')
+  assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'], '500.00 €/titres-restaurant')
 })
 
 test('refuse une valeur unitaire de titre-restaurant supérieure à 500 €', async () => {
