@@ -155,6 +155,7 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
+  await page.locator('.advanced-scenarios > summary').evaluate(el => { el.parentElement.open = true; });
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
@@ -285,16 +286,21 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
-    assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
+    assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
+    assert.match(await page.locator('#benchmarkBody').innerText(), /2\s?238/);
+    assert.match(await page.locator('#benchmarkBody').innerText(), /Données INSEE 2025 · publiées en 2026/);
+    assert.doesNotMatch(await page.locator('#benchmarkBody').innerText(), /2\s?190|INSEE 2024/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
-    const benchmarkNetBeforeTax = await page.locator('.benchmark-your-salary strong').innerText();
+    const benchmarkHourlyNet = await page.locator('.benchmark-your-salary strong').innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
-    assert.equal(parseEuro(cardNetBeforeTax), parseEuro(benchmarkNetBeforeTax), 'la carte et le comparatif doivent réutiliser le même net avant impôt Urssaf');
-    assert.equal(parseEuro(cardNetAfterTax), parseEuro(benchmarkNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNetBeforeTax) / 169) < 0.02,
+      'le résumé horaire doit reprendre le net avant impôt Urssaf divisé par les 169 h du contrat 39 h');
+    assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
@@ -822,11 +828,11 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   const { context, page } = await openApp({ consent:false });
   try {
     const order = await page.evaluate(() => {
-      const cards = document.querySelector('.cards-bar');
+      const form = document.querySelector('.unified-salary-panel');
       const comparison = document.querySelector('#comparePanel');
-      return cards.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
+      return form.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
     });
-    assert.ok(order, 'les fiches de salaire doivent précéder le comparatif');
+    assert.ok(order, 'le formulaire de saisie doit précéder le graphique de répartition');
     assert.equal(await page.locator('#comparePanel').isVisible(), false, 'ne pas afficher un panneau de résultats vide');
   } finally {
     await context.close();
@@ -854,6 +860,27 @@ test('le consentement indique explicitement les données envoyées à l’Urssaf
     assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
     assert.equal(await page.locator('#urssafStatusText').innerText(),
       'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForSelector('#benchmarkMount .benchmark-grid');
+    const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
+      getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
+    );
+    assert.equal(columns, 2, 'les cartes SMIC et médiane restent côte à côte sur mobile');
+    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
+    await page.locator('#mainSalaryGross').fill('3000');
+    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#updateDeclaredSalary').click();
+    assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3000');
+    assert.equal(await page.locator('#cardsBody [data-durree-group] button[aria-pressed="true"]').innerText(), '35 h');
   } finally {
     await context.close();
   }
