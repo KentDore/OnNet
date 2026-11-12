@@ -944,3 +944,15 @@ header.hero .trust-icon svg{width:19px;height:19px}
  .maquette-top .header-actions .header-share-btn{min-height:40px;padding:8px 11px}
  .maquette-top .header-menu-trigger{width:40px;height:40px}
 }
+
+/* Parcours V33 : les outils historiques restent accessibles, mais secondaires. */
+.advanced-workspace{margin:18px 0 16px;padding:0 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);}
+.advanced-workspace>summary{padding:15px 2px;color:var(--ink-soft);font-size:13px;font-weight:700;cursor:pointer;list-style:none;}
+.advanced-workspace>summary::-webkit-details-marker{display:none;}
+.advanced-workspace>summary::after{content:"＋";float:right;color:var(--accent);font-size:16px;}
+.advanced-workspace[open]>summary::after{content:"−";}
+.advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
+.advanced-workspace>.cards-bar{margin-bottom:10px;}
+.advanced-workspace>.cards-scroll{margin-bottom:14px;}
+.advanced-workspace>.situation-section,.advanced-workspace>.modules-section{margin-bottom:16px;}
+@media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
