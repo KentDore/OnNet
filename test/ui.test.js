@@ -958,3 +958,32 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     await context.close();
   }
 });
+
+test('capture les rendus V33 et OnNet aux mêmes dimensions pour revue visuelle', async () => {
+  const { context, page } = await openApp();
+  const outputDir = path.join(process.env.RUNNER_TEMP || os.tmpdir(), 'onnet-visual-comparison');
+  fs.rmSync(outputDir, { recursive: true, force: true });
+  fs.mkdirSync(outputDir, { recursive: true });
+  try {
+    await addSecondScenario(page, '2800');
+    const maquette = await context.newPage();
+    const fixturePath = path.resolve(__dirname, 'fixtures', 'maquette-v33.html');
+    await maquette.goto('file://' + fixturePath);
+    for (const viewport of [
+      { name: 'desktop', width: 1440, height: 1000 },
+      { name: 'mobile', width: 390, height: 844 }
+    ]) {
+      await page.setViewportSize({ width: viewport.width, height: viewport.height });
+      await maquette.setViewportSize({ width: viewport.width, height: viewport.height });
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await maquette.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => document.fonts.ready);
+      await maquette.evaluate(() => document.fonts.ready);
+      await page.screenshot({ path: path.join(outputDir, 'onnet-' + viewport.name + '.png'), fullPage: true });
+      await maquette.screenshot({ path: path.join(outputDir, 'maquette-' + viewport.name + '.png'), fullPage: true });
+    }
+    await maquette.close();
+  } finally {
+    await context.close();
+  }
+});
