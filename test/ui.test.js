@@ -155,6 +155,7 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
+  if (options.advancedOpen !== false) await page.locator('#advancedWorkspace > summary').click();
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
@@ -660,6 +661,23 @@ test('une commune saisie sans sélection bloque le calcul API', async () => {
   }
 });
 
+test('les outils secondaires sont repliés par défaut et restent accessibles', async () => {
+  const { context, page } = await openApp({ advancedOpen:false, consent:false });
+  try {
+    const advanced = page.locator('#advancedWorkspace');
+    assert.equal(await advanced.evaluate(el => el.open), false);
+    assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
+    assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
+    assert.equal(await page.locator('#cardsScroll').isVisible(), false);
+    await advanced.locator('summary').click();
+    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
+    assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
+    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', async () => {
   const { context, page } = await openApp();
   try {
@@ -680,6 +698,26 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
   }
 });
 
+
+test('la page ne déborde pas horizontalement sur les largeurs mobiles', async () => {
+  const { context, page } = await openApp();
+  try {
+    for (const width of [320, 375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const dimensions = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth
+      }));
+      assert.ok(dimensions.document <= dimensions.viewport + 1,
+        `débordement horizontal global à ${width}px : ${JSON.stringify(dimensions)}`);
+      assert.ok(dimensions.body <= dimensions.viewport + 1,
+        `débordement du body à ${width}px : ${JSON.stringify(dimensions)}`);
+    }
+  } finally {
+    await context.close();
+  }
+});
 
 test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', async () => {
   const { context, page } = await openApp();
