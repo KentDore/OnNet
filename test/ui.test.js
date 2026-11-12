@@ -884,6 +884,37 @@ test('les fiches de salaire et leurs contrôles restent visibles sans action pr�
   }
 });
 
+
+test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées sur mobile', async () => {
+  const { context, page } = await openApp();
+  try {
+    for (const width of [320, 375, 390, 430, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const layout = await page.evaluate(() => {
+        const top = document.querySelector('.maquette-top');
+        const hero = document.querySelector('header.hero');
+        const brand = top?.querySelector('.brand');
+        const actions = top?.querySelector('.header-actions');
+        const rect = el => {
+          const r = el.getBoundingClientRect();
+          return { left:r.left, right:r.right, top:r.top, bottom:r.bottom, width:r.width, height:r.height };
+        };
+        return {
+          top: rect(top), hero: rect(hero), brand: rect(brand), actions: rect(actions),
+          viewport: document.documentElement.clientWidth,
+          shield: !!hero.querySelector('.trust-icon svg')
+        };
+      });
+      assert.ok(layout.top.bottom <= layout.hero.top, `la marque doit précéder le hero à ${width}px`);
+      assert.ok(layout.brand.right <= layout.actions.left + 1, `la marque et les actions se chevauchent à ${width}px : ${JSON.stringify(layout)}`);
+      assert.ok(layout.actions.right <= layout.viewport + 1, `les actions sortent de l’écran à ${width}px`);
+      assert.ok(layout.shield, 'le pictogramme de confiance V33 doit être conservé');
+    }
+  } finally {
+    await context.close();
+  }
+});
+
 test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
   const { context, page } = await openApp();
   try {
