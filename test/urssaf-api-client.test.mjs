@@ -40,10 +40,16 @@ function apiResponse(expressions, overrides = {}) {
     "impôt . taux neutre d'impôt sur le revenu": 4.1
   }
   return {
-    evaluate: expressions.map(expression => ({
-      nodeValue: nodeValues[expression] ?? 0,
-      missingVariables: []
-    })),
+    evaluate: expressions.map(expression => {
+      assert.ok(
+        Object.hasOwn(nodeValues, expression),
+        `Expression API non définie dans le mock de test : ${expression}`
+      )
+      return {
+        nodeValue: nodeValues[expression],
+        missingVariables: []
+      }
+    }),
     warnings: [],
     ...overrides
   }

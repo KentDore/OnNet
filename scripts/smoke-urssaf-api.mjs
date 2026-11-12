@@ -193,6 +193,10 @@ await runTax('barème standard, couple avec 24 000 € autres revenus', {
   brut: 2300, dureeType: '35', modeImpot: 'barème',
   situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000
 })
+await runTax('barème standard, parent isolé avec un enfant', {
+  brut: 2300, dureeType: '35', modeImpot: 'barème',
+  situationFamille: 'célibataire', enfantsACharge: 1, parentIsole: true
+})
 
 console.log(JSON.stringify({ date, references, checks, failures }, null, 2))
 if (failures.length) {
