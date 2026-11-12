@@ -288,9 +288,10 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
     assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
-    assert.match(await page.locator('#benchmarkBody').innerText(), /2\s?238/);
-    assert.match(await page.locator('#benchmarkBody').innerText(), /Données INSEE 2025 · publiées en 2026/);
-    assert.doesNotMatch(await page.locator('#benchmarkBody').innerText(), /2\s?190|INSEE 2024/);
+    const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
+    assert.match(medianMethod, /2\s?238/);
+    assert.match(medianMethod, /Données INSEE 2025 · publiées en 2026/);
+    assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
