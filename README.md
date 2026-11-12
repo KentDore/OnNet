@@ -6,7 +6,7 @@ OnNet compare plusieurs scénarios de rémunération pour le secteur privé fran
 
 ## État du projet
 
-La branche de migration raccorde le calculateur à l’API REST officielle **Mon-entreprise / Urssaf**. Elle n’est pas publiée : tant qu’elle n’est pas fusionnée dans `main`, la version GitHub Pages reste inchangée.
+Le calculateur publié sur GitHub Pages utilise l’API REST officielle **Mon-entreprise / Urssaf** pour les calculs de paie. Le fichier `index.html` est généré depuis les sources de `src/` lors de la préparation d’une publication.
 
 ## Calculs et données transmises
 
@@ -14,7 +14,7 @@ Les calculs de cotisations et de prélèvement à la source sont effectués par 
 
 À l’ouverture, OnNet interroge la règle officielle `SMIC` avec la date du jour. Cet appel récupère le repère brut et ne transmet aucune donnée de paie. Le calcul du repère net avant impôt, comme les simulations salariales, nécessite ensuite le consentement explicite de l’utilisateur.
 
-Avant le premier calcul salarial, l’interface présente les paramètres envoyés à l’API : salaire, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun scénario salarial n’est envoyé avant cet accord. Après accord, les modifications sont recalculées automatiquement. Le consentement peut être mémorisé sur l’appareil. Une connexion Internet est nécessaire.
+Avant le premier calcul salarial, l’interface présente les paramètres envoyés à l’API : salaire, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun scénario salarial n’est envoyé avant cet accord. Après accord, les modifications sont recalculées automatiquement. Le consentement n’est pas mémorisé : il est redemandé à chaque ouverture. Une connexion Internet est nécessaire.
 
 Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Le modèle fiscal Mon-entreprise comporte des règles simplifiées ou expérimentales ; les avertissements et valeurs par défaut doivent être examinés.
 
