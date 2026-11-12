@@ -846,3 +846,15 @@ test('le texte des heures supplémentaires apparaît uniquement en 39 h', async 
     await context.close();
   }
 });
+
+
+test('le consentement indique explicitement les données envoyées à l’Urssaf', async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
+    assert.equal(await page.locator('#urssafStatusText').innerText(),
+      'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.');
+  } finally {
+    await context.close();
+  }
+});
