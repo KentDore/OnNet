@@ -723,10 +723,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
 @media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
 
-/* Lisibilité des statuts et périmètre des commandes */
-.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
-.urssaf-data-notice{flex:1 1 100%;margin:0;color:var(--ink-soft);font-size:12px;line-height:1.45;}
-.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+/* Lisibilité du périmètre du graphique */
 .chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
 
 
