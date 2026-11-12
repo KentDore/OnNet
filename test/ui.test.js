@@ -466,7 +466,7 @@ test('transmet les deux parts de mutuelle par défaut lors de l’ajout', async 
     assert.equal(stored.mutuelle, 30);
     assert.equal(stored.mutuellePat, 30);
     const request = calls.bodies.slice(before).find(body =>
-      body.situation['salarié . contrat . salaire brut'] === '3400.000000 €/mois'
+      body.situation['salarié . cotisations . prévoyances . santé . montant'] === '60.000000 €/mois'
     );
     assert.ok(request, 'la requête Urssaf du nouveau scénario doit exister');
     assert.equal(request.situation['salarié . cotisations . prévoyances . santé . montant'], '60.000000 €/mois');
@@ -679,8 +679,9 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
-    assert.equal(await modal.locator('#modalOnboardingMutuelle').inputValue(), '30');
-    assert.equal(await modal.locator('#modalOnboardingMutuellePat').inputValue(), '30');
+    assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
+    assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
+    assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
     const overtimeHint = modal.locator('#modalOnboarding39Hint');
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
@@ -701,7 +702,6 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     await context.close();
   }
 });
-
 
 test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par le consentement', async () => {
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
