@@ -39,3 +39,11 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
+      - name: Publier les captures de comparaison visuelle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnet-visual-comparison
+          path: ${{ runner.temp }}/onnet-visual-comparison/
+          if-no-files-found: ignore
+          retention-days: 7
