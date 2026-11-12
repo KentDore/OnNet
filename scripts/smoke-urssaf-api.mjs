@@ -1,3 +1,4 @@
+import { writeFile } from 'node:fs/promises'
 import { calculateWithUrssafApi, evaluateUrssafExpression } from '../src/urssaf-api-client.mjs'
 
 // Smoke test de production : valide la cohérence interne des réponses API.
@@ -198,7 +199,18 @@ await runTax('barème standard, parent isolé avec un enfant', {
   situationFamille: 'célibataire', enfantsACharge: 1, parentIsole: true
 })
 
-console.log(JSON.stringify({ date, references, checks, failures }, null, 2))
+const report = {
+  schemaVersion: 1,
+  capturedAt: new Date().toISOString(),
+  date,
+  source: 'API Mon-entreprise / Urssaf',
+  purpose: 'Contrôles de cohérence interne ; ne constitue pas une validation indépendante des montants.',
+  references,
+  checks,
+  failures
+}
+await writeFile('urssaf-smoke-results.json', `${JSON.stringify(report, null, 2)}\n`, 'utf8')
+console.log(JSON.stringify(report, null, 2))
 if (failures.length) {
   throw new Error(`Validation API incomplète : ${JSON.stringify(failures)}`)
 }

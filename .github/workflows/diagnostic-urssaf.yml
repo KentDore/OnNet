@@ -42,6 +42,14 @@ jobs:
         run: npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000
       - name: Vérifier les réponses réelles de l’API Urssaf
         run: node scripts/smoke-urssaf-api.mjs
+      - name: Archiver les résultats chiffrés du smoke test
+        if: always() && hashFiles('urssaf-smoke-results.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: urssaf-smoke-${{ github.run_id }}
+          path: urssaf-smoke-results.json
+          if-no-files-found: error
+          retention-days: 30
 
   probe-simulator:
     if: contains(github.event.head_commit.message, '[probe-simulator]')
