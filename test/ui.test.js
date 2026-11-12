@@ -786,7 +786,7 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
 test('le graphique explique explicitement qu’il montre le net avant impôt', async () => {
   const { context, page } = await openApp();
   try {
-    await page.waitForSelector('#stackChart .waterfall');
+    await page.waitForSelector('#comparePanel .chart-scope-hint');
     assert.equal((await page.locator('#comparePanel h2').innerText()).trim(), 'Du brut au net avant impôt');
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
     assert.match(scope, /net à payer avant impôt/i);
