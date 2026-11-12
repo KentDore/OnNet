@@ -2166,6 +2166,9 @@ const headerMenu = document.getElementById('headerMenu');
 document.addEventListener('click', event => {
   if(headerMenu && headerMenu.open && !headerMenu.contains(event.target)) headerMenu.open = false;
 });
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && headerMenu?.open) headerMenu.open = false;
+});
 if(headerMenu){
   headerMenu.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => { headerMenu.open = false; });
