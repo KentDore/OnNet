@@ -927,3 +927,20 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .advanced-scenarios{margin:14px 0 20px;padding:13px 16px;border:1px solid #e2eae3;border-radius:15px;background:#fbfdfb;color:#315640}.advanced-scenarios>summary{cursor:pointer;color:#315640;font-size:12px;font-weight:800}.advanced-scenarios-help{margin:8px 0 12px;color:#78837c;font-size:11px}.advanced-scenarios .cards-bar{margin-top:10px}.advanced-scenarios[open]{padding-bottom:16px}
 
 #benchmarkMount .benchmark-panel{padding:0;border:0;background:transparent;box-shadow:none;margin:0}
+
+
+/* Alignement strict de l'en-tête sur la maquette V33 : marque au-dessus du hero. */
+.maquette-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;min-width:0}
+.maquette-top>.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32;line-height:1;display:flex;align-items:baseline;gap:0;white-space:nowrap}
+.maquette-top>.brand .brand-accent{color:#138653}
+.maquette-top>.brand .brand-version{font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0;color:#68736c;background:#edf0ed;border-radius:20px;padding:4px 8px;margin-left:8px;vertical-align:middle}
+.maquette-top .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap;width:auto;flex:none}
+header.hero .trust-icon{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#e0f1e5;color:#176b45}
+header.hero .trust-icon svg{width:19px;height:19px}
+@media(max-width:640px){
+ .maquette-top{margin-bottom:14px;gap:8px}
+ .maquette-top>.brand{font-size:27px}
+ .maquette-top .header-actions{display:flex;width:auto;gap:6px}
+ .maquette-top .header-actions .header-share-btn{min-height:40px;padding:8px 11px}
+ .maquette-top .header-menu-trigger{width:40px;height:40px}
+}
