@@ -194,7 +194,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Aucune donnée de salaire n’est transmise avant votre accord/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
