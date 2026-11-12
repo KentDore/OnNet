@@ -12,43 +12,48 @@
 <body>
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
-  <header>
-    <div class="header-top">
-      <div class="brand-block">
-        <div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v@@ONNET_VERSION@@</span></div>
-        <div class="eyebrow">Simulateur de paie · API officielle Mon-entreprise</div>
-      </div>
+  <header class="hero">
+    <div class="header-top"><div class="brand-block"><div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v@@ONNET_VERSION@@</span></div></div>
       <div class="header-actions">
-        <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
-          <span>Partager</span>
-        </button>
-        <details class="header-menu" id="headerMenu">
-          <summary class="header-menu-trigger" aria-label="Autres actions" title="Autres actions">
-            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg>
-          </summary>
-          <div class="header-menu-panel">
-            <button type="button" id="printBtn">
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-              <span>Imprimer / exporter</span>
-            </button>
-            <button type="button" id="resetBtn">
-              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 7 4 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>
-              <span>Réinitialiser le comparatif</span>
-            </button>
-          </div>
+        <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
+        <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
+          <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
         </details>
       </div>
     </div>
-    <h1>Le brut promet. Le net décide.</h1>
-    <p>Mettez vos salaires côte à côte et voyez ce qui reste vraiment.</p>
-    <div class="share-banner" id="shareBanner" hidden>
-      <svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
-      <span>Comparatif chargé depuis un lien partagé. Vos salaires enregistrés localement restent intacts tant que vous ne modifiez rien ici — dès que vous éditez quelque chose, ce comparatif remplace l'ancien.</span>
+    <div class="hero-copy"><p class="eyebrow">Simulateur de salaire</p><h1>Le brut promet.<br>Le net décide.</h1>
+      <p class="intro">Comprenez votre salaire et situez-le en quelques secondes.</p>
+      <div class="trust"><span class="trust-icon" aria-hidden="true">✓</span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
     </div>
+    <svg class="wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true"><path d="M0 55 C170 5 270 125 470 75 S770 5 1000 45 L1000 130 L0 130Z" fill="#d8f3df"/><path d="M0 88 C190 35 320 145 520 98 S820 38 1000 78 L1000 130 L0 130Z" fill="#aee9c3"/><path d="M0 111 C210 75 350 150 560 116 S830 82 1000 104 L1000 130 L0 130Z" fill="#75d99c" opacity=".65"/></svg>
   </header>
 
   <main id="contenu">
+  <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
+    <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
+    <div class="declaration-inline">
+      <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+      <div class="declaration-fields">
+        <label for="mainSalaryPeriod">Période du salaire brut</label>
+        <select id="mainSalaryPeriod"><option value="month" selected>Mensuel</option><option value="year">Annuel</option></select>
+        <label for="mainSalaryGross">Salaire brut (€)</label>
+        <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
+        <label for="mainSalaryHours">Base horaire</label>
+        <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
+        <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
+      </div>
+      <button type="button" class="primary-btn declaration-update" id="updateDeclaredSalary">Calculer mon salaire</button>
+      <div class="urssaf-status maquette-urssaf" id="maquetteUrssafMount"></div>
+      <div class="integrated-offers">
+        <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">＋ Ajouter</button></div>
+        <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
+      </div>
+    </div>
+    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div id="maquetteYourSalary"></div>
+    <div id="benchmarkMount" aria-live="polite"></div>
+  </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="Source des calculs">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong>Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
@@ -66,26 +71,6 @@
       </details>
     </div>
   </section>
-  <div class="cards-bar reveal">
-    <div class="cards-bar-toggles">
-      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
-        <button data-amt="net" aria-pressed="true">Net</button>
-        <button data-amt="brut" aria-pressed="false">Brut</button>
-      </div>
-      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
-        <button data-period="mois" aria-pressed="true">Mensuel</button>
-        <button data-period="an" aria-pressed="false">Annuel</button>
-      </div>
-    </div>
-    <div class="cards-bar-nav">
-      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
-      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
-    </div>
-  </div>
-  <div class="cards-scroll" id="cardsScroll">
-    <div class="cards" id="cardsBody"></div>
-  </div>
-
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Du brut au net avant impôt</h2>
     <p class="chart-scope-hint">Répartition mensuelle du salaire : cotisations, mutuelle, titres-restaurant et net à payer avant impôt. Les bascules Brut/Net et Mensuel/Annuel des cartes ne modifient pas ce graphique.</p>
@@ -119,6 +104,30 @@
       </div>
     </details>
   </div>
+
+  <details class="advanced-scenarios">
+    <summary>Modifier les paramètres détaillés des offres</summary>
+    <p class="advanced-scenarios-help">Accédez aux paramètres complémentaires : commune de l’établissement, mutuelle, titres-restaurant et détails de chaque scénario.</p>
+  <div class="cards-bar reveal">
+    <div class="cards-bar-toggles">
+      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
+        <button data-amt="net" aria-pressed="true">Net</button>
+        <button data-amt="brut" aria-pressed="false">Brut</button>
+      </div>
+      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+        <button data-period="mois" aria-pressed="true">Mensuel</button>
+        <button data-period="an" aria-pressed="false">Annuel</button>
+      </div>
+    </div>
+    <div class="cards-bar-nav">
+      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
+      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
+    </div>
+  </div>
+  <div class="cards-scroll" id="cardsScroll">
+    <div class="cards" id="cardsBody"></div>
+  </div>
+  </details>
 
   <section class="situation-section reveal" aria-label="Votre situation">
     <div class="modules-head">
