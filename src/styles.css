@@ -723,8 +723,82 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
 @media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
 
-/* Lisibilité des statuts et périmètre des commandes */
-.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
-.urssaf-data-notice{flex:1 1 100%;margin:0;color:var(--ink-soft);font-size:12px;line-height:1.45;}
-.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+/* Lisibilité du périmètre du graphique */
 .chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+
+/* OnNet — actions discrètes et parcours d'entrée allégé */
+.header-actions{display:flex;align-items:center;gap:10px;flex:none;width:auto;}
+.header-actions .header-share-btn{min-height:42px;padding:9px 15px;border-radius:999px;}
+.header-menu{position:relative;z-index:30;}
+.header-menu-trigger{
+  display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+  list-style:none;border:1px solid var(--line);border-radius:50%;
+  background:var(--surface);color:var(--ink-soft);cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.header-menu-trigger::-webkit-details-marker{display:none;}
+.header-menu-trigger svg{width:19px;height:19px;}
+.header-menu[open] .header-menu-trigger,
+.header-menu-trigger:hover{background:var(--surface-secondary,var(--bg));border-color:var(--accent);color:var(--accent);}
+.header-menu-panel{
+  position:absolute;right:0;top:calc(100% + 9px);width:max-content;min-width:220px;
+  padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 32px rgba(20,35,27,.16);display:grid;gap:3px;
+}
+.header-menu-panel button{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:9px 11px;
+  border:0;border-radius:9px;background:transparent;color:var(--ink);
+  font:500 13px 'Inter',sans-serif;text-align:left;cursor:pointer;
+}
+.header-menu-panel button:hover,.header-menu-panel button:focus-visible{
+  background:var(--surface-secondary,var(--bg));outline:none;
+}
+.header-menu-panel svg{width:17px;height:17px;flex:none;color:var(--ink-soft);}
+@media(max-width:639px){
+  .header-top{align-items:center;flex-wrap:nowrap;gap:10px;}
+  .header-actions{display:flex;width:auto;gap:8px;}
+  .header-actions .header-share-btn{min-width:42px;min-height:42px;padding:9px 12px;font-size:12px;}
+  .header-actions .header-share-btn svg{width:15px;height:15px;}
+  .header-menu-panel{min-width:210px;}
+}
+
+/* La mutuelle est une information, pas un formulaire à configurer. */
+.onboarding-benefits{display:grid;gap:10px;margin-top:16px;}
+.onboarding-mutuelle-note{
+  display:flex;align-items:center;gap:9px;min-height:42px;
+  padding:9px 12px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--bg));color:var(--ink-soft);
+  font:500 13px 'Inter',sans-serif;
+}
+.onboarding-mutuelle-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;flex:none;border-radius:50%;background:rgba(35,119,83,.11);color:var(--accent);}
+.onboarding-mutuelle-icon svg{width:15px;height:15px;}
+.onboarding-mutuelle-label{color:var(--ink-soft);}
+.onboarding-mutuelle-note strong{margin-left:auto;color:var(--ink);font-weight:600;white-space:nowrap;}
+.onboarding-benefits .onboarding-optional{margin:0;}
+.onboarding-benefits .onboarding-optional summary{font-size:13px;}
+@media(max-width:420px){
+  .onboarding-mutuelle-note{gap:7px;padding:8px 10px;font-size:12px;}
+}
+
+/* Source et consentement : une phrase visible, les détails à la demande. */
+.urssaf-status{display:block;padding:10px 0;margin-bottom:16px;}
+.urssaf-status-copy{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:8px;width:100%;}
+.urssaf-status-main{flex:none;font-size:.8rem;line-height:1.45;}
+.urssaf-data-details{font-size:.74rem;color:var(--ink-soft);}
+.urssaf-data-details summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--accent);font-weight:550;}
+.urssaf-data-details summary:hover{text-decoration:underline;}
+.urssaf-data-notice{margin:7px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-secondary,var(--bg));font-size:.76rem;line-height:1.5;}
+.urssaf-consent-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.urssaf-status-message{margin:0;color:var(--ink-soft);font-size:.75rem;line-height:1.4;}
+.urssaf-status-message strong{font-weight:500;}
+.urssaf-status #urssafCalculateBtn{flex:none;margin:0;padding:9px 15px;font-size:.78rem;border-radius:999px;}
+.urssaf-status .result-source{margin:2px 0 0;font-size:.72rem;}
+.urssaf-status.is-error .urssaf-consent-row{gap:8px;}
+@media(max-width:600px){
+  .urssaf-status{margin-bottom:12px;padding:8px 0;}
+  .urssaf-status-main{font-size:.75rem;}
+  .urssaf-consent-row{align-items:stretch;gap:8px;}
+  .urssaf-status-message{font-size:.72rem;}
+  .urssaf-status #urssafCalculateBtn{width:100%;min-height:42px;font-size:.78rem;}
+}

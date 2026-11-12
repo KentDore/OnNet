@@ -4,12 +4,10 @@
 // ---------- État ----------
 let idCounter = 0;
 
-const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
-function loadUrssafConsent(){
-  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
-  catch(_){ return false; }
-}
-let urssafConsentGranted = loadUrssafConsent();
+// Le consentement est demandé à chaque ouverture : aucun choix de transmission
+// n'est mémorisé sur l'appareil.
+try{ localStorage.removeItem('onnet.urssafConsent.v1'); }catch(_){}
+let urssafConsentGranted = false;
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 let urssafRequestQueue = Promise.resolve();
@@ -200,18 +198,16 @@ function updateUrssafStatus(computed){
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
   const status = document.getElementById('urssafStatus');
-  const rememberConsent = document.getElementById('urssafRememberConsent');
-  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
   if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Les résultats sont calculés via l’API officielle Mon-entreprise de l’Urssaf.';
+    statusText.textContent = 'Aucune donnée de salaire n’est transmise avant votre accord.';
     button.hidden = false;
     button.disabled = false;
-    button.textContent = 'Calculer avec l’Urssaf';
+    button.textContent = 'Accepter et calculer';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
@@ -1944,74 +1940,55 @@ function showShareModal(url){
 // Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <details class="onboarding-optional">
-          <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
-          <div class="onboarding-optional-body">
-            <p class="sub-hint">30 € de mutuelle sont déduits du salaire chaque mois. Ajustez le montant selon votre bulletin.</p>
-            <div class="two-col onboarding-mutuelle-fields">
-              <div class="field-row">
-                <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" value="30" placeholder="Ex. 30" autocomplete="off">
-              </div>
-              <div class="field-row">
-                <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" value="30" placeholder="Ex. 30" autocomplete="off">
-              </div>
-            </div>
-            <div class="field-row" style="margin-bottom:0;">
-              <label>Avez-vous des titres-restaurant ?</label>
-              <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
-                <button type="button" data-tr="non" aria-pressed="true">Non</button>
-                <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-              </div>
-            </div>
-            <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-              <div class="three-col">
-                <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-                <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-                <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-              </div>
+    <div class="onboarding-benefits">
+      <div class="onboarding-mutuelle-note">
+        <span class="onboarding-mutuelle-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+        </span>
+        <span class="onboarding-mutuelle-label">Mutuelle</span>
+        <strong>30 € salarié · 30 € employeur</strong>
+      </div>
+      <details class="onboarding-optional">
+        <summary><span>Titres-restaurant</span><span class="optional-label">Facultatif</span></summary>
+        <div class="onboarding-optional-body">
+          <div class="field-row" style="margin-bottom:0;">
+            <label>Avez-vous des titres-restaurant ?</label>
+            <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
+              <button type="button" data-tr="non" aria-pressed="true">Non</button>
+              <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
             </div>
           </div>
-        </details>`;
+          <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
+            <div class="three-col">
+              <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+              <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+              <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>`;
 }
 
-// Branche les interactions du bloc ci-dessus et renvoie une fonction de
-// lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
+// La mutuelle est un réglage par défaut simple : 30 € de part salariale
+// et 30 € de part employeur. Seuls les titres-restaurant sont facultatifs.
 function bindMutuelleTrFields(overlay, idPrefix){
-  const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
-  const mutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
   const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
   const partInput = overlay.querySelector(`#${idPrefix}Part`);
-
   let trOui = false;
   trToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       trOui = b.dataset.tr === 'oui';
       trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       trFields.hidden = !trOui;
-      // Les nouveaux champs révélés peuvent tomber hors de la zone visible
-      // (surtout modale + clavier) sans qu'aucun focus ne les y ramène.
       if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
-
   return () => {
-    // Relire le DOM au moment de la validation : les modales partagent leur
-    // conteneur et peuvent remplacer leur contenu entre deux ouvertures.
-    const currentMutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
-    const currentMutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
-    if(!currentMutuelleInput || !currentMutuellePatInput){
-      throw new Error('Les deux champs de mutuelle sont introuvables dans la modale.');
-    }
-    const mutuelleRaw = currentMutuelleInput.value.trim();
-    const mutuellePatRaw = currentMutuellePatInput.value.trim();
-    const mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
-    const mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
-    const result = { mutuelle, mutuellePat, joursResto: 0 };
+    const result = { mutuelle:30, mutuellePat:30, joursResto:0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
@@ -2173,14 +2150,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     const v = parseNum(input.value);
     if(!(v > 0)) return;
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    const benefits = readMutuelleTr();
-    // Lire les deux champs visibles au dernier moment de la validation :
-    // la modale est réutilisée par plusieurs parcours de l'application.
-    const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
-    const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
-    benefits.mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
-    benefits.mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -2191,6 +2161,19 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   return pending;
 }
 
+
+const headerMenu = document.getElementById('headerMenu');
+document.addEventListener('click', event => {
+  if(headerMenu && headerMenu.open && !headerMenu.contains(event.target)) headerMenu.open = false;
+});
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && headerMenu?.open) headerMenu.open = false;
+});
+if(headerMenu){
+  headerMenu.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', () => { headerMenu.open = false; });
+  });
+}
 document.getElementById('shareBtn').addEventListener('click', shareLink);
 
 // ---------- Champ focalisé toujours amené dans la vue ----------
@@ -2408,20 +2391,8 @@ function scrollToNewCard(){
   });
 }
 
-document.getElementById('urssafRememberConsent').addEventListener('change', e => {
-  try{
-    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
-    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
-  }catch(_){
-    e.target.checked = false;
-    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
-  }
-});
 document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
   urssafConsentGranted = true;
-  if(document.getElementById('urssafRememberConsent').checked){
-    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
-  }
   scheduleUrssafCalculations(true,true);
 });
 
