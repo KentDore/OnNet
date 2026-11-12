@@ -240,7 +240,7 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
     await page.locator('#headerMenu summary').click();
     assert.equal(await page.locator('#resetBtn').isVisible(), true);
     assert.equal(await page.locator('#printBtn').isVisible(), true);
-    await page.locator('h1').click();
+    await page.locator('#headerMenu summary').press('Escape');
     assert.equal(await page.locator('#headerMenu').evaluate(el => el.open), false);
     const header = await page.locator('.header-top').boundingBox();
     const brand = await page.locator('.brand-block').boundingBox();
@@ -257,7 +257,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
-    assert.match(await page.locator('.onboarding-mutuelle-note').innerText(), /Mutuelle.*30 € déduits \/ mois/);
+    assert.match(await page.locator('.onboarding-mutuelle-note').innerText(), /Mutuelle.*30 € salarié · 30 € employeur/);
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
