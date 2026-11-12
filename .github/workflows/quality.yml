@@ -1,4 +1,4 @@
-name: Vérifications
+name: Vérifications # Capture visuelle V33
 
 on:
   pull_request:
