@@ -38,6 +38,13 @@ function assertFinite(label, value) {
   if (!Number.isFinite(value)) throw new Error(`${label} absent ou non numérique.`)
 }
 
+function assertNoEngineErrors(name, warnings = []) {
+  const errors = warnings.filter(warning => /\[\s*EngineError\s*\]/i.test(String(warning)))
+  if (errors.length) {
+    throw new Error(`${errors.length} erreur(s) du moteur Publicodes dans les avertissements API : ${errors.map(error => String(error).replace(/\s+/g, ' ').slice(0, 500)).join(' | ')}`)
+  }
+}
+
 function assertLocationResolved(result) {
   const missing = (result.missingVariables || []).filter(name => String(name).startsWith('établissement . commune . département'))
   if (missing.length) throw new Error('Le département de l’établissement reste non résolu par le modèle Urssaf : ' + missing.join(', '))
@@ -48,6 +55,7 @@ async function runSocial(name, input) {
   try {
     const result = await calculateWithUrssafApi({ commune: 'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     assertLocationResolved(result)
+    assertNoEngineErrors(name, result.warnings)
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
       ['net avant impôt', result.netBeforeTax],
@@ -98,6 +106,7 @@ async function runTax(name, input) {
   try {
     const result = await calculateWithUrssafApi({ commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
     assertLocationResolved(result)
+    assertNoEngineErrors(name, result.warnings)
     for (const [label, value] of [
       ['net avant impôt', result.netBeforeTax],
       ['net après impôt', result.netAfterTax],
