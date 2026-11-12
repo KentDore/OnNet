@@ -795,3 +795,40 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
     await context.close();
   }
 });
+
+
+test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur état visuel', async () => {
+  const { context, page } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await page.locator('#amtToggle [data-amt="brut"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Brut mensuel');
+    assert.equal(await page.locator('#amtToggle [data-amt="brut"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#periodToggle [data-period="an"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Brut annuel');
+    assert.equal(await page.locator('#periodToggle [data-period="an"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#amtToggle [data-amt="net"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé annuel');
+    await page.locator('#periodToggle [data-period="mois"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé mensuel');
+    assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#periodToggle [data-period="mois"]').getAttribute('aria-pressed'), 'true');
+  } finally {
+    await context.close();
+  }
+});
+
+test('les fiches de salaire précèdent le comparatif et les graphiques vides sont masqués', async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const order = await page.evaluate(() => {
+      const cards = document.querySelector('.cards-bar');
+      const comparison = document.querySelector('#comparePanel');
+      return cards.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
+    });
+    assert.ok(order, 'les fiches de salaire doivent précéder le comparatif');
+    assert.equal(await page.locator('#comparePanel').isVisible(), false, 'ne pas afficher un panneau de résultats vide');
+  } finally {
+    await context.close();
+  }
+});
