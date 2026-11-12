@@ -2230,16 +2230,18 @@ document.querySelectorAll('.metric-toggle button').forEach(b => {
 });
 document.querySelectorAll('#amtToggle button').forEach(b => {
   b.addEventListener('click', () => {
+    if(displayAmt === b.dataset.amt) return;
     displayAmt = b.dataset.amt;
-    document.querySelectorAll('#amtToggle button').forEach(x => x.setAttribute('aria-pressed', x===b?'true':'false'));
-    updateComputed();
+    syncDisplayToggles();
+    render();
   });
 });
 document.querySelectorAll('#periodToggle button').forEach(b => {
   b.addEventListener('click', () => {
+    if(displayPeriod === b.dataset.period) return;
     displayPeriod = b.dataset.period;
-    document.querySelectorAll('#periodToggle button').forEach(x => x.setAttribute('aria-pressed', x===b?'true':'false'));
-    updateComputed();
+    syncDisplayToggles();
+    render();
   });
 });
 // L'état restauré (localStorage ou lien partagé) doit se voir sur les bascules :
