@@ -730,11 +730,85 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
 @media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
 
-/* Lisibilité des statuts et périmètre des commandes */
-.consent-memory{display:flex;align-items:center;gap:8px;margin-top:10px;font-size:13px;color:var(--ink-soft);}
-.urssaf-data-notice{flex:1 1 100%;margin:0;color:var(--ink-soft);font-size:12px;line-height:1.45;}
-.consent-memory input{width:18px;height:18px;margin:0;accent-color:var(--accent);}
+/* Lisibilité du périmètre du graphique */
 .chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+
+/* OnNet — actions discrètes et parcours d'entrée allégé */
+.header-actions{display:flex;align-items:center;gap:10px;flex:none;width:auto;}
+.header-actions .header-share-btn{min-height:42px;padding:9px 15px;border-radius:999px;}
+.header-menu{position:relative;z-index:30;}
+.header-menu-trigger{
+  display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+  list-style:none;border:1px solid var(--line);border-radius:50%;
+  background:var(--surface);color:var(--ink-soft);cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.header-menu-trigger::-webkit-details-marker{display:none;}
+.header-menu-trigger svg{width:19px;height:19px;}
+.header-menu[open] .header-menu-trigger,
+.header-menu-trigger:hover{background:var(--surface-secondary,var(--bg));border-color:var(--accent);color:var(--accent);}
+.header-menu-panel{
+  position:absolute;right:0;top:calc(100% + 9px);width:max-content;min-width:220px;
+  padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 32px rgba(20,35,27,.16);display:grid;gap:3px;
+}
+.header-menu-panel button{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:9px 11px;
+  border:0;border-radius:9px;background:transparent;color:var(--ink);
+  font:500 13px 'Inter',sans-serif;text-align:left;cursor:pointer;
+}
+.header-menu-panel button:hover,.header-menu-panel button:focus-visible{
+  background:var(--surface-secondary,var(--bg));outline:none;
+}
+.header-menu-panel svg{width:17px;height:17px;flex:none;color:var(--ink-soft);}
+@media(max-width:639px){
+  .header-top{align-items:center;flex-wrap:nowrap;gap:10px;}
+  .header-actions{display:flex;width:auto;gap:8px;}
+  .header-actions .header-share-btn{min-width:42px;min-height:42px;padding:9px 12px;font-size:12px;}
+  .header-actions .header-share-btn svg{width:15px;height:15px;}
+  .header-menu-panel{min-width:210px;}
+}
+
+/* La mutuelle est une information, pas un formulaire à configurer. */
+.onboarding-benefits{display:grid;gap:10px;margin-top:16px;}
+.onboarding-mutuelle-note{
+  display:flex;align-items:center;gap:9px;min-height:42px;
+  padding:9px 12px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--bg));color:var(--ink-soft);
+  font:500 13px 'Inter',sans-serif;
+}
+.onboarding-mutuelle-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;flex:none;border-radius:50%;background:rgba(35,119,83,.11);color:var(--accent);}
+.onboarding-mutuelle-icon svg{width:15px;height:15px;}
+.onboarding-mutuelle-label{color:var(--ink-soft);}
+.onboarding-mutuelle-note strong{margin-left:auto;color:var(--ink);font-weight:600;white-space:nowrap;}
+.onboarding-benefits .onboarding-optional{margin:0;}
+.onboarding-benefits .onboarding-optional summary{font-size:13px;}
+@media(max-width:420px){
+  .onboarding-mutuelle-note{gap:7px;padding:8px 10px;font-size:12px;}
+}
+
+/* Source et consentement : une phrase visible, les détails à la demande. */
+.urssaf-status{display:block;padding:10px 0;margin-bottom:16px;}
+.urssaf-status-copy{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:8px;width:100%;}
+.urssaf-status-main{flex:none;font-size:.8rem;line-height:1.45;}
+.urssaf-data-details{font-size:.74rem;color:var(--ink-soft);}
+.urssaf-data-details summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--accent);font-weight:550;}
+.urssaf-data-details summary:hover{text-decoration:underline;}
+.urssaf-data-notice{margin:7px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-secondary,var(--bg));font-size:.76rem;line-height:1.5;}
+.urssaf-consent-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.urssaf-status-message{margin:0;color:var(--ink-soft);font-size:.75rem;line-height:1.4;}
+.urssaf-status-message strong{font-weight:500;}
+.urssaf-status #urssafCalculateBtn{flex:none;margin:0;padding:9px 15px;font-size:.78rem;border-radius:999px;}
+.urssaf-status .result-source{margin:2px 0 0;font-size:.72rem;}
+.urssaf-status.is-error .urssaf-consent-row{gap:8px;}
+@media(max-width:600px){
+  .urssaf-status{margin-bottom:12px;padding:8px 0;}
+  .urssaf-status-main{font-size:.75rem;}
+  .urssaf-consent-row{align-items:stretch;gap:8px;}
+  .urssaf-status-message{font-size:.72rem;}
+  .urssaf-status #urssafCalculateBtn{width:100%;min-height:42px;font-size:.78rem;}
+}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
@@ -749,18 +823,25 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
         <div class="eyebrow">Simulateur de paie · API officielle Mon-entreprise</div>
       </div>
       <div class="header-actions">
-        <button class="print-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
+        <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif">
           <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
           <span>Partager</span>
         </button>
-        <button class="print-btn" id="resetBtn" title="Effacer les salaires enregistrés et revenir à l'exemple de départ">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"></polyline><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"></path></svg>
-          <span>Réinitialiser</span>
-        </button>
-        <button class="print-btn" id="printBtn">
-          <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
-          <span>Imprimer / exporter</span>
-        </button>
+        <details class="header-menu" id="headerMenu">
+          <summary class="header-menu-trigger" aria-label="Autres actions" title="Autres actions">
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="currentColor"><circle cx="5" cy="12" r="1.7"></circle><circle cx="12" cy="12" r="1.7"></circle><circle cx="19" cy="12" r="1.7"></circle></svg>
+          </summary>
+          <div class="header-menu-panel">
+            <button type="button" id="printBtn">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+              <span>Imprimer / exporter</span>
+            </button>
+            <button type="button" id="resetBtn">
+              <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 7 4 7 10"></polyline><path d="M3.5 15a9 9 0 1 0 2.1-9.4L1 10"></path></svg>
+              <span>Réinitialiser le comparatif</span>
+            </button>
+          </div>
+        </details>
       </div>
     </div>
     <h1>Le brut promet. Le net décide.</h1>
@@ -772,15 +853,19 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   </header>
 
   <main id="contenu">
-  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite">
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="Source des calculs">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong>Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
-      <p class="urssaf-data-notice">Avant le calcul, les paramètres nécessaires à la simulation (salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale) sont transmis à l’API officielle de l’Urssaf. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
-      <p class="urssaf-status-main urssaf-status-secondary"><strong id="urssafStatusText">En attente de votre accord pour lancer le calcul.</strong></p>
-      <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Calculer avec l’Urssaf</button>
-      <label class="consent-memory" for="urssafRememberConsent"><input type="checkbox" id="urssafRememberConsent"> Se souvenir de mon choix sur cet appareil</label>
+      <details class="urssaf-data-details">
+        <summary>Quelles données sont transmises ?</summary>
+        <p class="urssaf-data-notice">Pour calculer votre résultat, OnNet transmet à l’Urssaf les paramètres nécessaires : salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
+      </details>
+      <div class="urssaf-consent-row">
+        <p class="urssaf-status-message"><strong id="urssafStatusText">Aucune donnée de salaire n’est transmise avant votre accord.</strong></p>
+        <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Accepter et calculer</button>
+      </div>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Détails techniques (facultatif)</summary>
+        <summary>Détails du calcul</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
     </div>
@@ -841,8 +926,8 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
   <section class="situation-section reveal" aria-label="Votre situation">
     <div class="modules-head">
-      <h2 class="modules-title">Votre situation</h2>
-      <p class="modules-sub">Un réglage de profil, pas un outil par comparatif : il s'applique à tous les salaires, tant que vous ne le changez pas.</p>
+      <h2 class="modules-title">Situation fiscale</h2>
+      <p class="modules-sub">Pour estimer votre impôt.</p>
     </div>
 
       <div class="module-card" id="foyerModule">
@@ -931,8 +1016,8 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
   <section class="modules-section reveal" aria-label="Modules complémentaires">
     <div class="modules-head">
-      <h2 class="modules-title">Modules</h2>
-      <p class="modules-sub">Activez les outils dont vous avez besoin pour ce comparatif.</p>
+      <h2 class="modules-title">Outils</h2>
+      <p class="modules-sub">Facultatifs, à utiliser selon vos besoins.</p>
     </div>
     <div class="modules-grid">
 
@@ -1574,12 +1659,10 @@ function esc(s){
 // ---------- État ----------
 let idCounter = 0;
 
-const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssafConsent.v1';
-function loadUrssafConsent(){
-  try{ return localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'true'; }
-  catch(_){ return false; }
-}
-let urssafConsentGranted = loadUrssafConsent();
+// Le consentement est demandé à chaque ouverture : aucun choix de transmission
+// n'est mémorisé sur l'appareil.
+try{ localStorage.removeItem('onnet.urssafConsent.v1'); }catch(_){}
+let urssafConsentGranted = false;
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 let urssafRequestQueue = Promise.resolve();
@@ -1770,18 +1853,16 @@ function updateUrssafStatus(computed){
   const button = document.getElementById('urssafCalculateBtn');
   if(!statusText || !button) return;
   const status = document.getElementById('urssafStatus');
-  const rememberConsent = document.getElementById('urssafRememberConsent');
-  if(rememberConsent) rememberConsent.checked = loadUrssafConsent();
   if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Les résultats sont calculés via l’API officielle Mon-entreprise de l’Urssaf.';
+    statusText.textContent = 'Aucune donnée de salaire n’est transmise avant votre accord.';
     button.hidden = false;
     button.disabled = false;
-    button.textContent = 'Calculer avec l’Urssaf';
+    button.textContent = 'Accepter et calculer';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
@@ -3514,74 +3595,55 @@ function showShareModal(url){
 // Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
 function renderMutuelleTrFields(idPrefix){
   return `
-        <details class="onboarding-optional">
-          <summary><span>Affiner le calcul</span><span class="optional-label">Facultatif</span></summary>
-          <div class="onboarding-optional-body">
-            <p class="sub-hint">30 € de mutuelle sont déduits du salaire chaque mois. Ajustez le montant selon votre bulletin.</p>
-            <div class="two-col onboarding-mutuelle-fields">
-              <div class="field-row">
-                <label for="${idPrefix}Mutuelle">Mutuelle — part salarié (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}Mutuelle" value="30" placeholder="Ex. 30" autocomplete="off">
-              </div>
-              <div class="field-row">
-                <label for="${idPrefix}MutuellePat">Mutuelle — part employeur (€/mois)</label>
-                <input type="text" inputmode="decimal" id="${idPrefix}MutuellePat" value="30" placeholder="Ex. 30" autocomplete="off">
-              </div>
-            </div>
-            <div class="field-row" style="margin-bottom:0;">
-              <label>Avez-vous des titres-restaurant ?</label>
-              <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
-                <button type="button" data-tr="non" aria-pressed="true">Non</button>
-                <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-              </div>
-            </div>
-            <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-              <div class="three-col">
-                <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-                <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-                <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-              </div>
+    <div class="onboarding-benefits">
+      <div class="onboarding-mutuelle-note">
+        <span class="onboarding-mutuelle-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
+        </span>
+        <span class="onboarding-mutuelle-label">Mutuelle</span>
+        <strong>30 € salarié · 30 € employeur</strong>
+      </div>
+      <details class="onboarding-optional">
+        <summary><span>Titres-restaurant</span><span class="optional-label">Facultatif</span></summary>
+        <div class="onboarding-optional-body">
+          <div class="field-row" style="margin-bottom:0;">
+            <label>Avez-vous des titres-restaurant ?</label>
+            <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
+              <button type="button" data-tr="non" aria-pressed="true">Non</button>
+              <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
             </div>
           </div>
-        </details>`;
+          <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
+            <div class="three-col">
+              <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+              <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+              <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+            </div>
+          </div>
+        </div>
+      </details>
+    </div>`;
 }
 
-// Branche les interactions du bloc ci-dessus et renvoie une fonction de
-// lecture : { mutuelle, joursResto, [valeurResto, partResto] }.
+// La mutuelle est un réglage par défaut simple : 30 € de part salariale
+// et 30 € de part employeur. Seuls les titres-restaurant sont facultatifs.
 function bindMutuelleTrFields(overlay, idPrefix){
-  const mutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
-  const mutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
   const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
   const partInput = overlay.querySelector(`#${idPrefix}Part`);
-
   let trOui = false;
   trToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       trOui = b.dataset.tr === 'oui';
       trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       trFields.hidden = !trOui;
-      // Les nouveaux champs révélés peuvent tomber hors de la zone visible
-      // (surtout modale + clavier) sans qu'aucun focus ne les y ramène.
       if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
-
   return () => {
-    // Relire le DOM au moment de la validation : les modales partagent leur
-    // conteneur et peuvent remplacer leur contenu entre deux ouvertures.
-    const currentMutuelleInput = overlay.querySelector(`#${idPrefix}Mutuelle`);
-    const currentMutuellePatInput = overlay.querySelector(`#${idPrefix}MutuellePat`);
-    if(!currentMutuelleInput || !currentMutuellePatInput){
-      throw new Error('Les deux champs de mutuelle sont introuvables dans la modale.');
-    }
-    const mutuelleRaw = currentMutuelleInput.value.trim();
-    const mutuellePatRaw = currentMutuellePatInput.value.trim();
-    const mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
-    const mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
-    const result = { mutuelle, mutuellePat, joursResto: 0 };
+    const result = { mutuelle:30, mutuellePat:30, joursResto:0 };
     if(trOui){
       result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
@@ -3743,14 +3805,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     const v = parseNum(input.value);
     if(!(v > 0)) return;
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    const benefits = readMutuelleTr();
-    // Lire les deux champs visibles au dernier moment de la validation :
-    // la modale est réutilisée par plusieurs parcours de l'application.
-    const mutuelleRaw = overlay.querySelector('#modalAddMutuelle')?.value.trim() ?? '';
-    const mutuellePatRaw = overlay.querySelector('#modalAddMutuellePat')?.value.trim() ?? '';
-    benefits.mutuelle = mutuelleRaw === '' ? 0 : Math.max(0, parseNum(mutuelleRaw));
-    benefits.mutuellePat = mutuellePatRaw === '' ? 0 : Math.max(0, parseNum(mutuellePatRaw));
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, benefits));
+    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
@@ -3761,6 +3816,19 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   return pending;
 }
 
+
+const headerMenu = document.getElementById('headerMenu');
+document.addEventListener('click', event => {
+  if(headerMenu && headerMenu.open && !headerMenu.contains(event.target)) headerMenu.open = false;
+});
+document.addEventListener('keydown', event => {
+  if(event.key === 'Escape' && headerMenu?.open) headerMenu.open = false;
+});
+if(headerMenu){
+  headerMenu.querySelectorAll('button').forEach(button => {
+    button.addEventListener('click', () => { headerMenu.open = false; });
+  });
+}
 document.getElementById('shareBtn').addEventListener('click', shareLink);
 
 // ---------- Champ focalisé toujours amené dans la vue ----------
@@ -3978,20 +4046,8 @@ function scrollToNewCard(){
   });
 }
 
-document.getElementById('urssafRememberConsent').addEventListener('change', e => {
-  try{
-    if(e.target.checked) localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true');
-    else localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
-  }catch(_){
-    e.target.checked = false;
-    showToastImpl('La mémorisation du choix n’est pas disponible dans ce navigateur.');
-  }
-});
 document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
   urssafConsentGranted = true;
-  if(document.getElementById('urssafRememberConsent').checked){
-    try{ localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'true'); }catch(_){}
-  }
   scheduleUrssafCalculations(true,true);
 });
 
