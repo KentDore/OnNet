@@ -6,7 +6,7 @@ OnNet compare plusieurs scénarios de rémunération pour le secteur privé fran
 
 ## État du projet
 
-La branche de migration raccorde le calculateur à l’API REST officielle **Mon-entreprise / Urssaf**. Elle n’est pas publiée : tant qu’elle n’est pas fusionnée dans `main`, la version GitHub Pages reste inchangée.
+La migration vers l’API REST officielle **Mon-entreprise / Urssaf** est intégrée à `main` et publiée sur GitHub Pages. Les workflows de vérification et de déploiement du commit `c9c08d75d3972e276fa147c5218814c8ee8a16bb` ont réussi le 12 novembre 2026. Le calcul salarial nécessite un consentement explicite avant l’envoi des paramètres à l’API.
 
 ## Calculs et données transmises
 
@@ -42,7 +42,7 @@ Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie v
 
 ## Développement et tests
 
-Le client API se trouve dans `src/urssaf-api-client.mjs`. Le fichier autonome `index.html` est généré par le build et embarque ce client : il ne doit pas être modifié indépendamment des sources.
+Le client API se trouve dans `src/urssaf-api-client.mjs`. Le fichier autonome `index.html` est généré par le build et embarque ce client : il ne doit pas être modifié indépendamment des sources. La version publiée est construite depuis `main` ; les archives `Onnet-*.html` sont des versions historiques et ne remplacent pas `index.html`.
 
 Tests automatisés :
 
