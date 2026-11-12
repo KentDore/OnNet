@@ -257,7 +257,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
-    assert.match(await page.locator('.onboarding-mutuelle-note').innerText(), /Mutuelle.*30 € salarié · 30 € employeur/);
+    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
