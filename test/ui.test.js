@@ -787,7 +787,7 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel .chart-scope-hint');
-    assert.equal((await page.locator('#comparePanel h2').innerText()).trim(), 'Du brut au net avant impôt');
+    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim(), 'Du brut au net avant impôt');
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
     assert.match(scope, /net à payer avant impôt/i);
     assert.match(scope, /ne modifient pas ce graphique/i);
