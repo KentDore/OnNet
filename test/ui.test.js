@@ -879,6 +879,8 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await page.locator('#mainSalaryGross').fill('3000');
     await page.locator('#mainSalaryHours').selectOption('35');
+    const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
+    assert.equal(savedGross, 3000, 'la saisie du brut doit être enregistrée dans le scénario');
     await page.locator('#updateDeclaredSalary').click();
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3000');
     assert.equal(await page.locator('#cardsBody [data-durree-group] button[aria-pressed="true"]').innerText(), '35 h');
