@@ -113,8 +113,8 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
     'salarié . rémunération . frais professionnels . titres-restaurant': mealTicketDays > 0 ? 'oui' : 'non',
-    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titre-restaurant/mois`,
-    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titre-restaurant`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . nombre': `${mealTicketDays} titres-restaurant/mois`,
+    'salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire': `${mealTicketValue.toFixed(2)} €/titres-restaurant`,
     'salarié . rémunération . frais professionnels . titres-restaurant . taux employeur': percent(employerMealTicketRate),
     'date': formatDate(input.date)
   }
