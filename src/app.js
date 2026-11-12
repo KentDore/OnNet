@@ -1093,6 +1093,16 @@ function renderMaquetteControls(computedOverride){
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
   const mutuelleText=document.getElementById('mainSalaryMutuelleText');
   if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
+  const updateButton=document.getElementById('updateDeclaredSalary');
+  if(updateButton) updateButton.onclick=()=>{
+    const scenario=findScenario(refId)||scenarios[0];
+    const raw=Number(gross?.value);
+    if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){gross?.focus();return;}
+    scenario.brut=document.getElementById('mainSalaryPeriod')?.value==='year'?Math.round(raw/12*100)/100:raw;
+    scenario.dureeType=hours?.value==='39'?'39':'35';
+    saveState();
+    render();
+  };
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après autorisation de transmission à l’Urssaf.</div></div>';}
@@ -1462,6 +1472,7 @@ function updateComputed(options = {}){
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  renderMaquetteControls(computed);
   updateFoyerImpot(computed);
   syncFoyerUI();
 
@@ -2442,26 +2453,6 @@ maquettePeriodButtons.forEach(button=>button.addEventListener('click',()=>{
     if(strong) strong.innerHTML=(period==='hour'?fmtHoraire(value):fmt(value))+' <small>/ '+unit+'</small>';
   }
 }));
-function syncDeclaredSalaryFromForm(){
-  const scenario=findScenario(refId)||scenarios[0];
-  const grossInput=document.getElementById('mainSalaryGross');
-  const raw=Number(grossInput?.value);
-  const period=document.getElementById('mainSalaryPeriod')?.value;
-  const hours=document.getElementById('mainSalaryHours')?.value;
-  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){grossInput?.focus();return false;}
-  scenario.brut=period==='year'?Math.round(raw/12*100)/100:raw;
-  scenario.dureeType=hours==='39'?'39':'35';
-  saveState();
-  return true;
-}
-['mainSalaryGross','mainSalaryPeriod','mainSalaryHours'].forEach(id=>{
-  document.getElementById(id)?.addEventListener('input',syncDeclaredSalaryFromForm);
-  document.getElementById(id)?.addEventListener('change',syncDeclaredSalaryFromForm);
-});
-document.getElementById('updateDeclaredSalary')?.addEventListener('click',()=>{
-  if(!syncDeclaredSalaryFromForm()) return;
-  render();
-});
 document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
 render();
   });
