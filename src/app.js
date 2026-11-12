@@ -2430,30 +2430,20 @@ if(!loadedFromShare && location.hash &&
    new URLSearchParams(location.hash.slice(1)).has('share')){
   showToastImpl('Lien de partage invalide ou incomplet : les données n’ont pas pu être chargées.');
 }
+// Les interactions V33 doivent fonctionner aussi pour les visiteurs qui ont déjà
+// terminé l'onboarding : elles ne dépendent pas de l'affichage de la modale initiale.
+document.querySelectorAll('[data-maquette-period]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    maquetteComparisonPeriod=button.dataset.maquettePeriod;
+    metric='netHoraire';
+    render();
+  });
+});
+document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
+
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
-    
-// Liaison de la maquette V33 aux scénarios et calculs réels OnNet.
-const maquettePeriodButtons=[...document.querySelectorAll('[data-maquette-period]')];
-maquettePeriodButtons.forEach(button=>button.addEventListener('click',()=>{
-  const period=button.dataset.maquettePeriod;
-  maquetteComparisonPeriod=period;
-  maquettePeriodButtons.forEach(b=>b.setAttribute('aria-pressed',String(b===button)));
-  render();
-  metric='netHoraire';
-  const computed=getCurrentComputed();
-  const selected=computed.find(x=>x.s.id===refId);
-  const summary=document.getElementById('maquetteYourSalary');
-  if(summary && selected && selected.r){
-    const s=selected.s, monthlyHours=Number(s.dureeType)*52/12;
-    const value=period==='hour'?selected.r.netApres/monthlyHours:period==='year'?selected.r.netApres*12:selected.r.netApres;
-    const unit=period==='hour'?'heure':period==='year'?'an':'mois';
-    const strong=summary.querySelector('.benchmark-your-salary>strong');
-    if(strong) strong.innerHTML=(period==='hour'?fmtHoraire(value):fmt(value))+' <small>/ '+unit+'</small>';
-  }
-}));
-document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
-render();
+    render();
   });
 }
