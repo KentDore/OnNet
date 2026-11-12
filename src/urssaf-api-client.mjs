@@ -284,6 +284,10 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
 
     const missingVariables = [...new Set(payload.evaluate.flatMap(item => normalizeMissingVariables(item.missingVariables)))]
     const warnings = normalizeWarnings(payload.warnings)
+    const engineErrors = warnings.filter(warning => /\[\s*EngineError\s*\]/i.test(warning))
+    if (engineErrors.length) {
+      throw new Error(`Le moteur Urssaf a signalé une erreur de calcul : ${engineErrors.map(warning => warning.replace(/\s+/g, ' ').trim()).join(' | ')}`)
+    }
     return {
       values,
       missingVariables,
