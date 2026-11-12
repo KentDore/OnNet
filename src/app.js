@@ -1089,7 +1089,8 @@ function renderMaquetteControls(computedOverride){
   if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
   }
-  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===refId);
+  const selectedId=(findScenario(refId)||scenarios[0])?.id;
+  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
   const mutuelleText=document.getElementById('mainSalaryMutuelleText');
   if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
   const summary=document.getElementById('maquetteYourSalary');
