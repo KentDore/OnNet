@@ -935,24 +935,42 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 
 #benchmarkMount .benchmark-panel{padding:0;border:0;background:transparent;box-shadow:none;margin:0}
 
+
+/* Alignement strict de l'en-tête sur la maquette V33 : marque au-dessus du hero. */
+.maquette-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;min-width:0}
+.maquette-top>.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32;line-height:1;display:flex;align-items:baseline;gap:0;white-space:nowrap}
+.maquette-top>.brand .brand-accent{color:#138653}
+.maquette-top>.brand .brand-version{font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0;color:#68736c;background:#edf0ed;border-radius:20px;padding:4px 8px;margin-left:8px;vertical-align:middle}
+.maquette-top .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap;width:auto;flex:none}
+header.hero .trust-icon{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#e0f1e5;color:#176b45}
+header.hero .trust-icon svg{width:19px;height:19px}
+@media(max-width:640px){
+ .maquette-top{margin-bottom:14px;gap:8px}
+ .maquette-top>.brand{font-size:27px}
+ .maquette-top .header-actions{display:flex;width:auto;gap:6px}
+ .maquette-top .header-actions .header-share-btn{min-height:40px;padding:8px 11px}
+ .maquette-top .header-menu-trigger{width:40px;height:40px}
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
-  <header class="hero">
-    <div class="header-top"><div class="brand-block"><div class="brand"><span class="brand-name">On<span class="brand-accent">net</span></span><span class="brand-version">v2.1.6</span></div></div>
-      <div class="header-actions">
-        <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
-        <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
-          <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
-        </details>
-      </div>
+  <div class="maquette-top">
+    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.1.6</span></div>
+    <div class="header-actions">
+      <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
+      <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
+        <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
+      </details>
     </div>
+  </div>
+  <header class="hero">
     <div class="hero-copy"><p class="eyebrow">Simulateur de salaire</p><h1>Le brut promet.<br>Le net décide.</h1>
       <p class="intro">Comprenez votre salaire et situez-le en quelques secondes.</p>
-      <div class="trust"><span class="trust-icon" aria-hidden="true">✓</span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
+      <div class="trust"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
     </div>
     <svg class="wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true"><path d="M0 55 C170 5 270 125 470 75 S770 5 1000 45 L1000 130 L0 130Z" fill="#d8f3df"/><path d="M0 88 C190 35 320 145 520 98 S820 38 1000 78 L1000 130 L0 130Z" fill="#aee9c3"/><path d="M0 111 C210 75 350 150 560 116 S830 82 1000 104 L1000 130 L0 130Z" fill="#75d99c" opacity=".65"/></svg>
   </header>
@@ -1508,7 +1526,7 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
  * Évalue une règle Publicodes sans calcul salarial local.
  * Une date ISO éventuelle est convertie au format attendu par le modèle.
  */
-async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
+export async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
   if (typeof expression !== 'string' || !expression.trim() || expression.length > 200) {
     throw new TypeError('Une règle Urssaf valide est requise.')
   }
@@ -1548,7 +1566,7 @@ async function evaluateUrssafExpression(expression, situation = {}, options = {}
  * pas être reconstruit à partir de l'écart entre deux montants nets.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
-async function calculateWithUrssafApi(input = {}, options = {}) {
+export async function calculateWithUrssafApi(input = {}, options = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new TypeError('Un scénario de calcul est requis.')
   }
@@ -1722,7 +1740,7 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
   return Object.freeze(result)
 }
 
-const urssafApiExpressions = EXPRESSIONS
+export const urssafApiExpressions = EXPRESSIONS
 
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 
