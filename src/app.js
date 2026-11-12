@@ -1065,7 +1065,7 @@ function renderBenchmarks(computed){
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
-function renderMaquetteControls(){
+function renderMaquetteControls(computedOverride){
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
   if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
@@ -1089,7 +1089,7 @@ function renderMaquetteControls(){
   if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
   }
-  const computed=getCurrentComputed().find(x=>x.s.id===refId);
+  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===refId);
   const mutuelleText=document.getElementById('mainSalaryMutuelleText');
   if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
   const summary=document.getElementById('maquetteYourSalary');
@@ -1148,7 +1148,7 @@ function render(){
   }
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
-  renderMaquetteControls();
+  renderMaquetteControls(computed);
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
@@ -1183,7 +1183,7 @@ function render(){
   suppressAutosave = false;
   justAddedId = null;
   updateUrssafStatus(computed);
-  renderMaquetteControls();
+  renderMaquetteControls(computed);
   scheduleUrssafCalculations(false,false);
 }
 
@@ -2454,6 +2454,7 @@ function syncDeclaredSalaryFromForm(){
   return true;
 }
 ['mainSalaryGross','mainSalaryPeriod','mainSalaryHours'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('input',syncDeclaredSalaryFromForm);
   document.getElementById(id)?.addEventListener('change',syncDeclaredSalaryFromForm);
 });
 document.getElementById('updateDeclaredSalary')?.addEventListener('click',()=>{
