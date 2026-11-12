@@ -194,12 +194,17 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /API officielle Mon-entreprise de l’Urssaf/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Aucune donnée de salaire n’est transmise avant votre accord/);
+    assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
+      'le choix de consentement ne doit plus être mémorisé par une case à cocher');
+    assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
+    await page.locator('.urssaf-data-details summary').click();
     const notice = await page.locator('.urssaf-data-notice').innerText();
     assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
-    assert.match(notice, /transmis à l’API officielle de l’Urssaf/);
+    assert.match(notice, /transmet à l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
+    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Accepter et calculer');
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
@@ -218,6 +223,54 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     for (const key of ['absenceType', 'absenceDuree', 'maintienPct', 'carenceCouverte']) {
       assert.equal(Object.hasOwn(legacy, key), false, `l’ancienne propriété ${key} doit être neutralisée`);
     }
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('le haut de page garde le partage visible et regroupe les actions secondaires', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    assert.equal(await page.locator('#shareBtn').isVisible(), true);
+    assert.equal(await page.locator('#headerMenu').count(), 1);
+    assert.equal(await page.locator('#resetBtn').isVisible(), false);
+    assert.equal(await page.locator('#printBtn').isVisible(), false);
+    await page.locator('#headerMenu summary').click();
+    assert.equal(await page.locator('#resetBtn').isVisible(), true);
+    assert.equal(await page.locator('#printBtn').isVisible(), true);
+    await page.locator('h1').click();
+    assert.equal(await page.locator('#headerMenu').evaluate(el => el.open), false);
+    const header = await page.locator('.header-top').boundingBox();
+    const brand = await page.locator('.brand-block').boundingBox();
+    const actions = await page.locator('.header-actions').boundingBox();
+    assert.ok(header && brand && actions);
+    assert.ok(actions.y < brand.y + brand.height + 2,
+      'les actions doivent rester alignées dans la même rangée que le logo sur mobile');
+  } finally {
+    await context.close();
+  }
+});
+
+test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30 € / 30 €', async () => {
+  const { context, page } = await openApp({ emptyStorage: true });
+  try {
+    assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
+    assert.match(await page.locator('.onboarding-mutuelle-note').innerText(), /Mutuelle.*30 € déduits \/ mois/);
+    assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
+    assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
+    await page.locator('#modalOnboardingInput').fill('2500');
+    await page.locator('#modalOnboardingSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.length === 1 && state.scenarios[0].mutuelle === 30 &&
+        state.scenarios[0].mutuellePat === 30;
+    });
+    await page.locator('#addScenario').click();
+    assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
+    assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
+    assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
   } finally {
     await context.close();
   }
