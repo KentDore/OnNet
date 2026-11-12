@@ -2441,14 +2441,23 @@ maquettePeriodButtons.forEach(button=>button.addEventListener('click',()=>{
     if(strong) strong.innerHTML=(period==='hour'?fmtHoraire(value):fmt(value))+' <small>/ '+unit+'</small>';
   }
 }));
-document.getElementById('updateDeclaredSalary')?.addEventListener('click',()=>{
+function syncDeclaredSalaryFromForm(){
   const scenario=findScenario(refId)||scenarios[0];
-  const raw=Number(document.getElementById('mainSalaryGross')?.value);
+  const grossInput=document.getElementById('mainSalaryGross');
+  const raw=Number(grossInput?.value);
   const period=document.getElementById('mainSalaryPeriod')?.value;
   const hours=document.getElementById('mainSalaryHours')?.value;
-  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){document.getElementById('mainSalaryGross')?.focus();return;}
+  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){grossInput?.focus();return false;}
   scenario.brut=period==='year'?Math.round(raw/12*100)/100:raw;
   scenario.dureeType=hours==='39'?'39':'35';
+  saveState();
+  return true;
+}
+['mainSalaryGross','mainSalaryPeriod','mainSalaryHours'].forEach(id=>{
+  document.getElementById(id)?.addEventListener('change',syncDeclaredSalaryFromForm);
+});
+document.getElementById('updateDeclaredSalary')?.addEventListener('click',()=>{
+  if(!syncDeclaredSalaryFromForm()) return;
   render();
 });
 document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
