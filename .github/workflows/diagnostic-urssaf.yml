@@ -4,7 +4,7 @@ name: Diagnostic API Urssaf (validation production)
 on:
   workflow_dispatch:
   push:
-    branches: [migration/publicodes-urssaf-final]
+    branches: [migration/publicodes-urssaf-final, fix/clarify-mutuelle-deduction]
 
 concurrency:
   group: onnet-urssaf-production-diagnostic
