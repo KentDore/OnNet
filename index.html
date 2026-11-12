@@ -952,6 +952,18 @@ header.hero .trust-icon svg{width:19px;height:19px}
  .maquette-top .header-menu-trigger{width:40px;height:40px}
 }
 
+/* Parcours V33 : les outils historiques restent accessibles, mais secondaires. */
+.advanced-workspace{margin:18px 0 16px;padding:0 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);}
+.advanced-workspace>summary{padding:15px 2px;color:var(--ink-soft);font-size:13px;font-weight:700;cursor:pointer;list-style:none;}
+.advanced-workspace>summary::-webkit-details-marker{display:none;}
+.advanced-workspace>summary::after{content:"＋";float:right;color:var(--accent);font-size:16px;}
+.advanced-workspace[open]>summary::after{content:"−";}
+.advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
+.advanced-workspace>.cards-bar{margin-bottom:10px;}
+.advanced-workspace>.cards-scroll{margin-bottom:14px;}
+.advanced-workspace>.situation-section,.advanced-workspace>.modules-section{margin-bottom:16px;}
+@media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1052,6 +1064,9 @@ header.hero .trust-icon svg{width:19px;height:19px}
     </details>
   </div>
 
+  <details class="advanced-workspace reveal" id="advancedWorkspace">
+    <summary>Paramètres avancés et outils</summary>
+    <p class="advanced-workspace-intro">Les fiches détaillées, réglages fiscaux et outils complémentaires restent disponibles ici, sans alourdir le parcours principal.</p>
   <div class="cards-bar reveal">
     <div class="cards-bar-toggles">
       <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
@@ -1198,6 +1213,8 @@ header.hero .trust-icon svg{width:19px;height:19px}
 
     </div>
   </section>
+
+  </details>
 
   <div class="disclaimer reveal">
     <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
