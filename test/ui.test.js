@@ -204,7 +204,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.match(notice, /transmet à l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
-    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Accepter et calculer');
+    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
