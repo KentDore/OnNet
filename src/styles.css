@@ -802,3 +802,17 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .urssaf-status-message{font-size:.72rem;}
   .urssaf-status #urssafCalculateBtn{width:100%;min-height:42px;font-size:.78rem;}
 }
+
+
+/* Ajustements de cohérence visuelle du menu et du parcours mobile. */
+.header-menu-trigger{
+  background:var(--bg);
+  color:var(--accent);
+  border-color:var(--line);
+}
+.header-menu[open] .header-menu-trigger,
+.header-menu-trigger:hover{
+  background:var(--accent-soft);
+  border-color:var(--accent);
+  color:var(--accent);
+}
