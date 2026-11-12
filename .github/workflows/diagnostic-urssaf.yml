@@ -11,6 +11,27 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
+  probe-meal-ticket-units:
+    if: contains(github.event.head_commit.message, '[probe-meal-ticket-units]')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+      - name: Installer Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Tester les unités des titres-restaurant sur l'API réelle
+        run: node scripts/probe-meal-ticket-units.mjs
+      - name: Archiver les sondes
+        if: always() && hashFiles('urssaf-meal-ticket-unit-probes.json') != ''
+        uses: actions/upload-artifact@v4
+        with:
+          name: urssaf-meal-ticket-unit-probes-${{ github.run_id }}
+          path: urssaf-meal-ticket-unit-probes.json
+          retention-days: 30
+
   compare:
     if: contains(github.event.head_commit.message, '[run-urssaf-matrix]')
     runs-on: ubuntu-24.04
