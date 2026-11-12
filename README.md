@@ -18,6 +18,10 @@ Avant le premier calcul salarial, l’interface présente les paramètres envoy�
 
 Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Le modèle fiscal Mon-entreprise comporte des règles simplifiées ou expérimentales ; les avertissements et valeurs par défaut doivent être examinés.
 
+## Référence salariale
+
+Le comparatif utilise la médiane nationale des salaires nets du secteur privé en EQTP pour 2025 : 2 238 € par mois, avant impôt sur le revenu. Ces données ont été publiées par l’INSEE le 22 octobre 2026 ([Insee Première n° 2132](https://www.insee.fr/fr/statistiques/9087193)). Le champ statistique inclut les alternants, stagiaires et bénéficiaires de contrats aidés ; il exclut l’agriculture et les particuliers employeurs. Il ne correspond donc pas exactement au périmètre de simulation d’OnNet (CDI non-cadre à temps plein). Cette référence statistique est distincte du calcul individuel réalisé par l’API Mon-entreprise / Urssaf.
+
 ## Fonctionnalités et périmètre
 
 - Comparaison de plusieurs scénarios de salaire, graphiques, réorganisation des cartes et simulation d’augmentation.
