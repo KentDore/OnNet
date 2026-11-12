@@ -1,0 +1,1000 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#f5f3ee">
+<title>OnNet — Comparaison des salaires · Maquette UX</title>
+<style>
+:root{
+  color-scheme:light;
+  --bg:#f5f3ee;--surface:#fff;--ink:#17241f;--muted:#68716b;
+  --green:#1f6d4c;--green-dark:#075334;--green-light:#e4efe8;
+  --green-bright:#39a96b;--line:#e4e1d6;--gold:#d9bc85;--orange:#c17a4e;
+  --shadow:0 8px 26px rgba(24,54,37,.08);
+}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(180deg,#fafbf9 0%,var(--bg) 100%);color:var(--ink);font:15px/1.45 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+button{font:inherit;cursor:pointer}
+button:focus-visible,summary:focus-visible{outline:3px solid #70b98a;outline-offset:3px}
+.page{width:min(100% - 32px,1000px);margin:auto;padding:22px 0 52px}
+.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:22px}
+.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32}
+.brand span{color:#138653}
+.version{font:600 11px Inter,sans-serif;letter-spacing:0;color:#68736c;background:#edf0ed;border-radius:20px;padding:4px 8px;margin-left:8px;vertical-align:middle}
+.hero{position:relative;isolation:isolate;overflow:hidden;min-height:0;padding:17px 24px 43px;border:1px solid rgba(255,255,255,.95);border-radius:26px;background:linear-gradient(145deg,#fff 0%,#f7fbf8 72%,#effaf3 100%);box-shadow:var(--shadow);margin-bottom:20px}
+.hero-copy{position:relative;z-index:2;max-width:580px}
+.eyebrow{margin:0 0 5px;color:var(--green);font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+h1{margin:0 0 7px;color:#073e2b;font:700 clamp(26px,3.7vw,36px)/1.04 Georgia,serif;letter-spacing:-1.2px}
+.intro{margin:0;color:var(--muted);max-width:48ch;font-size:13px;line-height:1.35}
+.trust{display:inline-flex;align-items:center;gap:10px;margin-top:13px;padding:8px 13px;border:1px solid #dcebe0;border-radius:12px;background:rgba(239,248,241,.92);color:#315441;font-size:11px;line-height:1.25}
+.trust-icon{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#e0f1e5;color:#176b45}
+.trust strong{display:block;color:#176b45;font-size:12px;font-weight:750}
+.wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54px;z-index:1;pointer-events:none}
+.panel{padding:clamp(18px,3vw,26px);background:rgba(255,255,255,.94);border:1px solid #fff;border-radius:23px;box-shadow:var(--shadow);margin-bottom:18px}
+.section-head{display:flex;align-items:flex-start;gap:12px;margin-bottom:18px}
+.section-icon{display:grid;place-items:center;flex:0 0 40px;height:40px;border-radius:13px;background:var(--green-light);color:var(--green)}
+h2{margin:0;color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
+.sub{margin:4px 0 0;color:var(--muted);font-size:13px}
+.your-card{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;column-gap:18px;row-gap:9px;padding:20px 22px;margin-bottom:12px;border:1px solid #d9eddf;border-radius:18px;background:linear-gradient(110deg,#e8f6eb,#f4faf5)}
+.you-label{display:flex;align-items:center;gap:12px;min-width:0;color:#214b34;font-size:16px;font-weight:750}
+.pill-you{padding:4px 8px;border-radius:99px;background:var(--green);color:white;font-size:10px;font-weight:800;letter-spacing:.04em;text-transform:uppercase}
+.your-amount{color:#075d3a;font-size:clamp(23px,3.5vw,30px);font-weight:800;letter-spacing:-1px;white-space:nowrap;flex:0 0 auto}
+.your-meta{grid-column:1/-1;min-width:0;margin:0;padding-top:9px;border-top:1px solid rgba(31,109,76,.12);color:#68776d;font-size:13px;line-height:1.45;overflow-wrap:anywhere}
+.reference-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.reference{min-width:0;padding:16px;border:1px solid #e8eee9;border-radius:17px;background:#fff}
+.reference-label{display:flex;align-items:center;gap:8px;margin-bottom:9px;color:#294b37;font-size:13px;font-weight:750}
+ .ref-dot{display:none;width:8px;height:8px;flex:0 0 8px;border-radius:50%;background:#79a98a}
+.reference-value{color:#173f2a;font-size:clamp(22px,3vw,28px);font-weight:800;letter-spacing:-.8px;line-height:1.1}
+.reference-unit{margin-top:4px;color:#77827a;font-size:11px}
+.gap-chip{display:inline-flex;align-items:center;gap:5px;margin-top:11px;padding:6px 9px;border-radius:10px;background:#e7f5eb;color:#116b43;font-size:12px;font-weight:800}
+.gap-chip.below{background:#fff0e9;color:#a34c31}
+.method{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.method summary{display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;cursor:pointer;color:var(--green);font-size:12px;font-weight:700}
+.method summary::-webkit-details-marker{display:none}
+.method summary:after{content:"＋";font-size:14px}
+.method[open] summary:after{content:"−"}
+.method p{margin:8px 0 0;color:var(--muted);font-size:11px;line-height:1.5}
+.scope{display:inline-flex;align-items:center;gap:6px;margin-top:12px;padding:6px 9px;border-radius:9px;background:#f3f6f3;color:#5e7064;font-size:11px}
+.scope:before{content:"";width:6px;height:6px;border-radius:50%;background:#79a98a}
+.distribution-head{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.segment{display:inline-flex;gap:3px;padding:4px;border-radius:999px;background:#eff2ef}
+.segment button{border:0;border-radius:999px;padding:8px 12px;background:transparent;color:#68736c;font-size:12px;font-weight:700}
+.segment button[aria-pressed="true"]{background:linear-gradient(135deg,#1f6d4c,#0a8755);color:white;box-shadow:0 2px 6px #145a3828}
+.chart-intro{margin:9px 0 17px;color:var(--muted);font-size:12px}
+.stack{display:flex;height:24px;overflow:hidden;border-radius:999px;background:#edf1ed;box-shadow:inset 0 1px 2px rgba(20,50,30,.08)}
+.stack-net{width:75.5%;background:linear-gradient(90deg,#1f6d4c,#0c8758)}
+.stack-deductions{flex:1;background:var(--gold)}
+.breakdown-values{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.breakdown-value{display:flex;align-items:flex-start;gap:8px;color:#5f6c63;font-size:12px}
+.breakdown-value strong{display:block;color:#173f2a;font-size:16px}
+.key{width:9px;height:9px;flex:0 0 9px;border-radius:3px;margin-top:5px}
+.key.net{background:var(--green)}.key.deduction{background:var(--gold)}
+.disclaimer{margin:15px 0 0;color:#829087;font-size:10px}
+.footer{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin:14px 4px 0;color:#829087;font-size:10px}
+@media(max-width:640px){
+ .page{width:min(100% - 22px,520px);padding:13px 0 30px}
+ .eyebrow{font-size:9px;letter-spacing:.11em}
+ h1{font-size:clamp(25px,7vw,31px);line-height:1.02}
+ .intro{font-size:12px;max-width:42ch}
+ .trust{margin-top:9px;font-size:11px}
+ .wave{height:37px}
+ .top{margin-bottom:14px}.brand{font-size:27px}
+ .hero{min-height:0;padding:18px 19px 56px;border-radius:21px;margin-bottom:14px}
+ .panel{padding:16px 13px;border-radius:20px;margin-bottom:13px}
+ .section-head{gap:10px;margin-bottom:14px}.section-icon{flex-basis:36px;height:36px;border-radius:12px}
+ h1{font-size:clamp(27px,7vw,34px);line-height:1.06;margin-bottom:8px}.intro{font-size:13px;line-height:1.4}.trust{margin-top:11px;padding:7px 10px}.trust-icon{width:28px;height:28px;flex-basis:28px}h2{font-size:21px}.sub{font-size:12px}
+ .your-card{padding:13px;border-radius:15px;gap:7px}
+ .you-label{font-size:13px}.your-amount{font-size:24px}
+ .your-meta{font-size:11px}
+ /* Keep the two-column comparison on mobile, with compact but readable cards. */
+ .reference-list{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ .reference{padding:12px 10px;border-radius:15px}
+ .reference-value{font-size:clamp(19px,5.2vw,24px)}
+ .reference-label{font-size:11px;line-height:1.3;min-height:29px;margin-bottom:7px;gap:6px}
+ .reference-unit{font-size:10px;line-height:1.35;min-height:27px}
+ .gap-chip{margin-top:8px;padding:5px 7px;font-size:10px}
+ .method summary{font-size:10px}
+ .scope{font-size:10px}
+ .breakdown-values{gap:8px}
+ .breakdown-value{font-size:11px}
+ .breakdown-value strong{font-size:15px}
+ .segment button{padding:8px 10px}
+}
+@media(max-width:380px){.hero{padding-left:15px;padding-right:15px}h1{font-size:27px}.trust{font-size:10px}.trust strong{font-size:11px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* Sélecteurs séparés : territoire statistique et scénario salarial. */
+.geo-control{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin:0 0 13px;padding:11px 12px;border:1px solid #e4eee6;border-radius:14px;background:#fbfdfb}
+.control-caption{display:block;color:#355642;font-size:12px;font-weight:800}
+.geo-segment{margin-left:auto}
+.control-note{flex:1 0 100%;margin:0;color:#7a877e;font-size:10px}
+.geo-segment button:disabled{opacity:.42;cursor:not-allowed}
+.salary-switcher{margin-bottom:13px;padding:13px;border:1px solid #e5eee7;border-radius:16px;background:#fbfdfb}
+.switcher-top{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px}
+.switcher-help{margin:3px 0 0;color:#7b857e;font-size:11px}
+.add-salary{border:1px solid #cfe5d5;border-radius:999px;padding:8px 12px;background:#eaf6ed;color:#146541;font-size:11px;font-weight:800;white-space:nowrap}
+.salary-tabs{display:flex;gap:8px;overflow-x:auto;padding:1px 1px 3px}
+.salary-tab{display:flex;flex-direction:column;align-items:flex-start;gap:2px;min-width:104px;padding:9px 12px;border:1px solid #dfe9e1;border-radius:12px;background:white;color:#31513d;text-align:left}
+.salary-tab span{font-size:12px;font-weight:800}
+.salary-tab small{font-size:10px;color:#7a877e}
+.salary-tab.active{border-color:#1f6d4c;background:#e8f5eb;box-shadow:inset 0 0 0 1px #1f6d4c}
+.salary-tab.active span{color:#075334}
+.add-salary-form{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin-top:12px;padding-top:12px;border-top:1px solid #e4eae5}
+.add-salary-form label{color:#4c6655;font-size:11px;font-weight:700}
+.add-salary-form input{width:100%;min-width:0;padding:9px 10px;border:1px solid #d9e3da;border-radius:10px;background:white;color:#173f2a;font:inherit;font-size:13px}
+.form-actions{grid-column:1/-1;display:flex;justify-content:flex-end;gap:8px;margin-top:4px}
+.form-actions button{padding:8px 12px;border-radius:10px;font-size:11px;font-weight:750}
+.secondary-btn{border:1px solid #dce5dd;background:white;color:#52675a}
+.primary-btn{border:1px solid #1f6d4c;background:#1f6d4c;color:white}
+@media(max-width:640px){
+ .geo-control{gap:7px;padding:10px}
+ .geo-segment{margin-left:0;width:100%}
+ .geo-segment button{flex:1;padding:8px 6px;font-size:10px}
+ .control-note{font-size:9px}
+ .salary-switcher{padding:11px}
+ .salary-tab{min-width:0;flex:1}
+ .add-salary-form{grid-template-columns:1fr}
+ .form-actions{grid-column:1}
+}
+
+
+.benefit-note{grid-column:1/-1;display:flex;flex-direction:column;gap:3px;padding:9px 10px;border-radius:11px;background:#edf7ef;border:1px solid #d9ecdd;color:#24543a;font-size:11px}
+.benefit-note strong{font-size:12px}
+.benefit-note span{color:#64766a;line-height:1.4}
+.meal-toggle{grid-column:1/-1;display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid #e2eae3;border-radius:10px;background:#fff;color:#31513d;font-size:12px;font-weight:700}
+.meal-toggle input{accent-color:#1f6d4c;width:16px;height:16px}
+.add-salary-form select{width:100%;min-width:0;padding:9px 10px;border:1px solid #d9e3da;border-radius:10px;background:white;color:#173f2a;font:inherit;font-size:13px}
+.salary-tab .gross{font-size:10px;color:#64766a}
+
+
+.compare-heading-copy{min-width:0;flex:1 1 250px}
+.geo-inline{display:flex;align-items:center;gap:7px;flex:0 0 auto;padding:6px 8px;border:1px solid #dfeae1;border-radius:12px;background:#f8fbf8}
+.geo-inline span{color:#637368;font-size:10px;font-weight:750}
+.geo-inline select{max-width:118px;border:0;outline:0;background:transparent;color:#145b3b;font:700 11px Inter,sans-serif}
+@media(max-width:640px){
+ .your-card{grid-template-columns:minmax(0,1fr) auto;column-gap:10px;row-gap:9px;padding:16px}
+ .your-label{grid-column:1;grid-row:1;min-width:0;flex-wrap:nowrap;font-size:14px}
+ .your-amount{grid-column:2;grid-row:1;font-size:clamp(21px,6vw,27px);letter-spacing:-.6px}
+ .your-meta{grid-column:1/-1;grid-row:2;margin:0;padding-top:9px;font-size:12px;white-space:normal;overflow-wrap:anywhere}
+ .compare-heading-copy{flex:1 1 100%}
+ .section-head{align-items:center;flex-wrap:wrap}
+ .geo-inline{margin-left:48px;margin-top:-5px}
+}
+
+
+.compare-controls{display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.compare-period button{padding:7px 10px;font-size:10px}
+@media(max-width:640px){
+ .compare-controls{width:100%;margin-left:46px;justify-content:flex-start;gap:7px}
+ .geo-inline{margin:0;padding:5px 7px}
+ .compare-period{margin-left:auto}
+ .compare-period button{padding:7px 9px;font-size:10px}
+}
+
+
+.median-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-height:34px}
+.median-card-head .reference-label{flex:1 1 auto;min-width:0}
+.median-card-head .geo-inline{flex:0 0 auto;margin-top:-4px;padding:4px 6px}
+.median-card-head .geo-inline span{font-size:9px}
+.median-card-head .geo-inline select{max-width:78px;font-size:10px}@media(max-width:640px){
+ .section-head{align-items:center;flex-wrap:nowrap} .median-card-head{display:block;min-height:0}
+ .median-card-head .geo-inline{display:inline-flex;margin:0 0 8px 15px}
+ .median-card-head .reference-label{min-height:0}
+ .median-card-head .geo-inline select{max-width:86px}
+}
+
+
+.declaration-period-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px;padding:9px 10px;border-radius:12px;background:#f1f6f2}
+.declaration-period-row .control-caption{font-size:11px}
+.declaration-period-row .compare-period{margin-left:auto}
+@media(max-width:640px){
+ .declaration-period-row{padding:8px;gap:6px}
+ .declaration-period-row .control-caption{font-size:10px}
+ .declaration-period-row .compare-period button{padding:7px 8px;font-size:9px}
+}
+
+
+@media(max-width:640px){
+ .section-head{align-items:center;flex-wrap:wrap}
+ .section-head .compare-heading-copy{flex:1 1 100%}
+ .section-head .compare-period{margin-left:46px;align-self:flex-start}
+}
+
+
+.offers-compare{margin:0 0 14px;padding:13px;border:1px solid #e5eee7;border-radius:16px;background:#fbfdfb}
+.offers-compare-head{margin-bottom:10px}
+.offers-compare-head h3{margin:0;color:#16472f;font:700 16px Georgia,serif}
+.offers-compare-head p{margin:3px 0 0;color:#7b857e;font-size:10px;line-height:1.4}
+.offers-compare-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.offer-compare-card{min-width:0;padding:11px;border:1px solid #e1eae2;border-radius:13px;background:#fff}
+.offer-compare-card.active{border-color:#8ab99a;background:#f1f8f2}
+.offer-compare-name{display:flex;align-items:center;justify-content:space-between;gap:4px;color:#31513d;font-size:11px;font-weight:800}
+.offer-compare-name span{color:#7c897f;font-size:9px;font-weight:600}
+.offer-compare-amount{display:block;margin-top:8px;color:#075d3a;font-size:clamp(19px,3vw,24px);font-weight:850;letter-spacing:-.7px;line-height:1.1;overflow-wrap:anywhere}
+.offer-compare-period{margin-top:2px;color:#65746a;font-size:10px}
+.offer-compare-details{margin-top:8px;padding-top:7px;border-top:1px solid #e4ebe5;color:#365641;font-size:10px;font-weight:700}
+.offer-compare-benefits{margin-top:4px;color:#78847b;font-size:9px;line-height:1.4;overflow-wrap:anywhere}
+.offers-difference{margin:10px 0 0;padding:8px 10px;border-radius:10px;background:#eaf5ec;color:#176440;font-size:11px;font-weight:750}
+@media(max-width:640px){
+ .offers-compare{padding:10px}
+ .offers-compare-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:7px}
+ .offer-compare-card{padding:9px}
+ .offer-compare-name{font-size:10px;display:block}
+ .offer-compare-name span{display:block;margin-top:2px}
+ .offer-compare-amount{font-size:clamp(17px,4.8vw,22px)}
+ .offers-difference{font-size:10px}
+}
+
+
+.offer-net-label{margin-top:10px;color:#637368;font-size:10px;font-weight:700;line-height:1.35}
+.offer-net-value{display:block;margin-top:3px;color:#075d3a;font-size:clamp(21px,3.8vw,27px);font-weight:850;letter-spacing:-.7px;line-height:1.15}
+.offer-hourly{margin-top:7px;padding:7px 8px;border-radius:9px;background:#eaf5ec;color:#146541;font-size:12px;font-weight:800}
+.offer-compare-details{margin-top:9px;padding-top:7px;border-top:1px solid #e4ebe5;color:#365641;font-size:10px;font-weight:700}
+.offer-compare-benefits{margin-top:4px;color:#78847b;font-size:9px;line-height:1.4;overflow-wrap:anywhere}
+
+
+.meal-inputs{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.meal-inputs>div{min-width:0}
+.meal-inputs p{grid-column:1/-1;margin:0;color:#748178;font-size:10px;line-height:1.4}
+.meal-benefit-highlight{display:block;margin-top:13px;padding:14px 13px;border:1px solid #cfe8d5;border-radius:13px;background:linear-gradient(120deg,#e9f7ed,#f5fbf6)}
+.meal-benefit-head{display:flex;justify-content:space-between;align-items:center;gap:8px;color:#24543a;font-size:13px}
+.meal-status{padding:4px 7px;border-radius:99px;background:#d6efdd;color:#176440;font-size:9px;font-weight:850;letter-spacing:.04em;white-space:nowrap}
+.meal-employer-value{margin-top:9px;color:#087044;font-size:19px;font-weight:850;letter-spacing:-.3px}
+.meal-split{margin-top:4px;color:#65766b;font-size:11px;line-height:1.45}
+.meal-benefit-highlight.no-meal{padding:12px;border:1px dashed #dce6de;background:#fafcf9;color:#89938b;font-size:11px}
+@media(max-width:640px){.meal-benefit-highlight{padding:12px}.meal-employer-value{font-size:17px}}
+@media(max-width:640px){.meal-inputs{grid-template-columns:1fr}.meal-inputs p{grid-column:1}}
+
+
+.meal-inputs{display:block;grid-column:1/-1;padding:0;margin-top:2px}
+.meal-inputs label{display:block;margin-bottom:5px;font-size:11px}
+.meal-inputs input{width:100%}
+.meal-inputs p{display:none}
+
+
+.salary-switcher-compact{padding:13px 14px;border:1px solid #e2ece4;border-radius:16px;background:#f8fbf8;margin-bottom:12px}
+.salary-switcher-compact .switcher-top{align-items:center;margin-bottom:10px}
+.salary-switcher-compact .switcher-help{font-size:11px;margin-top:3px}
+.salary-switcher-compact .salary-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.salary-switcher-compact .salary-tab{min-width:0;padding:10px 12px;text-align:left;border-radius:12px;display:flex;flex-direction:column;align-items:flex-start;gap:3px}
+.salary-switcher-compact .salary-tab>span{font-size:13px;font-weight:800}
+.salary-switcher-compact .salary-tab small{font-size:10px}
+.salary-switcher-compact .salary-tab .gross{font-size:10px}
+.salary-switcher-compact .add-salary{white-space:nowrap;padding:9px 12px;font-size:11px}
+.meal-benefit-highlight{min-height:96px;display:flex;flex-direction:column;justify-content:center}
+@media(max-width:640px){
+ .salary-switcher-compact{padding:11px;margin-bottom:10px}
+ .salary-switcher-compact .switcher-top{gap:8px}
+ .salary-switcher-compact .salary-tabs{grid-template-columns:repeat(2,minmax(0,1fr))}
+ .salary-switcher-compact .salary-tab{padding:10px}
+ .salary-switcher-compact .salary-tab .gross{overflow-wrap:anywhere}
+}
+
+
+.salary-switcher-compact{padding:12px 14px;border:1px solid #e3ece5;border-radius:14px;background:#fbfdfb;margin-bottom:12px}
+.studied-select-label{display:block;margin-bottom:6px;color:#355642;font-size:12px;font-weight:800}
+.studied-select-row{display:flex;align-items:center;gap:8px}
+.studied-select-row select{flex:1;min-width:0;padding:11px 12px;border:1px solid #dce7de;border-radius:11px;background:white;color:#214b34;font:600 12px Inter,sans-serif}
+.salary-switcher-compact .add-salary{padding:10px 13px}
+.meal-benefit-highlight{display:block;margin-top:13px;padding:15px;border:1px solid #bfe1c9;border-radius:13px;background:linear-gradient(130deg,#e7f6eb,#f5fbf6)}
+.meal-benefit-head{display:flex;align-items:center;justify-content:space-between;gap:8px;color:#24543a;font-size:13px}
+.meal-status{padding:4px 8px;border-radius:99px;background:#d3efdc;color:#176440;font-size:9px;font-weight:850;white-space:nowrap}
+.meal-total-prominent{margin-top:10px;color:#075d3a;font-size:21px;font-weight:850;letter-spacing:-.4px}
+.meal-breakdown{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:7px;padding-top:8px;border-top:1px solid #d2e8d7;color:#617469;font-size:11px}
+.meal-breakdown strong{color:#087044;font-size:12px}
+.meal-benefit-highlight p{margin:8px 0 0;color:#68796e;font-size:10px;line-height:1.4}
+.meal-no-offer-title{color:#64756a;font-size:12px;font-weight:800}
+.meal-no-offer-text{margin-top:5px;color:#8a958d;font-size:11px}
+@media(max-width:640px){.studied-select-row select{font-size:11px}.meal-total-prominent{font-size:19px}}
+
+
+/* Carte « offre étudiée » : grille stable, sans colonne latérale étroite */
+.your-card{
+  display:grid !important;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  column-gap:16px;
+  row-gap:10px;
+  min-width:0;
+  padding:18px 20px;
+}
+.you-label{grid-column:1;grid-row:1;min-width:0;display:flex;align-items:center;gap:11px;flex-wrap:wrap}
+.your-amount{grid-column:2;grid-row:1;display:flex;align-items:baseline;gap:5px;white-space:nowrap;font-size:clamp(23px,4vw,31px)}
+.your-amount small{font-size:13px;font-weight:700}
+.your-meta{grid-column:1/-1;grid-row:2;width:100%;min-width:0;margin:0;padding-top:10px;border-top:1px solid rgba(31,109,76,.14);font-size:12px;line-height:1.45;overflow-wrap:anywhere}
+.meal-form-hint{margin:7px 0 0;padding:9px 11px;border-radius:9px;background:#edf7ef;color:#246044;font-size:11px;line-height:1.4}
+@media(max-width:640px){
+ .your-card{grid-template-columns:minmax(0,1fr) auto;padding:15px 14px;column-gap:8px}
+ .you-label{gap:7px;font-size:13px}
+ .pill-you{font-size:9px;padding:5px 8px}
+ .your-amount{font-size:clamp(20px,5.7vw,26px)}
+ .your-amount small{font-size:11px}
+ .your-meta{font-size:11px}
+}
+
+
+/* Choix de l'offre : boutons segmentés, sans menu déroulant tronqué */
+.salary-switcher-compact{padding:12px 14px}
+.switcher-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:9px}
+.studied-select-label{margin:0;color:#355642;font-size:12px;font-weight:800}
+.salary-switcher-compact .add-salary{padding:8px 11px;border-radius:999px;font-size:11px;white-space:nowrap}
+.offer-tabs{display:flex;gap:6px;overflow-x:auto;padding:3px;border-radius:12px;background:#eef3ef}
+.offer-tab{flex:1 0 0;min-width:0;padding:9px 10px;border:1px solid transparent;border-radius:9px;background:transparent;color:#52665a;text-align:center;font-size:12px;font-weight:750}
+.offer-tab small{display:block;margin-top:2px;color:#829087;font-size:9px;font-weight:550}
+.offer-tab.active{background:#fff;border-color:#d4e6d9;color:#12603d;box-shadow:0 2px 7px rgba(20,70,42,.08)}
+.offer-tab.active small{color:#4c8061}
+/* Saisie TR progressive : les champs apparaissent seulement si la case est cochée */
+.meal-fields{margin:8px 0 2px;padding:12px;border:1px solid #d9eadc;border-radius:12px;background:#f3faf4}
+.meal-field-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.meal-fields label{display:flex;flex-direction:column;gap:5px;color:#3e604a;font-size:10px;font-weight:750}
+.meal-fields input{width:100%;min-width:0;padding:9px 10px;border:1px solid #d7e3d9;border-radius:9px;background:white;color:#1b4430;font:600 13px Inter,sans-serif}
+.meal-days-label{margin-top:9px;max-width:180px}
+.meal-live-summary{margin-top:10px;padding:9px 10px;border-radius:9px;background:#e3f3e7;color:#176440;font-size:11px;font-weight:750;line-height:1.4}
+@media(max-width:640px){
+ .salary-switcher-compact{padding:11px}
+ .switcher-topline{gap:6px}
+ .offer-tab{padding:9px 6px;font-size:11px}
+ .meal-fields{padding:10px}
+}
+
+
+.meal-toggle{min-height:66px;display:flex;align-items:center;gap:13px;padding:12px 14px;border:1px solid #dce8df;border-radius:13px;background:#fff;cursor:pointer;transition:background .15s,border-color .15s}
+.meal-toggle input{flex:0 0 22px;width:22px;height:22px;margin:0;accent-color:#176b49;cursor:pointer}
+.meal-toggle-copy{display:flex;flex:1;flex-direction:column;gap:2px;color:#31513d}
+.meal-toggle-copy strong{font-size:13px}
+.meal-toggle-copy small{color:#7b8980;font-size:10px;font-weight:500}
+.meal-toggle-state{display:grid;place-items:center;width:27px;height:27px;border-radius:50%;background:#edf6ef;color:#176b49;font-size:18px;font-weight:600}
+.meal-fields{display:none}
+.meal-toggle:has(input:checked){border-color:#8bbf9c;background:#f0f8f1}
+.meal-toggle:has(input:checked) .meal-toggle-state{background:#176b49;color:white}
+
+
+/* V24 — hiérarchie plus compacte, mieux intégrée sur mobile */
+@media(max-width:640px){
+  .page{padding-top:9px}
+  .top{margin-bottom:9px}
+  .hero{
+    padding:14px 16px 30px;
+    border-radius:18px;
+    margin-bottom:10px;
+    box-shadow:0 3px 12px rgba(24,54,37,.045);
+  }
+  .hero-copy{max-width:100%}
+  .eyebrow{margin-bottom:4px;font-size:8px;letter-spacing:.12em}
+  h1{font-size:clamp(23px,6.2vw,28px);line-height:1.02;letter-spacing:-.8px;margin-bottom:5px}
+  .intro{font-size:11px;line-height:1.3;max-width:36ch}
+  .trust{margin-top:8px;padding:5px 8px;gap:7px;border-radius:10px;font-size:9px}
+  .trust-icon{width:23px;height:23px;flex-basis:23px;border-radius:7px}
+  .trust-icon svg{width:15px;height:15px}
+  .trust strong{font-size:10px}
+  .wave{height:23px}
+  .panel{padding:14px 12px;border-radius:17px}
+  .section-head{margin-bottom:11px}
+}
+
+/* Le formulaire reste réellement masqué tant qu'il n'est pas demandé.
+   La règle corrige le display:grid qui neutralisait l'attribut HTML hidden. */
+.add-salary-form[hidden],
+.meal-fields[hidden]{display:none !important}
+
+/* Le choix d'offre devient un contrôle intégré, pas une carte dans la carte. */
+.salary-switcher-compact{
+  margin:0 0 12px;
+  padding:0 0 11px;
+  border:0;
+  border-bottom:1px solid #e7ede8;
+  border-radius:0;
+  background:transparent;
+}
+.switcher-topline{margin-bottom:7px}
+.studied-select-label{font-size:11px;color:#607268}
+.salary-switcher-compact .add-salary{
+  padding:7px 10px;
+  border-radius:999px;
+  background:#edf6ef;
+  font-size:10px;
+}
+.offer-tabs{padding:3px;gap:4px;background:#f0f4f0;border-radius:11px}
+.offer-tab{padding:8px 7px;border-radius:8px;font-size:11px}
+.offer-tab small{font-size:9px}
+.offer-tab.active{border-color:#d5e7d9;box-shadow:0 1px 4px rgba(20,70,42,.07)}
+@media(max-width:640px){
+  .salary-switcher-compact{padding-bottom:9px;margin-bottom:10px}
+  .switcher-topline{margin-bottom:6px}
+  .offer-tab{padding:7px 5px}
+}
+
+/* Une seule zone TR, sobre et lisible après activation. */
+.meal-toggle{min-height:54px;padding:9px 11px;border-radius:11px}
+.meal-toggle-copy strong{font-size:12px}
+.meal-toggle-copy small{font-size:9px}
+.meal-toggle-state{width:24px;height:24px;font-size:16px}
+.meal-fields{margin-top:7px;padding:10px;border-radius:10px}
+.meal-field-grid{gap:8px}
+.meal-fields label{font-size:9px}
+.meal-fields input{padding:8px;font-size:12px}
+.meal-live-summary{margin-top:8px;padding:8px;font-size:10px}
+
+
+/* Comparaison : période clairement placée dans le bloc de comparaison */
+.comparison-period{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px;padding:10px 12px;border:1px solid #e0ebe2;border-radius:13px;background:#f7faf7}
+.comparison-period>span{color:#3f5d49;font-size:12px;font-weight:750}
+.comparison-period-tabs{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eaf1eb}
+.comparison-period-tabs button{min-width:54px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#64746a;font:700 11px Inter,sans-serif;cursor:pointer}
+.comparison-period-tabs button[aria-pressed="true"]{background:#176b49;color:white;box-shadow:0 1px 4px rgba(0,0,0,.08)}
+.salary-switcher-compact{padding:13px 14px;margin:0 0 13px;border:1px solid #dfeae1;border-radius:14px;background:#f8fbf8}
+.studied-select-label{font-size:13px;color:#31513d}
+.switcher-topline{margin-bottom:8px}
+.salary-switcher-compact .add-salary{padding:9px 12px;font-size:11px}
+.offer-help{margin:0 0 8px;color:#748178;font-size:11px;line-height:1.4}
+.offer-tabs{padding:4px;gap:5px}
+.offer-tab{padding:10px 8px;font-size:12px}
+.offer-tab small{font-size:10px}
+.add-salary-form{padding-top:12px}
+.add-salary-form>label:not(.meal-toggle){display:block;margin:11px 0 5px;color:#3f5d49;font-size:12px;font-weight:750}
+.add-salary-form input:not([type=checkbox]),.add-salary-form select{width:100%;min-height:43px;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:white;color:#234532;font:500 14px Inter,sans-serif}
+@media(max-width:640px){
+ .comparison-period{margin-bottom:12px;padding:9px 10px}
+ .comparison-period-tabs button{min-width:48px;padding:8px 7px}
+ .salary-switcher-compact{padding:12px;margin-bottom:11px}
+ .offer-help{font-size:10px}
+}
+
+
+.form-intro{margin:0 0 12px;padding:10px 12px;border-radius:10px;background:#edf6ef}
+.form-intro strong{display:block;color:#24543a;font-size:13px}
+.form-intro span{display:block;margin-top:3px;color:#6f7e73;font-size:11px;line-height:1.4}
+.add-salary-form{display:grid;grid-template-columns:1fr;gap:6px;padding-top:13px}
+.add-salary-form>label:not(.meal-toggle){margin:5px 0 0;font-size:12px}
+.add-salary-form input:not([type=checkbox]),.add-salary-form select{min-height:46px;font-size:14px}
+.benefit-note{margin-top:6px;padding:11px 12px}
+.meal-toggle{margin-top:4px}
+.form-actions{margin-top:9px}
+
+
+/* Déclaration personnelle : rétablie avant le comparateur */
+.declaration-panel{margin:0 0 14px;padding:17px 16px;border:1px solid #e3ece5;border-radius:18px;background:#fff}
+.declaration-heading{margin-bottom:13px}
+.declaration-heading h2{margin:0;color:#164b35;font-family:Georgia,serif;font-size:25px;line-height:1.1}
+.declaration-heading .sub{margin:5px 0 0;color:#78837c;font-size:13px}
+.declaration-fields{display:grid;grid-template-columns:1fr;gap:6px}
+.declaration-fields>label{margin-top:5px;color:#45614e;font-size:12px;font-weight:750}
+.declaration-fields input,.declaration-fields select{width:100%;min-height:46px;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,sans-serif}
+.declaration-mutuelle{margin-top:7px;padding:11px 12px}
+.declaration-update{margin-top:12px;min-height:44px;width:100%;border:0;border-radius:11px;background:#176b49;color:white;font-size:13px;font-weight:750}
+.comparison-period{margin:0 0 13px}
+.add-salary-form[hidden],.meal-fields[hidden]{display:none !important}
+@media(max-width:640px){
+ .declaration-panel{padding:15px 13px;margin-bottom:12px}
+ .declaration-heading h2{font-size:23px}
+ .comparison-period{padding:9px 10px}
+}
+
+
+/* V28 — un seul parcours et un seul conteneur pour déclaration + comparaison */
+.unified-salary-panel{padding:20px 18px}
+.unified-heading{margin-bottom:15px}
+.declaration-inline{padding:14px 15px;border:1px solid #e1ebe3;border-radius:15px;background:#f8fbf8}
+.declaration-inline-title{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:10px}
+.declaration-inline-title strong{color:#315640;font-size:14px;font-weight:800}
+.declaration-inline-title span{color:#7c887f;font-size:11px}
+.declaration-inline .declaration-fields{display:grid;grid-template-columns:1fr 1fr;gap:6px 12px}
+.declaration-inline .declaration-fields>label{margin-top:4px}
+.declaration-inline .declaration-fields>label:nth-of-type(1){grid-column:1}
+.declaration-inline .declaration-fields>#mainSalaryPeriod{grid-column:1}
+.declaration-inline .declaration-fields>label[for="mainSalaryGross"],
+.declaration-inline .declaration-fields>#mainSalaryGross{grid-column:2}
+.declaration-inline .declaration-fields>label[for="mainSalaryHours"],
+.declaration-inline .declaration-fields>#mainSalaryHours{grid-column:1}
+.declaration-inline .declaration-mutuelle{grid-column:2;grid-row:3 / span 2;align-self:end;margin-top:0;min-height:70px;display:flex;flex-direction:column;justify-content:center}
+.declaration-inline .declaration-update{width:auto;min-width:150px;display:block;margin:11px 0 0 auto;padding:0 18px}
+.comparison-subhead{margin:20px 0 10px;padding-top:16px;border-top:1px solid #e7ede8}
+.comparison-subhead h3{margin:0;color:#174a34;font:700 18px/1.2 Georgia,serif}
+.comparison-subhead p{margin:4px 0 0;color:#78837c;font-size:12px}
+.unified-salary-panel .comparison-period{margin-bottom:12px}
+.unified-salary-panel .salary-switcher{margin-top:0}
+@media(max-width:640px){
+ .unified-salary-panel{padding:15px 13px}
+ .declaration-inline{padding:12px 11px}
+ .declaration-inline-title{align-items:flex-start;flex-direction:column;gap:2px}
+ .declaration-inline .declaration-fields{grid-template-columns:1fr 1fr;gap:5px 9px}
+ .declaration-inline .declaration-fields>label,
+ .declaration-inline .declaration-fields>input,
+ .declaration-inline .declaration-fields>select{min-width:0}
+ .declaration-inline .declaration-fields>label[for="mainSalaryGross"],
+ .declaration-inline .declaration-fields>#mainSalaryGross{grid-column:2}
+ .declaration-inline .declaration-fields>label[for="mainSalaryHours"],
+ .declaration-inline .declaration-fields>#mainSalaryHours{grid-column:1}
+ .declaration-inline .declaration-mutuelle{grid-column:2;grid-row:3 / span 2;font-size:10px}
+ .declaration-inline .declaration-fields input,
+ .declaration-inline .declaration-fields select{min-height:42px;padding:8px;font-size:12px}
+ .declaration-inline .declaration-update{width:100%;margin-top:10px}
+ .comparison-subhead{margin-top:16px;padding-top:13px}
+}
+@media(max-width:390px){
+ .declaration-inline .declaration-fields{grid-template-columns:1fr}
+ .declaration-inline .declaration-fields>label,
+ .declaration-inline .declaration-fields>input,
+ .declaration-inline .declaration-fields>select,
+ .declaration-inline .declaration-mutuelle{grid-column:1!important;grid-row:auto!important}
+}
+
+
+/* V29 — saisie évidente, sans grille qui dissocie les libellés des champs */
+.declaration-inline{padding:15px 16px;border:1px solid #e1ebe3;border-radius:15px;background:#f8fbf8}
+.declaration-inline-title{display:block;margin-bottom:13px}
+.declaration-inline-title strong{display:block;font-size:14px}
+.declaration-inline-title span{display:block;margin-top:3px;font-size:11px}
+.declaration-inline .declaration-fields{
+  display:flex;
+  flex-direction:column;
+  gap:5px;
+}
+.declaration-inline .declaration-fields>label{
+  display:block;
+  margin:8px 0 0;
+  color:#405e4a;
+  font-size:12px;
+  font-weight:750;
+}
+.declaration-inline .declaration-fields>select,
+.declaration-inline .declaration-fields>input{
+  display:block;
+  width:100%;
+  min-height:46px;
+  margin:0;
+  padding:10px 12px;
+  border:1px solid #d9e4db;
+  border-radius:10px;
+  background:#fff;
+  color:#234532;
+  font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.declaration-inline .declaration-fields>label:first-child{margin-top:0}
+.declaration-inline .declaration-mutuelle{
+  display:flex;
+  flex-direction:row;
+  align-items:center;
+  gap:8px;
+  margin-top:9px;
+  padding:9px 11px;
+  border:1px solid #deebe0;
+  border-radius:10px;
+  background:#eff7f0;
+  font-size:11px;
+}
+.declaration-inline .declaration-mutuelle strong{white-space:nowrap;font-size:11px}
+.declaration-inline .declaration-mutuelle span{line-height:1.35}
+.declaration-inline .declaration-update{
+  width:100%;
+  min-height:46px;
+  margin:12px 0 0;
+  border:0;
+  border-radius:11px;
+  background:linear-gradient(135deg,#1f7653,#0e6847);
+  color:#fff;
+  font-size:13px;
+  font-weight:800;
+  box-shadow:0 3px 8px rgba(17,91,57,.12);
+}
+.comparison-subhead{margin:19px 0 11px;padding-top:16px;border-top:1px solid #e7ede8}
+.comparison-subhead h3{font-size:19px}
+.comparison-period{min-height:54px}
+.salary-switcher-compact{background:#fbfdfb}
+.offer-help{line-height:1.4}
+@media(max-width:640px){
+ .unified-salary-panel{padding:15px 13px}
+ .declaration-inline{padding:13px 12px}
+ .declaration-inline .declaration-fields>select,
+ .declaration-inline .declaration-fields>input{min-height:44px;font-size:14px}
+ .declaration-inline .declaration-update{min-height:45px}
+ .comparison-subhead{margin-top:16px;padding-top:14px}
+}
+
+
+/* V30 — déclaration et offres regroupées dans une seule carte */
+.declaration-inline{padding:15px 16px 13px;background:#f8fbf8;border:1px solid #e1ebe3;border-radius:16px}
+.integrated-offers{margin-top:15px;padding-top:13px;border-top:1px solid #dfe9e1}
+.integrated-offers-heading{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.integrated-offers-heading strong{display:block;color:#315640;font-size:13px;font-weight:800}
+.integrated-offers-heading span{display:block;margin-top:2px;color:#7c887f;font-size:10px}
+.integrated-offers .add-salary{flex:0 0 auto;padding:8px 11px;border:1px solid #cfe3d4;border-radius:999px;background:#eaf5ed;color:#176b49;font-size:11px;font-weight:800}
+.integrated-offers .offer-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin:0;padding:0;background:transparent}
+.integrated-offers .offer-tab{min-width:0;min-height:54px;padding:9px 10px;border:1px solid #dfe9e1;border-radius:11px;background:#fff;color:#45614e;font-size:12px;font-weight:800}
+.integrated-offers .offer-tab.active{border:1.5px solid #77b38e;background:#edf7ef;color:#176b49;box-shadow:0 1px 3px rgba(24,90,55,.06)}
+.integrated-offers .offer-tab small{display:block;margin-top:3px;color:#7b8a7f;font-size:10px;font-weight:600}
+.integrated-offers .add-salary-form{margin-top:12px;padding:13px;border:1px solid #dfe9e1;border-radius:12px;background:#fff}
+.integrated-offers .add-salary-form[hidden]{display:none!important}
+.integrated-offers .form-intro{margin-bottom:10px}
+.comparison-subhead{margin-top:20px}
+@media(max-width:640px){
+ .declaration-inline{padding:13px 12px 12px}
+ .integrated-offers{margin-top:13px;padding-top:12px}
+ .integrated-offers-heading{margin-bottom:8px}
+ .integrated-offers .offer-tab{min-height:51px}
+}
+
+
+/* V32 — les offres sont réellement dans la carte « Votre situation » */
+.declaration-inline{padding:15px 16px 14px}
+.integrated-offers{
+  margin:16px 0 0;
+  padding:14px 0 0;
+  border:0;
+  border-top:1px solid #dce9df;
+  border-radius:0;
+  background:transparent;
+}
+.integrated-offers-heading{margin-bottom:9px}
+.integrated-offers-heading strong{font-size:13px}
+.integrated-offers-heading span{font-size:10px}
+.integrated-offers .offer-tabs{background:#edf3ee;border-radius:12px;padding:4px}
+.integrated-offers .offer-tab{min-height:50px;border-color:transparent;background:transparent}
+.integrated-offers .offer-tab.active{background:#fff;border-color:#cfe3d4;box-shadow:0 1px 4px rgba(24,80,48,.08)}
+.comparison-subhead{margin-top:20px}
+@media(max-width:640px){
+ .declaration-inline{padding:13px 12px 12px}
+ .integrated-offers{margin-top:13px;padding-top:12px}
+}
+
+
+/* V33 — une seule carte continue pour la déclaration et les offres */
+.declaration-inline{
+  padding:17px 17px 15px;
+  border:1px solid #dce9df;
+  border-radius:17px;
+  background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%);
+}
+.declaration-inline .integrated-offers{
+  display:block;
+  margin:17px 0 0;
+  padding:14px 0 0;
+  border:0;
+  border-top:1px solid #d7e6da;
+  border-radius:0;
+  background:transparent;
+}
+.declaration-inline .integrated-offers-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.declaration-inline .integrated-offers-heading strong{display:block;color:#315640;font-size:14px;font-weight:800}
+.declaration-inline .integrated-offers-heading span{display:block;margin-top:3px;color:#7c887f;font-size:11px}
+.declaration-inline .integrated-offers .add-salary{flex:0 0 auto;padding:9px 13px;border:1px solid #cfe3d4;border-radius:999px;background:#eaf5ed;color:#176b49;font-size:12px;font-weight:800}
+.declaration-inline .integrated-offers .offer-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:4px;border-radius:12px;background:#eaf1eb}
+.declaration-inline .integrated-offers .offer-tab{min-width:0;min-height:52px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#45614e;font-size:13px;font-weight:800}
+.declaration-inline .integrated-offers .offer-tab.active{border-color:#cfe3d4;background:#fff;color:#176b49;box-shadow:0 1px 3px rgba(24,80,48,.07)}
+.declaration-inline .integrated-offers .offer-tab small{display:block;margin-top:3px;color:#7b8a7f;font-size:10px;font-weight:600}
+.declaration-inline .integrated-offers .add-salary-form{margin-top:12px;padding:13px;border:1px solid #dce9df;border-radius:12px;background:#fff}
+.declaration-inline .integrated-offers .add-salary-form[hidden]{display:none!important}
+@media(max-width:640px){.declaration-inline{padding:14px 12px 13px}.declaration-inline .integrated-offers{margin-top:14px;padding-top:12px}.declaration-inline .integrated-offers .offer-tab{min-height:49px}}
+
+</style>
+</head>
+<body>
+<main class="page">
+<header class="top"><div class="brand">On<span>net</span></div></header>
+
+<section class="hero" aria-labelledby="main-title">
+  <div class="hero-copy">
+    <p class="eyebrow">Simulateur de salaire</p>
+    <h1 id="main-title">Le brut promet.<br>Le net décide.</h1>
+    <p class="intro">Comprenez votre salaire et situez-le en quelques secondes.</p>
+    <div class="trust"><span class="trust-icon" aria-hidden="true"><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
+  </div>
+  <svg class="wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true">
+    <path d="M0 55 C170 5 270 125 470 75 S770 5 1000 45 L1000 130 L0 130Z" fill="#d8f3df"/>
+    <path d="M0 88 C190 35 320 145 520 98 S820 38 1000 78 L1000 130 L0 130Z" fill="#aee9c3"/>
+    <path d="M0 111 C210 75 350 150 560 116 S830 82 1000 104 L1000 130 L0 130Z" fill="#75d99c" opacity=".65"/>
+  </svg>
+</section>
+
+
+
+
+<section class="panel unified-salary-panel" aria-labelledby="compare-title">
+  <div class="section-head unified-heading">
+    <div class="compare-heading-copy">
+      <h2 id="compare-title">Votre salaire, en perspective</h2>
+      <p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p>
+    </div>
+  </div>
+
+  <div class="declaration-inline">
+    <div class="declaration-inline-title">
+      <strong>Votre situation</strong>
+      <span>Quelques informations pour calculer votre net</span>
+    </div>
+  <div class="declaration-fields">
+    <label for="mainSalaryPeriod">Période du salaire brut</label>
+    <select id="mainSalaryPeriod">
+      <option value="month" selected>Mensuel</option>
+      <option value="year">Annuel</option>
+    </select>
+    <label for="mainSalaryGross">Salaire brut (€)</label>
+    <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
+    <label for="mainSalaryHours">Base horaire</label>
+    <select id="mainSalaryHours">
+      <option value="35">35 h / semaine</option>
+      <option value="39" selected>39 h / semaine</option>
+    </select>
+    <div class="benefit-note declaration-mutuelle">
+      <strong>Mutuelle</strong>
+      <span>30 € / mois déduits de votre net (part salarié).</span>
+    </div>
+  </div>
+  <button type="button" class="primary-btn declaration-update" id="updateDeclaredSalary">Calculer mon salaire</button>
+
+    <div class="integrated-offers">
+      <div class="integrated-offers-heading">
+        <div>
+          <strong>Offres à comparer</strong>
+          <span>Votre salaire et vos propositions</span>
+        </div>
+        <button type="button" class="add-salary" id="addSalary">＋ Ajouter</button>
+      </div>
+      <div class="offer-tabs" id="offerTabs" role="group" aria-label="Choisir l’offre à comparer aux références">
+        <button type="button" class="offer-tab active" data-offer="0" aria-pressed="true">Offre A <small>Actuelle</small></button>
+        <button type="button" class="offer-tab" data-offer="1" aria-pressed="false">Offre B <small>Proposition</small></button>
+      </div>
+      <div class="add-salary-form" id="addSalaryForm" hidden>
+        <div class="form-intro"><strong>Ajouter une offre à comparer</strong><span>Renseignez les conditions indiquées dans la proposition d’embauche.</span></div>
+        <label for="newSalaryName">Nom de l’offre</label>
+        <input id="newSalaryName" maxlength="24" value="Offre C">
+        <label for="newSalaryPeriod">Période du salaire brut</label>
+        <select id="newSalaryPeriod"><option value="month">Mensuel</option><option value="year">Annuel</option></select>
+        <label for="newSalaryAmount">Salaire brut (€)</label>
+        <input id="newSalaryAmount" type="number" min="1" max="1200000" value="2500">
+        <label for="newSalaryHours">Base horaire</label>
+        <select id="newSalaryHours"><option value="35">35 h</option><option value="39">39 h</option></select>
+        <div class="benefit-note">
+          <strong>Mutuelle</strong>
+          <span>30 € / mois déduits de votre net (part salarié).</span>
+        </div>
+        <label class="meal-toggle" for="newMealTickets">
+          <input type="checkbox" id="newMealTickets">
+          <span>Cette offre propose des titres-restaurant</span>
+        </label>
+        <div class="meal-fields" id="mealFields" hidden>
+          <label for="mealFaceValue">Valeur faciale d’un ticket (€)</label>
+          <input id="mealFaceValue" type="number" min="0" step="0.01" value="10">
+          <label for="mealEmployerRate">Part employeur (%)</label>
+          <input id="mealEmployerRate" type="number" min="0" max="100" value="50">
+          <label for="mealDays">Nombre de tickets / mois</label>
+          <input id="mealDays" type="number" min="0" max="31" value="18">
+        </div>
+        <div class="form-actions">
+          <button type="button" class="secondary-btn" id="cancelAddSalary">Annuler</button>
+          <button type="button" class="primary-btn" id="saveSalary">Ajouter l’offre</button>
+        </div>
+      </div>
+    </div>
+
+
+  </div>
+
+
+
+
+  <div class="comparison-subhead">
+    <h3>Comparer votre salaire</h3>
+    <p>Face au SMIC, à la médiane et à vos autres propositions.</p>
+  </div>
+
+  <div class="comparison-period" role="group" aria-label="Période de comparaison">
+    <span>Comparer en</span>
+    <div class="comparison-period-tabs">
+      <button type="button" data-compare-period="hour" aria-pressed="true">Heure</button>
+      <button type="button" data-compare-period="month" aria-pressed="false">Mois</button>
+      <button type="button" data-compare-period="year" aria-pressed="false">Année</button>
+    </div>
+  </div>
+
+  <div class="your-card">
+    <div class="you-label"><span class="pill-you">Vous</span><span id="selectedSalaryName">Offre A</span></div>
+    <div class="your-amount"><span id="selectedHourly">10,27 €</span><small>/ heure</small></div>
+    <div class="your-meta" id="selectedMeta">2 500 € brut / mois · 39 h · mutuelle salarié : 30 € / mois</div>
+  </div>
+
+<div class="reference-list">
+    <article class="reference">
+      <div class="reference-label" id="smicRefLabel">SMIC net</div>
+      <div class="reference-value" data-ref-value="smic">10,85 €</div>
+      <div class="reference-unit" id="smicRefUnit">Par heure · équivalent 35 h</div>
+      <div class="gap-chip" data-gap="smic">+90 € / mois</div>
+      <details class="method"><summary>Comment est calculé l’écart ?</summary><p>Votre net avant impôt horaire est comparé au net horaire du SMIC. Les montants affichés ici sont des exemples de maquette et devront être alimentés par les valeurs officielles à la date du calcul.</p></details>
+    </article>
+
+    <article class="reference">
+      <div class="median-card-head">
+        <div class="reference-label">Médiane des salaires privés</div>
+        <label class="geo-inline"><span>Zone</span><select id="geoSelect" aria-label="Zone géographique"><option value="france">France</option><option value="region" disabled>Région</option><option value="department" disabled>Département</option></select></label>
+      </div>
+      <div class="reference-value" data-ref-value="median">16,09 €</div>
+      <div class="reference-unit" id="medianRefUnit">Par heure · INSEE 2024 · France</div>
+      <div class="gap-chip below" data-gap="median">−705 € / mois</div>
+      <details class="method"><summary>Que signifie la médiane ?</summary><p>En 2024, la moitié des salariés du privé gagnait moins de 2 190 € nets par mois en équivalent temps plein. Le taux horaire est ici ramené à 151,67 heures par mois. Ce repère est national, pas régional.</p></details>
+    </article>
+  </div>
+</section>
+
+<section class="panel" aria-labelledby="distribution-title">
+  <div class="distribution-head">
+    <div><h2 id="distribution-title">Où part votre salaire&nbsp;?</h2><p class="sub">Du brut au net avant impôt.</p></div>
+    
+  </div>
+  <p class="chart-intro">Exemple illustratif · salaire brut de 2 300 € par mois.</p>
+  <div class="stack" role="img" aria-label="Répartition illustrative : 1 736 euros nets avant impôt et 564 euros de cotisations salariales.">
+    <span class="stack-net"></span><span class="stack-deductions"></span>
+  </div>
+  <div class="breakdown-values">
+    <div class="breakdown-value"><i class="key net"></i><div><strong data-net>1 736 €</strong>Net avant impôt</div></div>
+    <div class="breakdown-value"><i class="key deduction"></i><div><strong data-deductions>564 €</strong>Cotisations salariales</div></div>
+  </div>
+  <p class="disclaimer">Montants fictifs pour cette maquette. Le graphique réel apparaîtra après le calcul de votre salaire.</p>
+</section>
+
+<footer class="footer"><span>OnNet · Maquette UX grand public</span><span>Exemples non connectés au calcul</span></footer>
+</main>
+<script>
+(() => {
+  const values = { month: { net: 1736, deductions: 564, gross: 2300 }, year: { net: 20832, deductions: 6768, gross: 27600 } };
+  const fmt = n => new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(n) + ' €';
+  const buttons = [...document.querySelectorAll('[data-period]')];
+  function setPeriod(period) {
+    buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.period === period)));
+    document.querySelector('[data-net]').textContent = fmt(values[period].net);
+    document.querySelector('[data-deductions]').textContent = fmt(values[period].deductions);
+    document.querySelector('.chart-intro').textContent = `Exemple illustratif · salaire brut de ${fmt(values[period].gross)} ${period === 'month' ? 'par mois' : 'par an'}.`;
+    document.querySelector('.stack').setAttribute('aria-label',`Répartition illustrative : ${fmt(values[period].net)} nets avant impôt et ${fmt(values[period].deductions)} de cotisations salariales.`);
+  }
+  buttons.forEach(button => button.addEventListener('click', () => setPeriod(button.dataset.period)));
+
+  const salaryTabs = document.getElementById('salaryTabs');
+  const scenarios = [
+    {name:'Offre A',kind:'Actuelle',gross:2500,hours:39,meal:false,mealAmount:0,netHourly:10.27,hourly:'10,27 €',meta:'2 500 € brut / mois · 39 h · mutuelle salarié : 30 € / mois',smic:'+0,53 € / heure',median:'−4,17 € / heure'},
+    {name:'Offre B',kind:'Proposition',gross:2800,hours:35,meal:true,netHourly:11.15,mealFaceValue:9,mealEmployerRate:50,mealDays:20,mealAmount:90,mealEmployerAmount:90,hourly:'11,15 €',meta:'2 800 € brut / mois · 35 h · mutuelle salarié : 30 € / mois · TR : 45 € / mois',smic:'+1,41 € / heure',median:'−3,29 € / heure'}
+  ];
+  let comparisonPeriod='hour';
+  const periodButtons=[...document.querySelectorAll('[data-compare-period]')];
+  const fmtPeriod=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(n)+' €';
+  const smicMonthly=1646;
+  const medianMonthly=2440;
+  const standardHours=151.67;
+  function refreshComparisonPeriod(){
+    periodButtons.forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.comparePeriod===comparisonPeriod)));
+    const s=scenarios[selected];
+    const offerHours=s.hours*52/12;
+    const refScale=offerHours/standardHours;
+    const factor=comparisonPeriod==='hour'?1/standardHours:comparisonPeriod==='year'?12*refScale:refScale;
+    const suffix=comparisonPeriod==='hour'?'/ heure':comparisonPeriod==='year'?'/ an':'/ mois';
+    const smic=smicMonthly*factor, median=medianMonthly*factor;
+    document.querySelector('[data-ref-value="smic"]').textContent=fmtPeriod(smic);
+    document.querySelector('[data-ref-value="median"]').textContent=fmtPeriod(median);
+    document.getElementById('smicRefLabel').textContent='SMIC net '+suffix;
+    document.getElementById('smicRefUnit').textContent=comparisonPeriod==='hour'?'Taux horaire · base 35 h':'Référence ajustée à '+s.hours+' h / semaine';
+    document.getElementById('medianRefUnit').textContent='INSEE · privé · 2024 · France · '+(comparisonPeriod==='hour'?'taux horaire':comparisonPeriod==='year'?'référence annuelle ajustée':'référence mensuelle ajustée');
+    const offerValue=Number.isFinite(s.netHourly)
+      ? comparisonPeriod==='hour'?s.netHourly:comparisonPeriod==='year'?s.netHourly*offerHours*12:s.netHourly*offerHours
+      : null;
+    const unit=comparisonPeriod==='hour'?'heure':comparisonPeriod==='year'?'an':'mois';
+    document.getElementById('selectedHourly').textContent=offerValue==null?'À calculer':fmtPeriod(offerValue);
+    document.querySelector('.your-amount small').textContent=offerValue==null?'': '/ '+unit;
+    const gaps=document.querySelectorAll('.reference .gap-chip');
+    if(offerValue==null){
+      gaps.forEach(gap=>gap.textContent='À calculer');
+    }else{
+      const smicGap=offerValue-smic, medianGap=offerValue-median;
+      const gapUnit=comparisonPeriod==='hour'?'/ heure':comparisonPeriod==='year'?'/ an':'/ mois';
+      gaps[0].textContent=(smicGap>=0?'+':'−')+fmtPeriod(Math.abs(smicGap))+' '+gapUnit;
+      gaps[0].classList.toggle('below',smicGap<0);
+      gaps[1].textContent=(medianGap>=0?'+':'−')+fmtPeriod(Math.abs(medianGap))+' '+gapUnit;
+      gaps[1].classList.toggle('below',medianGap<0);
+    }
+  }
+  periodButtons.forEach(button=>button.addEventListener('click',()=>{
+    comparisonPeriod=button.dataset.comparePeriod;
+    refreshComparisonPeriod();
+  }));
+
+  const offersGrid=document.getElementById('offersCompareGrid');
+  const differenceNode=document.getElementById('offersDifference');
+  const money=n=>new Intl.NumberFormat('fr-FR',{maximumFractionDigits:0}).format(Math.round(n))+' €';
+  function renderOffersComparison(){
+    offersGrid.replaceChildren();
+    scenarios.forEach((s,index)=>{
+      const card=document.createElement('article');
+      card.className='offer-compare-card'+(index===selected?' active':'');
+      const name=document.createElement('div');name.className='offer-compare-name';
+      const title=document.createElement('strong');title.textContent=s.name;
+      const kind=document.createElement('span');kind.textContent=s.kind;
+      name.append(title,kind);
+      const netLabel=document.createElement('div');netLabel.className='offer-net-label';netLabel.textContent='Net mensuel après mutuelle';
+      const net=document.createElement('strong');net.className='offer-net-value';net.textContent='À calculer';
+      const hourly=document.createElement('div');hourly.className='offer-hourly';hourly.textContent='Net par heure : à calculer';
+      const details=document.createElement('div');details.className='offer-compare-details';details.textContent=`${money(s.gross||0)} brut / mois · ${s.hours||35} h / semaine`;
+      const benefits=document.createElement('div');benefits.className='offer-compare-benefits';benefits.textContent='Mutuelle salarié : 30 €/mois';
+      card.append(name,netLabel,net,hourly,details,benefits);
+
+      const meal=document.createElement('section');
+      meal.className='meal-benefit-highlight '+(s.meal?'has-meal':'no-meal');
+      if(s.meal){
+        const header=document.createElement('div');header.className='meal-benefit-head';
+        const label=document.createElement('strong');label.textContent='Titres-restaurant';
+        const badge=document.createElement('span');badge.className='meal-status';badge.textContent='PROPOSÉS';
+        header.append(label,badge);
+        const total=document.createElement('div');total.className='meal-total-prominent';
+        if(s.mealEmployerAmount!=null || (s.mealAmount||0)>0){
+          const totalAmount=(s.mealAmount||0)+(s.mealEmployerAmount||0);
+          total.textContent=money(totalAmount)+' de titres / mois';
+        }else{
+          total.textContent='Avantage à valoriser';
+        }
+        const split=document.createElement('div');split.className='meal-breakdown';
+        if(s.mealEmployerAmount!=null){
+          const employee=document.createElement('span');employee.textContent='Votre part : '+money(s.mealAmount||0);
+          const employer=document.createElement('strong');employer.textContent='Employeur : +'+money(s.mealEmployerAmount);
+          split.append(employee,employer);
+        }else{
+          split.textContent='Montant de la participation employeur non renseigné';
+        }
+        const foot=document.createElement('p');foot.textContent='La participation employeur est un avantage en plus du net versé.';
+        meal.append(header,total,split,foot);
+      }else{
+        meal.innerHTML='<div class="meal-no-offer-title">Titres-restaurant</div><div class="meal-no-offer-text">Non proposés dans cette offre</div>';
+      }
+      card.append(meal);
+      card.addEventListener('click',()=>selectSalary(index));
+      card.setAttribute('role','button');card.setAttribute('tabindex','0');
+      card.setAttribute('aria-label','Étudier '+s.name);
+      card.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();selectSalary(index);}});
+      offersGrid.append(card);
+    });
+    const withMeal=scenarios.filter(s=>s.meal);
+    if(withMeal.some(s=>s.mealEmployerAmount!=null)){
+      const best=withMeal.reduce((m,s)=>Math.max(m,s.mealEmployerAmount||0),0);
+      differenceNode.textContent='Participation employeur aux titres-restaurant : jusqu’à +'+money(best)+' par mois, en complément du net.';
+    }else if(withMeal.length){
+      differenceNode.textContent='Des titres-restaurant sont proposés sur '+withMeal.length+' offre(s). Le montant financé par l’employeur reste à renseigner pour chiffrer cet avantage.';
+    }else{
+      differenceNode.textContent='Aucun titre-restaurant proposé dans les offres comparées.';
+    }
+    differenceNode.hidden=false;
+  }
+  let selected = 0;
+  function selectSalary(index){
+    selected = index;
+    const s=scenarios[index];
+    renderOfferTabs();
+    document.getElementById('selectedSalaryName').textContent=s.name;
+    document.getElementById('selectedHourly').textContent=s.hourly;
+    document.getElementById('selectedMeta').textContent=s.meta;
+    refreshComparisonPeriod();
+    renderOffersComparison();
+  }
+  const offerTabs=document.getElementById('offerTabs');
+  function renderOfferTabs(){
+    offerTabs.replaceChildren();
+    scenarios.forEach((s,index)=>{
+      const button=document.createElement('button');
+      button.type='button';button.className='offer-tab'+(index===selected?' active':'');
+      button.dataset.offer=String(index);button.setAttribute('aria-pressed',String(index===selected));
+      button.append(document.createTextNode(s.name));
+      const small=document.createElement('small');small.textContent=s.kind;button.append(small);
+      button.addEventListener('click',()=>selectSalary(index));
+      offerTabs.append(button);
+    });
+  }
+  renderOfferTabs();
+  refreshComparisonPeriod();
+  renderOffersComparison();
+
+  const form=document.getElementById('addSalaryForm');
+  document.getElementById('addSalary').addEventListener('click',()=>{
+    form.hidden=!form.hidden;
+    if(!form.hidden) document.getElementById('newSalaryName').focus();
+  });
+  document.getElementById('cancelSalary').addEventListener('click',()=>{form.hidden=true;});
+  const mealToggle=document.getElementById('newMealTickets');
+  document.getElementById('confirmSalary').addEventListener('click',()=>{
+    const name=document.getElementById('newSalaryName').value.trim()||`Offre ${String.fromCharCode(65+scenarios.length)}`;
+    const enteredAmount=Number(document.getElementById('newSalaryAmount').value);
+    const enteredPeriod=document.getElementById('newSalaryPeriod').value;
