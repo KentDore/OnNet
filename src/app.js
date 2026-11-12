@@ -204,10 +204,10 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Aucune donnée de salaire n’est transmise avant votre accord.';
+    statusText.textContent = 'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.';
     button.hidden = false;
     button.disabled = false;
-    button.textContent = 'Accepter et calculer';
+    button.textContent = 'Autoriser l’envoi et calculer';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
