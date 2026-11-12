@@ -66,6 +66,26 @@
       </details>
     </div>
   </section>
+  <div class="cards-bar reveal">
+    <div class="cards-bar-toggles">
+      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
+        <button data-amt="net" aria-pressed="true">Net</button>
+        <button data-amt="brut" aria-pressed="false">Brut</button>
+      </div>
+      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+        <button data-period="mois" aria-pressed="true">Mensuel</button>
+        <button data-period="an" aria-pressed="false">Annuel</button>
+      </div>
+    </div>
+    <div class="cards-bar-nav">
+      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
+      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
+    </div>
+  </div>
+  <div class="cards-scroll" id="cardsScroll">
+    <div class="cards" id="cardsBody"></div>
+  </div>
+
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Du brut au net avant impôt</h2>
     <p class="chart-scope-hint">Répartition mensuelle du salaire : cotisations, mutuelle, titres-restaurant et net à payer avant impôt. Les bascules Brut/Net et Mensuel/Annuel des cartes ne modifient pas ce graphique.</p>
@@ -98,26 +118,6 @@
         <div id="barsBody" aria-live="polite"></div>
       </div>
     </details>
-  </div>
-
-  <div class="cards-bar reveal">
-    <div class="cards-bar-toggles">
-      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
-        <button data-amt="net" aria-pressed="true">Net</button>
-        <button data-amt="brut" aria-pressed="false">Brut</button>
-      </div>
-      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
-        <button data-period="mois" aria-pressed="true">Mensuel</button>
-        <button data-period="an" aria-pressed="false">Annuel</button>
-      </div>
-    </div>
-    <div class="cards-bar-nav">
-      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
-      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
-    </div>
-  </div>
-  <div class="cards-scroll" id="cardsScroll">
-    <div class="cards" id="cardsBody"></div>
   </div>
 
   <section class="situation-section reveal" aria-label="Votre situation">
