@@ -1,6 +1,6 @@
 # Migration du calcul brut → net vers Publicodes / modèle Urssaf
 
-Statut : intégration principale réalisée sur `migration/publicodes-urssaf`, non publiée. Les scénarios live de ce nouveau raccordement restent à valider.
+Statut au 12 novembre 2026 : ce document décrit la conception initiale et les étapes historiques de la migration. L’intégration est désormais réalisée dans `main` et publiée sur GitHub Pages. Les mentions « non publiée » ci-dessous sont historiques. Pour l’état actuellement livré et ses limites, consulter le [README](../README.md) et la [feuille de route de migration](complete-migration-roadmap.md).
 
 ## Décision
 
