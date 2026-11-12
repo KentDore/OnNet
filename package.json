@@ -2,7 +2,7 @@
   "name": "onnet",
   "version": "2.1.6",
   "private": true,
-  "description": "Prototype de migration du calcul salarial vers Publicodes / modèle Urssaf",
+  "description": "Comparateur de rémunération utilisant l’API officielle Mon-entreprise / Urssaf",
   "engines": {
     "node": ">=20"
   },
