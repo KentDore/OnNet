@@ -816,3 +816,111 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   border-color:var(--accent);
   color:var(--accent);
 }
+
+
+/* Maquette UX V33 — structure et proportions reprises du HTML fourni. */
+:root{--maquette-bg:#f5f3ee;--maquette-green:#1f6d4c;--maquette-dark:#075334}
+body{background:linear-gradient(180deg,#fafbf9 0%,var(--maquette-bg) 100%)}
+.wrap{width:min(100% - 32px,1000px);margin:auto;padding:22px 0 52px}
+header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:0;padding:17px 24px 43px;border:1px solid rgba(255,255,255,.95);border-radius:26px;background:linear-gradient(145deg,#fff 0%,#f7fbf8 72%,#effaf3 100%);box-shadow:0 8px 26px rgba(24,54,37,.08);margin-bottom:20px}
+header.hero .header-top{margin-bottom:12px}
+header.hero h1{margin:0 0 7px;color:#073e2b;font:700 clamp(26px,3.7vw,36px)/1.04 Georgia,serif;letter-spacing:-1.2px}
+header.hero>p{display:none}
+header.hero .hero-copy{position:relative;z-index:2;max-width:580px}
+header.hero .intro{margin:0;color:#68716b;max-width:48ch;font-size:13px;line-height:1.35}
+header.hero .eyebrow{margin:0 0 5px;color:#1f6d4c;font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+header.hero .trust{display:inline-flex;align-items:center;gap:10px;margin-top:13px;padding:8px 13px;border:1px solid #dcebe0;border-radius:12px;background:rgba(239,248,241,.92);color:#315441;font-size:11px;line-height:1.25}
+header.hero .trust strong{display:block;color:#176b45;font-size:12px}
+header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54px;pointer-events:none}
+.unified-salary-panel{padding:clamp(18px,3vw,26px);border-radius:23px}
+.unified-heading{margin-bottom:18px}
+.unified-heading h2,.comparison-subhead h3{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
+.unified-heading .sub{font-size:13px;color:#68716b}
+.declaration-inline{padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
+.declaration-inline-title{display:block;margin-bottom:13px}
+.declaration-inline-title strong{display:block;color:#315640;font-size:14px;font-weight:800}
+.declaration-inline-title span{display:block;margin-top:3px;color:#7c887f;font-size:11px}
+.declaration-fields{display:flex;flex-direction:column;gap:5px}
+.declaration-fields>label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
+.declaration-fields>label:first-child{margin-top:0}
+.declaration-fields>select,.declaration-fields>input{display:block;width:100%;min-height:46px;margin:0;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
+.declaration-mutuelle strong{white-space:nowrap;font-size:11px}
+.declaration-update{width:100%;min-height:46px;margin:12px 0 0;border:0;border-radius:11px;background:linear-gradient(135deg,#1f7653,#0e6847);color:#fff;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(17,91,57,.12)}
+.integrated-offers{display:block;margin:17px 0 0;padding:14px 0 0;border:0;border-top:1px solid #d7e6da}
+.integrated-offers-heading{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
+.integrated-offers-heading strong{display:block;color:#315640;font-size:14px;font-weight:800}
+.integrated-offers-heading span{display:block;margin-top:3px;color:#7c887f;font-size:11px}
+.integrated-offers .add-salary{padding:9px 13px;border:1px solid #cfe3d4;border-radius:999px;background:#eaf5ed;color:#176b49;font-size:12px;font-weight:800}
+.offer-tabs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:0;padding:4px;border-radius:12px;background:#eaf1eb}
+.offer-tab{min-width:0;min-height:52px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#45614e;font-size:13px;font-weight:800}
+.offer-tab.active{border-color:#cfe3d4;background:#fff;color:#176b49;box-shadow:0 1px 3px rgba(24,80,48,.07)}
+.offer-tab small{display:block;margin-top:3px;color:#7b8a7f;font-size:10px;font-weight:600}
+.comparison-subhead{margin:20px 0 11px;padding-top:16px;border-top:1px solid #e7ede8}
+.comparison-subhead h3{margin:0;font-size:19px}
+.comparison-subhead p{margin:4px 0 0;color:#78837c;font-size:12px}
+.comparison-period{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px;padding:10px 12px;border:1px solid #e0ebe2;border-radius:13px;background:#f7faf7}
+.comparison-period>span{color:#3f5d49;font-size:12px;font-weight:750}
+.comparison-period-tabs{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eaf1eb}
+.comparison-period-tabs button{min-width:54px;padding:8px 10px;border:0;border-radius:8px;background:transparent;color:#64746a;font:700 11px Inter,sans-serif}
+.comparison-period-tabs button[aria-pressed=true]{background:#176b49;color:white}
+#maquetteYourSalary .benchmark-your-salary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:9px;padding:20px 22px;margin-bottom:12px;border:1px solid #d9eddf;border-radius:18px;background:linear-gradient(110deg,#e8f6eb,#f4faf5)}
+#maquetteYourSalary .benchmark-your-salary>span{color:#214b34;font-size:16px;font-weight:750}
+#maquetteYourSalary .benchmark-your-salary>strong{color:#075d3a;font-size:clamp(23px,3.5vw,30px);white-space:nowrap}
+#maquetteYourSalary .benchmark-comparison-base{grid-column:1/-1;padding-top:9px;border-top:1px solid rgba(31,109,76,.12);font-size:12px}
+#benchmarkMount .benchmark-heading{display:none}
+#benchmarkMount .benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#benchmarkMount .benchmark-item{min-width:0;padding:16px;border:1px solid #e8eee9;border-radius:17px;background:#fff}
+#benchmarkMount .benchmark-label{color:#294b37;font-size:13px;font-weight:750}
+#benchmarkMount .benchmark-value{color:#173f2a;font-size:clamp(22px,3vw,28px);font-weight:800}
+#benchmarkMount .benchmark-meta{color:#77827a;font-size:11px}
+#benchmarkMount .benchmark-result{display:inline-flex;margin-top:11px;padding:6px 9px;border-radius:10px;background:#e7f5eb;color:#116b43;font-size:12px;font-weight:800}
+#benchmarkMount .benchmark-result.benchmark-negative{background:#fff0e9;color:#a34c31}
+#benchmarkMount .benchmark-details{margin-top:12px;padding-top:10px;border-top:1px solid #e4e1d6}
+#benchmarkMount .benchmark-details summary{color:#1f6d4c;font-size:12px;font-weight:700}
+#benchmarkMount .benchmark-details p{color:#68716b;font-size:11px;line-height:1.5}
+#comparePanel{padding:clamp(18px,3vw,26px);background:#fff;border:1px solid #fff;border-radius:23px;box-shadow:0 8px 26px rgba(24,54,37,.08)}
+#comparePanel .bars-title{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif}
+#comparePanel .chart-scope-hint{color:#68716b}
+#comparePanel .benchmark-panel{display:none}
+.maquette-urssaf{margin-top:12px}
+.maquette-urssaf .urssaf-status-main{font-size:11px}
+@media(max-width:640px){
+ .wrap{width:min(100% - 22px,520px);padding:13px 0 30px}
+ header.hero{padding:14px 16px 30px;border-radius:18px;margin-bottom:10px;box-shadow:0 3px 12px rgba(24,54,37,.045)}
+ header.hero .header-top{margin-bottom:9px}
+ header.hero h1{font-size:clamp(23px,6.2vw,28px);line-height:1.02;letter-spacing:-.8px}
+ header.hero .intro{font-size:11px;line-height:1.3}
+ header.hero .trust{margin-top:8px;padding:5px 8px;font-size:9px}
+ header.hero .trust strong{font-size:10px}
+ header.hero .wave{height:23px}
+ .unified-salary-panel{padding:15px 13px}
+ .declaration-inline{padding:14px 12px 13px}
+ .declaration-fields>select,.declaration-fields>input{min-height:44px;font-size:14px}
+ .declaration-update{min-height:45px}
+ .integrated-offers{margin-top:14px;padding-top:12px}
+ .offer-tab{min-height:49px}
+ .comparison-subhead{margin-top:16px;padding-top:14px}
+ .comparison-period{margin-bottom:12px;padding:9px 10px}
+ .comparison-period-tabs button{min-width:48px;padding:8px 7px}
+ #maquetteYourSalary .benchmark-your-salary{padding:13px;border-radius:15px;gap:7px}
+ #maquetteYourSalary .benchmark-your-salary>span{font-size:13px}
+ #maquetteYourSalary .benchmark-your-salary>strong{font-size:clamp(20px,5.7vw,26px)}
+ #benchmarkMount .benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+ #benchmarkMount .benchmark-item{padding:12px 10px;border-radius:15px}
+ #benchmarkMount .benchmark-label{font-size:11px;line-height:1.3;min-height:29px}
+ #benchmarkMount .benchmark-value{font-size:clamp(19px,5.2vw,24px)}
+ #benchmarkMount .benchmark-meta{font-size:10px;line-height:1.35}
+ #benchmarkMount .benchmark-result{padding:5px 7px;font-size:10px}
+ #benchmarkMount .benchmark-details summary{font-size:10px}
+ #comparePanel{padding:16px 13px;border-radius:20px}
+}
+@media(max-width:380px){#benchmarkMount .benchmark-item{padding:10px 8px}#benchmarkMount .benchmark-label{font-size:10px}}
+
+#benchmarkMount .benchmark-your-salary{display:none!important}
+
+#benchmarkMount .median-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:6px;min-height:34px}#benchmarkMount .median-card-head .benchmark-label{flex:1;min-width:0}#benchmarkMount .median-card-head .geo-inline{display:inline-flex;align-items:center;gap:5px;margin:0;padding:4px 6px;border:1px solid #dfeae1;border-radius:10px;background:#f8fbf8;color:#145b3b;font-size:10px;white-space:nowrap}#benchmarkMount .median-card-head .geo-inline span{color:#637368;font-size:9px;font-weight:750}#benchmarkMount .median-card-head .geo-inline strong{font-size:10px}
+
+.advanced-scenarios{margin:14px 0 20px;padding:13px 16px;border:1px solid #e2eae3;border-radius:15px;background:#fbfdfb;color:#315640}.advanced-scenarios>summary{cursor:pointer;color:#315640;font-size:12px;font-weight:800}.advanced-scenarios-help{margin:8px 0 12px;color:#78837c;font-size:11px}.advanced-scenarios .cards-bar{margin-top:10px}.advanced-scenarios[open]{padding-bottom:16px}
+
+#benchmarkMount .benchmark-panel{padding:0;border:0;background:transparent;box-shadow:none;margin:0}
