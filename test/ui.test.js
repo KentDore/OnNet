@@ -504,6 +504,27 @@ test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async 
   }
 });
 
+test('le concubinage conserve une imposition séparée et exclut les revenus du partenaire', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    await page.locator('#foyerModuleToggle').click();
+    await page.locator('#foyerSituation [data-foyer="commun"]').click();
+    await page.locator('#foyerConjoint').fill('24000');
+    const beforeConcubinage = calls.count;
+    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
+    await waitForCalls(calls, beforeConcubinage + 2, 15000);
+
+    assert.ok(calls.bodies.some(body =>
+      body.situation['impôt . foyer fiscal . situation de famille'] === "'célibataire'" &&
+      !Object.hasOwn(body.situation, 'impôt . foyer fiscal . revenu imposable . autres revenus imposables')
+    ), 'le concubinage doit être transmis comme une imposition individuelle, sans revenu du partenaire');
+    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
+    assert.equal(await page.locator('#foyerConjointRow').isVisible(), false);
+  } finally {
+    await context.close();
+  }
+});
+
 test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local', async () => {
   const { context, page, calls } = await openApp();
   try {
