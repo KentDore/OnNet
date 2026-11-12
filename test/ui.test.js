@@ -681,6 +681,26 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
 });
 
 
+test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', async () => {
+  const { context, page } = await openApp();
+  try {
+    const month = page.locator('[data-maquette-period="month"]');
+    const year = page.locator('[data-maquette-period="year"]');
+    await month.click();
+    assert.equal(await month.getAttribute('aria-pressed'), 'true');
+    assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    await year.click();
+    assert.equal(await year.getAttribute('aria-pressed'), 'true');
+    assert.equal(await month.getAttribute('aria-pressed'), 'false');
+
+    await page.locator('#maquetteAddSalary').click();
+    assert.equal(await page.locator('#modalAddInput').isVisible(), true,
+      'le bouton Ajouter doit ouvrir la modale de création de scénario');
+  } finally {
+    await context.close();
+  }
+});
+
 test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
