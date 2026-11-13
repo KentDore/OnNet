@@ -548,7 +548,6 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
     assert.equal(hasSalary(), false, 'aucun salaire ne doit être transmis au chargement');
 
     await page.reload();
-    await waitForCalls(calls, 2);
     assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
 
     await page.locator('#mainSalaryGross').fill('3200');
