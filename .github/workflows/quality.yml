@@ -39,3 +39,11 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
+      - name: Publier les captures visuelles desktop et mobile
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: onnet-visual-${{ github.run_number }}
+          path: artifacts/visual/*.png
+          if-no-files-found: warn
+          retention-days: 7
