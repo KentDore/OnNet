@@ -4,9 +4,8 @@
 // ---------- État ----------
 let idCounter = 0;
 
-// Le consentement est demandé à chaque ouverture : aucun choix de transmission
-// n'est mémorisé sur l'appareil.
-try{ localStorage.removeItem('onnet.urssafConsent.v1'); }catch(_){}
+// L'accord de transmission est donné par le clic sur le bouton principal.
+// Il reste limité à la session et n'est jamais mémorisé sur l'appareil.
 let urssafConsentGranted = false;
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
@@ -203,7 +202,7 @@ function queuedUrssafFetch(url, options){
 
 function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
-  const button = document.getElementById('urssafCalculateBtn');
+  const button = document.getElementById('updateDeclaredSalary');
   if(!statusText || !button) return;
   const status = document.getElementById('urssafStatus');
   if(status) status.classList.remove('is-error');
@@ -212,10 +211,10 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.';
+    statusText.textContent = 'En cliquant sur « Calculer mon salaire », vous autorisez l’envoi des paramètres nécessaires à l’Urssaf. Les données transmises sont détaillées ci-dessous.';
     button.hidden = false;
     button.disabled = false;
-    button.textContent = 'Autoriser l’envoi et calculer';
+    button.textContent = 'Calculer mon salaire';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
@@ -234,17 +233,21 @@ function updateUrssafStatus(computed){
     if(status) status.classList.add('is-error');
     button.hidden = false;
     button.disabled = false;
-    button.textContent = 'Réessayer les calculs';
+    button.textContent = 'Réessayer le calcul';
     return;
   }
   if(unsupported.length){
     statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
-    button.hidden = true;
+    button.hidden = false;
+    button.disabled = false;
+    button.textContent = 'Mettre à jour mon salaire';
     return;
   }
   if(pending.length){
     statusText.textContent = 'Mise à jour des calculs…';
-    button.hidden = true;
+    button.hidden = false;
+    button.disabled = true;
+    button.textContent = 'Calcul en cours…';
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
@@ -260,7 +263,9 @@ function updateUrssafStatus(computed){
     ].join('');
     diagnostics.hidden = false;
   }
-  button.hidden = true;
+  button.hidden = false;
+  button.disabled = false;
+  button.textContent = 'Mettre à jour mon salaire';
 }
 
 let officialSmicPromise = null;
@@ -1090,12 +1095,15 @@ function renderMaquetteControls(computedOverride){
     if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){gross?.focus();return;}
     scenario.brut=document.getElementById('mainSalaryPeriod')?.value==='year'?Math.round(raw/12*100)/100:raw;
     scenario.dureeType=hours?.value==='39'?'39':'35';
+    // Le clic sur le bouton principal constitue l'accord explicite à la
+    // transmission décrite juste en dessous, puis lance le calcul.
+    urssafConsentGranted = true;
     saveState();
     render();
   };
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
-    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après autorisation de transmission à l’Urssaf.</div></div>';}
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
     else{
       const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
       const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
@@ -2389,11 +2397,6 @@ function scrollToNewCard(){
     animateScrollLeft(scroller, dest, 380, restoreCardSnap);
   });
 }
-
-document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
-  urssafConsentGranted = true;
-  scheduleUrssafCalculations(true,true);
-});
 
 render();
 // Actualisation du repère SMIC à chaque ouverture, sans transmettre les données de paie.
