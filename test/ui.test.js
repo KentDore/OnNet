@@ -1239,7 +1239,8 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
 
     await addSecondScenario(page, '3200');
     const secondCard = page.locator('#cardsBody [data-card]').nth(1);
-    await secondCard.locator('[data-duree="35"]').click();
+    await page.locator('#stackChart [data-setref="1"]').click();
+    await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready')
