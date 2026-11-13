@@ -269,8 +269,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+    await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       return state?.scenarios?.length === 1 && state.scenarios[0].mutuelle === 30 &&
