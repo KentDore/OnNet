@@ -983,19 +983,29 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     await page.emulateMedia({ reducedMotion:'reduce' });
     assert.equal(await page.locator('#advancedWorkspace').evaluate(el => el.open), false,
       'les outils secondaires doivent rester repliés dans le parcours initial');
-    await page.waitForFunction(() => {
+    const initialVisualState = await page.evaluate(() => {
       const panel = document.getElementById('comparePanel');
       const chart = document.getElementById('stackChart');
-      return panel && !panel.hidden && chart && chart.children.length > 0 &&
-        !chart.parentElement.hidden;
-    }, null, { timeout:5000 });
+      const scroll = chart?.parentElement;
+      return {
+        status: document.getElementById('urssafStatusText')?.textContent?.trim(),
+        panelHidden: panel?.hidden,
+        chartChildren: chart?.children.length,
+        chartHtmlLength: chart?.innerHTML.length,
+        chartParentHidden: scroll?.hidden,
+        chartParentDisplay: scroll ? getComputedStyle(scroll).display : null,
+        smicCard: document.querySelector('#benchmarkMount .benchmark-item')?.innerText,
+        salaryCardStates: [...document.querySelectorAll('#cardsBody [data-card]')].map(el => el.dataset.resultState)
+      };
+    });
+    console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
 
     // Aligner la capture sur les données d'exemple de la maquette V33.
     await page.locator('#mainSalaryGross').fill('2500');
     await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
-      document.querySelector('#stackChart')?.children.length > 0,
+      document.querySelector('#cardsBody [data-key="brut"]')?.value === '2500',
       null, { timeout:20000 });
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
@@ -1003,6 +1013,18 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
     await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
+    const finalVisualState = await page.evaluate(() => {
+      const chart = document.getElementById('stackChart');
+      return {
+        status: document.getElementById('urssafStatusText')?.textContent?.trim(),
+        chartChildren: chart?.children.length,
+        chartParentHidden: chart?.parentElement?.hidden,
+        chartText: chart?.innerText?.slice(0,300)
+      };
+    });
+    console.log('ONNET_FINAL_VISUAL_STATE=' + JSON.stringify(finalVisualState));
+    assert.ok(finalVisualState.chartChildren > 0 && finalVisualState.chartParentHidden === false,
+      'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
   } finally {
     await context.close();
   }
