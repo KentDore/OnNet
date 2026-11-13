@@ -44,7 +44,7 @@
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
       <button type="button" class="primary-btn declaration-update" id="updateDeclaredSalary">Calculer mon salaire</button>
-      <div class="urssaf-status maquette-urssaf" id="maquetteUrssafMount"></div>
+      <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
       <div class="integrated-offers">
         <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
         <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
@@ -73,8 +73,9 @@
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
-    <h2 class="bars-title">Du brut au net avant impôt</h2>
-    <p class="chart-scope-hint">Répartition mensuelle du salaire : cotisations, mutuelle, titres-restaurant et net à payer avant impôt. Les bascules Brut/Net et Mensuel/Annuel des cartes ne modifient pas ce graphique.</p>
+    <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
+    <p class="sub">Du brut au net avant impôt.</p>
+    <p class="chart-scope-hint">Répartition mensuelle calculée à partir de votre simulation Urssaf.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
