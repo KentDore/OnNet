@@ -340,28 +340,27 @@
   .legend-swatch{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(23,36,31,.05);}
   @media (max-width:480px){ .stack-chart{gap:10px;} .stack-col{width:100px; padding:14px 8px 12px;} .stack-bar{width:48px;} .stack-ref-row{max-width:80px;} .stack-name{font-size:12px;} .stack-net{font-size:16px;} }
 
-  /* ---- Waterfall (répartition d'un salaire unique) ---- */
-  .waterfall{display:flex; flex-direction:column; gap:10px; padding:6px 2px 2px;}
-  .wf-row{display:grid; grid-template-columns:132px 1fr; align-items:center; gap:10px;}
-  .wf-label{display:flex; align-items:flex-start; gap:6px; font-family:'Inter',sans-serif; font-weight:600; font-size:12px; line-height:1.25; color:var(--ink-soft);}
-  .wf-dot{margin-top:3px;}
-  .wf-row.wf-total .wf-label{color:var(--ink);}
-  .wf-dot{width:9px; height:9px; border-radius:3px; flex:none;}
-  .wf-track{position:relative; height:34px; background:var(--bg); border-radius:8px;}
-  .wf-bar{position:absolute; top:0; bottom:0; left:0; border-radius:8px; display:flex; align-items:center; justify-content:flex-end; padding:0 10px; box-shadow:0 1px 2px rgba(23,36,31,.08); min-width:2px;}
-  .wf-bar-total{background:var(--surface); border:1px solid var(--line);}
-  .wf-bar-cotis{background:var(--stack-cotis);}
-  .wf-bar-mutuelle{background:var(--gold);}
-  .wf-bar-tr{background:var(--stack-tr);}
-  .wf-bar-net{background:linear-gradient(100deg, #2E8A62 0%, var(--accent) 85%);}
-  .wf-val{font-family:'IBM Plex Mono',monospace; font-size:11.5px; font-weight:700; color:var(--ink); white-space:nowrap;}
-  .wf-bar-total .wf-val{color:var(--ink);}
-  .wf-bar-cotis .wf-val, .wf-bar-mutuelle .wf-val, .wf-bar-tr .wf-val{color:rgba(23,36,31,.82);}
-  .wf-bar-net .wf-val{color:rgba(255,255,255,.95);}
-  .wf-val-out{position:absolute; left:100%; margin-left:8px; top:50%; transform:translateY(-50%); color:var(--ink) !important;}
-  .wf-note{font-family:'Inter',sans-serif; font-size:11.5px; line-height:1.4; color:var(--ink-soft); margin:-2px 0 4px 142px;}
+  /* ---- Répartition compacte du salaire unique, calquée sur la V33 ---- */
+  .waterfall{display:block;padding:4px 0 2px;}
+  .wf-stack{display:flex;width:100%;height:24px;overflow:hidden;border-radius:999px;background:var(--bg);box-shadow:inset 0 1px 2px rgba(20,50,30,.08);}
+  .wf-stack-net{display:block;min-width:0;background:linear-gradient(90deg,#1f6d4c,#0c8758);}
+  .wf-stack-deductions{display:block;min-width:0;background:var(--gold);}
+  .wf-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;}
+  .wf-breakdown-item{display:flex;align-items:flex-start;gap:8px;min-width:0;color:var(--ink-soft);font-size:12px;line-height:1.4;}
+  .wf-breakdown-item strong{display:block;color:var(--ink);font-size:16px;font-weight:750;letter-spacing:-.3px;}
+  .wf-breakdown-item span:not(.wf-key){display:block;}
+  .wf-key{width:9px;height:9px;flex:0 0 9px;border-radius:3px;margin-top:5px;}
+  .wf-key-net{background:#1f6d4c;}
+  .wf-key-deductions{background:var(--gold);}
+  .wf-components{margin:12px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.5;}
+  .wf-note{margin:8px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.45;}
   .wf-note strong{color:var(--ink);}
-  @media (max-width:480px){ .wf-row{grid-template-columns:104px 1fr; gap:8px;} .wf-label{font-size:11.5px;} .wf-val{font-size:10.5px;} .wf-note{margin-left:104px;} }
+  @media(max-width:480px){
+    .wf-breakdown{gap:8px;}
+    .wf-breakdown-item{gap:6px;font-size:11px;}
+    .wf-breakdown-item strong{font-size:15px;}
+    .wf-components,.wf-note{font-size:10.5px;}
+  }
 
   /* ---- Puces d'augmentation ---- */
   .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
@@ -893,7 +892,8 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 #benchmarkMount .benchmark-panel{display:block;width:100%;min-width:0;box-sizing:border-box}
 #benchmarkMount .benchmark-grid{width:100%;min-width:0;box-sizing:border-box}
 #benchmarkMount .benchmark-item{min-width:0;box-sizing:border-box}
-.maquette-urssaf{margin-top:12px}
+.maquette-urssaf{margin-top:10px}
+.maquette-urssaf>#urssafStatus:not(.is-error){margin:0;padding:0;border:0}
 .maquette-urssaf .urssaf-status-main{font-size:11px}
 @media(max-width:640px){
  .wrap{width:min(100% - 22px,520px);padding:13px 0 30px}
@@ -1002,7 +1002,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
       <button type="button" class="primary-btn declaration-update" id="updateDeclaredSalary">Calculer mon salaire</button>
-      <div class="urssaf-status maquette-urssaf" id="maquetteUrssafMount"></div>
+      <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
       <div class="integrated-offers">
         <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
         <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
@@ -1031,8 +1031,9 @@ header.hero .trust-icon svg{width:19px;height:19px}
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
-    <h2 class="bars-title">Du brut au net avant impôt</h2>
-    <p class="chart-scope-hint">Répartition mensuelle du salaire : cotisations, mutuelle, titres-restaurant et net à payer avant impôt. Les bascules Brut/Net et Mensuel/Annuel des cartes ne modifient pas ce graphique.</p>
+    <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
+    <p class="sub">Du brut au net avant impôt.</p>
+    <p class="chart-scope-hint">Répartition mensuelle calculée à partir de votre simulation Urssaf.</p>
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
@@ -2711,65 +2712,39 @@ function renderStackLegend(){
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
 }
 
-const WF_MIN_INSIDE = 15; // largeur (%) en dessous de laquelle le libellé sort de la barre
-
-function wfSeg(cls, dotStyle, label, val, pctVal, note){
-  const inside = pctVal >= WF_MIN_INSIDE;
-  return `
-  <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
-    <div class="wf-label"><span class="wf-dot" style="${dotStyle}"></span>${label}</div>
-    <div class="wf-track">
-      <div class="wf-bar ${cls}" style="width:${Math.min(100, Math.max(pctVal, 1.5))}%">
-        <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
-      </div>
-    </div>
-  </div>
-  ${note ? `<div class="wf-note">${note}</div>` : ''}`;
-}
-
-// Le choix libellé-dedans/dehors dans wfSeg() est fait sur un seuil en % de
-// la piste totale — insuffisant : sur un petit écran, ou quand une seule
-// catégorie (ex. titres restaurant) dépasse le brut, un % au-dessus du
-// seuil peut quand même correspondre à trop peu de pixels pour contenir le
-// texte, qui déborde alors de la barre. On corrige après coup en mesurant
-// la largeur réellement disponible.
-function fixWaterfallLabelFit(){
-  document.querySelectorAll('.wf-bar').forEach(bar => {
-    const val = bar.querySelector('.wf-val');
-    if(!val) return;
-    val.classList.remove('wf-val-out');
-    const fits = val.getBoundingClientRect().width + 20 <= bar.getBoundingClientRect().width;
-    if(!fits) val.classList.add('wf-val-out');
-  });
-}
-
 function renderWaterfall(computed){
   const { s, r } = computed[0];
   const m = r.m;
-  const brut = m.brutTotal;
-  const pct = v => brut > 0 ? (v/brut)*100 : 0;
-
-  const cotis = m.cotisNettes;
-  const mutuelle = m.mutuelle;
-  const tr = r.tr.totalSalarie;
-  const net = m.netApres;
+  const brut = Math.max(0, m.brutTotal);
+  const net = Math.max(0, m.netApres);
+  const deductions = Math.max(0, brut - net);
+  const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
+  const cotis = Math.max(0, m.cotisNettes);
+  const mutuelle = Math.max(0, m.mutuelle);
+  const tr = Math.max(0, r.tr.totalSalarie);
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  // Deux lignes chiffrées plutôt qu'une phrase : l'information est la même,
-  // mais elle se lit d'un coup d'œil au lieu de se déchiffrer.
-  // Une seule ligne compacte plutôt que deux rangées : même information,
-  // moitié moins de place sous une barre qui a déjà son propre libellé.
   const trNote = tr > 0.5
     ? `Sans TR : <strong>${fmt(netSansTR)}</strong> · TR perçus : <strong>${fmt(trValeurFaciale)}</strong>`
     : '';
-
   return `
-  <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
-    ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut', fmt(brut), 100)}
-    ${wfSeg('wf-bar-cotis', `background:${STACK_COLORS.cotis}`, '− Cotisations sociales', '−' + fmt(cotis), pct(cotis))}
-    ${wfSeg('wf-bar-mutuelle', `background:${STACK_COLORS.mutuelle}`, '− Mutuelle', '−' + fmt(mutuelle), pct(mutuelle))}
-    ${tr > 0.5 ? wfSeg('wf-bar-tr', `background:${STACK_COLORS.tr}`, '− Titres restaurant', '−' + fmt(tr), pct(tr)) : ''}
-    ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, '= Net', fmt(net), pct(net), trNote)}
+  <div class="waterfall">
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant impôt : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+      <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
+      <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
+    </div>
+    <div class="wf-breakdown">
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-net" aria-hidden="true"></span>
+        <div><strong>${fmt(net)}</strong><span>Net avant impôt</span></div>
+      </div>
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
+        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
+      </div>
+    </div>
+    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} · mutuelle ${fmt(mutuelle)} · titres-restaurant (part salarié) ${fmt(tr)}</p>
+    ${trNote ? `<p class="wf-note">${trNote}</p>` : ''}
   </div>`;
 }
 
@@ -2970,7 +2945,6 @@ function renderComparisonChart(computed){
     document.getElementById('insightBox').innerHTML = renderInsight(computed);
     stackChartEl.className = isSingle ? '' : 'stack-chart';
     stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    if(isSingle) fixWaterfallLabelFit();
     document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
