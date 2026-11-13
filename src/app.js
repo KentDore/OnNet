@@ -210,7 +210,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'En attente de votre accord dans la fenêtre d’accueil. Aucune donnée salariale n’est transmise avant validation.';
+    statusText.textContent = 'Renseignez votre salaire dans le formulaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
@@ -236,7 +236,6 @@ function updateUrssafStatus(computed){
     return;
   }
   if(pending.length){
-    statusText.textContent = 'Mise à jour des calculs…';
     statusText.textContent = 'Mise à jour des calculs…';
     return;
   }
@@ -1090,7 +1089,7 @@ function renderMaquetteControls(computedOverride){
   };
   // Les champs remplacent l’ancien bouton : toute modification valide
   // met à jour le scénario et relance le calcul après un court délai.
-  if(gross) gross.oninput=applyDeclaredSalary;
+  if(gross) gross.onchange=applyDeclaredSalary;
   if(period) period.onchange=applyDeclaredSalary;
   if(hours) hours.onchange=applyDeclaredSalary;
   const summary=document.getElementById('maquetteYourSalary');
