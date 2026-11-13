@@ -1125,16 +1125,15 @@ function renderMaquetteControls(computedOverride){
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
   if(status && mount && status.parentElement!==mount) mount.appendChild(status);
 }
-function render(){
-  if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
-  const computed = getCurrentComputed();
+
+function renderComparisonChart(computed){
   const isSingle = computed.length === 1;
   const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
   const allReady = hasSalaryResults && !!getCachedSmicResult();
   const comparePanel = document.getElementById('comparePanel');
   if(comparePanel) comparePanel.hidden = !hasSalaryResults;
-  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
-  if(chartContent){
+
+  if(comparePanel){
     const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
     chartElements.forEach(selector => {
       const element = comparePanel.querySelector(selector);
@@ -1142,8 +1141,8 @@ function render(){
     });
   }
 
-  updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
+  if(!stackChartEl) return;
   if(allReady){
     document.getElementById('stackHint').textContent = isSingle
       ? 'Du brut au net, étape par étape.'
@@ -1164,6 +1163,13 @@ function render(){
     document.getElementById('barsBody').innerHTML = '';
     document.getElementById('barsAlerts').innerHTML = '';
   }
+}
+
+function render(){
+  if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+  const computed = getCurrentComputed();
+  renderComparisonChart(computed);
+  updateRaiseBaseName();
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
@@ -1455,28 +1461,7 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 
 function updateComputed(options = {}){
   const computed = getCurrentComputed();
-  const isSingle = computed.length === 1;
-  const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
-  const allReady = hasSalaryResults && !!getCachedSmicResult();
-  const comparePanel = document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden = !hasSalaryResults;
-  const stackChartEl = document.getElementById('stackChart');
-  if(allReady){
-    document.getElementById('insightBox').innerHTML = renderInsight(computed);
-    stackChartEl.className = isSingle ? '' : 'stack-chart';
-    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    if(isSingle) fixWaterfallLabelFit();
-    document.getElementById('barsBody').innerHTML = renderBars(computed);
-    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
-  } else {
-    document.getElementById('insightBox').innerHTML = '';
-    stackChartEl.className = '';
-    stackChartEl.innerHTML = '';
-    document.getElementById('stackLegend').innerHTML = '';
-    document.getElementById('barsBody').innerHTML = '';
-    document.getElementById('barsAlerts').innerHTML = '';
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
-  }
+  renderComparisonChart(computed);
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
