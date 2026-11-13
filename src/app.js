@@ -1119,7 +1119,7 @@ function renderComparisonChart(computed){
   if(!stackChartEl) return;
   if(allReady){
     document.getElementById('stackHint').textContent = isSingle
-      ? 'Du brut au net, étape par étape.'
+      ? `Salaire brut de ${fmt(computed[0].r.m.brutTotal)} par mois.`
       : 'Cliquez sur une carte pour la définir comme référence.';
     document.getElementById('insightBox').innerHTML = renderInsight(computed);
     stackChartEl.className = isSingle ? '' : 'stack-chart';
