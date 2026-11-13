@@ -1022,46 +1022,53 @@ function renderBenchmarks(computed){
   const item=computed.find(x=>x.s.id===refId);
   if(!item) return '';
   const {s,r}=item;
-  const smicResult=getCachedSmicResult();
-  if(!smicResult && officialSmicState.status==='error') return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error||'erreur inconnue')}. Réessayez le calcul.</p>`;
-  if(!r) return '';
-  if(!smicResult) return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
   const weeklyHours=Number(s.dureeType), userMonthlyHours=weeklyHours*52/12;
-  const userNetBeforeTax=Math.max(0,r.netApres), userNetHourly=userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0;
-  const smicNetBeforeTax=Math.max(0,smicResult.netApres), smicNetHourly=smicNetBeforeTax/HEURES_BASE;
-  const smicGross=getSmicGross(), smicHourlyGross=smicGross/HEURES_BASE;
   const medianNetBeforeTax=2238, medianNetHourly=medianNetBeforeTax/HEURES_BASE;
   const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?userMonthlyHours*12:userMonthlyHours;
   const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
   const format=maquetteComparisonPeriod==='hour'?fmtHoraire:fmt;
-  const userValue=userNetHourly*factor, smicValue=smicNetHourly*factor, medianValue=medianNetHourly*factor;
-  const smicGap=userValue-smicValue, medianGap=userValue-medianValue;
+  const medianValue=medianNetHourly*factor;
+  const smicResult=getCachedSmicResult();
+  const smicGross=getSmicGross();
+  const smicHourlyGross=smicGross/HEURES_BASE;
+  const userNetBeforeTax=r?Math.max(0,r.netApres):null;
+  const userNetHourly=userNetBeforeTax===null?null:(userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0);
+  const userValue=userNetHourly===null?null:userNetHourly*factor;
   const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+' / '+unit;
   const gapClass=value=>value>=0?'benchmark-positive':'benchmark-negative';
   const durationLabel=weeklyHours.toLocaleString('fr-FR')+' h';
-  return `
-    <div class="benchmark-grid">
+  const smicNetHourly=smicResult?Math.max(0,smicResult.netApres)/HEURES_BASE:null;
+  const smicValue=smicNetHourly===null?null:smicNetHourly*factor;
+  const smicGap=userValue===null||smicValue===null?null:userValue-smicValue;
+  const medianGap=userValue===null?null:userValue-medianValue;
+  const smicStatus=officialSmicState.status==='error'
+    ? 'Repère SMIC indisponible via l’API officielle. Réessayez le calcul.'
+    : 'Le repère net sera récupéré auprès de l’Urssaf après votre autorisation.';
+  const smicCard=`
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC net</div><div class="benchmark-value">${format(smicValue)}</div>
-        <div class="benchmark-meta">Par ${unit} · équivalent 35 h</div>
-        <div class="benchmark-result ${gapClass(smicGap)}">${gapText(smicGap)}</div>
-        <details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
+        <div class="benchmark-label">SMIC net</div>
+        <div class="benchmark-value">${smicValue===null?'À calculer':format(smicValue)}</div>
+        <div class="benchmark-meta">${smicValue===null?esc(smicStatus):'Par '+unit+' · équivalent 35 h'}</div>
+        ${smicGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(smicGap)+'">'+gapText(smicGap)+'</div>'}
+        ${smicResult?`<details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
           <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf, sur une base de 35 h. Pour les périodes mensuelle et annuelle, le repère est ramené à la durée de votre contrat (${durationLabel}). Il est calculé sans mutuelle ni titres-restaurant.</p>
           <p>Brut mensuel de référence : ${fmt(smicGross)}. Taux horaire brut : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
-        </details>
-      </article>
+        </details>`:''}
+      </article>`;
+  const medianCard=`
       <article class="benchmark-item">
-        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div><div class="benchmark-value">${format(medianValue)}</div>
+        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div>
+        <div class="benchmark-value">${format(medianValue)}</div>
         <div class="benchmark-meta">Par ${unit} · INSEE 2025 · France</div>
-        <div class="benchmark-result ${gapClass(medianGap)}">${gapText(medianGap)}</div>
+        ${medianGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(medianGap)+'">'+gapText(medianGap)+'</div>'}
         <details class="benchmark-details"><summary>Que signifie la médiane ?</summary>
-          <p>L’Données INSEE 2025 · publiées en 2026 · France. La médiane publiée est de 2 238 € nets mensuels en EQTP. Le taux horaire est ramené à 151,67 h/mois ; les périodes mensuelle et annuelle sont ajustées à la durée du contrat comparé (${durationLabel}).</p>
+          <p>Données INSEE 2025, publiées en 2026, pour la France. La médiane publiée est de 2 238 € nets mensuels en EQTP. Le taux horaire est ramené à 151,67 h/mois ; les périodes mensuelle et annuelle sont ajustées à la durée du contrat comparé (${durationLabel}).</p>
           <p>Le champ couvre les salariés du privé en France, y compris alternants, stagiaires et contrats aidés ; il exclut l’agriculture et les particuliers employeurs. Il est plus large que le périmètre CDI non-cadre d’OnNet.</p>
           <p>Source : <a href="https://www.insee.fr/fr/statistiques/9087193" target="_blank" rel="noopener noreferrer">INSEE, salaires dans le secteur privé en 2025</a>.</p>
         </details>
-      </article>
-    </div>`;
+      </article>`;
+  return '<div class="benchmark-grid">'+smicCard+medianCard+'</div>';
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
