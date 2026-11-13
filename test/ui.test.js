@@ -157,7 +157,9 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
-  if (options.advancedOpen !== false && !options.emptyStorage) await page.locator('#advancedWorkspace > summary').click();
+  if (options.advancedOpen !== false && !options.emptyStorage) {
+    await page.locator('#advancedWorkspace').evaluate(el => { el.open = true; });
+  }
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
