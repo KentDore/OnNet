@@ -57,6 +57,6 @@ node --test test/ui.test.js
 node --test test/build.test.js
 ```
 
-Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement. `npm run test:all` couvre les tests du client API et du prototype Publicodes ; les tests UI et build sont lancés séparément par les deux commandes suivantes.
+Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement. Les parcours navigateur utilisent une API simulée : ils vérifient les interactions, les paramètres transmis et les états d’erreur, mais ne valident pas l’exactitude des montants de paie. La CI standard ne dépend pas de la disponibilité de l’API distante. `npm run test:all` couvre les tests du client API et du prototype Publicodes ; les tests UI et build sont lancés séparément par les deux commandes suivantes.
 
 Le smoke test `node scripts/smoke-urssaf-api.mjs` interroge réellement l’API et contrôle plusieurs scénarios (SMIC, 35 h / 39 h, mutuelle, titres-restaurant et paramètres fiscaux). Il vérifie des cohérences internes, mais ne constitue pas une validation indépendante de l’exactitude des montants. Le diagnostic comparatif avec le moteur Publicodes local est distinct et ne prouve pas la conformité réglementaire.
