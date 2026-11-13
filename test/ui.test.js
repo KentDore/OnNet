@@ -980,8 +980,24 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
   try {
     const output = path.join(__dirname, '..', 'artifacts', 'visual');
     fs.mkdirSync(output, { recursive:true });
+    await page.emulateMedia({ reducedMotion:'reduce' });
     assert.equal(await page.locator('#advancedWorkspace').evaluate(el => el.open), false,
       'les outils secondaires doivent rester repliés dans le parcours initial');
+    await page.waitForFunction(() => {
+      const panel = document.getElementById('comparePanel');
+      const chart = document.getElementById('stackChart');
+      return panel && !panel.hidden && chart && chart.children.length > 0 &&
+        !chart.parentElement.hidden;
+    }, null, { timeout:5000 });
+
+    // Aligner la capture sur les données d'exemple de la maquette V33.
+    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#updateDeclaredSalary').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
+      document.querySelector('#stackChart')?.children.length > 0,
+      null, { timeout:20000 });
+    await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
