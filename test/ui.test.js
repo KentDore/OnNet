@@ -992,15 +992,14 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   }
 });
 
-test('le texte des heures supplémentaires apparaît uniquement en 39 h', async () => {
+test('les valeurs principales se modifient dans le formulaire unique en haut de page', async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
-    const hint = card.locator('.field-row').filter({ hasText:'Base horaire' }).locator('.sub-hint');
-    await card.locator('[data-duree="35"]').click();
-    assert.equal(await hint.count(), 0, 'aucune explication d’heures supplémentaires en 35 h');
-    await card.locator('[data-duree="39"]').click();
-    assert.match(await card.locator('.field-row').filter({ hasText:'Base horaire' }).innerText(), /4 h supplémentaires/);
+    assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'pas de second champ de salaire dans la fiche détaillée');
+    assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
+    assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
   } finally {
     await context.close();
   }
