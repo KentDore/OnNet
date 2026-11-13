@@ -194,7 +194,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Aucune donnée de salaire n’est transmise avant votre accord/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
@@ -204,7 +204,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.match(notice, /transmet à l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
-    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Accepter et calculer');
+    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
     assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
 
     await page.locator('#urssafCalculateBtn').click();
@@ -791,6 +791,69 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
     assert.match(scope, /net à payer avant impôt/i);
     assert.match(scope, /ne modifient pas ce graphique/i);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur état visuel', async () => {
+  const { context, page } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    await page.locator('#amtToggle [data-amt="brut"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Brut mensuel');
+    assert.equal(await page.locator('#amtToggle [data-amt="brut"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#periodToggle [data-period="an"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Brut annuel');
+    assert.equal(await page.locator('#periodToggle [data-period="an"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#amtToggle [data-amt="net"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé annuel');
+    await page.locator('#periodToggle [data-period="mois"]').click();
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé mensuel');
+    assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#periodToggle [data-period="mois"]').getAttribute('aria-pressed'), 'true');
+  } finally {
+    await context.close();
+  }
+});
+
+test('les fiches de salaire précèdent le comparatif et les graphiques vides sont masqués', async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const order = await page.evaluate(() => {
+      const cards = document.querySelector('.cards-bar');
+      const comparison = document.querySelector('#comparePanel');
+      return cards.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
+    });
+    assert.ok(order, 'les fiches de salaire doivent précéder le comparatif');
+    assert.equal(await page.locator('#comparePanel').isVisible(), false, 'ne pas afficher un panneau de résultats vide');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le texte des heures supplémentaires apparaît uniquement en 39 h', async () => {
+  const { context, page } = await openApp();
+  try {
+    const card = page.locator('#cardsBody [data-card]').first();
+    const hint = card.locator('.field-row').filter({ hasText:'Base horaire' }).locator('.sub-hint');
+    await card.locator('[data-duree="35"]').click();
+    assert.equal(await hint.count(), 0, 'aucune explication d’heures supplémentaires en 35 h');
+    await card.locator('[data-duree="39"]').click();
+    assert.match(await card.locator('.field-row').filter({ hasText:'Base horaire' }).innerText(), /4 h supplémentaires/);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('le consentement indique explicitement les données envoyées à l’Urssaf', async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
+    assert.equal(await page.locator('#urssafStatusText').innerText(),
+      'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.');
   } finally {
     await context.close();
   }
