@@ -1011,29 +1011,34 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
-    const formGrid = await page.evaluate(() => {
+    const formLayout = await page.evaluate(() => {
       const rect = selector => {
         const r = document.querySelector(selector).getBoundingClientRect();
-        return { left:r.left, top:r.top, right:r.right, bottom:r.bottom };
+        return { left:r.left, top:r.top, width:r.width, right:r.right };
       };
       return {
-        periodLabel:rect('label[for="mainSalaryPeriod"]'),
-        grossLabel:rect('label[for="mainSalaryGross"]'),
-        hoursLabel:rect('label[for="mainSalaryHours"]'),
+        period:rect('#mainSalaryPeriod'),
+        gross:rect('#mainSalaryGross'),
+        hours:rect('#mainSalaryHours'),
         mutuelle:rect('.declaration-mutuelle'),
-        calculate:rect('#updateDeclaredSalary')
+        calculate:rect('#updateDeclaredSalary'),
+        fields:rect('.declaration-fields')
       };
     });
-    assert.ok(formGrid.periodLabel.left < formGrid.grossLabel.left,
-      'période à gauche et salaire brut à droite');
-    assert.ok(Math.abs(formGrid.periodLabel.top - formGrid.grossLabel.top) < 20,
-      'les deux premières étiquettes sont alignées');
-    assert.ok(formGrid.hoursLabel.left < formGrid.mutuelle.left,
-      'base horaire à gauche et mutuelle à droite');
-    assert.ok(formGrid.mutuelle.top <= formGrid.hoursLabel.top + 24,
-      'la note mutuelle occupe les deux lignes de droite');
-    assert.ok(formGrid.calculate.left > formGrid.hoursLabel.left,
-      'le bouton de calcul est aligné à droite sur desktop');
+    assert.ok(formLayout.gross.top > formLayout.period.top,
+      'les champs de saisie restent empilés comme dans la V33');
+    assert.ok(formLayout.hours.top > formLayout.gross.top,
+      'la base horaire suit le salaire brut');
+    assert.ok(formLayout.mutuelle.top > formLayout.hours.top,
+      'la note Mutuelle suit les champs de saisie');
+    assert.ok(formLayout.calculate.top > formLayout.mutuelle.top,
+      'le bouton de calcul suit la note Mutuelle');
+    assert.ok(Math.abs(formLayout.period.width - formLayout.fields.width) < 2,
+      'les champs occupent toute la largeur du formulaire');
+    assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
+      'la note Mutuelle occupe toute la largeur du formulaire');
+    assert.ok(Math.abs(formLayout.calculate.width - formLayout.fields.width) < 2,
+      'le bouton de calcul occupe toute la largeur du formulaire');
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
     await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
