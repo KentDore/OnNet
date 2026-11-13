@@ -1953,6 +1953,21 @@ function showShareModal(url){
 }
 
 // Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
+function renderUrssafConsentNotice(){
+  return `
+    <div class="onboarding-consent">
+      <div class="onboarding-consent-top">
+        <span class="onboarding-consent-icon" aria-hidden="true">✓</span>
+        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucune donnée transmise avant validation</small></span>
+        <span class="onboarding-consent-badge">Sécurisé</span>
+      </div>
+      <details class="onboarding-consent-details">
+        <summary>Quelles données sont transmises ?</summary>
+        <p>En validant ce formulaire, vous autorisez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale.</p>
+      </details>
+    </div>`;
+}
+
 function renderMutuelleTrFields(idPrefix){
   return `
     <div class="onboarding-benefits">
@@ -1963,25 +1978,24 @@ function renderMutuelleTrFields(idPrefix){
         <span class="onboarding-mutuelle-label">Mutuelle</span>
         <strong>30 € salarié · 30 € employeur</strong>
       </div>
-      <details class="onboarding-optional">
-        <summary><span>Titres-restaurant</span><span class="optional-label">Facultatif</span></summary>
-        <div class="onboarding-optional-body">
-          <div class="field-row" style="margin-bottom:0;">
-            <label>Avez-vous des titres-restaurant ?</label>
-            <div class="pill-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Titres-restaurant">
-              <button type="button" data-tr="non" aria-pressed="true">Non</button>
-              <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
-            </div>
-          </div>
-          <div id="${idPrefix}TrFields" hidden style="margin-top:14px;">
-            <div class="three-col">
-              <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-              <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-              <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
-            </div>
+      <div class="onboarding-tr">
+        <div class="onboarding-tr-heading">
+          <span class="onboarding-tr-icon" aria-hidden="true">▣</span>
+          <strong>Titres-restaurant</strong>
+          <span class="onboarding-tr-optional">Facultatif</span>
+        </div>
+        <div class="pill-toggle onboarding-tr-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Avez-vous des titres-restaurant ?">
+          <button type="button" data-tr="non" aria-pressed="true">Non</button>
+          <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+        </div>
+        <div id="${idPrefix}TrFields" class="onboarding-tr-fields" hidden>
+          <div class="three-col">
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
+            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
           </div>
         </div>
-      </details>
+      </div>
     </div>`;
 }
 
@@ -2016,7 +2030,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
-    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce formulaire, vous acceptez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun salaire n’est transmis avant cette validation.</p>
+        ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2043,7 +2057,7 @@ function showOnboardingModal(){
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer et lancer le calcul</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingPeriod button', dismissible: false });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
@@ -2095,7 +2109,7 @@ function showOnboardingModal(){
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
-    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce salaire, vous autorisez sa transmission à l’API officielle Mon-entreprise de l’Urssaf pour calculer le résultat.</p>
+        ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="Période du salaire">
