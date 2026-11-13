@@ -1075,3 +1075,11 @@ header.hero .trust-icon svg{width:19px;height:19px}
   font-size:13px;
   line-height:1.45;
 }
+
+
+.scenario-edit-hint{
+  margin:-5px 0 14px;
+  color:var(--ink-soft);
+  font-size:12px;
+  line-height:1.45;
+}
