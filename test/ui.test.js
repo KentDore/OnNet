@@ -161,8 +161,14 @@ async function openApp(options = {}) {
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
   }
 
-  if (options.consent !== false && !options.emptyStorage) {
+  if (options.consent !== false) {
+    if (options.emptyStorage) {
+      await page.locator('#modalOnboardingInput').fill('2500');
+      await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
+    } else {
+      await page.locator('#mainSalaryGross').fill('2300');
+    }
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -184,7 +190,7 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
-test('indique la source Urssaf et ne transmet aucune donnée avant la validation de la fenêtre d’accueil', async () => {
+test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du formulaire', async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
     await waitForCalls(calls, 1);
@@ -195,7 +201,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la validation
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Aucune donnée salariale n’est transmise avant validation/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
@@ -206,16 +212,16 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la validation
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
-    assert.equal(await page.locator('#updateDeclaredSalary').count().then(count => count > 0), true);
+    assert.match(await page.locator('.declaration-api-notice').innerText(), /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
 
-    await page.locator('#modalOnboardingSubmit').click();
+    await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
     );
     assert.ok(calls.count >= 3);
     assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /API officielle Mon-entreprise \(Urssaf\)/);
-    assert.equal(await page.locator('#updateDeclaredSalary').count().then(count => count > 0), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
 
     const legacy = await page.evaluate(() => {
       const data = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -263,6 +269,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
     assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
+    await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() => {
@@ -356,6 +363,7 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
 test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
+    await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
@@ -433,6 +441,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
 test('gère une indisponibilité Urssaf sans afficher de résultat local', async () => {
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
+    await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
@@ -441,7 +450,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', async
     assert.ok(calls.count >= 1);
     assert.equal(await page.locator('#cardsBody .hero-value').first().innerText(), '—');
     assert.match(await page.locator('#cardsBody .result-source').first().innerText(), /indisponible|joindre l’API Urssaf/);
-    assert.equal(await page.locator('#updateDeclaredSalary').count().then(count => count > 0), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
   }
@@ -530,7 +539,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     assert.ok(calls.count > before);
     await page.reload();
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3100');
-    assert.equal(await page.locator('#updateDeclaredSalary').count().then(count => count > 0), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
   }
@@ -560,7 +569,7 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     await sharedPage.goto(shareUrl);
     assert.equal(await sharedPage.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await sharedPage.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3450');
-    assert.equal(await sharedPage.locator('#updateDeclaredSalary').isVisible(), true);
+    assert.equal(await sharedPage.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
   }
@@ -654,7 +663,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-card] .result-source')?.textContent.includes('nombre de mensualités différent de 12')
     );
-    assert.equal(await page.locator('#updateDeclaredSalary').count().then(count => count > 0), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(calls.count, before, 'aucun nouvel appel API pour un scénario non pris en charge');
   } finally {
     await context.close();
@@ -835,9 +844,10 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
   }
 });
 
-test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par la fenêtre d’accueil', async () => {
+test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par la saisie du formulaire', async () => {
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
+    await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
@@ -848,13 +858,13 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
     assert.deepEqual(smicRequests[0].expressions, ['SMIC']);
     assert.ok(calls.bodies.some(body =>
       Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')
-    ), 'les calculs salariaux doivent démarrer après le clic explicite');
+    ), 'les calculs salariaux doivent démarrer après la validation du formulaire');
   } finally {
     await context.close();
   }
 });
 
-test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs après consentement', async () => {
+test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs après saisie', async () => {
   const { context, page, calls } = await openApp({ consent: false, failFirstCalls: 1 });
   try {
     await waitForCalls(calls, 1);
@@ -862,6 +872,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
+    await page.locator('#modalOnboardingInput').fill('2500');
     await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
