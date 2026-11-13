@@ -1663,7 +1663,7 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
  * Évalue une règle Publicodes sans calcul salarial local.
  * Une date ISO éventuelle est convertie au format attendu par le modèle.
  */
-export async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
+async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
   if (typeof expression !== 'string' || !expression.trim() || expression.length > 200) {
     throw new TypeError('Une règle Urssaf valide est requise.')
   }
@@ -1703,7 +1703,7 @@ export async function evaluateUrssafExpression(expression, situation = {}, optio
  * pas être reconstruit à partir de l'écart entre deux montants nets.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
-export async function calculateWithUrssafApi(input = {}, options = {}) {
+async function calculateWithUrssafApi(input = {}, options = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new TypeError('Un scénario de calcul est requis.')
   }
@@ -1877,8 +1877,10 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
   return Object.freeze(result)
 }
 
-export const urssafApiExpressions = EXPRESSIONS
-\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n
+const urssafApiExpressions = EXPRESSIONS
+
+window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
+
 </script>
 <script>
 "use strict";
