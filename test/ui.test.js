@@ -290,7 +290,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     const smicBenchmarkRequests = calls.bodies.filter(body =>
       body.expressions.length === 2 &&
       body.expressions.includes('salarié . rémunération . brut') &&
-      body.situation['salarié . temps de travail . heures supplémentaires']
+      Number.parseFloat(body.situation['salarié . temps de travail . heures supplémentaires'] || '0') > 17
     );
     const finalSmicRequest = smicBenchmarkRequests.at(-1);
     assert.ok(finalSmicRequest, 'le SMIC 39 h doit être calculé par l’API avec des heures supplémentaires');
