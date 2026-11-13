@@ -975,6 +975,23 @@ test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées 
   }
 });
 
+test('capture visuelle desktop et mobile du parcours V33', async () => {
+  const { context, page } = await openApp({ advancedOpen:false });
+  try {
+    const output = path.join(__dirname, '..', 'artifacts', 'visual');
+    fs.mkdirSync(output, { recursive:true });
+    assert.equal(await page.locator('#advancedWorkspace').evaluate(el => el.open), false,
+      'les outils secondaires doivent rester repliés dans le parcours initial');
+
+    await page.setViewportSize({ width:1440, height:1000 });
+    await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
+    await page.setViewportSize({ width:390, height:844 });
+    await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
+  } finally {
+    await context.close();
+  }
+});
+
 test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
   const { context, page } = await openApp();
   try {
