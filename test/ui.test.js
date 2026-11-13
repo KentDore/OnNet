@@ -361,8 +361,7 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
 test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
-    await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+    await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
@@ -996,7 +995,7 @@ test('le bouton principal informe explicitement de la transmission des données 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0, 'aucun bouton de calcul ne doit être affiché');
     assert.equal(await page.locator('#urssafCalculateBtn').count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Aucune donnée salariale n’est transmise avant validation/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire dans le formulaire pour autoriser sa transmission/);
   } finally {
     await context.close();
   }
