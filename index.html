@@ -1051,6 +1051,38 @@ header.hero .trust-icon svg{width:19px;height:19px}
   }
 
 
+
+/* Correctifs de lisibilité mobile : la mutuelle reste lisible sur fond pâle.
+   Le statut Urssaf n'apparaît qu'en cas d'erreur ou d'avertissement utile. */
+.declaration-inline .declaration-mutuelle{
+  background:#EAF4EC;
+  border-color:#C9DFCE;
+  color:#244B36;
+}
+.declaration-inline .declaration-mutuelle strong,
+.declaration-inline .declaration-mutuelle span{
+  color:#244B36;
+  opacity:1;
+}
+.urssaf-status:not(.is-error){
+  display:none !important;
+}
+.urssaf-status.is-error{
+  display:block;
+  margin:12px 0;
+  padding:11px 13px;
+  border:1px solid var(--warn-line);
+  border-radius:12px;
+  background:var(--warn-soft);
+  color:var(--warn);
+}
+.urssaf-status.is-error .urssaf-status-message{
+  margin:0;
+  color:var(--warn);
+  font-size:13px;
+  line-height:1.45;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1100,16 +1132,9 @@ header.hero .trust-icon svg{width:19px;height:19px}
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
   </section>
-  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="Source des calculs">
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
-      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong>Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
-      <details class="urssaf-data-details">
-        <summary>Quelles données sont transmises ?</summary>
-        <p class="urssaf-data-notice">Pour calculer votre résultat, OnNet transmet à l’Urssaf les paramètres nécessaires : salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
-      </details>
-      <div class="urssaf-consent-row">
-        <p class="urssaf-status-message"><strong id="urssafStatusText">Renseignez votre salaire pour autoriser sa transmission à l’API officielle Urssaf et lancer le calcul.</strong></p>
-      </div>
+      <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
         <summary>Détails du calcul</summary>
         <ul id="urssafWarningsList"></ul>
