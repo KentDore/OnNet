@@ -783,20 +783,9 @@ function renderCard(s, r, showRemove){
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
-    <div class="field-row">
-      <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
-      ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
-    </div>
-
-    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}</div>
-
-    <div class="field-row">
-      <label>Base horaire</label>
-      <div class="pill-toggle" data-durree-group="${uid}">
-        <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
-        <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
-      </div>
-      ${s.dureeType === '39' ? '<div class="sub-hint">Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>' : ''}
+    <div class="scenario-edit-hint">
+      Salaire brut et durée du travail modifiables dans « Votre situation », en haut de page.
+      ${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}
     </div>
 
     <details class="more">
