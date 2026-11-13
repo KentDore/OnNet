@@ -1137,10 +1137,12 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       const deadline = Date.now() + 15000;
       while (Date.now() < deadline) {
         const found = benchmarkRequests().filter(predicate).at(-1);
-        if (found) return found;
+        const status = document.getElementById('urssafStatusText')?.textContent || '';
+        const smicValue = document.querySelector('#benchmarkBody .benchmark-value')?.textContent || '';
+        if (found && status.includes('Calculs à jour') && smicValue !== 'À calculer') return found;
         await new Promise(resolve => setTimeout(resolve, 50));
       }
-      assert.fail('Le calcul du repère SMIC attendu n’a pas été envoyé à l’API.');
+      assert.fail('Le calcul du repère SMIC attendu n’a pas été envoyé ou terminé via l’API.');
     };
 
     const smic39 = await waitForBenchmarkRequest(request =>
