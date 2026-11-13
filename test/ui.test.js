@@ -270,7 +270,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
       return state?.scenarios?.length === 1 && state.scenarios[0].mutuelle === 30 &&
         state.scenarios[0].mutuellePat === 30;
     });
-    await page.locator('#addScenario').click();
+    await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
     assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
     assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
@@ -292,7 +292,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
     assert.match(medianMethod, /2\s?238/);
-    assert.match(medianMethod, /Données INSEE 2025 · publiées en 2026/);
+    assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
@@ -669,7 +669,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.locator('summary').click();
+    await advanced.getByText('Paramètres avancés et outils', { exact: true }).click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), true);
     assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
