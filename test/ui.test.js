@@ -162,7 +162,7 @@ async function openApp(options = {}) {
   }
 
   if (options.consent !== false && !options.emptyStorage) {
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -184,7 +184,7 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
-test('indique la source Urssaf et ne transmet aucune donnée avant consentement', async () => {
+test('indique la source Urssaf et ne transmet aucune donnée avant le clic de calcul', async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
     await waitForCalls(calls, 1);
@@ -205,17 +205,17 @@ test('indique la source Urssaf et ne transmet aucune donnée avant consentement'
     assert.match(notice, /transmet à l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
-    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
-    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').innerText(), 'Calculer mon salaire');
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), true);
 
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
     );
     assert.ok(calls.count >= 3);
     assert.match(await page.locator('#cardsBody [data-result-state="ready"]').first().innerText(), /API officielle Mon-entreprise \(Urssaf\)/);
-    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), true);
 
     const legacy = await page.evaluate(() => {
       const data = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -356,7 +356,7 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
 test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
@@ -433,7 +433,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
 test('gère une indisponibilité Urssaf sans afficher de résultat local', async () => {
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
       null, { timeout: 12000 }
@@ -441,7 +441,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', async
     assert.ok(calls.count >= 1);
     assert.equal(await page.locator('#cardsBody .hero-value').first().innerText(), '—');
     assert.match(await page.locator('#cardsBody .result-source').first().innerText(), /indisponible|joindre l’API Urssaf/);
-    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), true);
   } finally {
     await context.close();
   }
@@ -530,7 +530,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     assert.ok(calls.count > before);
     await page.reload();
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3100');
-    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), true);
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), true);
   } finally {
     await context.close();
   }
@@ -560,7 +560,7 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     await sharedPage.goto(shareUrl);
     assert.equal(await sharedPage.locator('#cardsBody [data-card]').count(), 2);
     assert.equal(await sharedPage.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3450');
-    assert.equal(await sharedPage.locator('#urssafCalculateBtn').isVisible(), true);
+    assert.equal(await sharedPage.locator('#updateDeclaredSalary').isVisible(), true);
   } finally {
     await context.close();
   }
@@ -654,7 +654,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-card] .result-source')?.textContent.includes('nombre de mensualités différent de 12')
     );
-    assert.equal(await page.locator('#urssafCalculateBtn').isVisible(), false);
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), false);
     assert.equal(calls.count, before, 'aucun nouvel appel API pour un scénario non pris en charge');
   } finally {
     await context.close();
@@ -835,10 +835,10 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
   }
 });
 
-test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par le consentement', async () => {
+test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par le bouton principal', async () => {
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -848,7 +848,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
     assert.deepEqual(smicRequests[0].expressions, ['SMIC']);
     assert.ok(calls.bodies.some(body =>
       Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')
-    ), 'les calculs salariaux doivent démarrer après le consentement');
+    ), 'les calculs salariaux doivent démarrer après le clic explicite');
   } finally {
     await context.close();
   }
@@ -862,7 +862,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
-    await page.locator('#urssafCalculateBtn').click();
+    await page.locator('#updateDeclaredSalary').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
@@ -981,12 +981,16 @@ test('le texte des heures supplémentaires apparaît uniquement en 39 h', async 
 });
 
 
-test('le consentement indique explicitement les données envoyées à l’Urssaf', async () => {
+test('le bouton principal informe explicitement de la transmission des données à l’Urssaf', async () => {
   const { context, page } = await openApp({ consent:false });
   try {
-    assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
-    assert.equal(await page.locator('#urssafStatusText').innerText(),
-      'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.');
+    assert.equal(await page.locator('#updateDeclaredSalary').innerText(), 'Calculer mon salaire');
+    assert.equal(await page.locator('#updateDeclaredSalary').count(), 1,
+      'un seul bouton doit déclencher le calcul et l’accord de transmission');
+    assert.equal(await page.locator('#urssafCalculateBtn').count(), 0,
+      'le second bouton d’autorisation doit être supprimé');
+    assert.match(await page.locator('#urssafStatusText').innerText(),
+      /En cliquant sur « Calculer mon salaire », vous autorisez l’envoi/);
   } finally {
     await context.close();
   }
