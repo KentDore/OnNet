@@ -2970,6 +2970,9 @@ function renderMaquetteControls(computedOverride){
     urssafConsentGranted = true;
     saveState();
     render();
+    // Le même bouton sert aussi à relancer proprement un calcul en échec :
+    // on invalide les erreurs mémorisées et on démarre sans attendre le debounce.
+    scheduleUrssafCalculations(true,true);
   };
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
