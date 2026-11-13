@@ -195,7 +195,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant le clic de ca
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /En cliquant sur « Calculer mon salaire », vous autorisez l’envoi/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
