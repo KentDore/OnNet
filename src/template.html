@@ -55,16 +55,9 @@
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
   </section>
-  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="Source des calculs">
+  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
-      <p class="urssaf-status-main"><span class="urssaf-status-dot" aria-hidden="true"></span><strong>Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf.</strong></p>
-      <details class="urssaf-data-details">
-        <summary>Quelles données sont transmises ?</summary>
-        <p class="urssaf-data-notice">Pour calculer votre résultat, OnNet transmet à l’Urssaf les paramètres nécessaires : salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
-      </details>
-      <div class="urssaf-consent-row">
-        <p class="urssaf-status-message"><strong id="urssafStatusText">Renseignez votre salaire pour autoriser sa transmission à l’API officielle Urssaf et lancer le calcul.</strong></p>
-      </div>
+      <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
         <summary>Détails du calcul</summary>
         <ul id="urssafWarningsList"></ul>
