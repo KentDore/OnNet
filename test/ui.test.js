@@ -1025,6 +1025,7 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
         fields:rect('.declaration-fields')
       };
     });
+    console.log('ONNET_FORM_LAYOUT=' + JSON.stringify(formLayout));
     assert.ok(formLayout.gross.top > formLayout.period.top,
       'les champs de saisie restent empilés comme dans la V33');
     assert.ok(formLayout.hours.top > formLayout.gross.top,
