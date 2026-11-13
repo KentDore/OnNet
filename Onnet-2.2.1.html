@@ -1083,6 +1083,14 @@ header.hero .trust-icon svg{width:19px;height:19px}
   line-height:1.45;
 }
 
+
+.scenario-edit-hint{
+  margin:-5px 0 14px;
+  color:var(--ink-soft);
+  font-size:12px;
+  line-height:1.45;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1655,7 +1663,7 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
  * Évalue une règle Publicodes sans calcul salarial local.
  * Une date ISO éventuelle est convertie au format attendu par le modèle.
  */
-async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
+export async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
   if (typeof expression !== 'string' || !expression.trim() || expression.length > 200) {
     throw new TypeError('Une règle Urssaf valide est requise.')
   }
@@ -1695,7 +1703,7 @@ async function evaluateUrssafExpression(expression, situation = {}, options = {}
  * pas être reconstruit à partir de l'écart entre deux montants nets.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
-async function calculateWithUrssafApi(input = {}, options = {}) {
+export async function calculateWithUrssafApi(input = {}, options = {}) {
   if (!input || typeof input !== 'object' || Array.isArray(input)) {
     throw new TypeError('Un scénario de calcul est requis.')
   }
@@ -1869,10 +1877,8 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
   return Object.freeze(result)
 }
 
-const urssafApiExpressions = EXPRESSIONS
-
-window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
-
+export const urssafApiExpressions = EXPRESSIONS
+\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n
 </script>
 <script>
 "use strict";
@@ -2715,20 +2721,9 @@ function renderCard(s, r, showRemove){
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
-    <div class="field-row">
-      <label for="f-brut-${uid}">Salaire brut mensuel (€)</label>
-      ${num(`f-brut-${uid}`,'brut',uid,s.brut,{min:0})}
-    </div>
-
-    <div class="sub-hint" id="rate-hint-${uid}" style="margin:-6px 0 14px;">${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}</div>
-
-    <div class="field-row">
-      <label>Base horaire</label>
-      <div class="pill-toggle" data-durree-group="${uid}">
-        <button type="button" data-duree="35" data-id="${uid}" aria-pressed="${s.dureeType==='35'}">35 h</button>
-        <button type="button" data-duree="39" data-id="${uid}" aria-pressed="${s.dureeType==='39'}">39 h</button>
-      </div>
-      ${s.dureeType === '39' ? '<div class="sub-hint">Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>' : ''}
+    <div class="scenario-edit-hint">
+      Salaire brut et durée du travail modifiables dans « Votre situation », en haut de page.
+      ${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}
     </div>
 
     <details class="more">
