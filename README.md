@@ -18,6 +18,10 @@ Avant le premier calcul salarial, l’interface présente les paramètres envoy�
 
 Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Le modèle fiscal Mon-entreprise comporte des règles simplifiées ou expérimentales ; les avertissements et valeurs par défaut doivent être examinés.
 
+## Référence salariale
+
+Le comparatif utilise la médiane nationale des salaires nets du secteur privé en EQTP pour 2025 : 2 238 € par mois, avant impôt sur le revenu. Ces données ont été publiées par l’INSEE le 22 octobre 2026 ([Insee Première n° 2132](https://www.insee.fr/fr/statistiques/9087193)). Le champ statistique inclut les alternants, stagiaires et bénéficiaires de contrats aidés ; il exclut l’agriculture et les particuliers employeurs. Il ne correspond donc pas exactement au périmètre de simulation d’OnNet (CDI non-cadre à temps plein). Cette référence statistique est distincte du calcul individuel réalisé par l’API Mon-entreprise / Urssaf.
+
 ## Fonctionnalités et périmètre
 
 - Comparaison de plusieurs scénarios de salaire, graphiques, réorganisation des cartes et simulation d’augmentation.
@@ -28,7 +32,7 @@ Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie v
 - Titres-restaurant paramétrables en nombre, valeur et part salariale. Le modèle accepte une participation salariale de 40 à 50 % (participation employeur de 50 à 60 %).
 - Prélèvement à la source selon le barème du modèle fiscal ou selon un taux personnalisé. Le taux personnalisé reste constant dans les scénarios comparés.
 - Foyer fiscal : personne seule, parent isolé, couple marié ou pacsé avec revenus complémentaires renseignables, ou concubinage. En concubinage, les revenus du partenaire ne sont pas intégrés au calcul de l’utilisateur.
-- Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net avant impôt est calculé par la même API après consentement.
+- Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net avant impôt est calculé par la même API après consentement. Pour une offre de 39 h, le repère tient compte des 4 heures supplémentaires hebdomadaires majorées à 25 % selon l’hypothèse de droit commun retenue par le simulateur.
 - Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 
 ## Limites connues

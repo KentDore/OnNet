@@ -155,11 +155,19 @@ function getSmicGross(){
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
 
+function getSmicGrossTarget(baseGross, weeklyHours){
+  const overtimeHours=Number(weeklyHours)===39?4*52/12:0;
+  if(!overtimeHours) return baseGross;
+  // En 39 h : SMIC de base 35 h + 4 h supplémentaires hebdomadaires à +25 %.
+  return Math.round(baseGross*(1+overtimeHours*1.25/HEURES_BASE)*100)/100;
+}
+
 function buildSmicScenario(base){
   const amount = getSmicGross();
   if(!Number.isFinite(amount) || amount <= 0) return null;
+  const weeklyHours=Number(base.dureeType)===39?39:35;
   return Object.assign({}, base, {
-    id:-1, name:'Référence SMIC', brut:amount, dureeType:'35',
+    id:-1, name:'Référence SMIC', brut:getSmicGrossTarget(amount,weeklyHours), dureeType:String(weeklyHours),
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
     nbMois:12, primes:0, isBenchmark:true
   });
@@ -891,65 +899,39 @@ function renderStackLegend(){
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
 }
 
-const WF_MIN_INSIDE = 15; // largeur (%) en dessous de laquelle le libellé sort de la barre
-
-function wfSeg(cls, dotStyle, label, val, pctVal, note){
-  const inside = pctVal >= WF_MIN_INSIDE;
-  return `
-  <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
-    <div class="wf-label"><span class="wf-dot" style="${dotStyle}"></span>${label}</div>
-    <div class="wf-track">
-      <div class="wf-bar ${cls}" style="width:${Math.min(100, Math.max(pctVal, 1.5))}%">
-        <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
-      </div>
-    </div>
-  </div>
-  ${note ? `<div class="wf-note">${note}</div>` : ''}`;
-}
-
-// Le choix libellé-dedans/dehors dans wfSeg() est fait sur un seuil en % de
-// la piste totale — insuffisant : sur un petit écran, ou quand une seule
-// catégorie (ex. titres restaurant) dépasse le brut, un % au-dessus du
-// seuil peut quand même correspondre à trop peu de pixels pour contenir le
-// texte, qui déborde alors de la barre. On corrige après coup en mesurant
-// la largeur réellement disponible.
-function fixWaterfallLabelFit(){
-  document.querySelectorAll('.wf-bar').forEach(bar => {
-    const val = bar.querySelector('.wf-val');
-    if(!val) return;
-    val.classList.remove('wf-val-out');
-    const fits = val.getBoundingClientRect().width + 20 <= bar.getBoundingClientRect().width;
-    if(!fits) val.classList.add('wf-val-out');
-  });
-}
-
 function renderWaterfall(computed){
   const { s, r } = computed[0];
   const m = r.m;
-  const brut = m.brutTotal;
-  const pct = v => brut > 0 ? (v/brut)*100 : 0;
-
-  const cotis = m.cotisNettes;
-  const mutuelle = m.mutuelle;
-  const tr = r.tr.totalSalarie;
-  const net = m.netApres;
+  const brut = Math.max(0, m.brutTotal);
+  const net = Math.max(0, m.netApres);
+  const deductions = Math.max(0, brut - net);
+  const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
+  const cotis = Math.max(0, m.cotisNettes);
+  const mutuelle = Math.max(0, m.mutuelle);
+  const tr = Math.max(0, r.tr.totalSalarie);
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  // Deux lignes chiffrées plutôt qu'une phrase : l'information est la même,
-  // mais elle se lit d'un coup d'œil au lieu de se déchiffrer.
-  // Une seule ligne compacte plutôt que deux rangées : même information,
-  // moitié moins de place sous une barre qui a déjà son propre libellé.
   const trNote = tr > 0.5
     ? `Sans TR : <strong>${fmt(netSansTR)}</strong> · TR perçus : <strong>${fmt(trValeurFaciale)}</strong>`
     : '';
-
   return `
-  <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
-    ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut', fmt(brut), 100)}
-    ${wfSeg('wf-bar-cotis', `background:${STACK_COLORS.cotis}`, '− Cotisations sociales', '−' + fmt(cotis), pct(cotis))}
-    ${wfSeg('wf-bar-mutuelle', `background:${STACK_COLORS.mutuelle}`, '− Mutuelle', '−' + fmt(mutuelle), pct(mutuelle))}
-    ${tr > 0.5 ? wfSeg('wf-bar-tr', `background:${STACK_COLORS.tr}`, '− Titres restaurant', '−' + fmt(tr), pct(tr)) : ''}
-    ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, '= Net', fmt(net), pct(net), trNote)}
+  <div class="waterfall">
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant impôt : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+      <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
+      <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
+    </div>
+    <div class="wf-breakdown">
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-net" aria-hidden="true"></span>
+        <div><strong>${fmt(net)}</strong><span>Net avant impôt</span></div>
+      </div>
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
+        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
+      </div>
+    </div>
+    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} · mutuelle ${fmt(mutuelle)} · titres-restaurant (part salarié) ${fmt(tr)}</p>
+    ${trNote ? `<p class="wf-note">${trNote}</p>` : ''}
   </div>`;
 }
 
@@ -1019,97 +1001,122 @@ function benchmarkDelta(value, reference){
   return { amount: sign + fmt(Math.abs(delta)), pct: (delta > 0 ? '+' : '') + pct.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1}) + ' %', positive: delta >= 0 };
 }
 function renderBenchmarks(computed){
-  const item = computed.find(x => x.s.id === refId);
+  const item=computed.find(x=>x.s.id===refId);
   if(!item) return '';
-  const { s, r } = item;
-  const smicResult = getCachedSmicResult();
-  if(!smicResult && officialSmicState.status === 'error'){
-    return `<p class="hint">Repère SMIC indisponible via l’API officielle : ${esc(officialSmicState.error || 'erreur inconnue')}. Réessayez le calcul pour actualiser les données.</p>`;
-  }
-  if(!r) return '';
-  if(!smicResult){
-    return '<p class="hint">Récupération du repère SMIC depuis l’API officielle Mon-entreprise / Urssaf…</p>';
-  }
-
-  // Le SMIC reste une référence à 35 h. Le salaire comparé conserve
-  // strictement la durée et les montants du contrat saisi.
-  const smicNetBeforeTax = Math.max(0, smicResult.netApres);
-  const smicMonthlyHours = HEURES_BASE;
-  const smicNetHourly = smicNetBeforeTax / smicMonthlyHours;
-  const smicGross = getSmicGross();
-  const smicHourlyGross = smicGross / smicMonthlyHours;
-
-  // Comparaison en net avant impôt par heure réellement travaillée.
-  // Aucun recalcul du salaire de l'utilisateur à 35 h.
-  const weeklyHours = Number(s.dureeType);
-  const userMonthlyHours = Number.isFinite(weeklyHours) && weeklyHours > 0
-    ? weeklyHours * 52 / 12
-    : 0;
-  const userNetBeforeTax = Math.max(0, r.netApres);
-  const userNetHourly = userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
-
-  // Référence INSEE 2024 : salaire mensuel net médian privé en EQTP.
-  // Aucun brut médian n'est déduit faute de donnée source équivalente.
-  const medianNetBeforeTax = 2190;
-  const medianNetHourly = medianNetBeforeTax / HEURES_BASE;
-
-  const smic = benchmarkDelta(userNetHourly, smicNetHourly);
-  const median = benchmarkDelta(userNetHourly, medianNetHourly);
-  const signedClass = d => d.positive ? 'benchmark-positive' : 'benchmark-negative';
-  const durationLabel = Number.isFinite(weeklyHours) && weeklyHours > 0
-    ? weeklyHours.toLocaleString('fr-FR') + ' h'
-    : 'durée non renseignée';
-  return `
-    <div class="benchmark-heading">
-      <div>
-        <h2 class="bars-title">Votre salaire face aux repères</h2>
-        <p class="hint">Comparaison en net avant impôt par heure. Votre salaire reste calculé selon la durée réelle de votre contrat ; le SMIC et le salaire médian servent de références horaires.</p>
-      </div>
-    </div>
-    <div class="benchmark-your-salary">
-      <span>Votre net avant impôt</span>
-      <strong>${fmt(userNetBeforeTax)} <small>/ mois</small></strong>
-      <div class="benchmark-meta benchmark-comparison-base">Net horaire : ${fmtHoraire(userNetHourly)} · contrat de ${durationLabel}.</div>
-    </div>
-    <div class="benchmark-grid">
+  const {s,r}=item;
+  const weeklyHours=Number(s.dureeType), userMonthlyHours=weeklyHours*52/12;
+  const medianNetBeforeTax=2238, medianNetHourly=medianNetBeforeTax/HEURES_BASE;
+  const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?userMonthlyHours*12:userMonthlyHours;
+  const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
+  const format=maquetteComparisonPeriod==='hour'?fmtHoraire:fmt;
+  const medianValue=medianNetHourly*factor;
+  const smicResult=getCachedSmicResult();
+  const smicGross=getSmicGross();
+  const smicGrossTarget=smicGross===null?null:getSmicGrossTarget(smicGross,weeklyHours);
+  const smicHourlyGross=smicGross/HEURES_BASE;
+  const userNetBeforeTax=r?Math.max(0,r.netApres):null;
+  const userNetHourly=userNetBeforeTax===null?null:(userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0);
+  const userValue=userNetHourly===null?null:userNetHourly*factor;
+  const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+' / '+unit;
+  const gapClass=value=>value>=0?'benchmark-positive':'benchmark-negative';
+  const durationLabel=weeklyHours.toLocaleString('fr-FR')+' h';
+  const smicNetHourly=smicResult?Math.max(0,smicResult.netApres)/userMonthlyHours:null;
+  const smicValue=smicNetHourly===null?null:smicNetHourly*factor;
+  const smicGap=userValue===null||smicValue===null?null:userValue-smicValue;
+  const medianGap=userValue===null?null:userValue-medianValue;
+  const smicStatus=officialSmicState.status==='error'
+    ? 'Repère SMIC indisponible via l’API officielle. Réessayez le calcul.'
+    : 'Le repère net sera récupéré auprès de l’Urssaf après votre autorisation.';
+  const smicCard=`
       <article class="benchmark-item">
-        <div class="benchmark-label">SMIC · net avant impôt</div>
-        <div class="benchmark-value">${fmt(smicNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(smicNetHourly)} · Brut mensuel : ${fmt(smicGross)}</div>
-        <div class="benchmark-result ${signedClass(smic)}">${fmtHoraireSigned(userNetHourly - smicNetHourly)} <small>/h (${smic.pct})</small></div>
-        <details class="benchmark-details">
-          <summary>Méthode de calcul</summary>
-          <p>Référence SMIC calculée sur 35 h, sans mutuelle ni titres-restaurant. Le net horaire est obtenu en divisant le net avant impôt estimé par 151,67 h/mois. Le brut mensuel vient de la règle SMIC récupérée via l’API officielle Mon-entreprise / Urssaf ; le taux horaire brut correspondant est de ${fmtHoraire(smicHourlyGross)}.</p>
-          ${officialSmicState.checkedAt ? `<p>Règle SMIC consultée le ${new Date(officialSmicState.checkedAt).toLocaleString('fr-FR')}.</p>` : ''}
-          <p>Votre taux horaire net avant impôt est calculé à partir de votre net estimé et de la durée hebdomadaire de votre contrat (${durationLabel}).</p>
+        <div class="benchmark-label">SMIC net</div>
+        <div class="benchmark-value">${smicValue===null?'À calculer':format(smicValue)}</div>
+        <div class="benchmark-meta">${smicValue===null?esc(smicStatus):'Par '+unit+' · repère '+durationLabel}</div>
+        ${smicGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(smicGap)+'">'+gapText(smicGap)+'</div>'}
+        ${smicResult?`<details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
+          <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf sur une base de ${durationLabel}${weeklyHours===39?' : 35 h au SMIC + 4 h supplémentaires hebdomadaires majorées à 25 %':''}. Pour les périodes mensuelle et annuelle, le repère est calculé sur cette même durée. Il est calculé sans mutuelle ni titres-restaurant.</p>
+          <p>${weeklyHours===39?`Brut mensuel de référence à 35 h : ${fmt(smicGross)}. Brut total estimé à 39 h : ${fmt(smicGrossTarget)}, avec 4 h supplémentaires hebdomadaires majorées à 25 %.`:`Brut mensuel de référence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
-        </details>
-      </article>
+        </details>`:''}
+      </article>`;
+  const medianCard=`
       <article class="benchmark-item">
-        <div class="benchmark-label">Salaire médian privé · net avant impôt</div>
-        <div class="benchmark-value">${fmt(medianNetBeforeTax)}</div>
-        <div class="benchmark-meta">Net horaire : ${fmtHoraire(medianNetHourly)} · Référence mensuelle nette INSEE 2024</div>
-        <div class="benchmark-result ${signedClass(median)}">${fmtHoraireSigned(userNetHourly - medianNetHourly)} <small>/h (${median.pct})</small></div>
-        <details class="benchmark-details">
-          <summary>Méthode de calcul</summary>
-          <p>La référence INSEE publiée est de 2 190 € net mensuel en équivalent temps plein. Son taux horaire est calculé sur 151,67 h/mois. Le brut mensuel correspondant n'est pas affiché, car il ne figure pas dans cette donnée source.</p>
-          <p>Votre contrat : ${durationLabel} · ${fmt(userNetBeforeTax)} € net avant impôt estimés / mois, soit ${fmtHoraire(userNetHourly)}.</p>
+        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div>
+        <div class="benchmark-value">${format(medianValue)}</div>
+        <div class="benchmark-meta">Par ${unit} · INSEE 2025 · France</div>
+        ${medianGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(medianGap)+'">'+gapText(medianGap)+'</div>'}
+        <details class="benchmark-details"><summary>Que signifie la médiane ?</summary>
+          <p>Données INSEE 2025, publiées en 2026, pour la France. La médiane publiée est de 2 238 € nets mensuels en EQTP. Le taux horaire est ramené à 151,67 h/mois ; les périodes mensuelle et annuelle sont ajustées à la durée du contrat comparé (${durationLabel}).</p>
+          <p>Le champ couvre les salariés du privé en France, y compris alternants, stagiaires et contrats aidés ; il exclut l’agriculture et les particuliers employeurs. Il est plus large que le périmètre CDI non-cadre d’OnNet.</p>
+          <p>Source : <a href="https://www.insee.fr/fr/statistiques/9087193" target="_blank" rel="noopener noreferrer">INSEE, salaires dans le secteur privé en 2025</a>.</p>
         </details>
-      </article>
-    </div>
-`
+      </article>`;
+  return '<div class="benchmark-grid">'+smicCard+medianCard+'</div>';
 }
 // ---------- Rendu ----------
-function render(){
-  if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
-  const computed = getCurrentComputed();
+let maquetteComparisonPeriod='hour';
+function renderMaquetteControls(computedOverride){
+  const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
+  const benchmarkMount=document.getElementById('benchmarkMount');
+  if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
+  const tabs=document.getElementById('maquetteOfferTabs');
+  if(!tabs) return;
+  tabs.replaceChildren();
+  scenarios.forEach((scenario,index)=>{
+    const button=document.createElement('button');
+    button.type='button';button.className='offer-tab'+(scenario.id===refId?' active':'');
+    button.setAttribute('aria-pressed',String(scenario.id===refId));
+    button.append(document.createTextNode(scenario.name));
+    const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
+    button.addEventListener('click',()=>{refId=scenario.id;render();});
+    tabs.append(button);
+  });
+  const selected=findScenario(refId)||scenarios[0];
+  document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
+  const period=document.getElementById('mainSalaryPeriod');
+  const gross=document.getElementById('mainSalaryGross');
+  const hours=document.getElementById('mainSalaryHours');
+  if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
+    period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+  }
+  const selectedId=(findScenario(refId)||scenarios[0])?.id;
+  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
+  const mutuelleText=document.getElementById('mainSalaryMutuelleText');
+  if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
+  const updateButton=document.getElementById('updateDeclaredSalary');
+  if(updateButton) updateButton.onclick=()=>{
+    const scenario=findScenario(refId)||scenarios[0];
+    const raw=Number(gross?.value);
+    if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){gross?.focus();return;}
+    scenario.brut=document.getElementById('mainSalaryPeriod')?.value==='year'?Math.round(raw/12*100)/100:raw;
+    scenario.dureeType=hours?.value==='39'?'39':'35';
+    saveState();
+    render();
+  };
+  const summary=document.getElementById('maquetteYourSalary');
+  if(summary){
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après autorisation de transmission à l’Urssaf.</div></div>';}
+    else{
+      const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
+      const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
+      const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:selected.dureeType*52/12;
+      const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
+      const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
+      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h · mutuelle salarié : '+fmt(selected.mutuelle||0)+' / mois</div></div>';
+    }
+  }
+  const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
+  if(status && mount && status.parentElement!==mount) mount.appendChild(status);
+}
+
+function renderComparisonChart(computed){
   const isSingle = computed.length === 1;
   const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
   const allReady = hasSalaryResults && !!getCachedSmicResult();
   const comparePanel = document.getElementById('comparePanel');
   if(comparePanel) comparePanel.hidden = !hasSalaryResults;
-  const chartContent = comparePanel?.querySelector('#stackHint')?.parentElement;
-  if(chartContent){
+
+  if(comparePanel){
     const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
     chartElements.forEach(selector => {
       const element = comparePanel.querySelector(selector);
@@ -1117,16 +1124,15 @@ function render(){
     });
   }
 
-  updateRaiseBaseName();
   const stackChartEl = document.getElementById('stackChart');
+  if(!stackChartEl) return;
   if(allReady){
     document.getElementById('stackHint').textContent = isSingle
-      ? 'Du brut au net, étape par étape.'
+      ? `Salaire brut de ${fmt(computed[0].r.m.brutTotal)} par mois.`
       : 'Cliquez sur une carte pour la définir comme référence.';
     document.getElementById('insightBox').innerHTML = renderInsight(computed);
     stackChartEl.className = isSingle ? '' : 'stack-chart';
     stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    if(isSingle) fixWaterfallLabelFit();
     document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
@@ -1139,8 +1145,16 @@ function render(){
     document.getElementById('barsBody').innerHTML = '';
     document.getElementById('barsAlerts').innerHTML = '';
   }
+}
+
+function render(){
+  if(!scenarios.some(s => s.id === refId)) refId = scenarios[0].id;
+  const computed = getCurrentComputed();
+  renderComparisonChart(computed);
+  updateRaiseBaseName();
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  renderMaquetteControls(computed);
   updateFoyerImpot(computed);
   syncFoyerUI();
   document.getElementById('refSelect').innerHTML = scenarios
@@ -1175,6 +1189,7 @@ function render(){
   suppressAutosave = false;
   justAddedId = null;
   updateUrssafStatus(computed);
+  renderMaquetteControls(computed);
   scheduleUrssafCalculations(false,false);
 }
 
@@ -1428,30 +1443,10 @@ function setShown(id, shown){ const el = document.getElementById(id); if(el) el.
 
 function updateComputed(options = {}){
   const computed = getCurrentComputed();
-  const isSingle = computed.length === 1;
-  const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
-  const allReady = hasSalaryResults && !!getCachedSmicResult();
-  const comparePanel = document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden = !hasSalaryResults;
-  const stackChartEl = document.getElementById('stackChart');
-  if(allReady){
-    document.getElementById('insightBox').innerHTML = renderInsight(computed);
-    stackChartEl.className = isSingle ? '' : 'stack-chart';
-    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    if(isSingle) fixWaterfallLabelFit();
-    document.getElementById('barsBody').innerHTML = renderBars(computed);
-    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
-  } else {
-    document.getElementById('insightBox').innerHTML = '';
-    stackChartEl.className = '';
-    stackChartEl.innerHTML = '';
-    document.getElementById('stackLegend').innerHTML = '';
-    document.getElementById('barsBody').innerHTML = '';
-    document.getElementById('barsAlerts').innerHTML = '';
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
-  }
+  renderComparisonChart(computed);
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
+  renderMaquetteControls(computed);
   updateFoyerImpot(computed);
   syncFoyerUI();
 
@@ -2409,6 +2404,17 @@ if(!loadedFromShare && location.hash &&
    new URLSearchParams(location.hash.slice(1)).has('share')){
   showToastImpl('Lien de partage invalide ou incomplet : les données n’ont pas pu être chargées.');
 }
+// Les interactions V33 doivent fonctionner aussi pour les visiteurs qui ont déjà
+// terminé l'onboarding : elles ne dépendent pas de l'affichage de la modale initiale.
+document.querySelectorAll('[data-maquette-period]').forEach(button=>{
+  button.addEventListener('click',()=>{
+    maquetteComparisonPeriod=button.dataset.maquettePeriod;
+    metric='netHoraire';
+    render();
+  });
+});
+document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
+
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);

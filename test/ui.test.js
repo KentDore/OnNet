@@ -155,6 +155,7 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
+  if (options.advancedOpen !== false && !options.emptyStorage) await page.locator('#advancedWorkspace > summary').click();
   if (pageErrors.length) {
     await context.close();
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
@@ -175,7 +176,7 @@ async function openApp(options = {}) {
 }
 
 async function addSecondScenario(page, gross = '3200') {
-  await page.locator('#addScenario').click();
+  await page.locator('#maquetteAddSalary').click();
   await page.locator('#modalAddInput').fill(gross);
   await page.locator('#modalAddSubmit').click();
   await page.waitForFunction(() =>
@@ -242,12 +243,14 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
     assert.equal(await page.locator('#printBtn').isVisible(), true);
     await page.locator('#headerMenu summary').press('Escape');
     assert.equal(await page.locator('#headerMenu').evaluate(el => el.open), false);
-    const header = await page.locator('.header-top').boundingBox();
-    const brand = await page.locator('.brand-block').boundingBox();
-    const actions = await page.locator('.header-actions').boundingBox();
-    assert.ok(header && brand && actions);
+    const header = await page.locator('.maquette-top').boundingBox();
+    const brand = await page.locator('.maquette-top > .brand').boundingBox();
+    const actions = await page.locator('.maquette-top > .header-actions').boundingBox();
+    assert.ok(header && brand && actions, 'la barre supérieure, la marque et les actions doivent être présentes');
     assert.ok(actions.y < brand.y + brand.height + 2,
       'les actions doivent rester alignées dans la même rangée que le logo sur mobile');
+    assert.ok(actions.x + actions.width <= header.x + header.width + 1,
+      'les actions doivent rester dans la barre supérieure');
   } finally {
     await context.close();
   }
@@ -267,7 +270,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
       return state?.scenarios?.length === 1 && state.scenarios[0].mutuelle === 30 &&
         state.scenarios[0].mutuellePat === 30;
     });
-    await page.locator('#addScenario').click();
+    await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
     assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
     assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
@@ -284,17 +287,37 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
-    assert.match(await page.locator('.benchmark-heading').innerText(), /par heure/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /Votre net avant impôt/);
+    const smicBenchmarkRequests = calls.bodies.filter(body =>
+      body.expressions.length === 2 &&
+      body.expressions.includes('salarié . rémunération . brut') &&
+      Number.parseFloat(body.situation['salarié . temps de travail . heures supplémentaires'] || '0') > 17
+    );
+    const finalSmicRequest = smicBenchmarkRequests.at(-1);
+    assert.ok(finalSmicRequest, 'le SMIC 39 h doit être calculé par l’API avec des heures supplémentaires');
+    const smicBase39 = Number.parseFloat(finalSmicRequest.situation['salarié . contrat . salaire brut']);
+    const smicOvertime39 = Number.parseFloat(finalSmicRequest.situation['salarié . temps de travail . heures supplémentaires']);
+    const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    const expectedSmicGross39 = 1867.02 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicBase39 - 1867.02) < 0.02,
+      'la base mensuelle doit rester égale au SMIC officiel 35 h');
+    assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
+      'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
+    assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
+    const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
+    assert.match(medianMethod, /2\s?238/);
+    assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
+    assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
+    assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
-    const benchmarkNetBeforeTax = await page.locator('.benchmark-your-salary strong').innerText();
+    const benchmarkHourlyNet = await page.locator('.benchmark-your-salary strong').innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
-    assert.equal(parseEuro(cardNetBeforeTax), parseEuro(benchmarkNetBeforeTax), 'la carte et le comparatif doivent réutiliser le même net avant impôt Urssaf');
-    assert.equal(parseEuro(cardNetAfterTax), parseEuro(benchmarkNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNetBeforeTax) / 169) < 0.02,
+      'le résumé horaire doit reprendre le net avant impôt Urssaf divisé par les 169 h du contrat 39 h');
+    assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
@@ -311,7 +334,20 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
     assert.equal(await page.locator('#benchmarkSmicDate').count(), 0);
     assert.equal(await page.locator('#saveBenchmarkSettings').count(), 0);
     assert.equal(await page.locator('#resetBenchmarkSettings').count(), 0);
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1950.250000 €/mois'));
+    const smicRequests = calls.bodies.filter(body =>
+      body.expressions.length === 2 &&
+      body.expressions.includes('salarié . rémunération . brut') &&
+      Number.parseFloat(body.situation['salarié . temps de travail . heures supplémentaires'] || '0') > 17
+    );
+    assert.ok(smicRequests.length > 0, 'le repère SMIC 39 h doit être envoyé à l’API');
+    const customBase39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . contrat . salaire brut']);
+    const customOvertime39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . temps de travail . heures supplémentaires']);
+    const customGross39 = customBase39 * (151.67 + customOvertime39 * 1.25) / 151.67;
+    const expectedCustomGross39 = 1950.25 * (151.67 + customOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(customBase39 - 1950.25) < 0.02,
+      'la base mensuelle doit reprendre le montant SMIC renvoyé par l’API');
+    assert.ok(Math.abs(customGross39 - expectedCustomGross39) < 0.03,
+      'le brut total 39 h doit intégrer les heures supplémentaires majorées au montant de base renvoyé par l’API');
   } finally {
     await context.close();
   }
@@ -652,6 +688,23 @@ test('une commune saisie sans sélection bloque le calcul API', async () => {
   }
 });
 
+test('les outils secondaires sont repliés par défaut et restent accessibles', async () => {
+  const { context, page } = await openApp({ advancedOpen:false, consent:false });
+  try {
+    const advanced = page.locator('#advancedWorkspace');
+    assert.equal(await advanced.evaluate(el => el.open), false);
+    assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
+    assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
+    assert.equal(await page.locator('#cardsScroll').isVisible(), false);
+    await advanced.getByText('Paramètres avancés et outils', { exact: true }).click();
+    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
+    assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
+    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', async () => {
   const { context, page } = await openApp();
   try {
@@ -672,6 +725,46 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
   }
 });
 
+
+test('la page ne déborde pas horizontalement sur les largeurs mobiles', async () => {
+  const { context, page } = await openApp();
+  try {
+    for (const width of [320, 375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const dimensions = await page.evaluate(() => ({
+        viewport: document.documentElement.clientWidth,
+        document: document.documentElement.scrollWidth,
+        body: document.body.scrollWidth
+      }));
+      assert.ok(dimensions.document <= dimensions.viewport + 1,
+        `débordement horizontal global à ${width}px : ${JSON.stringify(dimensions)}`);
+      assert.ok(dimensions.body <= dimensions.viewport + 1,
+        `débordement du body à ${width}px : ${JSON.stringify(dimensions)}`);
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', async () => {
+  const { context, page } = await openApp();
+  try {
+    const month = page.locator('[data-maquette-period="month"]');
+    const year = page.locator('[data-maquette-period="year"]');
+    await month.click();
+    assert.equal(await month.getAttribute('aria-pressed'), 'true');
+    assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    await year.click();
+    assert.equal(await year.getAttribute('aria-pressed'), 'true');
+    assert.equal(await month.getAttribute('aria-pressed'), 'false');
+
+    await page.locator('#maquetteAddSalary').click();
+    assert.equal(await page.locator('#modalAddInput').isVisible(), true,
+      'le bouton Ajouter doit ouvrir la modale de création de scénario');
+  } finally {
+    await context.close();
+  }
+});
 
 test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', async () => {
   const { context, page } = await openApp({ emptyStorage: true });
@@ -787,10 +880,11 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel .chart-scope-hint');
-    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim(), 'Du brut au net avant impôt');
+    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
+    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
-    assert.match(scope, /net à payer avant impôt/i);
-    assert.match(scope, /ne modifient pas ce graphique/i);
+    assert.match(scope, /montants issus de la simulation officielle/i);
+    assert.match(scope, /Mon-entreprise \/ Urssaf/i);
   } finally {
     await context.close();
   }
@@ -822,11 +916,11 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   const { context, page } = await openApp({ consent:false });
   try {
     const order = await page.evaluate(() => {
-      const cards = document.querySelector('.cards-bar');
+      const form = document.querySelector('.unified-salary-panel');
       const comparison = document.querySelector('#comparePanel');
-      return cards.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
+      return form.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
     });
-    assert.ok(order, 'les fiches de salaire doivent précéder le comparatif');
+    assert.ok(order, 'le formulaire de saisie doit précéder le graphique de répartition');
     assert.equal(await page.locator('#comparePanel').isVisible(), false, 'ne pas afficher un panneau de résultats vide');
   } finally {
     await context.close();
@@ -854,6 +948,249 @@ test('le consentement indique explicitement les données envoyées à l’Urssaf
     assert.equal(await page.locator('#urssafCalculateBtn').innerText(), 'Autoriser l’envoi et calculer');
     assert.equal(await page.locator('#urssafStatusText').innerText(),
       'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.');
+  } finally {
+    await context.close();
+  }
+});
+
+
+
+test('les fiches de salaire et leurs contrôles restent visibles sans action préalable', async () => {
+  const { context, page } = await openApp();
+  try {
+    assert.equal(await page.locator('.cards-bar').isVisible(), true);
+    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
+    assert.equal(await page.locator('#amtToggle').isVisible(), true);
+    assert.equal(await page.locator('#periodToggle').isVisible(), true);
+    const card = page.locator('#cardsBody [data-card]').first();
+    assert.equal(await card.isVisible(), true);
+    await card.locator('details.more > summary').click();
+    assert.equal(await card.locator('details.more').evaluate(el => el.open), true);
+    assert.equal(await card.locator('[data-key="brut"]').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées sur mobile', async () => {
+  const { context, page } = await openApp();
+  try {
+    for (const width of [320, 375, 390, 430, 768, 1280]) {
+      await page.setViewportSize({ width, height: 900 });
+      const layout = await page.evaluate(() => {
+        const top = document.querySelector('.maquette-top');
+        const hero = document.querySelector('header.hero');
+        const brand = top?.querySelector('.brand');
+        const actions = top?.querySelector('.header-actions');
+        const rect = el => {
+          const r = el.getBoundingClientRect();
+          return { left:r.left, right:r.right, top:r.top, bottom:r.bottom, width:r.width, height:r.height };
+        };
+        return {
+          top: rect(top), hero: rect(hero), brand: rect(brand), actions: rect(actions),
+          viewport: document.documentElement.clientWidth,
+          shield: !!hero.querySelector('.trust-icon svg')
+        };
+      });
+      assert.ok(layout.top.bottom <= layout.hero.top, `la marque doit précéder le hero à ${width}px`);
+      assert.ok(layout.brand.right <= layout.actions.left + 1, `la marque et les actions se chevauchent à ${width}px : ${JSON.stringify(layout)}`);
+      assert.ok(layout.actions.right <= layout.viewport + 1, `les actions sortent de l’écran à ${width}px`);
+      assert.ok(layout.shield, 'le pictogramme de confiance V33 doit être conservé');
+    }
+  } finally {
+    await context.close();
+  }
+});
+
+test('capture visuelle desktop et mobile du parcours V33', async () => {
+  const { context, page } = await openApp({ advancedOpen:false });
+  try {
+    const output = path.join(__dirname, '..', 'artifacts', 'visual');
+    fs.mkdirSync(output, { recursive:true });
+    await page.emulateMedia({ reducedMotion:'reduce' });
+    assert.equal(await page.locator('#advancedWorkspace').evaluate(el => el.open), false,
+      'les outils secondaires doivent rester repliés dans le parcours initial');
+    const initialVisualState = await page.evaluate(() => {
+      const panel = document.getElementById('comparePanel');
+      const chart = document.getElementById('stackChart');
+      const scroll = chart?.parentElement;
+      return {
+        status: document.getElementById('urssafStatusText')?.textContent?.trim(),
+        panelHidden: panel?.hidden,
+        chartChildren: chart?.children.length,
+        chartHtmlLength: chart?.innerHTML.length,
+        chartParentHidden: scroll?.hidden,
+        chartParentDisplay: scroll ? getComputedStyle(scroll).display : null,
+        smicCard: document.querySelector('#benchmarkMount .benchmark-item')?.innerText,
+        salaryCardStates: [...document.querySelectorAll('#cardsBody [data-card]')].map(el => el.dataset.resultState)
+      };
+    });
+    console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
+
+    // Aligner la capture sur les données d'exemple de la maquette V33.
+    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#updateDeclaredSalary').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
+      document.querySelector('#cardsBody [data-key="brut"]')?.value === '2500',
+      null, { timeout:20000 });
+    await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
+
+    await page.setViewportSize({ width:1440, height:1000 });
+    const formLayout = await page.evaluate(() => {
+      const rect = selector => {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return { left:r.left, top:r.top, width:r.width, right:r.right };
+      };
+      return {
+        period:rect('#mainSalaryPeriod'),
+        gross:rect('#mainSalaryGross'),
+        hours:rect('#mainSalaryHours'),
+        mutuelle:rect('.declaration-mutuelle'),
+        calculate:rect('#updateDeclaredSalary'),
+        fields:rect('.declaration-fields')
+      };
+    });
+    assert.ok(formLayout.gross.top > formLayout.period.top,
+      'les champs de saisie restent empilés comme dans la V33');
+    assert.ok(formLayout.hours.top > formLayout.gross.top,
+      'la base horaire suit le salaire brut');
+    assert.ok(formLayout.mutuelle.top > formLayout.hours.top,
+      'la note Mutuelle suit les champs de saisie');
+    assert.ok(formLayout.calculate.top > formLayout.mutuelle.top,
+      'le bouton de calcul suit la note Mutuelle');
+    assert.ok(Math.abs(formLayout.period.width - formLayout.fields.width) < 2,
+      'les champs occupent toute la largeur du formulaire');
+    assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
+      'la note Mutuelle occupe toute la largeur du formulaire');
+    assert.ok(Math.abs(formLayout.calculate.width - formLayout.fields.width) < 2,
+      'le bouton de calcul occupe toute la largeur du formulaire');
+    await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
+    await page.setViewportSize({ width:390, height:844 });
+    await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
+    const finalVisualState = await page.evaluate(() => {
+      const chart = document.getElementById('stackChart');
+      return {
+        status: document.getElementById('urssafStatusText')?.textContent?.trim(),
+        chartChildren: chart?.children.length,
+        chartParentHidden: chart?.parentElement?.hidden,
+        chartText: chart?.innerText?.slice(0,300)
+      };
+    });
+    console.log('ONNET_FINAL_VISUAL_STATE=' + JSON.stringify(finalVisualState));
+    assert.ok(finalVisualState.chartChildren > 0 && finalVisualState.chartParentHidden === false,
+      'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
+    assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
+      'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
+    assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
+    assert.match(await page.locator('#stackChart').innerText(), /Net avant impôt[\s\S]*Retenues sur le brut/);
+    assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
+
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('le graphique comparatif et sa légende apparaissent après les calculs API', async () => {
+  const { context, page } = await openApp({ advancedOpen:false });
+  try {
+    await addSecondScenario(page, '3200');
+    await page.waitForFunction(() => {
+      const chart = document.getElementById('stackChart');
+      const legend = document.getElementById('stackLegend');
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
+        cards.length === 2 && cards.every(card => card.dataset.resultState === 'ready') &&
+        chart?.children.length === 2 && chart.parentElement?.hidden === false &&
+        legend?.hidden === false && legend.children.length === 4;
+    }, null, { timeout:20000 });
+    assert.equal(await page.locator('#stackHint').innerText(), 'Cliquez sur une carte pour la définir comme référence.');
+  } finally {
+    await context.close();
+  }
+});
+
+test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.waitForSelector('#benchmarkMount .benchmark-grid');
+    const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
+      getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
+    );
+    assert.equal(columns, 2, 'les cartes SMIC et médiane restent côte à côte sur mobile');
+    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
+    await page.locator('#mainSalaryGross').fill('3000');
+    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#updateDeclaredSalary').click();
+    const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
+    assert.equal(savedGross, 3000, 'le bouton de calcul doit enregistrer le brut dans le scénario');
+    assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3000');
+    assert.equal(await page.locator('#cardsBody [data-durree-group] button[aria-pressed="true"]').innerText(), '35 h');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le repère SMIC suit la durée de l’offre de référence et applique la majoration à 39 h', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const overtimeKey = 'salarié . temps de travail . heures supplémentaires';
+    const baseGrossKey = 'salarié . contrat . salaire brut';
+    const benchmarkRequests = () => calls.bodies.filter(request =>
+      Array.isArray(request.expressions) &&
+      request.expressions.length === 2 &&
+      request.expressions.includes('salarié . rémunération . brut') &&
+      request.expressions.includes('salarié . rémunération . net . à payer avant impôt')
+    );
+    const waitForBenchmarkRequest = async predicate => {
+      const deadline = Date.now() + 15000;
+      while (Date.now() < deadline) {
+        const found = benchmarkRequests().filter(predicate).at(-1);
+        const status = await page.locator('#urssafStatusText').textContent() || '';
+        const smicValue = await page.locator('#benchmarkBody .benchmark-value').first().textContent() || '';
+        if (found && status.includes('Calculs à jour') && smicValue !== 'À calculer') return found;
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      assert.fail('Le calcul du repère SMIC attendu n’a pas été envoyé ou terminé via l’API.');
+    };
+
+    const smic39 = await waitForBenchmarkRequest(request =>
+      Number.parseFloat(request.situation[overtimeKey]) > 17
+    );
+    const smicBase39 = Number.parseFloat(smic39.situation[baseGrossKey]);
+    const smicOvertime39 = Number.parseFloat(smic39.situation[overtimeKey]);
+    const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    const expectedSmicGross39 = 1867.02 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicBase39 - 1867.02) < 0.02,
+      'la base 35 h doit rester égale au SMIC officiel');
+    assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
+      'le brut total 39 h doit intégrer les 4 heures supplémentaires majorées ; données : ' + JSON.stringify(smic39.situation));
+
+    await page.locator('#benchmarkBody .benchmark-details summary').first().click();
+    assert.match(await page.locator('#benchmarkBody .benchmark-details').first().innerText(),
+      /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
+
+    await addSecondScenario(page, '3200');
+    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
+    await secondCard.locator('[data-duree="35"]').click();
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
+      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready')
+    );
+    await page.locator('#stackChart [data-setref="1"]').click();
+
+    const smic35 = await waitForBenchmarkRequest(request =>
+      Math.abs(Number.parseFloat(request.situation[overtimeKey] || '0')) < 0.001
+    );
+    assert.ok(Math.abs(Number.parseFloat(smic35.situation[baseGrossKey]) - 1867.02) < 0.02,
+      'le repère 35 h doit rester égal au SMIC brut officiel sans heures supplémentaires');
+    await page.waitForFunction(() =>
+      document.querySelector('#benchmarkBody .benchmark-meta')?.textContent.includes('repère 35 h')
+    );
+    assert.match(await page.locator('#benchmarkBody').innerText(), /repère 35 h/);
   } finally {
     await context.close();
   }

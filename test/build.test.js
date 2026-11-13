@@ -95,11 +95,7 @@ test('la restauration utilise le premier scénario si la référence est invalid
   assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
 });
 
-test('la page publiée reste synchronisée avec les sources lors d’une publication sur main', t => {
-  if(process.env.GITHUB_EVENT_NAME !== 'push' || process.env.GITHUB_REF !== 'refs/heads/main'){
-    t.skip('Le contrôle de synchronisation est réservé à une publication sur main ; la branche de migration ne modifie pas la production.');
-    return;
-  }
+test('les fichiers HTML publiables restent synchronisés avec les sources', t => {
   const root = path.resolve(__dirname, '..');
   const indexPath = path.join(root, 'index.html');
   const index = fs.readFileSync(indexPath, 'utf8');
