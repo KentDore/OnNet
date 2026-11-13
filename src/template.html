@@ -34,6 +34,7 @@
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
     <div class="declaration-inline">
       <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+      <p class="urssaf-data-notice declaration-api-notice">En renseignant ou modifiant ces données, vous acceptez leur transmission à l’API officielle Mon-entreprise de l’Urssaf pour calculer votre net : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun salaire n’est transmis avant votre saisie.</p>
       <div class="declaration-fields">
         <label for="mainSalaryPeriod">Période du salaire brut</label>
         <select id="mainSalaryPeriod"><option value="month" selected>Mensuel</option><option value="year">Annuel</option></select>
@@ -62,7 +63,7 @@
         <p class="urssaf-data-notice">Pour calculer votre résultat, OnNet transmet à l’Urssaf les paramètres nécessaires : salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
       </details>
       <div class="urssaf-consent-row">
-        <p class="urssaf-status-message"><strong id="urssafStatusText">Aucune donnée salariale n’est transmise avant validation dans la fenêtre d’accueil.</strong></p>
+        <p class="urssaf-status-message"><strong id="urssafStatusText">Renseignez votre salaire pour autoriser sa transmission à l’API officielle Urssaf et lancer le calcul.</strong></p>
       </div>
       <details class="result-source" id="urssafWarnings" hidden>
         <summary>Détails du calcul</summary>
