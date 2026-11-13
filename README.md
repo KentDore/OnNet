@@ -12,9 +12,9 @@ Le calculateur publié sur GitHub Pages utilise l’API REST officielle **Mon-en
 
 Les calculs de cotisations et de prélèvement à la source sont effectués par l’API Mon-entreprise / Urssaf. OnNet ne reprend pas un ancien moteur local si l’API échoue. L’application effectue localement certaines opérations de présentation et de mise en forme des résultats ; elle ne recalcule pas les cotisations ni l’impôt.
 
-À l’ouverture, OnNet interroge la règle officielle `SMIC` avec la date du jour. Cet appel récupère le repère brut et ne transmet aucune donnée de paie. Le calcul du repère net avant impôt, comme les simulations salariales, nécessite ensuite le consentement explicite de l’utilisateur.
+À l’ouverture, OnNet interroge la règle officielle `SMIC` avec la date du jour. Cet appel récupère le repère brut et ne transmet aucune donnée de paie. Le calcul du repère net avant impôt, comme les simulations salariales, démarre au clic sur le bouton principal « Calculer mon salaire » : ce clic constitue l’accord explicite à la transmission.
 
-Avant le premier calcul salarial, l’interface présente les paramètres envoyés à l’API : salaire, durée du travail, commune de l’établissement (paramètre de calcul Urssaf), mutuelle, titres-restaurant et situation fiscale. Aucun scénario salarial n’est envoyé avant cet accord. Après accord, les modifications sont recalculées automatiquement. Le consentement n’est pas mémorisé : il est redemandé à chaque ouverture. Une connexion Internet est nécessaire.
+Avant le premier calcul salarial, l’interface indique clairement que le clic sur « Calculer mon salaire » autorise la transmission des paramètres nécessaires à l’API : salaire, durée du travail, commune de l’établissement (paramètre de calcul Urssaf), mutuelle, titres-restaurant et situation fiscale. Le détail des données est consultable à proximité du bouton. Aucun scénario salarial n’est envoyé avant ce clic. Après accord, les modifications sont recalculées automatiquement. L’accord n’est pas mémorisé : il est redemandé à chaque ouverture. Une connexion Internet est nécessaire.
 
 Les résultats sont des estimations : ils ne remplacent ni un bulletin de paie vérifié ni un avis d’imposition. Le modèle fiscal Mon-entreprise comporte des règles simplifiées ou expérimentales ; les avertissements et valeurs par défaut doivent être examinés.
 
