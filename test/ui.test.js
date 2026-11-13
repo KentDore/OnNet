@@ -164,8 +164,7 @@ async function openApp(options = {}) {
   if (options.consent !== false) {
     if (options.emptyStorage) {
       await page.locator('#modalOnboardingInput').fill('2500');
-      await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+      await page.locator('#modalOnboardingSubmit').click();
     } else {
       await page.locator('#mainSalaryGross').fill('2300');
     }
