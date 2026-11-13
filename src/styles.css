@@ -844,7 +844,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .declaration-fields>label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
 .declaration-fields>label:first-child{margin-top:0}
 .declaration-fields>select,.declaration-fields>input{display:block;width:100%;min-height:46px;margin:0;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
+.declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;align-self:flex-end;width:225px;max-width:100%;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
 .declaration-mutuelle strong{white-space:nowrap;font-size:11px}
 .declaration-update{width:100%;min-height:46px;margin:12px 0 0;border:0;border-radius:11px;background:linear-gradient(135deg,#1f7653,#0e6847);color:#fff;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(17,91,57,.12)}
 .integrated-offers{display:block;margin:17px 0 0;padding:14px 0 0;border:0;border-top:1px solid #d7e6da}
@@ -949,7 +949,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .advanced-workspace{margin:18px 0 16px;padding:0 16px;border:1px solid var(--line);border-radius:16px;background:var(--surface);}
 .advanced-workspace>summary{padding:15px 2px;color:var(--ink-soft);font-size:13px;font-weight:700;cursor:pointer;list-style:none;}
 .advanced-workspace>summary::-webkit-details-marker{display:none;}
-.advanced-workspace>summary::after{content:"＋";float:right;color:var(--accent);font-size:16px;}
+.advanced-workspace>summary::after{content:"+";float:right;color:var(--accent);font-size:16px;}
 .advanced-workspace[open]>summary::after{content:"−";}
 .advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
 .advanced-workspace>.cards-bar{margin-bottom:10px;}
