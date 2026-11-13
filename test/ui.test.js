@@ -203,7 +203,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     const notice = await page.locator('.declaration-api-notice').innerText();
     assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
     assert.match(notice, /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
-    assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
+    assert.match(await page.locator('.urssaf-data-details').innerText(), /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.match(await page.locator('.declaration-api-notice').innerText(), /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
