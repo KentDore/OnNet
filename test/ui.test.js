@@ -200,9 +200,9 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
     await page.locator('.urssaf-data-details summary').click();
-    const notice = await page.locator('.urssaf-data-notice').innerText();
+    const notice = await page.locator('.declaration-api-notice').innerText();
     assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
-    assert.match(notice, /transmet à l’Urssaf/);
+    assert.match(notice, /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
     assert.match(notice, /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
     assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
@@ -990,7 +990,7 @@ test('le bouton principal informe explicitement de la transmission des données 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0, 'aucun bouton de calcul ne doit être affiché');
     assert.equal(await page.locator('#urssafCalculateBtn').count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire dans le formulaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
   } finally {
     await context.close();
   }
