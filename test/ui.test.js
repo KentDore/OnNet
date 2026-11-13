@@ -264,12 +264,13 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
-      return state?.scenarios?.length === 1 && state.scenarios[0].mutuelle === 30 &&
-        state.scenarios[0].mutuellePat === 30;
+      return state?.scenarios?.length === 1 && state.scenarios[0].brut === 2500 &&
+        state.scenarios[0].mutuelle === 30 && state.scenarios[0].mutuellePat === 30;
     });
+    await page.locator('#advancedWorkspace > summary').click();
     await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
     assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
@@ -433,8 +434,8 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
 test('gère une indisponibilité Urssaf sans afficher de résultat local', async () => {
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
-    await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+    assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
       null, { timeout: 12000 }
@@ -839,8 +840,8 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
 test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par la saisie du formulaire', async () => {
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
-    await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+    assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -864,8 +865,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
-    await page.locator('#modalOnboardingInput').fill('2500');
-    await page.locator('#modalOnboardingSubmit').click();
+    await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
@@ -1167,7 +1167,9 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await page.locator('#mainSalaryGross').fill('3000');
     await page.locator('#mainSalaryHours').selectOption('35');
-    
+    await page.waitForFunction(() =>
+      JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
+    );
     const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
     assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
     assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3000');
