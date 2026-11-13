@@ -1716,6 +1716,7 @@ async function addScenario(){
   const last = scenarios[scenarios.length-1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
+  urssafConsentGranted = true;
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
@@ -2077,6 +2078,7 @@ function showOnboardingModal(){
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
+    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce salaire, vous autorisez sa transmission à l’API officielle Mon-entreprise de l’Urssaf pour calculer le résultat.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="Période du salaire">
