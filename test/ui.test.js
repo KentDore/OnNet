@@ -294,8 +294,11 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     );
     const finalSmicRequest = smicBenchmarkRequests.at(-1);
     assert.ok(finalSmicRequest, 'le SMIC 39 h doit être calculé par l’API avec des heures supplémentaires');
-    assert.ok(Math.abs(Number.parseFloat(finalSmicRequest.situation['salarié . contrat . salaire brut']) - 1867.02) < 0.02,
-      'après calibration, le salaire de base du repère doit rester proche du SMIC 35 h');
+    const smicBase39 = Number.parseFloat(finalSmicRequest.situation['salarié . contrat . salaire brut']);
+    const smicOvertime39 = Number.parseFloat(finalSmicRequest.situation['salarié . temps de travail . heures supplémentaires']);
+    const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicGross39 - 1867.02) < 0.03,
+      'après calibration, le brut total 39 h doit correspondre au SMIC 35 h augmenté des heures supplémentaires majorées');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
@@ -334,8 +337,11 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
       Number.parseFloat(body.situation['salarié . temps de travail . heures supplémentaires'] || '0') > 17
     );
     assert.ok(smicRequests.length > 0, 'le repère SMIC 39 h doit être envoyé à l’API');
-    assert.ok(Math.abs(Number.parseFloat(smicRequests.at(-1).situation['salarié . contrat . salaire brut']) - 1950.25) < 0.02,
-      'le salaire de base du SMIC personnalisé doit rester correct après calibration');
+    const customBase39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . contrat . salaire brut']);
+    const customOvertime39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . temps de travail . heures supplémentaires']);
+    const customGross39 = customBase39 * (151.67 + customOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(customGross39 - 1950.25) < 0.03,
+      'le brut total 39 h du SMIC personnalisé doit intégrer les heures supplémentaires majorées');
   } finally {
     await context.close();
   }
@@ -1137,8 +1143,8 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       const deadline = Date.now() + 15000;
       while (Date.now() < deadline) {
         const found = benchmarkRequests().filter(predicate).at(-1);
-        const status = document.getElementById('urssafStatusText')?.textContent || '';
-        const smicValue = document.querySelector('#benchmarkBody .benchmark-value')?.textContent || '';
+        const status = await page.locator('#urssafStatusText').textContent() || '';
+        const smicValue = await page.locator('#benchmarkBody .benchmark-value').textContent() || '';
         if (found && status.includes('Calculs à jour') && smicValue !== 'À calculer') return found;
         await new Promise(resolve => setTimeout(resolve, 50));
       }
@@ -1148,8 +1154,11 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     const smic39 = await waitForBenchmarkRequest(request =>
       Number.parseFloat(request.situation[overtimeKey]) > 17
     );
-    assert.ok(Math.abs(Number.parseFloat(smic39.situation[baseGrossKey]) - 1867.02) < 0.02,
-      'après calibration, le salaire de base doit rester au SMIC 35 h ; données : ' + JSON.stringify(smic39.situation));
+    const smicBase39 = Number.parseFloat(smic39.situation[baseGrossKey]);
+    const smicOvertime39 = Number.parseFloat(smic39.situation[overtimeKey]);
+    const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicGross39 - 1867.02) < 0.03,
+      'le brut total 39 h doit intégrer les 4 heures supplémentaires majorées ; données : ' + JSON.stringify(smic39.situation));
 
     await page.locator('#benchmarkBody .benchmark-details summary').first().click();
     assert.match(await page.locator('#benchmarkBody .benchmark-details').first().innerText(),
@@ -1167,7 +1176,8 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     const smic35 = await waitForBenchmarkRequest(request =>
       Math.abs(Number.parseFloat(request.situation[overtimeKey] || '0')) < 0.001
     );
-    assert.ok(Math.abs(Number.parseFloat(smic35.situation[baseGrossKey]) - 1867.02) < 0.02);
+    assert.ok(Math.abs(Number.parseFloat(smic35.situation[baseGrossKey]) - 1867.02) < 0.02,
+      'le repère 35 h doit rester égal au SMIC brut officiel sans heures supplémentaires');
     await page.waitForFunction(() =>
       document.querySelector('#benchmarkBody .benchmark-meta')?.textContent.includes('repère 35 h')
     );
