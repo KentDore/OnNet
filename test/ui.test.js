@@ -287,7 +287,15 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1867.020000 €/mois'));
+    const smicBenchmarkRequests = calls.bodies.filter(body =>
+      body.expressions.length === 2 &&
+      body.expressions.includes('salarié . rémunération . brut') &&
+      body.situation['salarié . temps de travail . heures supplémentaires']
+    );
+    const finalSmicRequest = smicBenchmarkRequests.at(-1);
+    assert.ok(finalSmicRequest, 'le SMIC 39 h doit être calculé par l’API avec des heures supplémentaires');
+    assert.ok(Math.abs(Number.parseFloat(finalSmicRequest.situation['salarié . contrat . salaire brut']) - 1867.02) < 0.02,
+      'après calibration, le salaire de base du repère doit rester proche du SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
@@ -320,7 +328,14 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
     assert.equal(await page.locator('#benchmarkSmicDate').count(), 0);
     assert.equal(await page.locator('#saveBenchmarkSettings').count(), 0);
     assert.equal(await page.locator('#resetBenchmarkSettings').count(), 0);
-    assert.ok(calls.bodies.some(body => body.situation['salarié . contrat . salaire brut'] === '1950.250000 €/mois'));
+    const smicRequests = calls.bodies.filter(body =>
+      body.expressions.length === 2 &&
+      body.expressions.includes('salarié . rémunération . brut') &&
+      Number.parseFloat(body.situation['salarié . temps de travail . heures supplémentaires'] || '0') > 17
+    );
+    assert.ok(smicRequests.length > 0, 'le repère SMIC 39 h doit être envoyé à l’API');
+    assert.ok(Math.abs(Number.parseFloat(smicRequests.at(-1).situation['salarié . contrat . salaire brut']) - 1950.25) < 0.02,
+      'le salaire de base du SMIC personnalisé doit rester correct après calibration');
   } finally {
     await context.close();
   }
@@ -1121,7 +1136,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     const waitForBenchmarkRequest = async predicate => {
       const deadline = Date.now() + 15000;
       while (Date.now() < deadline) {
-        const found = benchmarkRequests().find(predicate);
+        const found = benchmarkRequests().filter(predicate).at(-1);
         if (found) return found;
         await new Promise(resolve => setTimeout(resolve, 50));
       }
@@ -1132,7 +1147,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       Number.parseFloat(request.situation[overtimeKey]) > 17
     );
     assert.ok(Math.abs(Number.parseFloat(smic39.situation[baseGrossKey]) - 1867.02) < 0.02,
-      'le salaire de base doit rester au SMIC 35 h, les heures supplémentaires étant calculées séparément');
+      'après calibration, le salaire de base doit rester au SMIC 35 h ; données : ' + JSON.stringify(smic39.situation));
 
     await page.locator('#benchmarkBody .benchmark-details summary').first().click();
     assert.match(await page.locator('#benchmarkBody .benchmark-details').first().innerText(),
