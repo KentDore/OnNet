@@ -28,11 +28,13 @@ test('le build utilise l’API officielle et n’embarque pas l’ancien fichier
   assert.doesNotMatch(template, /@@ONNET_CALC@@/);
 });
 
-test('le résultat principal indique la source Urssaf et requiert un clic avant transmission', () => {
+test('le résultat principal utilise un seul bouton pour calculer et autoriser la transmission', () => {
   assert.match(template, /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
   assert.match(template, /Quelles données sont transmises/);
-  assert.match(template, /id="urssafCalculateBtn"/);
-  assert.match(template, /Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf/);
+  assert.match(template, /id="updateDeclaredSalary"/);
+  assert.doesNotMatch(template, /id="urssafCalculateBtn"/);
+  assert.match(template, /En cliquant sur « Calculer mon salaire », vous autorisez l’envoi/);
+  assert.match(app, /urssafConsentGranted = true/);
   assert.doesNotMatch(template, /urssafRememberConsent|Se souvenir de mon choix/);
   assert.match(app, /urssafConsentGranted\s*=\s*true/);
   assert.match(app, /calculateWithUrssafApi/);
