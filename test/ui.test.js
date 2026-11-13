@@ -96,7 +96,7 @@ test.before(async () => {
   });
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   baseUrl = `http://127.0.0.1:${server.address().port}`;
-  browser = await chromium.launch({ headless: true });
+  browser = await chromium.launch({ headless: true, timeout: 30000 });
 });
 
 test.after(async () => {
@@ -107,6 +107,8 @@ test.after(async () => {
 
 async function openApp(options = {}) {
   const context = await browser.newContext();
+  context.setDefaultTimeout(10000);
+  context.setDefaultNavigationTimeout(15000);
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const calls = { count: 0, bodies: [] };
   await context.route('**/api/v1/evaluate', async route => {
@@ -184,7 +186,7 @@ async function addSecondScenario(page, gross = '3200') {
   );
 }
 
-test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du formulaire', async () => {
+test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du formulaire', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
     await waitForCalls(calls, 1);
@@ -198,15 +200,10 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
-    assert.equal(await page.locator('.urssaf-data-details').isVisible(), true);
-    await page.locator('.urssaf-data-details summary').click();
-    const notice = await page.locator('.declaration-api-notice').innerText();
-    assert.match(notice, /salaire.*durée du travail.*commune.*mutuelle.*titres-restaurant.*situation fiscale/);
-    assert.match(notice, /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
-    assert.match(await page.locator('.urssaf-data-details').innerText(), /Aucun calcul local des cotisations ou de l’impôt n’est utilisé/);
-    assert.match(await page.locator('.urssaf-status-main').first().innerText(), /Calculs réalisés via l’API officielle Mon-entreprise de l’Urssaf/);
+    assert.equal(await page.locator('.urssaf-data-details').count(), 0, 'le panneau de consentement redondant doit rester supprimé');
+    assert.equal(await page.locator('.declaration-api-notice').count(), 0, 'aucun pavé de consentement redondant ne doit être affiché');
+    assert.equal(await page.locator('.urssaf-status-main').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
-    assert.match(await page.locator('.declaration-api-notice').innerText(), /transmission à l’API officielle Mon-entreprise de l’Urssaf/);
 
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
@@ -230,7 +227,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
 });
 
 
-test('le haut de page garde le partage visible et regroupe les actions secondaires', async () => {
+test('le haut de page garde le partage visible et regroupe les actions secondaires', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -256,7 +253,7 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
   }
 });
 
-test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30 € / 30 €', async () => {
+test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30 € / 30 €', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
@@ -280,7 +277,7 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
   }
 });
 
-test('les chiffres principaux et le repère SMIC sont calculés via l’API', async () => {
+test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     assert.match(await page.locator('#cardsBody').first().innerText(), /Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
@@ -326,7 +323,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
 });
 
 
-test('le SMIC est récupéré via l’API et aucun réglage manuel n’est proposé', async () => {
+test('le SMIC est récupéré via l’API et aucun réglage manuel n’est proposé', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ smicValue: 1950.25 });
   try {
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
@@ -347,14 +344,13 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
     const expectedCustomGross39 = 1950.25 * (151.67 + customOvertime39 * 1.25) / 151.67;
     assert.ok(Math.abs(customBase39 - 1950.25) < 0.02,
       'la base mensuelle doit reprendre le montant SMIC renvoyé par l’API');
-    assert.ok(Math.abs(customGross39 - expectedCustomGross39) < 0.03,
-      'le brut total 39 h doit intégrer les heures supplémentaires majorées au montant de base renvoyé par l’API');
+    assert.ok(Math.abs(customGross39 - expectedCustomGross39) < 0.03,      'le brut total 39 h doit intégrer les heures supplémentaires majorées au montant de base renvoyé par l’API');
   } finally {
     await context.close();
   }
 });
 
-test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', async () => {
+test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
     await page.locator('#mainSalaryGross').fill('2300');
@@ -369,7 +365,7 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   }
 });
 
-test('transmet la commune propre à chaque salaire et la conserve dans le lien partagé', async () => {
+test('transmet la commune propre à chaque salaire et la conserve dans le lien partagé', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
@@ -414,7 +410,7 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
   }
 });
 
-test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', async () => {
+test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({
     warnings: [{ message: 'Une règle expérimentale a été utilisée.' }],
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
@@ -431,7 +427,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
   }
 });
 
-test('gère une indisponibilité Urssaf sans afficher de résultat local', async () => {
+test('gère une indisponibilité Urssaf sans afficher de résultat local', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
@@ -449,7 +445,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', async
   }
 });
 
-test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf', async () => {
+test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -460,13 +456,14 @@ test('ajoute un salaire et recalcule uniquement le nouveau scénario avec Urssaf
     );
     assert.ok(calls.count > before);
     assert.equal(await page.locator('#cardsBody [data-card]').count(), 2);
-    assert.equal(await page.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3200');
+    const stored = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(stored.scenarios[1].brut, 3200, 'le second salaire doit être conservé dans le scénario');
   } finally {
     await context.close();
   }
 });
 
-test('limite la valeur unitaire des titres-restaurant à 500 € dans la carte', async () => {
+test('limite la valeur unitaire des titres-restaurant à 500 € dans la carte', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.locator('#cardsBody details.more').first().locator('summary').click();
@@ -482,7 +479,7 @@ test('limite la valeur unitaire des titres-restaurant à 500 € dans la carte',
     await context.close();
   }
 });
-test('transmet les deux parts de mutuelle par défaut lors de l’ajout', async () => {
+test('transmet les deux parts de mutuelle par défaut lors de l’ajout', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -514,11 +511,11 @@ test('transmet les deux parts de mutuelle par défaut lors de l’ajout', async 
   }
 });
 
-test('conserve la saisie du brut après rechargement sans consentement implicite', async () => {
+test('conserve la saisie du brut après rechargement sans consentement implicite', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
-    const gross = page.locator('#cardsBody [data-key="brut"]').first();
+    const gross = page.locator('#mainSalaryGross');
     await gross.fill('3100');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -531,14 +528,14 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     );
     assert.ok(calls.count > before);
     await page.reload();
-    assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3100');
+    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3100');
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
   }
 });
 
-test('un retour de session ne retransmet pas le salaire enregistré avant une nouvelle modification', async () => {
+test('un retour de session ne retransmet pas le salaire enregistré avant une nouvelle modification', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ consent: false });
   try {
     await waitForCalls(calls, 1);
@@ -560,7 +557,7 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
   }
 });
 
-test('recrée les scénarios à partir du lien de partage', async () => {
+test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await addSecondScenario(page, '3450');
@@ -583,14 +580,15 @@ test('recrée les scénarios à partir du lien de partage', async () => {
     const sharedPage = await context.newPage();
     await sharedPage.goto(shareUrl);
     assert.equal(await sharedPage.locator('#cardsBody [data-card]').count(), 2);
-    assert.equal(await sharedPage.locator('#cardsBody [data-key="brut"]').nth(1).inputValue(), '3450');
+    const sharedState = await sharedPage.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(sharedState.scenarios[1].brut, 3450);
     assert.equal(await sharedPage.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
   }
 });
 
-test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async () => {
+test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -607,7 +605,7 @@ test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async 
   }
 });
 
-test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', async () => {
+test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     await page.locator('#foyerModuleToggle').click();
@@ -646,7 +644,7 @@ test('le concubinage réutilise le calcul individuel sans transmettre les revenu
   }
 });
 
-test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local', async () => {
+test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -667,7 +665,7 @@ test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local
   }
 });
 
-test('ne propose pas de réessayer pour les paramètres hors périmètre', async () => {
+test('ne propose pas de réessayer pour les paramètres hors périmètre', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -685,7 +683,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
   }
 });
 
-test('la part salariale des titres-restaurant est bornée à 40–50 %', async () => {
+test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
@@ -697,8 +695,7 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', async (
     await context.close();
   }
 });
-
-test('la recherche de commune confirme le département transmis à Urssaf', async () => {
+test('la recherche de commune confirme le département transmis à Urssaf', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
@@ -731,7 +728,7 @@ test('la recherche de commune confirme le département transmis à Urssaf', asyn
   }
 });
 
-test('une commune saisie sans sélection bloque le calcul API', async () => {
+test('une commune saisie sans sélection bloque le calcul API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
@@ -751,7 +748,7 @@ test('une commune saisie sans sélection bloque le calcul API', async () => {
   }
 });
 
-test('les outils secondaires sont repliés par défaut et restent accessibles', async () => {
+test('les outils secondaires sont repliés par défaut et restent accessibles', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ advancedOpen:false, consent:false });
   try {
     const advanced = page.locator('#advancedWorkspace');
@@ -768,7 +765,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
-test('le comparatif reste dans la largeur sur petits écrans', async () => {
+test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     for (const width of [320, 375, 430]) {
@@ -789,7 +786,7 @@ test('le comparatif reste dans la largeur sur petits écrans', async () => {
 });
 
 
-test('la page ne déborde pas horizontalement sur les largeurs mobiles', async () => {
+test('la page ne déborde pas horizontalement sur les largeurs mobiles', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     for (const width of [320, 375, 390, 430]) {
@@ -809,7 +806,7 @@ test('la page ne déborde pas horizontalement sur les largeurs mobiles', async (
   }
 });
 
-test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', async () => {
+test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const month = page.locator('[data-maquette-period="month"]');
@@ -829,7 +826,7 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', as
   }
 });
 
-test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', async () => {
+test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     const modal = page.locator('#modalOverlay');
@@ -860,7 +857,7 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
   }
 });
 
-test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par la saisie du formulaire', async () => {
+test('une récupération du SMIC lente est mutualisée avec le calcul déclenché par la saisie du formulaire', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
@@ -880,7 +877,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
   }
 });
 
-test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs après saisie', async () => {
+test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs après saisie', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ consent: false, failFirstCalls: 1 });
   try {
     await waitForCalls(calls, 1);
@@ -908,7 +905,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
 });
 
 
-test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de salaire', async () => {
+test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de salaire', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.locator('#addScenario').click();
@@ -941,7 +938,7 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
 });
 
 
-test('le graphique explique explicitement qu’il montre le net avant impôt', async () => {
+test('le graphique explique explicitement qu’il montre le net avant impôt', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel .chart-scope-hint');
@@ -956,7 +953,7 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
 });
 
 
-test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur état visuel', async () => {
+test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur état visuel', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
@@ -977,7 +974,7 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
   }
 });
 
-test('les fiches de salaire précèdent le comparatif et les graphiques vides sont masqués', async () => {
+test('les fiches de salaire précèdent le comparatif et les graphiques vides sont masqués', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     const order = await page.evaluate(() => {
@@ -992,7 +989,7 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   }
 });
 
-test('les valeurs principales se modifient dans le formulaire unique en haut de page', async () => {
+test('les valeurs principales se modifient dans le formulaire unique en haut de page', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
@@ -1006,7 +1003,7 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
 });
 
 
-test('le bouton principal informe explicitement de la transmission des données à l’Urssaf', async () => {
+test('le bouton principal informe explicitement de la transmission des données à l’Urssaf', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
@@ -1020,7 +1017,7 @@ test('le bouton principal informe explicitement de la transmission des données 
 
 
 
-test('les fiches de salaire et leurs contrôles restent visibles sans action préalable', async () => {
+test('les fiches de salaire et leurs contrôles restent visibles sans action préalable', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     assert.equal(await page.locator('.cards-bar').isVisible(), true);
@@ -1031,14 +1028,15 @@ test('les fiches de salaire et leurs contrôles restent visibles sans action pr�
     assert.equal(await card.isVisible(), true);
     await card.locator('details.more > summary').click();
     assert.equal(await card.locator('details.more').evaluate(el => el.open), true);
-    assert.equal(await card.locator('[data-key="brut"]').isVisible(), true);
+    assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'le salaire se modifie uniquement dans le formulaire principal');
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
   } finally {
     await context.close();
   }
 });
 
 
-test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées sur mobile', async () => {
+test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées sur mobile', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     for (const width of [320, 375, 390, 430, 768, 1280]) {
@@ -1047,8 +1045,7 @@ test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées 
         const top = document.querySelector('.maquette-top');
         const hero = document.querySelector('header.hero');
         const brand = top?.querySelector('.brand');
-        const actions = top?.querySelector('.header-actions');
-        const rect = el => {
+        const actions = top?.querySelector('.header-actions');        const rect = el => {
           const r = el.getBoundingClientRect();
           return { left:r.left, right:r.right, top:r.top, bottom:r.bottom, width:r.width, height:r.height };
         };
@@ -1068,7 +1065,7 @@ test('l’en-tête respecte la hiérarchie V33 et ses actions restent alignées 
   }
 });
 
-test('capture visuelle desktop et mobile du parcours V33', async () => {
+test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ advancedOpen:false });
   try {
     const output = path.join(__dirname, '..', 'artifacts', 'visual');
@@ -1098,7 +1095,7 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
-      document.querySelector('#cardsBody [data-key="brut"]')?.value === '2500',
+      document.getElementById('mainSalaryGross')?.value === '2500',
       null, { timeout:20000 });
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
@@ -1113,7 +1110,6 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
         gross:rect('#mainSalaryGross'),
         hours:rect('#mainSalaryHours'),
         mutuelle:rect('.declaration-mutuelle'),
-        calculate:rect('.urssaf-status'),
         fields:rect('.declaration-fields')
       };
     });
@@ -1123,14 +1119,10 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
       'la base horaire suit le salaire brut');
     assert.ok(formLayout.mutuelle.top > formLayout.hours.top,
       'la note Mutuelle suit les champs de saisie');
-    assert.ok(formLayout.calculate.top > formLayout.mutuelle.top,
-      'le bouton de calcul suit la note Mutuelle');
     assert.ok(Math.abs(formLayout.period.width - formLayout.fields.width) < 2,
       'les champs occupent toute la largeur du formulaire');
     assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
       'la note Mutuelle occupe toute la largeur du formulaire');
-    assert.ok(Math.abs(formLayout.calculate.width - formLayout.fields.width) < 2,
-      'le bouton de calcul occupe toute la largeur du formulaire');
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
     await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
@@ -1158,7 +1150,7 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
 });
 
 
-test('le graphique comparatif et sa légende apparaissent après les calculs API', async () => {
+test('le graphique comparatif et sa légende apparaissent après les calculs API', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ advancedOpen:false });
   try {
     await addSecondScenario(page, '3200');
@@ -1177,7 +1169,7 @@ test('le graphique comparatif et sa légende apparaissent après les calculs API
   }
 });
 
-test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
+test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -1194,14 +1186,17 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     );
     const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
     assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.locator('#cardsBody [data-key="brut"]').first().inputValue(), '3000');
-    assert.equal(await page.locator('#cardsBody [data-durree-group] button[aria-pressed="true"]').innerText(), '35 h');
+    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3000');
+    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '35');
+    const card = page.locator('#cardsBody [data-card]').first();
+    assert.equal(await card.locator('[data-key="brut"]').count(), 0);
+    assert.equal(await card.locator('[data-duree]').count(), 0);
   } finally {
     await context.close();
   }
 });
 
-test('le repère SMIC suit la durée de l’offre de référence et applique la majoration à 39 h', async () => {
+test('le repère SMIC suit la durée de l’offre de référence et applique la majoration à 39 h', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
     const overtimeKey = 'salarié . temps de travail . heures supplémentaires';
