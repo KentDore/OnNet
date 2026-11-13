@@ -958,19 +958,19 @@ header.hero .trust-icon svg{width:19px;height:19px}
 @media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
 
 /* Finition V33 : grille de saisie sur desktop, repli propre sur mobile. */
-@media(min-width:641px){
+@media(min-width:391px){
   .declaration-inline .declaration-fields{
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     gap:6px 12px;
   }
   .declaration-inline .declaration-fields>label{margin:4px 0 0}
-  .declaration-inline .declaration-fields>label[for="mainSalaryPeriod"],
-  .declaration-inline .declaration-fields>#mainSalaryPeriod,
-  .declaration-inline .declaration-fields>label[for="mainSalaryHours"],
-  .declaration-inline .declaration-fields>#mainSalaryHours{grid-column:1}
-  .declaration-inline .declaration-fields>label[for="mainSalaryGross"],
-  .declaration-inline .declaration-fields>#mainSalaryGross{grid-column:2}
+  .declaration-inline .declaration-fields>label[for="mainSalaryPeriod"]{grid-column:1;grid-row:1}
+  .declaration-inline .declaration-fields>#mainSalaryPeriod{grid-column:1;grid-row:2}
+  .declaration-inline .declaration-fields>label[for="mainSalaryGross"]{grid-column:2;grid-row:1}
+  .declaration-inline .declaration-fields>#mainSalaryGross{grid-column:2;grid-row:2}
+  .declaration-inline .declaration-fields>label[for="mainSalaryHours"]{grid-column:1;grid-row:3}
+  .declaration-inline .declaration-fields>#mainSalaryHours{grid-column:1;grid-row:4}
   .declaration-inline .declaration-mutuelle{
     grid-column:2;
     grid-row:3 / span 2;
@@ -982,7 +982,8 @@ header.hero .trust-icon svg{width:19px;height:19px}
     width:100%;
   }
   .declaration-inline .declaration-update{
-    width:auto;
+    display:block;
+    width:max-content;
     min-width:150px;
     margin:11px 0 0 auto;
   }
