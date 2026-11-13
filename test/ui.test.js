@@ -1011,6 +1011,29 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
+    const formGrid = await page.evaluate(() => {
+      const rect = selector => {
+        const r = document.querySelector(selector).getBoundingClientRect();
+        return { left:r.left, top:r.top, right:r.right, bottom:r.bottom };
+      };
+      return {
+        periodLabel:rect('label[for="mainSalaryPeriod"]'),
+        grossLabel:rect('label[for="mainSalaryGross"]'),
+        hoursLabel:rect('label[for="mainSalaryHours"]'),
+        mutuelle:rect('.declaration-mutuelle'),
+        calculate:rect('#updateDeclaredSalary')
+      };
+    });
+    assert.ok(formGrid.periodLabel.left < formGrid.grossLabel.left,
+      'période à gauche et salaire brut à droite');
+    assert.ok(Math.abs(formGrid.periodLabel.top - formGrid.grossLabel.top) < 20,
+      'les deux premières étiquettes sont alignées');
+    assert.ok(formGrid.hoursLabel.left < formGrid.mutuelle.left,
+      'base horaire à gauche et mutuelle à droite');
+    assert.ok(formGrid.mutuelle.top <= formGrid.hoursLabel.top + 24,
+      'la note mutuelle occupe les deux lignes de droite');
+    assert.ok(formGrid.calculate.left > formGrid.hoursLabel.left,
+      'le bouton de calcul est aligné à droite sur desktop');
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
     await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
