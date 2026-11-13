@@ -32,7 +32,7 @@ Le comparatif utilise la médiane nationale des salaires nets du secteur privé 
 - Titres-restaurant paramétrables en nombre, valeur et part salariale. Le modèle accepte une participation salariale de 40 à 50 % (participation employeur de 50 à 60 %).
 - Prélèvement à la source selon le barème du modèle fiscal ou selon un taux personnalisé. Le taux personnalisé reste constant dans les scénarios comparés.
 - Foyer fiscal : personne seule, parent isolé, couple marié ou pacsé avec revenus complémentaires renseignables, ou concubinage. En concubinage, les revenus du partenaire ne sont pas intégrés au calcul de l’utilisateur.
-- Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net avant impôt est calculé par la même API après consentement.
+- Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net avant impôt est calculé par la même API après consentement. Pour une offre de 39 h, le repère tient compte des 4 heures supplémentaires hebdomadaires majorées à 25 % selon l’hypothèse de droit commun retenue par le simulateur.
 - Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 
 ## Limites connues

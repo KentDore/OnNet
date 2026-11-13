@@ -155,11 +155,19 @@ function getSmicGross(){
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
 
+function getSmicGrossTarget(baseGross, weeklyHours){
+  const overtimeHours=Number(weeklyHours)===39?4*52/12:0;
+  if(!overtimeHours) return baseGross;
+  // En 39 h : SMIC de base 35 h + 4 h supplémentaires hebdomadaires à +25 %.
+  return Math.round(baseGross*(1+overtimeHours*1.25/HEURES_BASE)*100)/100;
+}
+
 function buildSmicScenario(base){
   const amount = getSmicGross();
   if(!Number.isFinite(amount) || amount <= 0) return null;
+  const weeklyHours=Number(base.dureeType)===39?39:35;
   return Object.assign({}, base, {
-    id:-1, name:'Référence SMIC', brut:amount, dureeType:'35',
+    id:-1, name:'Référence SMIC', brut:getSmicGrossTarget(amount,weeklyHours), dureeType:String(weeklyHours),
     mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
     nbMois:12, primes:0, isBenchmark:true
   });
@@ -1004,6 +1012,7 @@ function renderBenchmarks(computed){
   const medianValue=medianNetHourly*factor;
   const smicResult=getCachedSmicResult();
   const smicGross=getSmicGross();
+  const smicGrossTarget=smicGross===null?null:getSmicGrossTarget(smicGross,weeklyHours);
   const smicHourlyGross=smicGross/HEURES_BASE;
   const userNetBeforeTax=r?Math.max(0,r.netApres):null;
   const userNetHourly=userNetBeforeTax===null?null:(userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0);
@@ -1011,7 +1020,7 @@ function renderBenchmarks(computed){
   const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+' / '+unit;
   const gapClass=value=>value>=0?'benchmark-positive':'benchmark-negative';
   const durationLabel=weeklyHours.toLocaleString('fr-FR')+' h';
-  const smicNetHourly=smicResult?Math.max(0,smicResult.netApres)/HEURES_BASE:null;
+  const smicNetHourly=smicResult?Math.max(0,smicResult.netApres)/userMonthlyHours:null;
   const smicValue=smicNetHourly===null?null:smicNetHourly*factor;
   const smicGap=userValue===null||smicValue===null?null:userValue-smicValue;
   const medianGap=userValue===null?null:userValue-medianValue;
@@ -1022,11 +1031,11 @@ function renderBenchmarks(computed){
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC net</div>
         <div class="benchmark-value">${smicValue===null?'À calculer':format(smicValue)}</div>
-        <div class="benchmark-meta">${smicValue===null?esc(smicStatus):'Par '+unit+' · équivalent 35 h'}</div>
+        <div class="benchmark-meta">${smicValue===null?esc(smicStatus):'Par '+unit+' · repère '+durationLabel}</div>
         ${smicGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(smicGap)+'">'+gapText(smicGap)+'</div>'}
         ${smicResult?`<details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
-          <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf, sur une base de 35 h. Pour les périodes mensuelle et annuelle, le repère est ramené à la durée de votre contrat (${durationLabel}). Il est calculé sans mutuelle ni titres-restaurant.</p>
-          <p>Brut mensuel de référence : ${fmt(smicGross)}. Taux horaire brut : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
+          <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf sur une base de ${durationLabel}${weeklyHours===39?' : 35 h au SMIC + 4 h supplémentaires hebdomadaires majorées à 25 %':''}. Pour les périodes mensuelle et annuelle, le repère est calculé sur cette même durée. Il est calculé sans mutuelle ni titres-restaurant.</p>
+          <p>${weeklyHours===39?`Brut mensuel de référence à 35 h : ${fmt(smicGross)}. Brut total estimé à 39 h : ${fmt(smicGrossTarget)}, avec 4 h supplémentaires hebdomadaires majorées à 25 %.`:`Brut mensuel de référence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>`:''}
       </article>`;

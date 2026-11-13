@@ -1106,3 +1106,56 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     await context.close();
   }
 });
+
+test('le repère SMIC suit la durée de l’offre de référence et applique la majoration à 39 h', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    const overtimeKey = 'salarié . temps de travail . heures supplémentaires';
+    const baseGrossKey = 'salarié . contrat . salaire brut';
+    const benchmarkRequests = () => calls.bodies.filter(request =>
+      Array.isArray(request.expressions) &&
+      request.expressions.length === 2 &&
+      request.expressions.includes('salarié . rémunération . brut') &&
+      request.expressions.includes('salarié . rémunération . net . à payer avant impôt')
+    );
+    const waitForBenchmarkRequest = async predicate => {
+      const deadline = Date.now() + 15000;
+      while (Date.now() < deadline) {
+        const found = benchmarkRequests().find(predicate);
+        if (found) return found;
+        await new Promise(resolve => setTimeout(resolve, 50));
+      }
+      assert.fail('Le calcul du repère SMIC attendu n’a pas été envoyé à l’API.');
+    };
+
+    const smic39 = await waitForBenchmarkRequest(request =>
+      Number.parseFloat(request.situation[overtimeKey]) > 17
+    );
+    assert.ok(Math.abs(Number.parseFloat(smic39.situation[baseGrossKey]) - 1867.02) < 0.02,
+      'le salaire de base doit rester au SMIC 35 h, les heures supplémentaires étant calculées séparément');
+
+    await page.locator('#benchmarkBody .benchmark-details summary').first().click();
+    assert.match(await page.locator('#benchmarkBody .benchmark-details').first().innerText(),
+      /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
+
+    await addSecondScenario(page, '3200');
+    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
+    await secondCard.locator('[data-duree="35"]').click();
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
+      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready')
+    );
+    await page.locator('#stackChart [data-setref="1"]').click();
+
+    const smic35 = await waitForBenchmarkRequest(request =>
+      Math.abs(Number.parseFloat(request.situation[overtimeKey] || '0')) < 0.001
+    );
+    assert.ok(Math.abs(Number.parseFloat(smic35.situation[baseGrossKey]) - 1867.02) < 0.02);
+    await page.waitForFunction(() =>
+      document.querySelector('#benchmarkBody .benchmark-meta')?.textContent.includes('repère 35 h')
+    );
+    assert.match(await page.locator('#benchmarkBody').innerText(), /repère 35 h/);
+  } finally {
+    await context.close();
+  }
+});
