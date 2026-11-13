@@ -1005,28 +1005,4 @@ header.hero .trust-icon svg{width:19px;height:19px}
   .declaration-inline .declaration-update{min-height:45px}
 }
 
-  #comparePanel>.chart-scope-hint{margin:9px 0 14px;color:var(--ink-soft);font-size:11px;line-height:1.4}
-  .declaration-inline .declaration-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:5px 9px}
-  .declaration-inline .declaration-fields>label,
-  .declaration-inline .declaration-fields>input,
-  .declaration-inline .declaration-fields>select{min-width:0}
-  .declaration-inline .declaration-fields>label[for="mainSalaryGross"],
-  .declaration-inline .declaration-fields>#mainSalaryGross{grid-column:2}
-  .declaration-inline .declaration-fields>label[for="mainSalaryHours"],
-  .declaration-inline .declaration-fields>#mainSalaryHours{grid-column:1}
-  .declaration-inline .declaration-mutuelle{grid-column:2;grid-row:3 / span 2;width:100%;margin:0;min-height:70px;flex-direction:column;justify-content:center}
-}
-@media(max-width:390px){
-  .declaration-inline .declaration-fields{grid-template-columns:minmax(0,1fr)}
-  .declaration-inline .declaration-fields>*{grid-column:1!important;grid-row:auto!important}
-  .declaration-inline .declaration-mutuelle{
-    width:calc(100% - 16px);
-    margin-left:16px;
-    min-height:0;
-    align-self:flex-end;
-    flex-direction:row;
-    justify-content:flex-start;
-  }
-  .declaration-inline .declaration-update{width:100%}
-}
-#comparePanel>.sub{margin:3px 0 8px;color:#78837c;font-size:12px;line-height:1.35}
+
