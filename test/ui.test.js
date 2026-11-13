@@ -297,8 +297,11 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', as
     const smicBase39 = Number.parseFloat(finalSmicRequest.situation['salarié . contrat . salaire brut']);
     const smicOvertime39 = Number.parseFloat(finalSmicRequest.situation['salarié . temps de travail . heures supplémentaires']);
     const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
-    assert.ok(Math.abs(smicGross39 - 1867.02) < 0.03,
-      'après calibration, le brut total 39 h doit correspondre au SMIC 35 h augmenté des heures supplémentaires majorées');
+    const expectedSmicGross39 = 1867.02 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicBase39 - 1867.02) < 0.02,
+      'la base mensuelle doit rester égale au SMIC officiel 35 h');
+    assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
+      'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
@@ -340,8 +343,11 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
     const customBase39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . contrat . salaire brut']);
     const customOvertime39 = Number.parseFloat(smicRequests.at(-1).situation['salarié . temps de travail . heures supplémentaires']);
     const customGross39 = customBase39 * (151.67 + customOvertime39 * 1.25) / 151.67;
-    assert.ok(Math.abs(customGross39 - 1950.25) < 0.03,
-      'le brut total 39 h du SMIC personnalisé doit intégrer les heures supplémentaires majorées');
+    const expectedCustomGross39 = 1950.25 * (151.67 + customOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(customBase39 - 1950.25) < 0.02,
+      'la base mensuelle doit reprendre le montant SMIC renvoyé par l’API');
+    assert.ok(Math.abs(customGross39 - expectedCustomGross39) < 0.03,
+      'le brut total 39 h doit intégrer les heures supplémentaires majorées au montant de base renvoyé par l’API');
   } finally {
     await context.close();
   }
@@ -1144,7 +1150,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       while (Date.now() < deadline) {
         const found = benchmarkRequests().filter(predicate).at(-1);
         const status = await page.locator('#urssafStatusText').textContent() || '';
-        const smicValue = await page.locator('#benchmarkBody .benchmark-value').textContent() || '';
+        const smicValue = await page.locator('#benchmarkBody .benchmark-value').first().textContent() || '';
         if (found && status.includes('Calculs à jour') && smicValue !== 'À calculer') return found;
         await new Promise(resolve => setTimeout(resolve, 50));
       }
