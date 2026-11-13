@@ -161,13 +161,8 @@ async function openApp(options = {}) {
     throw new Error('Erreur JavaScript au chargement :\n' + pageErrors.join('\n'));
   }
 
-  if (options.consent !== false) {
-    if (options.emptyStorage) {
-      await page.locator('#modalOnboardingInput').fill('2500');
-      await page.locator('#modalOnboardingSubmit').click();
-    } else {
-      await page.locator('#mainSalaryGross').fill('2300');
-    }
+  if (options.consent !== false && !options.emptyStorage) {
+    await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
