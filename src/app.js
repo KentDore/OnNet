@@ -4,7 +4,7 @@
 // ---------- État ----------
 let idCounter = 0;
 
-// L'accord de transmission est donné par le clic sur le bouton principal.
+// L'accord de transmission est donné par la saisie/validation du formulaire.
 // Il reste limité à la session et n'est jamais mémorisé sur l'appareil.
 let urssafConsentGranted = false;
 let urssafGeneration = 0;
@@ -1082,8 +1082,11 @@ function renderMaquetteControls(computedOverride){
     if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
     scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
     scenario.dureeType=hours?.value==='39'?'39':'35';
+    // La modification explicite du formulaire vaut accord à la transmission
+    // annoncée juste au-dessus des champs.
+    urssafConsentGranted = true;
     saveState();
-    if(urssafConsentGranted) scheduleUrssafCalculations(false,false);
+    scheduleUrssafCalculations(false,false);
   };
   // Les champs remplacent l’ancien bouton : toute modification valide
   // met à jour le scénario et relance le calcul après un court délai.
@@ -1995,6 +1998,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
+    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ces informations, vous autorisez leur transmission à l’API officielle Mon-entreprise de l’Urssaf : salaire brut, durée du travail, mutuelle et titres-restaurant. Les paramètres de commune et de situation fiscale sont également utilisés pour le calcul. Aucun salaire n’est transmis avant la validation du formulaire.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2071,18 +2075,6 @@ function showOnboardingModal(){
 // Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
-function showUrssafConsentModal(){
-  const html = `
-    <p class="modal-msg">Pour afficher vos résultats, OnNet doit interroger l’API officielle Mon-entreprise de l’Urssaf.</p>
-    <p class="urssaf-data-notice onboarding-urssaf-notice">En continuant, vous autorisez OnNet à transmettre les paramètres nécessaires au calcul : salaires comparés, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est effectué. Aucun salaire n’est transmis avant votre validation.</p>
-    <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn btn-primary" id="modalUrssafConsentSubmit" style="width:100%;">Continuer et lancer les calculs</button>
-    </div>`;
-  const pending = openModal(html, { dismissible:false });
-  document.getElementById('modalOverlay').querySelector('#modalUrssafConsentSubmit')
-    .addEventListener('click',()=>closeModal(true));
-  return pending;
-}
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
@@ -2420,15 +2412,12 @@ document.querySelectorAll('[data-maquette-period]').forEach(button=>{
 });
 document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
 
-const consentFlow = showOnboarding
-  ? showOnboardingModal().then(result => {
-      Object.assign(scenarios[0], result);
-      render();
-    })
-  : showUrssafConsentModal();
-
-consentFlow.then(() => {
-  urssafConsentGranted = true;
-  saveState();
-  scheduleUrssafCalculations(true,true);
-});
+if(showOnboarding){
+  showOnboardingModal().then(result => {
+    Object.assign(scenarios[0], result);
+    urssafConsentGranted = true;
+    render();
+    saveState();
+    scheduleUrssafCalculations(true,true);
+  });
+}
