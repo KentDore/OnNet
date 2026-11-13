@@ -1163,7 +1163,10 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     const smicBase39 = Number.parseFloat(smic39.situation[baseGrossKey]);
     const smicOvertime39 = Number.parseFloat(smic39.situation[overtimeKey]);
     const smicGross39 = smicBase39 * (151.67 + smicOvertime39 * 1.25) / 151.67;
-    assert.ok(Math.abs(smicGross39 - 1867.02) < 0.03,
+    const expectedSmicGross39 = 1867.02 * (151.67 + smicOvertime39 * 1.25) / 151.67;
+    assert.ok(Math.abs(smicBase39 - 1867.02) < 0.02,
+      'la base 35 h doit rester égale au SMIC officiel');
+    assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit intégrer les 4 heures supplémentaires majorées ; données : ' + JSON.stringify(smic39.situation));
 
     await page.locator('#benchmarkBody .benchmark-details summary').first().click();
