@@ -176,7 +176,7 @@ async function openApp(options = {}) {
 }
 
 async function addSecondScenario(page, gross = '3200') {
-  await page.locator('#addScenario').click();
+  await page.locator('#maquetteAddSalary').click();
   await page.locator('#modalAddInput').fill(gross);
   await page.locator('#modalAddSubmit').click();
   await page.waitForFunction(() =>
