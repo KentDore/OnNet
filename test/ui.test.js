@@ -583,6 +583,45 @@ test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', async 
   }
 });
 
+test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', async () => {
+  const { context, page, calls } = await openApp();
+  try {
+    await page.locator('#foyerModuleToggle').click();
+    await page.locator('#foyerSituation [data-foyer="commun"]').click();
+    await page.locator('#foyerConjoint').fill('24000');
+    await page.waitForFunction(() => {
+      const status = document.getElementById('urssafStatusText')?.textContent || '';
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return status.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout: 20000 });
+
+    assert.ok(calls.bodies.some(body =>
+      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
+      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
+    ), 'les revenus du conjoint doivent être transmis pour un foyer marié/PACSé');
+
+    const callsBeforeConcubinage = calls.count;
+    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
+    await page.waitForFunction(() =>
+      document.getElementById('foyerConcubinageInfo')?.style.display !== 'none' &&
+      document.getElementById('foyerConjointRow')?.style.display === 'none'
+    );
+    await page.waitForTimeout(500);
+
+    assert.equal(calls.count, callsBeforeConcubinage,
+      'le concubinage doit réutiliser le résultat individuel déjà calculé, sans nouvelle requête avec les revenus du partenaire');
+    assert.ok(calls.bodies.some(body =>
+      body.situation['impôt . foyer fiscal . situation de famille'] === "'célibataire'" &&
+      !Object.hasOwn(body.situation, 'impôt . foyer fiscal . revenu imposable . autres revenus imposables')
+    ), 'le calcul individuel ne doit pas inclure les revenus du partenaire');
+    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
+    assert.equal(await page.locator('#foyerConjointRow').isVisible(), false);
+  } finally {
+    await context.close();
+  }
+});
+
 test('un scénario avec 13 mensualités est signalé au lieu d’un calcul local', async () => {
   const { context, page, calls } = await openApp();
   try {
