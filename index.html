@@ -2917,6 +2917,22 @@ function renderBenchmarks(computed){
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
+function applyDeclaredSalaryFromForm(){
+  const scenario=findScenario(refId)||scenarios[0];
+  const gross=document.getElementById('mainSalaryGross');
+  const period=document.getElementById('mainSalaryPeriod');
+  const hours=document.getElementById('mainSalaryHours');
+  const raw=Number(gross?.value);
+  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
+  scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
+  scenario.dureeType=hours?.value==='39'?'39':'35';
+  // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
+  urssafConsentGranted=true;
+  saveState();
+  render();
+  scheduleUrssafCalculations(false,false);
+}
+
 function renderMaquetteControls(computedOverride){
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
@@ -2945,26 +2961,25 @@ function renderMaquetteControls(computedOverride){
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
   const mutuelleText=document.getElementById('mainSalaryMutuelleText');
   if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
-  const applyDeclaredSalary=()=>{
-    const scenario=findScenario(refId)||scenarios[0];
-    const raw=Number(gross?.value);
-    if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
-    scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
-    scenario.dureeType=hours?.value==='39'?'39':'35';
-    // La modification explicite du formulaire vaut accord à la transmission
-    // annoncée juste au-dessus des champs.
-    urssafConsentGranted = true;
-    saveState();
-    scheduleUrssafCalculations(false,false);
-  };
-  // Les champs remplacent l’ancien bouton : toute modification valide
-  // met à jour le scénario et relance le calcul après un court délai.
+  // Un seul raccordement durable : les rerendus ne doivent ni remplacer ni perdre
+  // les événements de saisie du formulaire.
   if(gross){
-    gross.oninput=applyDeclaredSalary;
-    gross.onchange=applyDeclaredSalary;
+    gross.oninput=null;
+    gross.onchange=null;
+    if(gross.dataset.onnetSalaryBound!=='true'){
+      gross.addEventListener('input',applyDeclaredSalaryFromForm);
+      gross.addEventListener('change',applyDeclaredSalaryFromForm);
+      gross.dataset.onnetSalaryBound='true';
+    }
   }
-  if(period) period.onchange=applyDeclaredSalary;
-  if(hours) hours.onchange=applyDeclaredSalary;
+  if(period && period.dataset.onnetSalaryBound!=='true'){
+    period.addEventListener('change',applyDeclaredSalaryFromForm);
+    period.dataset.onnetSalaryBound='true';
+  }
+  if(hours && hours.dataset.onnetSalaryBound!=='true'){
+    hours.addEventListener('change',applyDeclaredSalaryFromForm);
+    hours.dataset.onnetSalaryBound='true';
+  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
