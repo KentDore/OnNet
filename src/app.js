@@ -481,9 +481,15 @@ function loadPersistedState(){
     const restored = normalizeScenarioIds(
       data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId, data.openCardIds);
     if(!restored.scenarios.length) return null;
+    const legacyPristine = data.onboardingCompleted !== true && restored.scenarios.length === 1 &&
+      Number(restored.scenarios[0].brut) === 2300 && String(restored.scenarios[0].dureeType) === '39' &&
+      Number(restored.scenarios[0].mutuelle) === 30 && Number(restored.scenarios[0].mutuellePat) === 30 &&
+      Number(restored.scenarios[0].joursResto) === 21 && Number(restored.scenarios[0].valeurResto) === 8 &&
+      Number(restored.scenarios[0].partResto) === 50;
     return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
              displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
-             openCardIds: restored.openCardIds, foyer: sanitizeFoyer(data.foyer) };
+             openCardIds: restored.openCardIds, foyer: sanitizeFoyer(data.foyer),
+             onboardingCompleted: data.onboardingCompleted === true || (data.onboardingCompleted !== false && !legacyPristine) };
   } catch(e){ return null; }
 }
 
@@ -495,7 +501,7 @@ function saveState(){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       v:1, scenarios, refId, metric, displayAmt, displayPeriod, foyer,
-      openCardIds:[...openCardIds]
+      onboardingCompleted, openCardIds:[...openCardIds]
     }));
   } catch(e){
     // Une seule alerte par session : les saisies restent utilisables, mais
@@ -674,7 +680,8 @@ const initialSource = shareState || persisted;
 // aucun lien partagé) ou juste après une réinitialisation — les deux cas
 // arrivent ici, puisque ni le localStorage ni le hash de l'URL n'ont fourni
 // quoi que ce soit à restaurer.
-let showOnboarding = !initialSource;
+let showOnboarding = !initialSource || initialSource.onboardingCompleted === false;
+let onboardingCompleted = !showOnboarding;
 // Ne pas persister le brut placeholder tant que la pop-up d'onboarding n'a
 // pas été validée — même logique que pour un chargement depuis un lien
 // partagé, pour ne jamais écraser silencieusement un état déjà enregistré.
@@ -1957,7 +1964,7 @@ function renderUrssafConsentNotice(){
   return `
     <div class="onboarding-consent">
       <div class="onboarding-consent-top">
-        <span class="onboarding-consent-icon" aria-hidden="true">✓</span>
+        <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
         <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucune donnée transmise avant validation</small></span>
         <span class="onboarding-consent-badge">Sécurisé</span>
       </div>
@@ -1980,7 +1987,7 @@ function renderMutuelleTrFields(idPrefix){
       </div>
       <div class="onboarding-tr">
         <div class="onboarding-tr-heading">
-          <span class="onboarding-tr-icon" aria-hidden="true">▣</span>
+          <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 15h3"/></svg></span>
           <strong>Titres-restaurant</strong>
           <span class="onboarding-tr-optional">Facultatif</span>
         </div>
@@ -2447,6 +2454,7 @@ document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addSc
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
+    onboardingCompleted = true;
     urssafConsentGranted = true;
     render();
     saveState();
