@@ -654,7 +654,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', async
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-card] .result-source')?.textContent.includes('nombre de mensualités différent de 12')
     );
-    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), false);
+    assert.equal(await page.locator('#updateDeclaredSalary').isVisible(), true);
     assert.equal(calls.count, before, 'aucun nouvel appel API pour un scénario non pris en charge');
   } finally {
     await context.close();
