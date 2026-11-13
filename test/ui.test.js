@@ -834,7 +834,8 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
   try {
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
-    assert.equal(await modal.locator('.onboarding-optional').getAttribute('open'), null);
+    assert.equal(await modal.locator('.onboarding-tr-fields').isVisible(), false);
+    assert.equal(await modal.locator('#modalOnboardingTrToggle').isVisible(), true);
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
     assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
