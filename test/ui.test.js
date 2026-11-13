@@ -853,9 +853,11 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel .chart-scope-hint');
-    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim(), 'Du brut au net avant impôt');
+    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
+    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
     assert.match(scope, /net à payer avant impôt/i);
+    assert.match(scope, /simulation Urssaf/i);
     assert.match(scope, /ne modifient pas ce graphique/i);
   } finally {
     await context.close();
@@ -1025,6 +1027,10 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
     console.log('ONNET_FINAL_VISUAL_STATE=' + JSON.stringify(finalVisualState));
     assert.ok(finalVisualState.chartChildren > 0 && finalVisualState.chartParentHidden === false,
       'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
+    assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
+      'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
+    assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
+    assert.match(await page.locator('#stackChart').innerText(), /Net avant impôt[\s\S]*Retenues sur le brut/);
   } finally {
     await context.close();
   }
