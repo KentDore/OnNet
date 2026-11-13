@@ -891,65 +891,39 @@ function renderStackLegend(){
   <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
 }
 
-const WF_MIN_INSIDE = 15; // largeur (%) en dessous de laquelle le libellé sort de la barre
-
-function wfSeg(cls, dotStyle, label, val, pctVal, note){
-  const inside = pctVal >= WF_MIN_INSIDE;
-  return `
-  <div class="wf-row${cls === 'wf-bar-total' ? ' wf-total' : ''}">
-    <div class="wf-label"><span class="wf-dot" style="${dotStyle}"></span>${label}</div>
-    <div class="wf-track">
-      <div class="wf-bar ${cls}" style="width:${Math.min(100, Math.max(pctVal, 1.5))}%">
-        <span class="wf-val${inside ? '' : ' wf-val-out'}">${val}</span>
-      </div>
-    </div>
-  </div>
-  ${note ? `<div class="wf-note">${note}</div>` : ''}`;
-}
-
-// Le choix libellé-dedans/dehors dans wfSeg() est fait sur un seuil en % de
-// la piste totale — insuffisant : sur un petit écran, ou quand une seule
-// catégorie (ex. titres restaurant) dépasse le brut, un % au-dessus du
-// seuil peut quand même correspondre à trop peu de pixels pour contenir le
-// texte, qui déborde alors de la barre. On corrige après coup en mesurant
-// la largeur réellement disponible.
-function fixWaterfallLabelFit(){
-  document.querySelectorAll('.wf-bar').forEach(bar => {
-    const val = bar.querySelector('.wf-val');
-    if(!val) return;
-    val.classList.remove('wf-val-out');
-    const fits = val.getBoundingClientRect().width + 20 <= bar.getBoundingClientRect().width;
-    if(!fits) val.classList.add('wf-val-out');
-  });
-}
-
 function renderWaterfall(computed){
   const { s, r } = computed[0];
   const m = r.m;
-  const brut = m.brutTotal;
-  const pct = v => brut > 0 ? (v/brut)*100 : 0;
-
-  const cotis = m.cotisNettes;
-  const mutuelle = m.mutuelle;
-  const tr = r.tr.totalSalarie;
-  const net = m.netApres;
+  const brut = Math.max(0, m.brutTotal);
+  const net = Math.max(0, m.netApres);
+  const deductions = Math.max(0, brut - net);
+  const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
+  const cotis = Math.max(0, m.cotisNettes);
+  const mutuelle = Math.max(0, m.mutuelle);
+  const tr = Math.max(0, r.tr.totalSalarie);
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  // Deux lignes chiffrées plutôt qu'une phrase : l'information est la même,
-  // mais elle se lit d'un coup d'œil au lieu de se déchiffrer.
-  // Une seule ligne compacte plutôt que deux rangées : même information,
-  // moitié moins de place sous une barre qui a déjà son propre libellé.
   const trNote = tr > 0.5
     ? `Sans TR : <strong>${fmt(netSansTR)}</strong> · TR perçus : <strong>${fmt(trValeurFaciale)}</strong>`
     : '';
-
   return `
-  <div class="waterfall" role="img" aria-label="Répartition du salaire brut de ${fmt(brut)} : ${fmt(cotis)} de cotisations sociales, ${fmt(mutuelle)} de mutuelle, ${fmt(tr)} de titres restaurant, ${fmt(net)} de net">
-    ${wfSeg('wf-bar-total', 'background:var(--surface); border:1.5px solid var(--line);', 'Brut', fmt(brut), 100)}
-    ${wfSeg('wf-bar-cotis', `background:${STACK_COLORS.cotis}`, '− Cotisations sociales', '−' + fmt(cotis), pct(cotis))}
-    ${wfSeg('wf-bar-mutuelle', `background:${STACK_COLORS.mutuelle}`, '− Mutuelle', '−' + fmt(mutuelle), pct(mutuelle))}
-    ${tr > 0.5 ? wfSeg('wf-bar-tr', `background:${STACK_COLORS.tr}`, '− Titres restaurant', '−' + fmt(tr), pct(tr)) : ''}
-    ${wfSeg('wf-bar-net', `background:${STACK_COLORS.net}`, '= Net', fmt(net), pct(net), trNote)}
+  <div class="waterfall">
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant impôt : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+      <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
+      <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
+    </div>
+    <div class="wf-breakdown">
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-net" aria-hidden="true"></span>
+        <div><strong>${fmt(net)}</strong><span>Net avant impôt</span></div>
+      </div>
+      <div class="wf-breakdown-item">
+        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
+        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
+      </div>
+    </div>
+    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} · mutuelle ${fmt(mutuelle)} · titres-restaurant (part salarié) ${fmt(tr)}</p>
+    ${trNote ? `<p class="wf-note">${trNote}</p>` : ''}
   </div>`;
 }
 
@@ -1150,7 +1124,6 @@ function renderComparisonChart(computed){
     document.getElementById('insightBox').innerHTML = renderInsight(computed);
     stackChartEl.className = isSingle ? '' : 'stack-chart';
     stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    if(isSingle) fixWaterfallLabelFit();
     document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
     document.getElementById('barsBody').innerHTML = renderBars(computed);
     document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
