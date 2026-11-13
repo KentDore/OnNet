@@ -856,8 +856,8 @@ test('le graphique explique explicitement qu’il montre le net avant impôt', a
     assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
     assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
     const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
-    assert.match(scope, /répartition mensuelle/i);
-    assert.match(scope, /simulation Urssaf/i);
+    assert.match(scope, /montants issus de la simulation officielle/i);
+    assert.match(scope, /Mon-entreprise \/ Urssaf/i);
   } finally {
     await context.close();
   }
