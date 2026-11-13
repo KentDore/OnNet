@@ -1030,6 +1030,8 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
       'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
     assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
     assert.match(await page.locator('#stackChart').innerText(), /Net avant impôt[\s\S]*Retenues sur le brut/);
+    assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
+
   } finally {
     await context.close();
   }
