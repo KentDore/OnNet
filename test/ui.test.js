@@ -538,6 +538,29 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
   }
 });
 
+test('un retour de session ne retransmet pas le salaire enregistré avant une nouvelle modification', async () => {
+  const { context, page, calls } = await openApp({ consent: false });
+  try {
+    await waitForCalls(calls, 1);
+    const hasSalary = () => calls.bodies.some(body =>
+      Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')
+    );
+    assert.equal(hasSalary(), false, 'aucun salaire ne doit être transmis au chargement');
+
+    await page.reload();
+    await waitForCalls(calls, 2);
+    assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
+
+    await page.locator('#mainSalaryGross').fill('3200');
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
+    , null, { timeout: 20000 });
+    assert.equal(hasSalary(), true, 'une modification explicite doit déclencher le calcul');
+  } finally {
+    await context.close();
+  }
+});
+
 test('recrée les scénarios à partir du lien de partage', async () => {
   const { context, page } = await openApp();
   try {
