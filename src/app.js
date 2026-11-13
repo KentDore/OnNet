@@ -1089,7 +1089,7 @@ function renderMaquetteControls(computedOverride){
   };
   // Les champs remplacent l’ancien bouton : toute modification valide
   // met à jour le scénario et relance le calcul après un court délai.
-  if(gross) gross.onchange=applyDeclaredSalary;
+  if(gross) gross.oninput=applyDeclaredSalary;
   if(period) period.onchange=applyDeclaredSalary;
   if(hours) hours.onchange=applyDeclaredSalary;
   const summary=document.getElementById('maquetteYourSalary');
@@ -1998,7 +1998,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
-    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ces informations, vous autorisez leur transmission à l’API officielle Mon-entreprise de l’Urssaf : salaire brut, durée du travail, mutuelle et titres-restaurant. Les paramètres de commune et de situation fiscale sont également utilisés pour le calcul. Aucun salaire n’est transmis avant la validation du formulaire.</p>
+    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce formulaire, vous acceptez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun salaire n’est transmis avant cette validation.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2022,7 +2022,6 @@ function showOnboardingModal(){
 
     ${renderMutuelleTrFields('modalOnboarding')}
 
-    <p class="urssaf-data-notice onboarding-urssaf-notice">En continuant, vous autorisez OnNet à transmettre à l’API officielle Mon-entreprise de l’Urssaf les paramètres nécessaires au calcul : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est effectué. Aucun salaire n’est transmis avant votre validation.</p>
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer et lancer le calcul</button>
     </div>`;
