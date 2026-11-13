@@ -1030,6 +1030,26 @@ test('capture visuelle desktop et mobile du parcours V33', async () => {
   }
 });
 
+
+test('le graphique comparatif et sa légende apparaissent après les calculs API', async () => {
+  const { context, page } = await openApp({ advancedOpen:false });
+  try {
+    await addSecondScenario(page, '3200');
+    await page.waitForFunction(() => {
+      const chart = document.getElementById('stackChart');
+      const legend = document.getElementById('stackLegend');
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
+        cards.length === 2 && cards.every(card => card.dataset.resultState === 'ready') &&
+        chart?.children.length === 2 && chart.parentElement?.hidden === false &&
+        legend?.hidden === false && legend.children.length === 4;
+    }, null, { timeout:20000 });
+    assert.equal(await page.locator('#stackHint').innerText(), 'Cliquez sur une carte pour la définir comme référence.');
+  } finally {
+    await context.close();
+  }
+});
+
 test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', async () => {
   const { context, page } = await openApp();
   try {
