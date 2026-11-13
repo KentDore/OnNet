@@ -1,6 +1,6 @@
 {
   "name": "onnet",
-  "version": "2.2.0",
+  "version": "2.2.1",
   "private": true,
   "description": "Comparateur de salaires utilisant l’API officielle Mon-entreprise / Urssaf ; Publicodes conservé pour les diagnostics.",
   "engines": {

@@ -34,6 +34,7 @@
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
     <div class="declaration-inline">
       <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+      <p class="urssaf-data-notice declaration-api-notice">En renseignant ou modifiant ces données, vous acceptez leur transmission à l’API officielle Mon-entreprise de l’Urssaf pour calculer votre net : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun salaire n’est transmis avant votre saisie.</p>
       <div class="declaration-fields">
         <label for="mainSalaryPeriod">Période du salaire brut</label>
         <select id="mainSalaryPeriod"><option value="month" selected>Mensuel</option><option value="year">Annuel</option></select>
@@ -43,7 +44,6 @@
         <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
-      <button type="button" class="primary-btn declaration-update" id="updateDeclaredSalary">Calculer mon salaire</button>
       <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
       <div class="integrated-offers">
         <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
@@ -63,8 +63,7 @@
         <p class="urssaf-data-notice">Pour calculer votre résultat, OnNet transmet à l’Urssaf les paramètres nécessaires : salaire, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale. Aucun calcul local des cotisations ou de l’impôt n’est utilisé.</p>
       </details>
       <div class="urssaf-consent-row">
-        <p class="urssaf-status-message"><strong id="urssafStatusText">Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.</strong></p>
-        <button type="button" class="btn btn-primary" id="urssafCalculateBtn">Autoriser l’envoi et calculer</button>
+        <p class="urssaf-status-message"><strong id="urssafStatusText">Renseignez votre salaire pour autoriser sa transmission à l’API officielle Urssaf et lancer le calcul.</strong></p>
       </div>
       <details class="result-source" id="urssafWarnings" hidden>
         <summary>Détails du calcul</summary>

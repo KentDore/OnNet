@@ -4,9 +4,8 @@
 // ---------- État ----------
 let idCounter = 0;
 
-// Le consentement est demandé à chaque ouverture : aucun choix de transmission
-// n'est mémorisé sur l'appareil.
-try{ localStorage.removeItem('onnet.urssafConsent.v1'); }catch(_){}
+// L'accord de transmission est donné par la saisie/validation du formulaire.
+// Il reste limité à la session et n'est jamais mémorisé sur l'appareil.
 let urssafConsentGranted = false;
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
@@ -203,8 +202,7 @@ function queuedUrssafFetch(url, options){
 
 function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
-  const button = document.getElementById('urssafCalculateBtn');
-  if(!statusText || !button) return;
+  if(!statusText) return;
   const status = document.getElementById('urssafStatus');
   if(status) status.classList.remove('is-error');
   const diagnostics = document.getElementById('urssafWarnings');
@@ -212,10 +210,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   if(!urssafConsentGranted){
-    statusText.textContent = 'Le calcul nécessite votre autorisation pour transmettre ces paramètres à l’Urssaf.';
-    button.hidden = false;
-    button.disabled = false;
-    button.textContent = 'Autoriser l’envoi et calculer';
+    statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
@@ -232,19 +227,16 @@ function updateUrssafStatus(computed){
   if(failed.length || smicError){
     statusText.textContent = 'Le calcul n’a pas abouti. Vérifiez votre connexion puis réessayez.';
     if(status) status.classList.add('is-error');
-    button.hidden = false;
-    button.disabled = false;
-    button.textContent = 'Réessayer les calculs';
+    statusText.textContent += ' Modifiez un paramètre pour relancer le calcul.';
     return;
   }
   if(unsupported.length){
     statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
-    button.hidden = true;
+    statusText.textContent += ' Modifiez les paramètres concernés pour relancer le calcul.';
     return;
   }
   if(pending.length){
     statusText.textContent = 'Mise à jour des calculs…';
-    button.hidden = true;
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
@@ -260,7 +252,7 @@ function updateUrssafStatus(computed){
     ].join('');
     diagnostics.hidden = false;
   }
-  button.hidden = true;
+  // Aucun bouton de calcul : les résultats sont actualisés automatiquement.
 }
 
 let officialSmicPromise = null;
@@ -1055,6 +1047,22 @@ function renderBenchmarks(computed){
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
+function applyDeclaredSalaryFromForm(){
+  const scenario=findScenario(refId)||scenarios[0];
+  const gross=document.getElementById('mainSalaryGross');
+  const period=document.getElementById('mainSalaryPeriod');
+  const hours=document.getElementById('mainSalaryHours');
+  const raw=Number(gross?.value);
+  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
+  scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
+  scenario.dureeType=hours?.value==='39'?'39':'35';
+  // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
+  urssafConsentGranted=true;
+  saveState();
+  render();
+  scheduleUrssafCalculations(false,false);
+}
+
 function renderMaquetteControls(computedOverride){
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
@@ -1083,19 +1091,28 @@ function renderMaquetteControls(computedOverride){
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
   const mutuelleText=document.getElementById('mainSalaryMutuelleText');
   if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
-  const updateButton=document.getElementById('updateDeclaredSalary');
-  if(updateButton) updateButton.onclick=()=>{
-    const scenario=findScenario(refId)||scenarios[0];
-    const raw=Number(gross?.value);
-    if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000){gross?.focus();return;}
-    scenario.brut=document.getElementById('mainSalaryPeriod')?.value==='year'?Math.round(raw/12*100)/100:raw;
-    scenario.dureeType=hours?.value==='39'?'39':'35';
-    saveState();
-    render();
-  };
+  // Un seul raccordement durable : les rerendus ne doivent ni remplacer ni perdre
+  // les événements de saisie du formulaire.
+  if(gross){
+    gross.oninput=null;
+    gross.onchange=null;
+    if(gross.dataset.onnetSalaryBound!=='true'){
+      gross.addEventListener('input',applyDeclaredSalaryFromForm);
+      gross.addEventListener('change',applyDeclaredSalaryFromForm);
+      gross.dataset.onnetSalaryBound='true';
+    }
+  }
+  if(period && period.dataset.onnetSalaryBound!=='true'){
+    period.addEventListener('change',applyDeclaredSalaryFromForm);
+    period.dataset.onnetSalaryBound='true';
+  }
+  if(hours && hours.dataset.onnetSalaryBound!=='true'){
+    hours.addEventListener('change',applyDeclaredSalaryFromForm);
+    hours.dataset.onnetSalaryBound='true';
+  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
-    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après autorisation de transmission à l’Urssaf.</div></div>';}
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
     else{
       const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
       const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
@@ -1717,6 +1734,7 @@ async function addScenario(){
   const last = scenarios[scenarios.length-1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
+  urssafConsentGranted = true;
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
@@ -1998,6 +2016,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
+    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce formulaire, vous acceptez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune de l’établissement, mutuelle, titres-restaurant et situation fiscale. Aucun salaire n’est transmis avant cette validation.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalOnboardingPeriod" role="group" aria-label="Période du salaire">
@@ -2022,7 +2041,7 @@ function showOnboardingModal(){
     ${renderMutuelleTrFields('modalOnboarding')}
 
     <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer</button>
+      <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer et lancer le calcul</button>
     </div>`;
   const pending = openModal(html, { initialFocusSelector: '#modalOnboardingInput', dismissible: false });
   const overlay = document.getElementById('modalOverlay');
@@ -2076,6 +2095,7 @@ function showOnboardingModal(){
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
+    <p class="urssaf-data-notice onboarding-urssaf-notice">En renseignant puis en validant ce salaire, vous autorisez sa transmission à l’API officielle Mon-entreprise de l’Urssaf pour calculer le résultat.</p>
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
       <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="Période du salaire">
@@ -2390,11 +2410,6 @@ function scrollToNewCard(){
   });
 }
 
-document.getElementById('urssafCalculateBtn').addEventListener('click', () => {
-  urssafConsentGranted = true;
-  scheduleUrssafCalculations(true,true);
-});
-
 render();
 // Actualisation du repère SMIC à chaque ouverture, sans transmettre les données de paie.
 refreshOfficialSmic(false);
@@ -2418,6 +2433,9 @@ document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addSc
 if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
+    urssafConsentGranted = true;
     render();
+    saveState();
+    scheduleUrssafCalculations(true,true);
   });
 }
