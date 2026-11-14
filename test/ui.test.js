@@ -708,17 +708,33 @@ test('bloque les paramètres de titres-restaurant hors plage avant transmission 
   try {
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
+test('la part salariale des titres-restaurant alterne entre 50 % par défaut et 40 % au clic', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ emptyStorage: true });
+  try {
+    const modal = page.locator('#modalOverlay');
+    await modal.waitFor({ state: 'visible' });
+    await modal.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
+    const share = modal.locator('#modalOnboardingPart');
+    assert.equal(await share.locator('[data-share="50"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await share.locator('[data-share="40"]').getAttribute('aria-pressed'), 'false');
+    await share.locator('[data-share="40"]').click();
+    assert.equal(await share.locator('[data-share="40"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await share.locator('[data-share="50"]').getAttribute('aria-pressed'), 'false');
+  } finally { await context.close(); }
+});
+
     await modal.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
     await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingJours').fill('20.5');
     await modal.locator('#modalOnboardingValeur').fill('8');
-    await modal.locator('#modalOnboardingPart').fill('30');
+    assert.equal(await modal.locator('#modalOnboardingPart [data-share="50"]').getAttribute('aria-pressed'), 'true',
+      '50 % doit être sélectionné par défaut');
     const submit = modal.locator('#modalOnboardingSubmit');
     await submit.click();
     assert.equal(await modal.isVisible(), true, 'une saisie invalide ne doit pas fermer la modale');
     assert.match(await modal.locator('#modalMsg').innerText(), /Vérifiez les titres-restaurant/);
     await modal.locator('#modalOnboardingJours').fill('21');
-    await modal.locator('#modalOnboardingPart').fill('40');
+    await modal.locator('#modalOnboardingPart [data-share="40"]').click();
     await submit.click();
 
     await page.waitForFunction(() => {
