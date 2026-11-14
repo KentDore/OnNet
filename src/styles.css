@@ -759,7 +759,7 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 }
 .onboarding-mutuelle-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;flex:none;border-radius:50%;background:rgba(35,119,83,.11);color:var(--accent);}
 .onboarding-mutuelle-icon svg{width:15px;height:15px;}
-.onboarding-mutuelle-label{color:var(--ink-soft);}
+.onboarding-mutuelle-label{color:var(--ink);font-size:12.5px;font-weight:650;}
 .onboarding-mutuelle-note strong{margin-left:auto;color:var(--ink);font-weight:600;white-space:nowrap;}
 .onboarding-benefits .onboarding-optional{margin:0;}
 .onboarding-benefits .onboarding-optional summary{font-size:13px;}
@@ -1094,3 +1094,12 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .declaration-benefits p{margin:8px 0 0;color:#7c887f;font-size:11px;line-height:1.4}
 .benchmark-after-tax{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #d7e6da;color:#315640;font-size:13px}
 .benchmark-after-tax strong{font-size:16px;color:#116b4b;white-space:nowrap}
+
+
+.meal-share-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.meal-share-label,.field-label{display:block;color:#405e4a;font-size:11px;font-weight:700}
+.meal-share-toggle{width:100%;min-height:42px}
+.meal-share-toggle button{flex:1;min-width:0;padding:8px 10px;font-size:13px}
+.onboarding-tr-fields .meal-share-toggle{min-height:36px}
+
+.onboarding-mutuelle-note .onboarding-mutuelle-label{font-weight:650;}

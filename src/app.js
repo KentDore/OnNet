@@ -1063,7 +1063,7 @@ function applyDeclaredSalaryFromForm(){
   scenario.dureeType=hours?.value==='39'?'39':'35';
   scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
   scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
-  scenario.partResto=Number(document.getElementById('mainMealShare')?.value)||50;
+  scenario.partResto=Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share)||50;
   // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
   urssafConsentGranted=true;
   saveState();
@@ -1100,7 +1100,7 @@ function renderMaquetteControls(computedOverride){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
     if(mealDays) mealDays.value=String(selected.joursResto||0);
     if(mealValue) mealValue.value=String(selected.valeurResto||0);
-    if(mealShare) mealShare.value=String(selected.partResto||50);
+    if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
   }
   const selectedId=(findScenario(refId)||scenarios[0])?.id;
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
@@ -1125,13 +1125,22 @@ function renderMaquetteControls(computedOverride){
     hours.addEventListener('change',applyDeclaredSalaryFromForm);
     hours.dataset.onnetSalaryBound='true';
   }
-  [mealDays,mealValue,mealShare].forEach(field=>{
+  [mealDays,mealValue].forEach(field=>{
     if(field && field.dataset.onnetSalaryBound!=='true'){
       field.addEventListener('change',applyDeclaredSalaryFromForm);
       field.addEventListener('input',applyDeclaredSalaryFromForm);
       field.dataset.onnetSalaryBound='true';
     }
   });
+  if(mealShare && mealShare.dataset.onnetSalaryBound!=='true'){
+    mealShare.addEventListener('click',event=>{
+      const button=event.target.closest('button[data-share]');
+      if(!button) return;
+      mealShare.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      applyDeclaredSalaryFromForm();
+    });
+    mealShare.dataset.onnetSalaryBound='true';
+  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
@@ -2003,14 +2012,13 @@ function renderMutuelleTrFields(idPrefix){
         <span class="onboarding-mutuelle-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
         </span>
-        <span class="onboarding-mutuelle-label">Mutuelle</span>
+        <strong class="onboarding-mutuelle-label">Mutuelle</strong>
         <strong>30 € salarié</strong>
       </div>
       <div class="onboarding-tr">
         <div class="onboarding-tr-heading">
           <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 10h18M8 15h3"/></svg></span>
           <strong>Titres-restaurant</strong>
-          <span class="onboarding-tr-optional">Facultatif</span>
         </div>
         <div class="pill-toggle onboarding-tr-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Avez-vous des titres-restaurant ?">
           <button type="button" data-tr="non" aria-pressed="true">Non</button>
@@ -2020,7 +2028,7 @@ function renderMutuelleTrFields(idPrefix){
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${idPrefix}Jours" value="21"></div>
             <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="number" inputmode="decimal" min="40" max="50" step="any" id="${idPrefix}Part" value="50"></div>
+            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${idPrefix}Part" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
           </div>
           <p class="sub-hint">Nombre de titres entier (0 à 31) ; part salariale comprise entre 40 et 50 %.</p>
         </div>
@@ -2036,7 +2044,12 @@ function bindMutuelleTrFields(overlay, idPrefix){
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
   const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
   const partInput = overlay.querySelector(`#${idPrefix}Part`);
+  let partResto = 50;
   let trOui = false;
+  partInput.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    partResto=Number(button.dataset.share);
+    partInput.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
   trToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       trOui = b.dataset.tr === 'oui';
@@ -2050,11 +2063,11 @@ function bindMutuelleTrFields(overlay, idPrefix){
     if(trOui){
       result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
-      result.partResto = clamp(parseNum(partInput.value), 40, 50);
+      result.partResto = partResto;
     }
     return result;
   };
-  read.isValid = () => !trOui || [joursInput, valeurInput, partInput].every(input =>
+  read.isValid = () => !trOui || [joursInput, valeurInput].every(input =>
     input.value.trim() !== '' && input.checkValidity()
   );
   return read;
