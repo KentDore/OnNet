@@ -260,11 +260,11 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
   }
 });
 
-test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30 € / 30 €', { timeout: 60000 }, async () => {
+test('la mutuelle affiche la part salarié sans exposer la part employeur', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
-    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
+    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
@@ -492,7 +492,7 @@ test('transmet les deux parts de mutuelle par défaut lors de l’ajout', { time
     const before = calls.count;
     await page.locator('#addScenario').click();
     await page.locator('#modalAddInput').fill('3400');
-    assert.equal(await page.locator('.onboarding-mutuelle-note').innerText(), 'Mutuelle\n30 € salarié · 30 € employeur');
+    assert.equal(await page.locator('.onboarding-mutuelle-note').innerText(), 'Mutuelle\n30 € salarié');
     assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
     assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
     await page.locator('#modalAddSubmit').click();
@@ -833,7 +833,7 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
   }
 });
 
-test('l’onboarding garde les paramètres secondaires repliés et applique 30 € par part de mutuelle', { timeout: 60000 }, async () => {
+test('l’onboarding garde les paramètres secondaires repliés et n’affiche que la part salarié', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     const modal = page.locator('#modalOverlay');
@@ -842,7 +842,7 @@ test('l’onboarding garde les paramètres secondaires repliés et applique 30 �
     assert.equal(await modal.locator('#modalOnboardingTrToggle').isVisible(), true);
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
-    assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
+    assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
     const overtimeHint = modal.locator('#modalOnboarding39Hint');
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
