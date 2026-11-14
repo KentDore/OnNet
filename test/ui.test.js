@@ -738,7 +738,7 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
     const breakdown = await page.locator('.wf-note').innerText();
-    assert.match(breakdown, /21 jours × 8,00 €/);
+    assert.match(breakdown, /21 jours × 8 €/);
     assert.match(breakdown, /part salarié/);
     assert.match(breakdown, /part employeur/);
   } finally {
