@@ -734,20 +734,14 @@ const metricHints = {
 function findScenario(id){ return scenarios.find(s => s.id === id); }
 function heroValue(r){
   if(displayAmt === 'net'){
-    const value = displayPeriod === 'mois' ? r.netApresImpot : r.annuelNetApresImpot;
+    const value = displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
     return Number.isFinite(value) ? value : null;
   }
   return displayPeriod === 'mois' ? r.m.brutTotal : r.a.brutTotal;
 }
 function heroLabel(){
   if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
-  return 'Net après impôt estimé ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
-}
-function heroPasValue(r){
-  return displayPeriod === 'mois' ? r.m.netApres : r.a.netApres;
-}
-function heroPasShown(){
-  return displayAmt === 'net';
+  return 'Net avant impôt ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 
 // ---------- Rendu des cartes ----------
@@ -787,7 +781,6 @@ function renderCard(s, r, showRemove){
     <div class="hero">
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
-      <div class="hero-pas" id="c-heropas-${uid}" style="${heroPasShown() ? '' : 'display:none;'}">${r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —'}</div>
       <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
       <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
@@ -1523,8 +1516,6 @@ function updateComputed(options = {}){
     if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
     setText(`c-hero-${u}`, r && heroValue(r) !== null ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
-    setHTML(`c-heropas-${u}`, r ? `Avant impôt : <strong>${fmt(heroPasValue(r))}</strong>` : 'Avant impôt : —');
-    setShown(`c-heropas-${u}`, heroPasShown());
 
     const hint = document.getElementById(`rate-hint-${u}`);
     if(hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —';

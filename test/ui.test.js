@@ -326,15 +326,15 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
-    const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
-    const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
+    const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
     const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .benchmark-your-salary > strong').innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
-    assert.match(cardNetBeforeTax, /Avant impôt/);
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNetBeforeTax) + 30) / 169) < 0.02,
+    assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net avant impôt mensuel');
+    assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
+      'les fiches ne doivent plus afficher une seconde ligne fiscale estimée');
+    assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net avant impôt calculé par l’API');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNet) + 30) / 169) < 0.02,
       'le taux horaire doit exclure la mutuelle salarié du net avant impôt, puis diviser par les 169 h du contrat 39 h');
-    assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
@@ -1090,9 +1090,9 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
     assert.equal(await card.locator('.hero-label').innerText(), 'Brut annuel');
     assert.equal(await page.locator('#periodToggle [data-period="an"]').getAttribute('aria-pressed'), 'true');
     await page.locator('#amtToggle [data-amt="net"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé annuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt annuel');
     await page.locator('#periodToggle [data-period="mois"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net après impôt estimé mensuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt mensuel');
     assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#periodToggle [data-period="mois"]').getAttribute('aria-pressed'), 'true');
   } finally {
