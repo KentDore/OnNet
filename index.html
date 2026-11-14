@@ -147,14 +147,26 @@
   .modal{
     background:var(--surface); border:1px solid var(--line); border-radius:16px;
     padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
-    transform:translateY(8px) scale(.98); transition:transform .18s ease;
+    opacity:0; transform:translateY(16px) scale(.975);
+    transition:opacity .24s ease, transform .34s cubic-bezier(.22,1,.36,1);
+    will-change:opacity,transform;
     font-family:'Inter',sans-serif; max-height:85vh; overflow-y:auto;
     /* Centrage par les marges automatiques plutôt que par align-items seul :
        une modale plus haute que l'écran reste alors intégralement atteignable
        au défilement, là où align-items:center en rognerait le haut. */
     margin:auto;
   }
-  .modal-overlay.show .modal{transform:translateY(0) scale(1);}
+  .modal-overlay.show .modal{opacity:1;transform:translateY(0) scale(1);}
+  /* Les champs TR apparaissent sans saut de mise en page brutal. Le contenu
+     reste dans le flux et la hauteur de la modale reste contrôlée. */
+  .onboarding-tr-fields{
+    display:grid;grid-template-rows:1fr;opacity:1;
+    transition:grid-template-rows .28s cubic-bezier(.22,1,.36,1),opacity .2s ease;
+  }
+  .onboarding-tr-fields[hidden]{display:grid;grid-template-rows:0fr;opacity:0;pointer-events:none;}
+  .onboarding-tr-fields>.three-col{min-height:0;overflow:hidden;}
+  .onboarding-tr-toggle button{transition:background-color .2s ease,color .2s ease,transform .16s ease;}
+  .onboarding-tr-toggle button:active{transform:scale(.96);}
   /* Première fenêtre : aucun défilement, même lorsque les champs TR sont ouverts. */
   @media(max-width:600px){
     .modal.modal-onboarding{max-height:calc(100dvh - 16px);overflow:hidden;padding:10px 12px;}
@@ -493,7 +505,7 @@
        chacun ne couvrant que ce qui venait d'être ajouté ce jour-là : le
        dépliage des modules (v1.6.0), le chevron (v1.5.1) et la modale/le
        toast (antérieurs à tout ça) étaient passés entre les mailles. */
-    .toast, .modal-overlay, .modal{ transition:none; }
+    .toast, .modal-overlay, .modal, .onboarding-tr-fields, .onboarding-tr-toggle button{ transition:none; }
     .module-switch, .module-switch::after, .module-chevron, .pill-toggle button{ transition:none; }
     .module-body, .module-card.is-open .module-body{ transition:none; }
   }
