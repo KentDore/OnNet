@@ -895,6 +895,8 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-tr-fields').isVisible(), false);
     assert.equal(await modal.locator('#modalOnboardingTrToggle').isVisible(), true);
+    assert.equal(await modal.locator('.onboarding-tr-optional').count(), 0,
+      'aucune mention facultatif ne doit apparaître à côté des titres-restaurant');
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
     assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
