@@ -4,9 +4,10 @@ const { test } = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
+const { readAppSource } = require('./helpers/read-app-source');
 
 const root = path.resolve(__dirname, '..');
-const app = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8');
+const app = readAppSource(root);
 const template = fs.readFileSync(path.join(root, 'src', 'template.html'), 'utf8');
 const client = fs.readFileSync(path.join(root, 'src', 'urssaf-api-client.mjs'), 'utf8');
 const build = fs.readFileSync(path.join(root, 'scripts', 'build.js'), 'utf8');
