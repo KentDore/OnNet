@@ -2843,7 +2843,7 @@ function renderStack(computed){
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
       <div class="stack-net">${fmt(net)}</div>
-      ${tr > 0.5 ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${tr > 0.5 ? `<div class="stack-net-notr">TR salarié : ${fmt(tr)} · employeur : ${fmt(r.tr.totalEmployeur)}</div><div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
