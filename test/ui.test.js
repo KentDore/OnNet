@@ -151,7 +151,8 @@ async function openApp(options = {}) {
           refId: 0,
           metric: 'netHoraire',
           displayAmt: 'net',
-          displayPeriod: 'mois'
+          displayPeriod: 'mois',
+          onboardingCompleted: true
         }));
       }
     });
@@ -282,8 +283,8 @@ test('la mutuelle est affichée en une ligne et appliquée automatiquement à 30
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.match(await page.locator('#cardsBody').first().innerText(), /Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %/);
-    assert.match(await page.locator('#cardsBody').first().innerText(), /Les RTT ne sont pas pris en compte/);
+    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '39',
+      'le formulaire de référence doit conserver la durée 39 h');
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
