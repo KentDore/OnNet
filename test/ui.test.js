@@ -911,6 +911,10 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
     await modal.waitFor({ state: 'visible' });
     assert.equal(await modal.locator('.onboarding-tr-fields').isVisible(), false);
     assert.equal(await modal.locator('#modalOnboardingTrToggle').isVisible(), true);
+    await modal.locator('#modalOnboardingTrToggle').click();
+    assert.equal(await modal.locator('.onboarding-tr-fields').isVisible(), true);
+    assert.equal(await modal.locator('.onboarding-tr-fields .sub-hint').count(), 0,
+      'aucune aide technique redondante ne doit apparaître sous les champs titres-restaurant');
     assert.equal(await modal.locator('.onboarding-tr-optional').count(), 0,
       'aucune mention facultatif ne doit apparaître à côté des titres-restaurant');
     assert.equal(await modal.locator('.onboarding-mutuelle-label').evaluate(el => getComputedStyle(el).fontWeight), '650',
