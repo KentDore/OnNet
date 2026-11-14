@@ -46,7 +46,7 @@ Le comparatif utilise la médiane nationale des salaires nets du secteur privé 
 
 ## Développement et tests
 
-Le client API se trouve dans `src/urssaf-api-client.mjs`. La logique de l’interface est répartie dans `src/app/` ; `manifest.json` fixe son ordre d’assemblage. Le build réunit ces fichiers en un seul script classique dans le HTML final afin de conserver la distribution autonome en un fichier. Les sources se modifient dans `src/app/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
+Le client API se trouve dans `src/urssaf-api-client.mjs`. La logique de l’interface est répartie dans `src/app/` ; son `manifest.json` fixe l’ordre d’assemblage. Les styles sont répartis dans `src/styles/` avec un manifeste propre ; les polices WOFF2 sont stockées séparément dans `src/fonts/` puis réinjectées au build. Le build recompose exactement le CSS source, assemble les scripts dans un seul script classique et conserve ainsi le HTML autonome. Les sources se modifient dans `src/app/` et `src/styles/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
 
 Tests automatisés :
 
