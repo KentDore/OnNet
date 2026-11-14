@@ -1273,6 +1273,19 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .modal-msg:empty{display:none;}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
+
+/* Résumé : total des titres-restaurant et comparaison du net. */
+#maquetteYourSalary .salary-meal-benefit{
+  grid-column:1/-1;display:flex;flex-direction:column;gap:8px;
+  padding-top:11px;border-top:1px solid rgba(31,109,76,.12);color:#214b34;font-size:13px;
+}
+#maquetteYourSalary .salary-meal-benefit>div{display:flex;align-items:center;justify-content:space-between;gap:12px}
+#maquetteYourSalary .salary-meal-benefit span{color:#52685a;font-weight:500}
+#maquetteYourSalary .salary-meal-benefit strong{color:#087348;font-size:15px;font-weight:750;white-space:nowrap}
+@media(max-width:640px){
+  #maquetteYourSalary .salary-meal-benefit{font-size:12px;padding-top:9px;gap:7px}
+  #maquetteYourSalary .salary-meal-benefit strong{font-size:14px}
+}
 </style>
 </head>
 <body>
