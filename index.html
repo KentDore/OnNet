@@ -1170,8 +1170,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .declaration-benefits-grid label{display:block;margin:0 0 5px;color:#405e4a;font-size:11px;font-weight:700}
 .declaration-benefits-grid input,.declaration-benefits-grid select{width:100%;min-height:42px;padding:8px 10px;border:1px solid #d9e4db;border-radius:9px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .declaration-benefits p{margin:8px 0 0;color:#7c887f;font-size:11px;line-height:1.4}
-.benchmark-after-tax{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #d7e6da;color:#315640;font-size:13px}
-.benchmark-after-tax strong{font-size:16px;color:#116b4b;white-space:nowrap}
 
 
 .meal-share-field{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -1224,30 +1222,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
   line-height:1.3;
   white-space:normal;
 }
-#maquetteYourSalary .benchmark-your-salary .benchmark-after-tax{
-  grid-column:1/-1;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-width:0;
-  margin:0;
-  padding:12px 0 0;
-  border-top:1px solid rgba(31,109,76,.14);
-}
-#maquetteYourSalary .benchmark-after-tax>span{
-  min-width:0;
-  color:#466453;
-  font-size:13px;
-  line-height:1.35;
-}
-#maquetteYourSalary .benchmark-after-tax>strong{
-  flex:0 0 auto;
-  color:#116b4b;
-  font-size:clamp(17px,4.5vw,21px);
-  line-height:1.15;
-  white-space:nowrap;
-}
 #maquetteYourSalary .benchmark-comparison-base{
   grid-column:1/-1;
   margin:0;
@@ -1267,8 +1241,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
   #maquetteYourSalary .benchmark-your-salary>span{font-size:13px}
   #maquetteYourSalary .benchmark-your-salary>strong{font-size:clamp(21px,6vw,26px)}
   #maquetteYourSalary .benchmark-your-salary>strong small{font-size:10px}
-  #maquetteYourSalary .benchmark-after-tax>span{font-size:12px}
-  #maquetteYourSalary .benchmark-after-tax>strong{font-size:18px}
   #maquetteYourSalary .benchmark-comparison-base{font-size:11px}
 }
 
@@ -1505,11 +1477,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
             </div>
           </div>
 
-          <div class="subline" style="margin-top:14px;">
-            <span>Impôt estimé sur le salaire de référence</span>
-            <span class="val" id="foyerImpot">—</span>
-          </div>
-          <div class="sub-hint" style="margin-bottom:0;" id="foyerImpotHint">Barème 2026 : abattement de 10 %, quotient familial (plafonné), décote. Le montant est le <em>supplément</em> d'impôt dû au salaire, pas l'impôt du foyer entier. Ne sont pas pris en compte : crédits et réductions d'impôt, revenus fonciers ou de capitaux, pensions, taux neutre ou individualisé.</div>
         </div>
       </div>
   </section>
@@ -3309,16 +3276,13 @@ function renderMaquetteControls(computedOverride){
   }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
-    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>À calculer<small>Net avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>En attente</strong></div><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>À calculer<small>Net avant impôt</small></strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
     else{
       const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
       const hourly=hoursMonth>0 && Number.isFinite(computed.r.netHoraire)?computed.r.netHoraire:0;
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
-      const afterTaxHourly=Number.isFinite(computed.r.netApresImpotHoraire)?computed.r.netApresImpotHoraire:null;
-      const afterTaxValue=afterTaxHourly===null?null:afterTaxHourly*factor;
-      const afterTaxAmount=afterTaxValue===null?'Non disponible':(maquetteComparisonPeriod==='hour'?fmtHoraire(afterTaxValue):fmt(afterTaxValue));
       const mealEmployee=Number(computed.r.tr?.totalSalarie||0);
       const mealEmployer=Number(computed.r.tr?.totalEmployeur||0);
       const mealTotal=mealEmployee+mealEmployer;
@@ -3329,7 +3293,7 @@ function renderMaquetteControls(computedOverride){
       const mealBenefit=mealTotal>0.5
         ? '<div class="salary-meal-benefit"><div><span>Net sans TR</span><strong>'+periodFmt(netWithoutMeal)+'</strong></div><div><span>TR</span><strong>'+periodFmt(mealTotal*periodScale)+'</strong></div><div><span>Net avec TR</span><strong>'+periodFmt(netWithMeal)+'</strong></div></div>'
         : '';
-      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h</div>'+mealBenefit+'</div>';
+      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h</div>'+mealBenefit+'</div>';
     }
   }
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
