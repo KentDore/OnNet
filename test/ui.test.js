@@ -240,12 +240,34 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
 test('le haut de page garde le partage visible et regroupe les actions secondaires', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
+    const styleSignature = selector => page.locator(selector).evaluate(el => {
+      const style = getComputedStyle(el);
+      return {
+        color: style.color,
+        backgroundColor: style.backgroundColor,
+        borderColor: style.borderColor,
+        borderRadius: style.borderRadius,
+        height: Math.round(el.getBoundingClientRect().height)
+      };
+    });
+    await page.setViewportSize({ width: 1280, height: 900 });
+    const desktopShareStyle = await styleSignature('#shareBtn');
+    const desktopMenuStyle = await styleSignature('#headerMenu summary');
+    assert.deepEqual(desktopShareStyle, desktopMenuStyle,
+      'sur desktop, les actions d’en-tête partagent couleur, fond, bordure, rayon et hauteur');
+    assert.equal(desktopShareStyle.borderRadius, '12px');
+
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.locator('#shareBtn').isVisible(), true);
     assert.equal(await page.locator('#headerMenu').count(), 1);
-    const shareColor = await page.locator('#shareBtn').evaluate(el => getComputedStyle(el).color);
-    const menuColor = await page.locator('#headerMenu summary').evaluate(el => getComputedStyle(el).color);
-    assert.equal(shareColor, menuColor, 'les actions de l’en-tête utilisent la même couleur de marque');
+    const mobileShareStyle = await styleSignature('#shareBtn');
+    const mobileMenuStyle = await styleSignature('#headerMenu summary');
+    assert.deepEqual(mobileShareStyle, mobileMenuStyle,
+      'sur mobile, les actions d’en-tête partagent couleur, fond, bordure, rayon et hauteur');
+    assert.equal(mobileShareStyle.borderRadius, '11px');
+    const viewportContent = await page.locator('meta[name="viewport"]').getAttribute('content');
+    assert.doesNotMatch(viewportContent || '', /maximum-scale\\s*=\\s*1|user-scalable\\s*=\\s*no/i,
+      'le zoom tactile reste disponible pour les utilisateurs');
     assert.equal(await page.locator('#resetBtn').isVisible(), false);
     assert.equal(await page.locator('#printBtn').isVisible(), false);
     await page.locator('#headerMenu summary').click();
