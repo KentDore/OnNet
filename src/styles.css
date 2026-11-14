@@ -1208,3 +1208,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
 
 /* Harmoniser la hiérarchie des libellés des avantages dans le formulaire principal. */
 .declaration-inline .declaration-mutuelle strong{font-weight:800}
+
+/* Les messages de validation n'occupent aucun espace tant qu'ils sont vides. */
+.modal-msg:empty{display:none;}
