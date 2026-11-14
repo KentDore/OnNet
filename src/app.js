@@ -1162,10 +1162,17 @@ function renderMaquetteControls(computedOverride){
       const afterTaxHourly=Number.isFinite(computed.r.netApresImpotHoraire)?computed.r.netApresImpotHoraire:null;
       const afterTaxValue=afterTaxHourly===null?null:afterTaxHourly*factor;
       const afterTaxAmount=afterTaxValue===null?'Non disponible':(maquetteComparisonPeriod==='hour'?fmtHoraire(afterTaxValue):fmt(afterTaxValue));
-      const mealInfo=Number(selected.joursResto||0)>0
-        ? ' · TR : '+selected.joursResto+' j × '+fmt(selected.valeurResto)+' (part salarié '+(selected.partResto||50)+' %)'
-        : ' · sans titres-restaurant';
-      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h'+mealInfo+'</div></div>';
+      const mealEmployee=Number(computed.r.tr?.totalSalarie||0);
+      const mealEmployer=Number(computed.r.tr?.totalEmployeur||0);
+      const mealTotal=mealEmployee+mealEmployer;
+      const periodScale=maquetteComparisonPeriod==='hour'?(hoursMonth>0?1/hoursMonth:0):maquetteComparisonPeriod==='year'?12:1;
+      const periodFmt=n=>maquetteComparisonPeriod==='hour'?fmtHoraire(n):fmt(n);
+      const netWithoutMeal=Number(computed.r.m?.netSocial||0)*periodScale;
+      const netWithMeal=(Number(computed.r.m?.netApres||0)+mealTotal)*periodScale;
+      const mealBenefit=mealTotal>0.5
+        ? '<div class="salary-meal-benefit"><div><span>Net sans TR</span><strong>'+periodFmt(netWithoutMeal)+'</strong></div><div><span>TR</span><strong>'+periodFmt(mealTotal*periodScale)+'</strong></div><div><span>Net avec TR</span><strong>'+periodFmt(netWithMeal)+'</strong></div></div>'
+        : '';
+      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h</div>'+mealBenefit+'</div>';
     }
   }
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
