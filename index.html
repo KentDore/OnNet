@@ -1091,6 +1091,17 @@ header.hero .trust-icon svg{width:19px;height:19px}
   line-height:1.45;
 }
 
+/* Paramètres de titres-restaurant visibles dans le formulaire principal */
+.declaration-benefits{margin-top:12px;padding:12px;border:1px solid #dce9df;border-radius:12px;background:#fff}
+.declaration-benefits-title{display:block;color:#315640;font-size:13px;font-weight:800;margin-bottom:8px}
+.declaration-benefits-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.declaration-benefits-grid>div:last-child{grid-column:1/-1}
+.declaration-benefits-grid label{display:block;margin:0 0 5px;color:#405e4a;font-size:11px;font-weight:700}
+.declaration-benefits-grid input,.declaration-benefits-grid select{width:100%;min-height:42px;padding:8px 10px;border:1px solid #d9e4db;border-radius:9px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.declaration-benefits p{margin:8px 0 0;color:#7c887f;font-size:11px;line-height:1.4}
+.benchmark-after-tax{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #d7e6da;color:#315640;font-size:13px}
+.benchmark-after-tax strong{font-size:16px;color:#116b4b;white-space:nowrap}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1127,6 +1138,15 @@ header.hero .trust-icon svg{width:19px;height:19px}
         <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
         <label for="mainSalaryHours">Base horaire</label>
         <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
+        <div class="declaration-benefits" aria-label="Titres-restaurant">
+          <strong class="declaration-benefits-title">Titres-restaurant (facultatif)</strong>
+          <div class="declaration-benefits-grid">
+            <div><label for="mainMealDays">Jours par mois</label><input id="mainMealDays" type="number" min="0" max="31" step="1" value="0" inputmode="numeric"></div>
+            <div><label for="mainMealValue">Valeur du titre (€)</label><input id="mainMealValue" type="number" min="0" max="500" step="0.01" value="0" inputmode="decimal"></div>
+            <div><label for="mainMealShare">Part salariale</label><select id="mainMealShare"><option value="50">50 %</option><option value="40">40 %</option></select></div>
+          </div>
+          <p>Sans titres-restaurant, laissez les valeurs à zéro. La part employeur est calculée automatiquement.</p>
+        </div>
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
       <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
@@ -1888,7 +1908,7 @@ window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urss
 // Utilitaires d'interface uniquement. Aucun calcul de cotisations, de net ou d'impôt.
 // Les montants de paie proviennent exclusivement de l'API officielle Mon-entreprise / Urssaf.
 let scenarioDefaults = {
-  mutuelle: 30, joursResto: 21, valeurResto: 8,
+  mutuelle: 30, joursResto: 0, valeurResto: 0,
   partResto: 50, nbMois: 12
 };
 
@@ -2993,6 +3013,9 @@ function applyDeclaredSalaryFromForm(){
   if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
   scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
   scenario.dureeType=hours?.value==='39'?'39':'35';
+  scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
+  scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
+  scenario.partResto=Number(document.getElementById('mainMealShare')?.value)||50;
   // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
   urssafConsentGranted=true;
   saveState();
@@ -3021,8 +3044,15 @@ function renderMaquetteControls(computedOverride){
   const period=document.getElementById('mainSalaryPeriod');
   const gross=document.getElementById('mainSalaryGross');
   const hours=document.getElementById('mainSalaryHours');
-  if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
+  const mealDays=document.getElementById('mainMealDays');
+  const mealValue=document.getElementById('mainMealValue');
+  const mealShare=document.getElementById('mainMealShare');
+  const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
+  if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+    if(mealDays) mealDays.value=String(selected.joursResto||0);
+    if(mealValue) mealValue.value=String(selected.valeurResto||0);
+    if(mealShare) mealShare.value=String(selected.partResto||50);
   }
   const selectedId=(findScenario(refId)||scenarios[0])?.id;
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
@@ -3047,6 +3077,13 @@ function renderMaquetteControls(computedOverride){
     hours.addEventListener('change',applyDeclaredSalaryFromForm);
     hours.dataset.onnetSalaryBound='true';
   }
+  [mealDays,mealValue,mealShare].forEach(field=>{
+    if(field && field.dataset.onnetSalaryBound!=='true'){
+      field.addEventListener('change',applyDeclaredSalaryFromForm);
+      field.addEventListener('input',applyDeclaredSalaryFromForm);
+      field.dataset.onnetSalaryBound='true';
+    }
+  });
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
@@ -3056,7 +3093,13 @@ function renderMaquetteControls(computedOverride){
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:selected.dureeType*52/12;
       const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
-      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h · mutuelle salarié : '+fmt(selected.mutuelle||0)+' / mois</div></div>';
+      const afterTaxHourly=Number.isFinite(computed.r.netApresImpot)?computed.r.netApresImpot/hoursMonth:null;
+      const afterTaxValue=afterTaxHourly===null?null:afterTaxHourly*factor;
+      const afterTaxAmount=afterTaxValue===null?'Non disponible':(maquetteComparisonPeriod==='hour'?fmtHoraire(afterTaxValue):fmt(afterTaxValue));
+      const mealInfo=Number(selected.joursResto||0)>0
+        ? ' · TR : '+selected.joursResto+' j × '+fmt(selected.valeurResto)+' (part salarié '+(selected.partResto||50)+' %)'
+        : ' · sans titres-restaurant';
+      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+' avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé / '+unit+'</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h'+mealInfo+'</div></div>';
     }
   }
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
