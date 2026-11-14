@@ -17,7 +17,7 @@ async function main(){
   const appFiles = JSON.parse(await fs.readFile(path.join(root, 'src', 'app', 'manifest.json'), 'utf8'));
   if(!Array.isArray(appFiles) || appFiles.length === 0 ||
      new Set(appFiles).size !== appFiles.length ||
-     appFiles.some(file => typeof file !== 'string' || !/^[a-z0-9-]+\\.js$/.test(file))){
+     appFiles.some(file => typeof file !== 'string' || !file.endsWith('.js') || file.includes('/') || file.includes('..'))){
     throw new Error('Invalid application source manifest');
   }
   const app = (await Promise.all(appFiles.map(file =>
