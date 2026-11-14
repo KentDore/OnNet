@@ -20,6 +20,20 @@ jobs:
           npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1 eslint@10.15.0 stylelint@18.0.0 esbuild@0.28.2
           # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
           npx --no-install playwright install chromium
+      - name: Générer les fichiers HTML depuis les sources
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          node scripts/build.js "$VERSION" "$RUNNER_TEMP/Onnet-$VERSION.html"
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
+      - name: Publier le HTML généré pour mise à jour de la PR
+        uses: actions/upload-artifact@v7
+        with:
+          name: onnet-generated-html
+          path: |
+            index.html
+            Onnet-*.html
+          retention-days: 1
       - name: Vérifier la syntaxe JavaScript
         run: |
           node --check src/urssaf-api-client.mjs
