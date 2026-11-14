@@ -1111,6 +1111,96 @@ header.hero .trust-icon svg{width:19px;height:19px}
 
 .onboarding-mutuelle-note .onboarding-mutuelle-label{font-weight:650;}
 
+
+/* Résumé salarial : hiérarchie stable, sans compression des libellés. */
+#maquetteYourSalary .benchmark-your-salary{
+  display:grid;
+  grid-template-columns:minmax(0,1fr) auto;
+  align-items:center;
+  gap:12px 16px;
+  padding:20px 22px;
+}
+#maquetteYourSalary .benchmark-your-salary>span{
+  display:flex;
+  flex-direction:column;
+  align-items:flex-start;
+  gap:4px;
+  min-width:0;
+  color:#214b34;
+  font-size:15px;
+  line-height:1.25;
+}
+#maquetteYourSalary .benchmark-your-salary>span b{
+  color:#174a32;
+  font-size:13px;
+  font-weight:850;
+  letter-spacing:.02em;
+}
+#maquetteYourSalary .benchmark-your-salary>strong{
+  min-width:0;
+  color:#075d3a;
+  font-size:clamp(23px,3.5vw,30px);
+  line-height:1.08;
+  text-align:right;
+  white-space:nowrap;
+}
+#maquetteYourSalary .benchmark-your-salary>strong small{
+  display:block;
+  margin-top:5px;
+  color:#66766b;
+  font-size:11px;
+  font-weight:650;
+  line-height:1.3;
+  white-space:normal;
+}
+#maquetteYourSalary .benchmark-your-salary .benchmark-after-tax{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  min-width:0;
+  margin:0;
+  padding:12px 0 0;
+  border-top:1px solid rgba(31,109,76,.14);
+}
+#maquetteYourSalary .benchmark-after-tax>span{
+  min-width:0;
+  color:#466453;
+  font-size:13px;
+  line-height:1.35;
+}
+#maquetteYourSalary .benchmark-after-tax>strong{
+  flex:0 0 auto;
+  color:#116b4b;
+  font-size:clamp(17px,4.5vw,21px);
+  line-height:1.15;
+  white-space:nowrap;
+}
+#maquetteYourSalary .benchmark-comparison-base{
+  grid-column:1/-1;
+  margin:0;
+  padding-top:10px;
+  border-top:1px solid rgba(31,109,76,.12);
+  color:#68766d;
+  font-size:12px;
+  line-height:1.45;
+}
+@media(max-width:640px){
+  #maquetteYourSalary .benchmark-your-salary{
+    grid-template-columns:minmax(0,1fr) auto;
+    gap:10px 12px;
+    padding:15px;
+    border-radius:16px;
+  }
+  #maquetteYourSalary .benchmark-your-salary>span{font-size:13px}
+  #maquetteYourSalary .benchmark-your-salary>strong{font-size:clamp(21px,6vw,26px)}
+  #maquetteYourSalary .benchmark-your-salary>strong small{font-size:10px}
+  #maquetteYourSalary .benchmark-after-tax>span{font-size:12px}
+  #maquetteYourSalary .benchmark-after-tax>strong{font-size:18px}
+  #maquetteYourSalary .benchmark-comparison-base{font-size:11px}
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1142,6 +1232,11 @@ header.hero .trust-icon svg{width:19px;height:19px}
         <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
       </div>
 
+    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div id="maquetteYourSalary"></div>
+    <div id="benchmarkMount" aria-live="polite"></div>
+
     <div class="declaration-inline">
       <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
       
@@ -1164,12 +1259,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
       <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
-
     </div>
-    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
-    <div id="maquetteYourSalary"></div>
-    <div id="benchmarkMount" aria-live="polite"></div>
   </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
@@ -3115,11 +3205,11 @@ function renderMaquetteControls(computedOverride){
   }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
-    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
+    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>À calculer<small>Net avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>En attente</strong></div><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
     else{
       const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
       const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
-      const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:selected.dureeType*52/12;
+      const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
       const afterTaxHourly=Number.isFinite(computed.r.netApresImpot)?computed.r.netApresImpot/hoursMonth:null;
@@ -3128,7 +3218,7 @@ function renderMaquetteControls(computedOverride){
       const mealInfo=Number(selected.joursResto||0)>0
         ? ' · TR : '+selected.joursResto+' j × '+fmt(selected.valeurResto)+' (part salarié '+(selected.partResto||50)+' %)'
         : ' · sans titres-restaurant';
-      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+' avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé / '+unit+'</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h'+mealInfo+'</div></div>';
+      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h'+mealInfo+'</div></div>';
     }
   }
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
