@@ -38,6 +38,14 @@ export default [
     }
   },
   {
+    // Les fichiers src/app sont des fragments d'un seul script classique.
+    // Une variable déclarée ici peut être réaffectée dans un fragment chargé ensuite.
+    files: ["src/app/**/*.js"],
+    rules: {
+      "prefer-const": "off"
+    }
+  },
+  {
     files: ["src/**/*.mjs", "scripts/**/*.mjs", "test/**/*.mjs"],
     languageOptions: {
       ecmaVersion: "latest",
