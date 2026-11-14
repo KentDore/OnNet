@@ -423,29 +423,6 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
-    const diagnosticsDebug = await page.evaluate(() => ({
-      status: document.getElementById('urssafStatusText')?.textContent,
-      warningsHidden: document.getElementById('urssafWarnings')?.hidden,
-      warningsHtml: document.getElementById('urssafWarnings')?.outerHTML,
-      cardWarnings: document.getElementById('c-result-warnings-0')?.outerHTML,
-      resultState: document.querySelector('#cardsBody [data-card]')?.dataset.resultState,
-      ancestors: (() => {
-        const nodes = [];
-        let el = document.getElementById('urssafWarnings');
-        while (el) {
-          const style = getComputedStyle(el);
-          const rect = el.getBoundingClientRect();
-          nodes.push({
-            tag: el.tagName, id: el.id, className: String(el.className),
-            hidden: el.hidden, display: style.display, visibility: style.visibility,
-            opacity: style.opacity, width: Math.round(rect.width), height: Math.round(rect.height)
-          });
-          el = el.parentElement;
-        }
-        return nodes;
-      })()
-    }));
-    console.log('ONNET_URSSAF_DIAGNOSTICS_DEBUG=' + JSON.stringify(diagnosticsDebug));
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
@@ -1127,6 +1104,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.getElementById('mainSalaryGross')?.value === '2500',
       null, { timeout:20000 });
+    await page.locator('#mainSalaryGross').blur();
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
