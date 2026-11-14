@@ -323,6 +323,19 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNetBeforeTax) / 169) < 0.02,
       'le résumé horaire doit reprendre le net avant impôt Urssaf divisé par les 169 h du contrat 39 h');
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
+    await page.locator('#moreMetrics > summary').click();
+    await page.waitForFunction(() => document.getElementById('moreMetrics')?.open === true);
+    const afterTaxHourlyButton = page.locator('.metric-toggle button[data-metric="netApresImpotHoraire"]');
+    assert.equal(await afterTaxHourlyButton.count(), 1, 'un indicateur de net horaire après impôt doit être disponible');
+    await afterTaxHourlyButton.evaluate(button => button.click());
+    await page.waitForFunction(() =>
+      document.querySelector('.metric-toggle button[data-metric="netApresImpotHoraire"]')?.getAttribute('aria-pressed') === 'true'
+    );
+    const afterTaxHourlyValue = await page.locator('#comparePanel .bar-row').first().locator('.bar-value span').first().innerText();
+    const actualHourly = parseEuro(afterTaxHourlyValue);
+    const expectedHourly = parseEuro(cardNetAfterTax) / 169;
+    assert.ok(Math.abs(actualHourly - expectedHourly) < 0.02,
+      `net horaire après impôt incorrect : affiché=${afterTaxHourlyValue} (${actualHourly}), net mensuel=${cardNetAfterTax} (${parseEuro(cardNetAfterTax)}), attendu=${expectedHourly}, métrique active=${await afterTaxHourlyButton.getAttribute('aria-pressed')}, ligne=${await page.locator('#comparePanel .bar-row').first().innerText()}`);
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
