@@ -1431,12 +1431,15 @@ test('le runtime applicatif est encapsulé sans exposer ses fonctions internes',
     const runtime = await page.evaluate(() => ({
       appReady: Boolean(document.getElementById('mainSalaryGross')),
       urssafClientReady: typeof window.OnNetUrssafApi?.calculateWithUrssafApi === 'function',
-      rendererExposed: typeof window.renderCard !== 'undefined'
+      rendererExposed: typeof window.renderCard !== 'undefined',
+      utilityExposed: typeof window.parseNum !== 'undefined'
     }));
     assert.equal(runtime.appReady, true);
     assert.equal(runtime.urssafClientReady, true);
     assert.equal(runtime.rendererExposed, false,
       'les fonctions internes ne doivent plus polluer l’objet window');
+    assert.equal(runtime.utilityExposed, false,
+      'les utilitaires importés doivent rester privés au module runtime');
   } finally {
     await context.close();
   }
