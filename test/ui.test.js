@@ -963,13 +963,15 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
       'le montant doit rester à droite du libellé');
     assert.ok(mutuelleLayout.note.right - mutuelleLayout.amount.right <= 16,
       'le montant doit rester aligné à droite de la ligne');
-    const overtimeHint = modal.locator('#modalOnboarding39Hint');
-    assert.equal(await overtimeHint.isVisible(), false);
+    assert.equal(await modal.locator('#modalOnboarding39Hint').count(), 0,
+      'aucun paragraphe explicatif sur les 39 h ne doit encombrer la fenêtre');
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
-    assert.equal(await overtimeHint.isVisible(), true);
-    assert.match(await overtimeHint.innerText(), /droit commun.*majorées à 25 %.*taux particuliers des conventions collectives ne sont pas pris en compte.*RTT/);
     await modal.locator('#modalOnboardingDuree [data-duree="35"]').click();
-    assert.equal(await overtimeHint.isVisible(), false);
+    const modalBeforeTrToggle = await modal.evaluate(el => el.scrollTop);
+    await modal.locator('#modalOnboardingTrToggle').click();
+    await page.waitForTimeout(100);
+    assert.equal(await modal.evaluate(el => el.scrollTop), modalBeforeTrToggle,
+      'activer les titres-restaurant ne doit pas déplacer automatiquement la fenêtre');
     await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingSubmit').click();
     await page.waitForFunction(() => {
@@ -1036,16 +1038,10 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
   const { context, page } = await openApp();
   try {
     await page.locator('#addScenario').click();
-    const hint = page.locator('#modalAdd39Hint');
-    assert.equal(await hint.isVisible(), true);
+    assert.equal(await page.locator('#modalAdd39Hint').count(), 0,
+      'aucun paragraphe explicatif sur les 39 h ne doit être affiché');
     assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
     await page.locator('#modalAddDuree [data-duree="35"]').click();
-    assert.equal(await hint.isVisible(), false);
-    await page.locator('#modalAddDuree [data-duree="39"]').click();
-    assert.equal(await hint.isVisible(), true);
-    assert.match(await hint.innerText(), /droit commun.*majorées à 25 %.*taux particuliers des conventions collectives ne sont pas pris en compte.*RTT/);
-    await page.locator('#modalAddDuree [data-duree="35"]').click();
-    assert.equal(await hint.isVisible(), false);
     await page.locator('#modalAddDuree [data-duree="39"]').click();
     await page.locator('#modalAddInput').fill('3300');
     await page.locator('#modalAddSubmit').click();
