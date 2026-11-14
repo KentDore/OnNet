@@ -44,6 +44,8 @@ jobs:
         run: npm run test:publicodes
       - name: Tester les anciens scénarios locaux (non utilisés en production)
         run: node --test test/calc.test.js
+      - name: Tester les utilitaires de présentation
+        run: node --test test/ui-utils.test.js
       - name: Tester le build
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
