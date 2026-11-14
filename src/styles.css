@@ -1163,8 +1163,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .declaration-benefits-grid label{display:block;margin:0 0 5px;color:#405e4a;font-size:11px;font-weight:700}
 .declaration-benefits-grid input,.declaration-benefits-grid select{width:100%;min-height:42px;padding:8px 10px;border:1px solid #d9e4db;border-radius:9px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
 .declaration-benefits p{margin:8px 0 0;color:#7c887f;font-size:11px;line-height:1.4}
-.benchmark-after-tax{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #d7e6da;color:#315640;font-size:13px}
-.benchmark-after-tax strong{font-size:16px;color:#116b4b;white-space:nowrap}
 
 
 .meal-share-field{display:flex;flex-direction:column;gap:5px;min-width:0}
@@ -1217,30 +1215,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
   line-height:1.3;
   white-space:normal;
 }
-#maquetteYourSalary .benchmark-your-salary .benchmark-after-tax{
-  grid-column:1/-1;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  min-width:0;
-  margin:0;
-  padding:12px 0 0;
-  border-top:1px solid rgba(31,109,76,.14);
-}
-#maquetteYourSalary .benchmark-after-tax>span{
-  min-width:0;
-  color:#466453;
-  font-size:13px;
-  line-height:1.35;
-}
-#maquetteYourSalary .benchmark-after-tax>strong{
-  flex:0 0 auto;
-  color:#116b4b;
-  font-size:clamp(17px,4.5vw,21px);
-  line-height:1.15;
-  white-space:nowrap;
-}
 #maquetteYourSalary .benchmark-comparison-base{
   grid-column:1/-1;
   margin:0;
@@ -1260,8 +1234,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
   #maquetteYourSalary .benchmark-your-salary>span{font-size:13px}
   #maquetteYourSalary .benchmark-your-salary>strong{font-size:clamp(21px,6vw,26px)}
   #maquetteYourSalary .benchmark-your-salary>strong small{font-size:10px}
-  #maquetteYourSalary .benchmark-after-tax>span{font-size:12px}
-  #maquetteYourSalary .benchmark-after-tax>strong{font-size:18px}
   #maquetteYourSalary .benchmark-comparison-base{font-size:11px}
 }
 
