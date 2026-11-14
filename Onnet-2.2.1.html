@@ -1536,7 +1536,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
   </main>
 </div>
 
-<script>
+<script type="module">
 const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'
 const DEFAULT_TIMEOUT_MS = 15000
 const MONTHLY_BASE_HOURS = 151.67
@@ -2059,8 +2059,6 @@ const urssafApiExpressions = EXPRESSIONS
 
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 
-</script>
-<script>
 "use strict";
 
 // Utilitaires d'interface uniquement. Aucun calcul de cotisations, de net ou d'impôt.
@@ -2114,8 +2112,6 @@ function esc(s){
   return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 }
 
-</script>
-<script>
 "use strict";
 
 
