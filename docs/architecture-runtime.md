@@ -15,7 +15,7 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 5. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
 6. `scripts/build.js` génère le HTML autonome. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
-Les fragments applicatifs sont assemblés dans un seul script de type module. Ils partagent donc le même espace lexical au moment de l'exécution. Ils ne sont pas encore des modules ES indépendants avec des imports et exports explicites.
+Depuis la fusion de la [PR #91](https://github.com/KentDore/OnNet/pull/91), le client Urssaf, les utilitaires et les fragments applicatifs sont regroupés dans un unique `<script type="module">`. Les fonctions et variables internes ne polluent donc plus `window` ; `window.OnNetUrssafApi` reste le point d'accès volontaire. Cette amélioration encapsule le runtime, mais ne crée pas encore des modules ES indépendants : les fragments applicatifs partagent toujours le même espace lexical et leur ordre d'assemblage reste important.
 
 ## Responsabilités actuelles
 
