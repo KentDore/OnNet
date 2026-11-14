@@ -918,6 +918,18 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
   }
 });
 
+test('la première fenêtre tient sans défilement sur mobile, même avec les champs titres-restaurant ouverts', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ emptyStorage: true, viewport: { width: 390, height: 844 } });
+  try {
+    const modal = page.locator('#modalBox');
+    await page.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
+    const dimensions = await modal.evaluate(el => ({ clientHeight: el.clientHeight, scrollHeight: el.scrollHeight, overflowY: getComputedStyle(el).overflowY }));
+    assert.equal(dimensions.overflowY, 'hidden', 'la première modale ne doit pas être une zone défilante');
+    assert.ok(dimensions.scrollHeight <= dimensions.clientHeight, `le contenu doit tenir sans défilement : ${JSON.stringify(dimensions)}`);
+    assert.equal(await page.locator('#modalOnboardingSubmit').isVisible(), true);
+  } finally { await context.close(); }
+});
+
 test('l’onboarding garde les paramètres secondaires repliés et n’affiche que la part salarié', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
