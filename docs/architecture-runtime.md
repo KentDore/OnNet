@@ -13,7 +13,7 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 3. `src/ui-utils.mjs` exporte les valeurs par défaut et les utilitaires purs de présentation.
 4. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs.
 5. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
-6. `scripts/build.js` génère le HTML autonome. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
+6. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
 Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) extrait les utilitaires purs et le client Urssaf en véritables modules ES, puis les regroupe avec esbuild au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Les huit fragments applicatifs sont encore assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
 
