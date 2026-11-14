@@ -1,0 +1,275 @@
+  :root{
+    --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69716A;
+    --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#AD522D; --warn-soft:#F8EDE6;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C17A4E;
+    --stack-tr:#D9BC85;
+    --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
+    --scrollbar-thumb:#A9B0A6;
+    /* Fonds de bouton fixes (non inversés) : --ink/--accent/--warn s'inversent
+       entre les thèmes pour rester lisibles en tant que texte, ce qui casse un
+       bouton à fond plein + texte blanc en mode sombre. Ceux-ci restent
+       constants dans les deux thèmes. */
+    --btn-primary-bg:#1F6D4C; --btn-primary-bg-hover:#28855D; --btn-danger-bg:#B2542E;
+    --btn-toggle-active-bg:#17241F; --btn-gold-bg:#A9852E; --toast-bg:#17241F;
+    color-scheme: light;
+  }
+  /* Le thème clair est le défaut. Le sombre ne s’active que par choix explicite. */
+  /* Ces surcharges explicites l'emportent sur la préférence système, dans les
+     deux sens — utile quand hébergé dans un visualiseur avec son propre
+     bascule clair/sombre. */
+  :root[data-theme="dark"]{
+    --bg:#14181A; --surface:#1C2220; --ink:#EDEDE6; --ink-soft:#96A099;
+    --accent:#5BC79A; --accent-soft:#1D2E27; --warn:#E2916A; --warn-soft:#2E241C;
+    --line:#2A302C; --gold:#D9B968; --gold-soft:#2B2413; --stack-cotis:#D99A6C;
+    --stack-tr:#E6D1A0;
+    --gold-ink:#E9C27A; --warn-line:#5A3B2C; --gold-line:#4A3D22;
+    --scrollbar-thumb:#3A423D;
+    --btn-danger-bg:#9C4526;
+    color-scheme: dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#F5F3EE; --surface:#FFFFFF; --ink:#17241F; --ink-soft:#69716A;
+    --accent:#1F6D4C; --accent-soft:#E4EFE8; --warn:#AD522D; --warn-soft:#F8EDE6;
+    --line:#E4E1D6; --gold:#A9852E; --gold-soft:#F7F0DF; --stack-cotis:#C17A4E;
+    --stack-tr:#D9BC85;
+    --gold-ink:#7A5F1E; --warn-line:#E3C4B4; --gold-line:#E5D5AC;
+    --scrollbar-thumb:#A9B0A6;
+    --btn-danger-bg:#B2542E;
+    color-scheme: light;
+  }
+  *{box-sizing:border-box;}
+  html{-webkit-text-size-adjust:100%; overflow-x:hidden; width:100%;}
+  body{
+    margin:0; background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; -webkit-font-smoothing:antialiased; line-height:1.4; overflow-x:hidden; width:100%;
+    -webkit-user-select:none; -moz-user-select:none; user-select:none;
+    -webkit-touch-callout:none; -webkit-tap-highlight-color:transparent;
+  }
+  input, select, textarea{
+    -webkit-user-select:text; -moz-user-select:text; user-select:text; -webkit-touch-callout:default;
+  }
+  .wrap{max-width:1100px; margin:0 auto; padding:24px 16px 64px;}
+  @media (min-width:640px){ .wrap{padding:48px 32px 80px;} }
+
+  header{margin-bottom:16px;}
+  .eyebrow{font-family:'IBM Plex Mono',monospace; font-size:11px; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); margin-bottom:8px;}
+  h1{font-family:'Fraunces',serif; font-weight:550; font-size:30px; line-height:1.15; margin:0 0 10px; letter-spacing:-.01em;}
+  @media (min-width:640px){ h1{font-size:38px;} }
+  header p{color:var(--ink-soft); font-size:14.5px; line-height:1.55; max-width:60ch; margin:0 0 18px;}
+  .header-top{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:8px; flex-wrap:wrap;}
+  .header-actions{display:flex; align-items:center; gap:8px; flex-wrap:wrap;}
+
+  /* Actions d'en-tête : compacter sur mobile pour éviter une troisième ligne. */
+  @media (max-width:639px){
+    .header-actions{
+      display:grid;
+      grid-template-columns:repeat(3,minmax(0,1fr));
+      gap:8px;
+      width:100%;
+    }
+    .header-actions .print-btn{
+      min-width:0;
+      min-height:44px;
+      justify-content:center;
+      gap:5px;
+      padding:8px 5px;
+      font-size:clamp(10px,2.8vw,12px);
+      white-space:nowrap;
+    }
+    .header-actions .print-btn svg{width:13px;height:13px;}
+  }
+
+  .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
+  .share-banner[hidden]{display:none;}
+  .toast{
+    position:fixed; left:50%; bottom:24px; transform:translate(-50%, 12px);
+    background:var(--toast-bg); color:#fff; font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px;
+    padding:10px 18px; border-radius:999px; box-shadow:0 6px 20px rgba(0,0,0,.28);
+    opacity:0; pointer-events:none; transition:opacity .2s ease, transform .2s ease; z-index:1000;
+  }
+  .toast.show{opacity:1; transform:translate(-50%, 0);}
+  /* ---- Modale maison (remplace window.confirm()/prompt(), bloqués dans les iframes sandboxées) ---- */
+  .modal-overlay{
+    position:fixed; inset:0; background:rgba(0,0,0,.45);
+    display:flex; align-items:center; justify-content:center; padding:20px;
+    opacity:0; pointer-events:none; transition:opacity .18s ease; z-index:1100;
+    overflow-y:auto; overscroll-behavior:contain;
+    backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+  }
+  .modal-overlay.show{opacity:1; pointer-events:auto;}
+  .modal-overlay[hidden]{display:none;}
+  .modal{
+    background:var(--surface); border:1px solid var(--line); border-radius:16px;
+    padding:22px; max-width:400px; width:100%; box-shadow:0 12px 40px rgba(0,0,0,.35);
+    opacity:0; transform:translateY(16px) scale(.975);
+    transition:opacity .24s ease, transform .34s cubic-bezier(.22,1,.36,1);
+    will-change:opacity,transform;
+    font-family:'Inter',sans-serif; max-height:85vh; overflow-y:auto;
+    /* Centrage par les marges automatiques plutôt que par align-items seul :
+       une modale plus haute que l'écran reste alors intégralement atteignable
+       au défilement, là où align-items:center en rognerait le haut. */
+    margin:auto;
+  }
+  .modal-overlay.show .modal{opacity:1;transform:translateY(0) scale(1);}
+  /* Les champs TR apparaissent sans saut de mise en page brutal. Le contenu
+     reste dans le flux et la hauteur de la modale reste contrôlée. */
+  .onboarding-tr-fields{display:grid;grid-template-rows:1fr;opacity:1;}
+  /* Respecte l’attribut HTML hidden : les champs repliés restent réellement masqués. */
+  .onboarding-tr-fields[hidden]{display:none;}
+  .onboarding-tr-fields:not([hidden]){animation:onboardingFieldsIn .28s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes onboardingFieldsIn{
+    from{grid-template-rows:0fr;opacity:0;}
+    to{grid-template-rows:1fr;opacity:1;}
+  }
+  .onboarding-tr-fields>.three-col{min-height:0;overflow:hidden;}
+  .onboarding-tr-toggle button{transition:background-color .2s ease,color .2s ease,transform .16s ease;}
+  .onboarding-tr-toggle button:active{transform:scale(.96);}
+  /* Première fenêtre : aucun défilement, même lorsque les champs TR sont ouverts. */
+  @media(max-width:600px){
+    .modal.modal-onboarding{max-height:calc(100dvh - 16px);overflow:hidden;padding:10px 12px;}
+    .modal-onboarding .modal-msg{margin:0 0 5px;font-size:12px;line-height:1.25;}
+    .modal-onboarding .onboarding-consent{margin:0 0 6px;padding:7px 9px;border-radius:10px;}
+    .modal-onboarding .onboarding-consent-details{margin:3px 0 0 32px;font-size:9px;}
+    .modal-onboarding .field-row{margin-bottom:6px!important;}
+    .modal-onboarding .field-row label{font-size:11px;margin-bottom:3px;}
+    .modal-onboarding .field-row input{padding:8px 10px;font-size:16px;}
+    .modal-onboarding .pill-toggle button{min-height:34px;padding:6px 10px;font-size:12px;}
+    .modal-onboarding .onboarding-benefits{gap:5px;margin-top:5px;}
+    .modal-onboarding .onboarding-mutuelle-note{min-height:32px;padding:4px 8px;gap:7px;font-size:11px;}
+    .modal-onboarding .onboarding-mutuelle-icon{width:22px;height:22px;}
+    .modal-onboarding .onboarding-tr{margin-top:5px;padding:6px 8px;gap:5px 8px;}
+    .modal-onboarding .onboarding-tr-heading{gap:6px;}
+    .modal-onboarding .onboarding-tr-heading .onboarding-mutuelle-icon{width:22px;height:22px;}
+    .modal-onboarding .onboarding-tr-toggle button{min-height:30px;padding:5px 9px;}
+    .modal-onboarding .onboarding-tr-fields{padding-top:0;}
+    .modal-onboarding .onboarding-tr-fields .three-col{gap:5px;}
+    .modal-onboarding .onboarding-tr-fields .field-row label{font-size:9px;line-height:1.1;}
+    .modal-onboarding .onboarding-tr-fields input{padding:6px 5px;font-size:14px;}
+    .modal-onboarding .onboarding-tr-fields .field-row input,.modal-onboarding .onboarding-tr-fields .meal-share-toggle{height:34px;min-height:34px;}
+    .modal-onboarding .onboarding-tr-fields .meal-share-toggle button{height:100%;min-height:0;white-space:nowrap;}
+    .modal-onboarding .modal-actions{margin-top:6px!important;padding:0;border:0;position:static;background:transparent;}
+    .modal-onboarding .modal-actions .btn{min-height:40px;padding:9px 12px;font-size:13px;}
+  }
+
+  .modal-msg{font-size:14.5px; line-height:1.5; color:var(--ink); margin:0 0 18px;}
+
+  /* Onboarding : les paramètres secondaires restent repliés pour garder
+     le premier écran court, surtout sur mobile. */
+  .onboarding-optional{margin-top:18px;border-top:1px solid var(--line);padding-top:12px;}
+  .onboarding-optional > summary{display:flex;align-items:center;gap:8px;cursor:pointer;list-style:none;font-size:13px;font-weight:650;color:var(--ink-soft);padding:4px 0;}
+  .onboarding-optional > summary::-webkit-details-marker{display:none;}
+  .onboarding-optional > summary::before{content:"+";font-family:'IBM Plex Mono',monospace;color:var(--accent);font-size:15px;}
+  .onboarding-optional[open] > summary::before{content:"–";}
+  .onboarding-optional .optional-label{margin-left:auto;font-size:11px;font-weight:500;color:var(--ink-soft);background:var(--bg);border:1px solid var(--line);border-radius:999px;padding:3px 8px;}
+  .onboarding-optional-body{padding-top:12px;}
+  .onboarding-optional-body > .sub-hint{margin:0 0 12px;}
+  @media(max-width:480px){.onboarding-mutuelle-fields{grid-template-columns:1fr;}}
+
+  .modal-share-row{display:flex; gap:8px; margin:2px 0 18px;}
+  .modal-share-row .btn{width:auto; flex:none;}
+  .modal-share-input{
+    flex:1; min-width:0; font-family:'IBM Plex Mono',monospace; font-size:13px;
+    padding:11px 12px; border:1px solid var(--line); border-radius:10px;
+    background:var(--bg); color:var(--ink);
+  }
+  .modal-share-input:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
+   .modal-actions{display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; position:sticky; bottom:-16px; z-index:3; padding:12px 0 4px; margin-top:14px; background:var(--surface); border-top:1px solid var(--line);}
+  .modal-actions .btn{width:auto; padding:11px 16px; font-size:14px;}
+  .modal-btn-cancel{background:var(--bg); color:var(--ink); border:1px solid var(--line);}
+  .modal-btn-cancel:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent);}
+  @media print{ .toast, .share-banner, .modal-overlay{display:none !important;} }
+  .header-top .eyebrow{margin-bottom:0;}
+  .brand-block{display:flex; flex-direction:column; gap:3px;}
+  .brand{font-family:'Fraunces',serif; font-weight:650; font-size:17px; letter-spacing:-.01em; color:var(--ink); line-height:1; display:flex; align-items:baseline; gap:6px;}
+  .brand-accent{color:var(--accent);}
+  .brand-version{font-family:'IBM Plex Mono',monospace; font-weight:500; font-size:10.5px; letter-spacing:.02em; color:var(--ink-soft);}
+  .print-btn{
+    display:inline-flex; align-items:center; gap:7px; flex:none;
+    font-family:'Inter',sans-serif; font-weight:600; font-size:12.5px; color:var(--ink-soft);
+    background:transparent; border:1px solid var(--line); border-radius:999px; padding:8px 14px 8px 12px; cursor:pointer;
+  }
+  .print-btn svg{width:14px; height:14px; flex:none;}
+  .print-btn:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+  .print-btn:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .btn{font-family:'Inter',sans-serif; font-weight:600; font-size:15px; border-radius:12px; padding:14px 18px; cursor:pointer; border:none; width:100%;}
+  @media (min-width:640px){ .btn{width:auto;} }
+  .btn:disabled{opacity:.45; cursor:not-allowed;}
+  .btn-primary{background:var(--btn-primary-bg); color:#fff;}
+  .btn-primary:hover{background:var(--btn-primary-bg-hover);}
+  .btn-danger{background:var(--btn-danger-bg); color:#fff;}
+  .btn-danger:hover{filter:brightness(1.1);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px; margin-bottom:16px;}
+  .panel > summary{cursor:pointer; font-family:'Fraunces',serif; font-weight:550; font-size:16px; color:var(--ink); list-style:none; display:flex; align-items:center; gap:8px; padding:2px 0;}
+  .panel > summary::-webkit-details-marker{display:none;}
+  .panel > summary::after{content:"+"; font-family:'IBM Plex Mono',monospace; color:var(--accent); margin-left:auto; font-size:16px;}
+  .panel[open] > summary::after{content:"–";}
+  .panel-body{padding-top:16px;}
+
+  .panel-advanced{background:transparent; border:1px dashed var(--line); box-shadow:none;}
+  .panel-advanced > summary{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; color:var(--ink-soft);}
+  .panel-advanced > summary::after{color:var(--ink-soft);}
+
+  /* ---- Modules (panneaux complémentaires : augmentation, absence, ...) ---- */
+  .situation-section{margin-bottom:16px;}
+  .modules-section{margin-bottom:16px;}
+  .modules-head{margin-bottom:10px;}
+  .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
+  .modules-sub{font-size:12.5px; color:var(--ink-soft); margin:0;}
+  /* align-items:start (et non le stretch par défaut) : sans ça, déplier un
+     module agrandit sa ligne de grille et les cartes fermées de la même ligne
+     s'étirent pour l'égaler, laissant un grand vide sous leur bandeau. */
+  /* auto-fit/minmax plutôt qu'un compte de colonnes fixé à 720px : ce seuil
+     supposait 3 cartes et donnait ~230px chacune pile à la limite — trop
+     étroit pour « Simuler une augmentation », qui repassait à la ligne mot
+     par mot. La grille s'adapte maintenant au nombre de cartes réellement
+     présentes (deux depuis que Foyer fiscal a sa propre section) et ne
+     descend jamais sous une largeur où le texte tient. */
+  .modules-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:12px; align-items:start;}
+  .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
+  .module-toggle-head{width:100%; display:flex; align-items:center; gap:12px; padding:16px; background:none; border:none; cursor:pointer; text-align:left; font-family:'Inter',sans-serif;}
+  .module-icon{flex:none; width:34px; height:34px; border-radius:10px; background:var(--accent-soft); color:var(--accent); display:flex; align-items:center; justify-content:center;}
+  .module-icon svg{width:18px; height:18px;}
+  .module-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px;}
+  .module-name{font-weight:600; font-size:14px; color:var(--ink);}
+  /* Pas de troncature en ellipse : à une largeur de colonne intermédiaire,
+     elle coupait « Comparer une hausse en % ou en euros » en plein mot sans
+     rien apporter en échange. Une deuxième ligne occasionnelle coûte moins
+     qu'une information qui disparaît. */
+  .module-desc{font-size:12px; color:var(--ink-soft); line-height:1.35;}
+  .module-switch{flex:none; width:34px; height:20px; border-radius:999px; background:var(--line); position:relative; transition:background .15s ease;}
+  .module-switch::after{content:""; position:absolute; top:2px; left:2px; width:16px; height:16px; border-radius:50%; background:#fff; transition:transform .15s ease; box-shadow:0 1px 2px rgba(0,0,0,.2);}
+  .module-card.is-open .module-switch{background:var(--accent);}
+  .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
+  .module-card.is-open .module-switch::after{transform:translateX(14px);}
+  /* Le bloc « Foyer fiscal » se déplie, il ne s'active pas : un chevron plutôt
+     qu'un interrupteur, qui laisserait croire qu'on peut couper l'estimation. */
+  .module-chevron{flex:none; width:20px; height:20px; color:var(--ink-soft); transition:transform .15s ease, color .15s ease;}
+  .module-card.is-open .module-chevron{transform:rotate(180deg); color:var(--accent);}
+  /* Le bloc est replié au chargement : l'avertissement doit remonter dans le
+     bandeau, sinon le garde-fou reste invisible tant qu'on n'ouvre pas. */
+  .module-desc.is-warn{color:var(--warn); font-weight:600;}
+  /* Dépliage animé. L'attribut hidden ne se transitionne pas (display:none) :
+     l'état est porté par la classe is-open, et visibility retire malgré tout le
+     contenu replié de l'arbre d'accessibilité et du parcours au clavier. */
+  .module-body{
+    padding:0 16px; max-height:0; overflow:hidden; opacity:0; visibility:hidden;
+    transition:max-height .3s cubic-bezier(.25,.8,.3,1), opacity .2s ease,
+               padding-bottom .3s ease, visibility 0s linear .3s;
+  }
+  .module-card.is-open .module-body{
+    max-height:1600px; opacity:1; visibility:visible; padding-bottom:18px;
+    transition:max-height .34s cubic-bezier(.25,.8,.3,1), opacity .26s ease .04s,
+               padding-bottom .34s ease, visibility 0s;
+  }
+  .module-card .hint{margin-top:0;}
+
+  .panel-nested{margin-top:18px; border-top:1px solid var(--line); padding-top:4px;}
+  .panel-nested > summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); list-style:none; display:flex; align-items:center; gap:6px; padding:8px 0;}
+  .panel-nested > summary::-webkit-details-marker{display:none;}
+  .panel-nested > summary::before{content:"+"; font-family:'IBM Plex Mono',monospace; font-size:14px;}
+  .panel-nested[open] > summary::before{content:"–";}
+  .panel-nested-body{padding-top:10px;}
+
+  .hint{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-2px 0 14px;}
+  h2.bars-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 4px;}
+
