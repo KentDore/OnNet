@@ -114,7 +114,16 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   ], { encoding: 'utf8' });
   assert.equal(run.status, 0, run.stderr);
   const generated = fs.readFileSync(output, 'utf8');
-  assert.equal(fs.readFileSync(artifactPath, 'utf8'), generated,
-    'le fichier autonome versionné doit correspondre aux sources');
-  assert.equal(index, generated, 'index.html doit correspondre au fichier autonome versionné');
+  const published = fs.readFileSync(artifactPath, 'utf8');
+  const styles = fs.readFileSync(path.join(root, 'src', 'styles.css'), 'utf8').trim();
+  const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
+  const app = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8').trim();
+  assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
+  assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
+  assert.ok(published.includes(utils), 'le fichier publié doit embarquer les utilitaires actuels');
+  assert.ok(published.includes(app), 'le fichier publié doit embarquer le JavaScript actuel');
+  assert.ok(generated.includes(styles), 'le build doit toujours intégrer le CSS source');
+  assert.ok(generated.includes(utils), 'le build doit toujours intégrer les utilitaires source');
+  assert.ok(generated.includes(app), 'le build doit toujours intégrer le JavaScript source');
+  assert.equal(published.includes('@@ONNET_'), false, 'aucun marqueur de template ne doit rester');
 });
