@@ -204,7 +204,7 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   if(!statusText) return;
   const status = document.getElementById('urssafStatus');
-  if(status) status.classList.remove('is-error');
+  if(status) status.classList.remove('is-error','has-diagnostics');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
@@ -251,6 +251,7 @@ function updateUrssafStatus(computed){
       ...warnings.map(warning => `<li>${esc(warning)}</li>`)
     ].join('');
     diagnostics.hidden = false;
+    if(status) status.classList.add('has-diagnostics');
   }
   // Aucun bouton de calcul : les résultats sont actualisés automatiquement.
 }
