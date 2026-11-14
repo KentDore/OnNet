@@ -1204,3 +1204,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .legacy-salary-intro{margin:0 0 12px;color:var(--ink-soft);font-size:11px;line-height:1.45;}
 .legacy-salary-details .cards-bar{margin:0 0 10px;}
 .legacy-salary-details .cards-scroll{margin:0 0 10px;}
+
+
+/* Harmoniser la hiérarchie des libellés des avantages dans le formulaire principal. */
+.declaration-inline .declaration-mutuelle strong{font-weight:800}
