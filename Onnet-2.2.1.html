@@ -2273,13 +2273,18 @@ async function executeUrssafCalculations(generation, forceRetry){
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
         buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
       );
-      if(generation !== urssafGeneration) return;
+      // Une réponse valide reste réutilisable pour ses paramètres exacts,
+      // même si une saisie plus récente a rendu son affichage obsolète.
       urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      urssafErrorCache.delete(key);
       if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
     }catch(error){
-      if(generation !== urssafGeneration) return;
-      urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      // Une erreur obsolète ne doit pas bloquer une prochaine tentative.
+      if(generation === urssafGeneration){
+        urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      }
     }
+    if(generation !== urssafGeneration) return;
     updateUrssafStatus(getCurrentComputed());
   }
   if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
