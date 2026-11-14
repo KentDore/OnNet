@@ -44,6 +44,10 @@ Le comparatif utilise la médiane nationale des salaires nets du secteur privé 
 - Le net annuel affiché correspond au net mensuel multiplié par 12 ; il ne s’agit pas d’une simulation annuelle indépendante.
 - Le partage par URL encode les données sélectionnées dans le fragment de l’adresse. Elles ne sont ni chiffrées ni protégées par mot de passe : ne partagez que les informations nécessaires.
 
+## Architecture technique
+
+La cartographie des responsabilités, des couplages actuels et de la trajectoire de modularisation est décrite dans [docs/architecture-runtime.md](docs/architecture-runtime.md). Ce document distingue le découpage des fichiers de véritables frontières de modules.
+
 ## Développement et tests
 
 Le client API se trouve dans `src/urssaf-api-client.mjs`. La logique de l’interface est répartie dans `src/app/` ; son `manifest.json` fixe l’ordre d’assemblage. Les styles sont répartis dans `src/styles/` avec un manifeste propre ; les polices WOFF2 sont stockées séparément dans `src/fonts/` puis réinjectées au build. Le build recompose exactement le CSS source, assemble les scripts dans un seul script classique et conserve ainsi le HTML autonome. Les sources se modifient dans `src/app/` et `src/styles/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
