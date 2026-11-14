@@ -33,6 +33,7 @@ jobs:
         run: |
           node --check src/urssaf-api-client.mjs
           node --check src/ui-utils.mjs
+          node --check src/state-normalizers.mjs
           node --check src/app/00-state-and-calculations.js
           node --check src/app/10-persistence.js
           node --check src/app/20-sharing.js
