@@ -1102,6 +1102,15 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .benchmark-after-tax{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-top:10px;padding-top:10px;border-top:1px solid #d7e6da;color:#315640;font-size:13px}
 .benchmark-after-tax strong{font-size:16px;color:#116b4b;white-space:nowrap}
 
+
+.meal-share-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.meal-share-label,.field-label{display:block;color:#405e4a;font-size:11px;font-weight:700}
+.meal-share-toggle{width:100%;min-height:42px}
+.meal-share-toggle button{flex:1;min-width:0;padding:8px 10px;font-size:13px}
+.onboarding-tr-fields .meal-share-toggle{min-height:36px}
+
+.onboarding-mutuelle-note .onboarding-mutuelle-label{font-weight:650;}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1143,7 +1152,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
           <div class="declaration-benefits-grid">
             <div><label for="mainMealDays">Jours par mois</label><input id="mainMealDays" type="number" min="0" max="31" step="1" value="0" inputmode="numeric"></div>
             <div><label for="mainMealValue">Valeur du titre (€)</label><input id="mainMealValue" type="number" min="0" max="500" step="0.01" value="0" inputmode="decimal"></div>
-            <div><label for="mainMealShare">Part salariale</label><select id="mainMealShare"><option value="50">50 %</option><option value="40">40 %</option></select></div>
+            <div class="meal-share-field"><span class="meal-share-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="mainMealShare" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
           </div>
           <p>Sans titres-restaurant, laissez les valeurs à zéro. La part employeur est calculée automatiquement.</p>
         </div>
@@ -3024,7 +3033,7 @@ function applyDeclaredSalaryFromForm(){
   scenario.dureeType=hours?.value==='39'?'39':'35';
   scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
   scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
-  scenario.partResto=Number(document.getElementById('mainMealShare')?.value)||50;
+  scenario.partResto=Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share)||50;
   // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
   urssafConsentGranted=true;
   saveState();
@@ -3061,7 +3070,7 @@ function renderMaquetteControls(computedOverride){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
     if(mealDays) mealDays.value=String(selected.joursResto||0);
     if(mealValue) mealValue.value=String(selected.valeurResto||0);
-    if(mealShare) mealShare.value=String(selected.partResto||50);
+    if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
   }
   const selectedId=(findScenario(refId)||scenarios[0])?.id;
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
@@ -3086,13 +3095,22 @@ function renderMaquetteControls(computedOverride){
     hours.addEventListener('change',applyDeclaredSalaryFromForm);
     hours.dataset.onnetSalaryBound='true';
   }
-  [mealDays,mealValue,mealShare].forEach(field=>{
+  [mealDays,mealValue].forEach(field=>{
     if(field && field.dataset.onnetSalaryBound!=='true'){
       field.addEventListener('change',applyDeclaredSalaryFromForm);
       field.addEventListener('input',applyDeclaredSalaryFromForm);
       field.dataset.onnetSalaryBound='true';
     }
   });
+  if(mealShare && mealShare.dataset.onnetSalaryBound!=='true'){
+    mealShare.addEventListener('click',event=>{
+      const button=event.target.closest('button[data-share]');
+      if(!button) return;
+      mealShare.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      applyDeclaredSalaryFromForm();
+    });
+    mealShare.dataset.onnetSalaryBound='true';
+  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
@@ -3980,7 +3998,7 @@ function renderMutuelleTrFields(idPrefix){
           <div class="three-col">
             <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${idPrefix}Jours" value="21"></div>
             <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="number" inputmode="decimal" min="40" max="50" step="any" id="${idPrefix}Part" value="50"></div>
+            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${idPrefix}Part" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
           </div>
           <p class="sub-hint">Nombre de titres entier (0 à 31) ; part salariale comprise entre 40 et 50 %.</p>
         </div>
@@ -3996,7 +4014,12 @@ function bindMutuelleTrFields(overlay, idPrefix){
   const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
   const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
   const partInput = overlay.querySelector(`#${idPrefix}Part`);
+  let partResto = 50;
   let trOui = false;
+  partInput.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    partResto=Number(button.dataset.share);
+    partInput.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
   trToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       trOui = b.dataset.tr === 'oui';
@@ -4010,11 +4033,11 @@ function bindMutuelleTrFields(overlay, idPrefix){
     if(trOui){
       result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
-      result.partResto = clamp(parseNum(partInput.value), 40, 50);
+      result.partResto = partResto;
     }
     return result;
   };
-  read.isValid = () => !trOui || [joursInput, valeurInput, partInput].every(input =>
+  read.isValid = () => !trOui || [joursInput, valeurInput].every(input =>
     input.value.trim() !== '' && input.checkValidity()
   );
   return read;
