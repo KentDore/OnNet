@@ -170,7 +170,7 @@
     background:var(--bg); color:var(--ink);
   }
   .modal-share-input:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
-  .modal-actions{display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap;}
+  .modal-actions{display:flex; justify-content:flex-end; gap:10px; flex-wrap:wrap; position:sticky; bottom:-16px; z-index:3; padding:12px 0 4px; margin-top:14px; background:var(--surface); border-top:1px solid var(--line);}
   .modal-actions .btn{width:auto; padding:11px 16px; font-size:14px;}
   .modal-btn-cancel{background:var(--bg); color:var(--ink); border:1px solid var(--line);}
   .modal-btn-cancel:hover{background:var(--accent-soft); border-color:var(--accent); color:var(--accent);}
