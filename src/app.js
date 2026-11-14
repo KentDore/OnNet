@@ -2169,7 +2169,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     </div>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" placeholder="Ex. 2500" autocomplete="off">
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" placeholder="Ex. 2 500" autocomplete="off">
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
