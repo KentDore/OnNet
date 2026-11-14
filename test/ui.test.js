@@ -919,7 +919,8 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
 });
 
 test('la première fenêtre tient sans défilement sur mobile, même avec les champs titres-restaurant ouverts', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp({ emptyStorage: true, viewport: { width: 390, height: 844 } });
+  const { context, page } = await openApp({ emptyStorage: true });
+  await page.setViewportSize({ width: 390, height: 844 });
   try {
     const modal = page.locator('#modalBox');
     await page.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
