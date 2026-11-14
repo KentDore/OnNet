@@ -872,14 +872,15 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .unified-heading{margin-bottom:18px}
 .unified-heading h2,.comparison-subhead h3{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
 .unified-heading .sub{font-size:13px;color:#68716b}
-.declaration-inline{padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
+.declaration-inline{margin-top:16px;padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
 .declaration-inline-title{display:block;margin-bottom:13px}
 .declaration-inline-title strong{display:block;color:#315640;font-size:14px;font-weight:800}
 .declaration-inline-title span{display:block;margin-top:3px;color:#7c887f;font-size:11px}
 .declaration-fields{display:flex;flex-direction:column;gap:5px}
-.declaration-fields>label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
+.declaration-fields>label,.declaration-fields>.declaration-field-label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
 .declaration-fields>label:first-child{margin-top:0}
 .declaration-fields>select,.declaration-fields>input{display:block;width:100%;min-height:46px;margin:0;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.declaration-fields .declaration-period-toggle{align-self:flex-start;}
 .declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;align-self:flex-end;width:225px;max-width:100%;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
 .declaration-mutuelle strong{white-space:nowrap;font-size:11px}
 .declaration-update{width:100%;min-height:46px;margin:12px 0 0;border:0;border-radius:11px;background:linear-gradient(135deg,#1f7653,#0e6847);color:#fff;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(17,91,57,.12)}
@@ -1302,8 +1303,11 @@ header.hero .trust-icon svg{width:19px;height:19px}
       <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
       
       <div class="declaration-fields">
-        <label for="mainSalaryPeriod">Période du salaire brut</label>
-        <select id="mainSalaryPeriod"><option value="month" selected>Mensuel</option><option value="year">Annuel</option></select>
+        <span class="declaration-field-label">Période du salaire brut</span>
+        <div class="pill-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
+          <button type="button" data-period="month" aria-pressed="true">Mensuel</button>
+          <button type="button" data-period="year" aria-pressed="false">Annuel</button>
+        </div>
         <label for="mainSalaryGross">Salaire brut (€)</label>
         <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
         <label for="mainSalaryHours">Base horaire</label>
@@ -1346,25 +1350,11 @@ header.hero .trust-icon svg{width:19px;height:19px}
       <div id="benchmarkBody" aria-live="polite"></div>
     </section>
 
-    <details class="panel-nested" id="moreMetrics">
-      <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
-      <div class="panel-nested-body">
-        <div class="ref-row">
-          <label for="refSelect">Salaire de référence</label>
-          <select id="refSelect"></select>
-        </div>
-        <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
-          <button data-metric="netHoraire" aria-pressed="true">Net horaire avant impôt</button>
-          <button data-metric="netApresImpotHoraire" aria-pressed="false">Net horaire après impôt</button>
-          <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
-          <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
-          <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
-          <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
-        </div>
-        <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
-        <div id="barsBody" aria-live="polite"></div>
-      </div>
-    </details>
+    <div class="internal-metrics-state" hidden>
+      <select id="refSelect"></select>
+      <div id="metricHint"></div>
+      <div id="barsBody"></div>
+    </div>
   </div>
 
   <details class="advanced-workspace reveal" id="advancedWorkspace">
@@ -3186,7 +3176,7 @@ function applyDeclaredSalaryFromForm(){
   const hours=document.getElementById('mainSalaryHours');
   const raw=Number(gross?.value);
   if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
-  scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
+  scenario.brut=period?.querySelector('[aria-pressed="true"]')?.dataset.period==='year'?Math.round(raw/12*100)/100:raw;
   scenario.dureeType=hours?.value==='39'?'39':'35';
   scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
   scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
@@ -3224,7 +3214,7 @@ function renderMaquetteControls(computedOverride){
   const mealShare=document.getElementById('mainMealShare');
   const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
   if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
-    period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+    period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period==='month')));gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
     if(mealDays) mealDays.value=String(selected.joursResto||0);
     if(mealValue) mealValue.value=String(selected.valeurResto||0);
     if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
@@ -3245,7 +3235,12 @@ function renderMaquetteControls(computedOverride){
     }
   }
   if(period && period.dataset.onnetSalaryBound!=='true'){
-    period.addEventListener('change',applyDeclaredSalaryFromForm);
+    period.addEventListener('click',event=>{
+      const button=event.target.closest('button[data-period]');
+      if(!button) return;
+      period.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      applyDeclaredSalaryFromForm();
+    });
     period.dataset.onnetSalaryBound='true';
   }
   if(hours && hours.dataset.onnetSalaryBound!=='true'){
