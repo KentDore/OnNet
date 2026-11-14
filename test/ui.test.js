@@ -742,6 +742,10 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.match(breakdown, /21 jours × 8 €/);
     assert.match(breakdown, /part salarié/);
     assert.match(breakdown, /part employeur/);
+    await addSecondScenario(page);
+    const stackTicketDetails = await page.locator('#stackChart .stack-col .stack-net-notr').allTextContents();
+    assert.ok(stackTicketDetails.some(text => text.includes('TR salarié : 84 € · employeur : 84 €')),
+      'le graphique comparatif doit afficher les deux contributions aux titres-restaurant');
   } finally {
     await context.close();
   }
