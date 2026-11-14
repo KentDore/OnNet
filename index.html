@@ -880,8 +880,8 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .declaration-fields>label,.declaration-fields>.declaration-field-label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
 .declaration-fields>label:first-child,.declaration-fields>.declaration-field-label:first-child{margin-top:0}
 .declaration-fields>select,.declaration-fields>input{display:block;width:100%;min-height:46px;margin:0;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
-.declaration-fields .declaration-period-toggle{align-self:flex-start;width:100%;max-width:none;box-sizing:border-box;}
-.declaration-fields .declaration-period-toggle button{flex:1;}
+.period-choice-toggle{display:flex;align-self:flex-start;width:176px;max-width:100%;box-sizing:border-box;}
+.period-choice-toggle button{flex:1;min-width:0;}
 .declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;align-self:flex-end;width:225px;max-width:100%;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
 .declaration-mutuelle strong{white-space:nowrap;font-size:11px}
 .declaration-update{width:100%;min-height:46px;margin:12px 0 0;border:0;border-radius:11px;background:linear-gradient(135deg,#1f7653,#0e6847);color:#fff;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(17,91,57,.12)}
@@ -1305,7 +1305,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
       
       <div class="declaration-fields">
         <span class="declaration-field-label">Période du salaire brut</span>
-        <div class="pill-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
+        <div class="pill-toggle period-choice-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
           <button type="button" data-period="month" aria-pressed="true">Mensuel</button>
           <button type="button" data-period="year" aria-pressed="false">Annuel</button>
         </div>
@@ -1370,7 +1370,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
           <button data-amt="net" aria-pressed="true">Net</button>
           <button data-amt="brut" aria-pressed="false">Brut</button>
         </div>
-        <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+        <div class="pill-toggle period-choice-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
           <button data-period="mois" aria-pressed="true">Mensuel</button>
           <button data-period="an" aria-pressed="false">Annuel</button>
         </div>
