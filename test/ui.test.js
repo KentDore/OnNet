@@ -309,6 +309,15 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
+    const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
+      const position = selector => [...panel.children].findIndex(node => node.matches(selector));
+      return {
+        comparison: position('.comparison-subhead'),
+        salarySituation: position('.declaration-inline')
+      };
+    });
+    assert.ok(sectionOrder.comparison >= 0 && sectionOrder.comparison < sectionOrder.salarySituation,
+      'le comparatif complet doit précéder le formulaire Votre situation');
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
     assert.match(medianMethod, /2\s?238/);
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
@@ -316,7 +325,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
-    const benchmarkHourlyNet = await page.locator('.benchmark-your-salary > strong').innerText();
+    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .benchmark-your-salary > strong').innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
