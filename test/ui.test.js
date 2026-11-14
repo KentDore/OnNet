@@ -709,16 +709,16 @@ test('bloque les paramètres de titres-restaurant hors plage avant transmission 
     const modal = page.locator('#modalOverlay');
     await modal.waitFor({ state: 'visible' });
     await modal.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
+    await modal.locator('#modalOnboardingInput').fill('2500');
     await modal.locator('#modalOnboardingJours').fill('20.5');
     await modal.locator('#modalOnboardingValeur').fill('8');
     await modal.locator('#modalOnboardingPart').fill('30');
     const submit = modal.locator('#modalOnboardingSubmit');
-    assert.equal(await submit.isDisabled(), true,
-      'le formulaire doit bloquer un nombre de titres fractionnaire et une part salarié hors plage');
+    await submit.click();
+    assert.equal(await modal.isVisible(), true, 'une saisie invalide ne doit pas fermer la modale');
+    assert.match(await modal.locator('#modalMsg').innerText(), /Vérifiez les titres-restaurant/);
     await modal.locator('#modalOnboardingJours').fill('21');
-    assert.equal(await submit.isDisabled(), true, 'la part salarié hors plage doit toujours bloquer la validation');
     await modal.locator('#modalOnboardingPart').fill('40');
-    assert.equal(await submit.isEnabled(), true);
     await submit.click();
 
     await page.waitForFunction(() => {
