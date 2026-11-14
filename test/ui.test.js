@@ -1144,9 +1144,14 @@ test('le bouton principal informe explicitement de la transmission des données 
 
 
 
-test('les fiches de salaire et leurs contrôles restent visibles sans action préalable', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp();
+test('les anciennes fiches sont repliées mais restent accessibles à la demande', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ legacyCardsOpen:false });
   try {
+    const legacy = page.locator('#legacySalaryCards');
+    assert.equal(await legacy.evaluate(el => el.open), false);
+    assert.equal(await page.locator('#cardsScroll').isVisible(), false);
+    await legacy.locator(':scope > summary').click();
+    assert.equal(await legacy.evaluate(el => el.open), true);
     assert.equal(await page.locator('.cards-bar').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), true);
     assert.equal(await page.locator('#amtToggle').isVisible(), true);
