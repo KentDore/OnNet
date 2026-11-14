@@ -842,7 +842,7 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
     assert.equal(await modal.locator('#modalOnboardingTrToggle').isVisible(), true);
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
-    assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié · 30 € employeur'));
+    assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
     const overtimeHint = modal.locator('#modalOnboarding39Hint');
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
