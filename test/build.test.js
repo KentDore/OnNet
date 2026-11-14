@@ -129,6 +129,7 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
   const app = readAppSource(root).trim();
   assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
+  assert.equal(generated, published, 'le build doit reproduire exactement le HTML autonome publié');
   assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
   assert.ok(published.includes(utils), 'le fichier publié doit embarquer les utilitaires actuels');
   assert.ok(published.includes(app), 'le fichier publié doit embarquer le JavaScript actuel');
