@@ -5,17 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-
-function readAppSource(root = path.resolve(__dirname, '..')){
-  const manifestPath = path.join(root, 'src', 'app', 'manifest.json');
-  const files = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-  assert.ok(Array.isArray(files) && files.length > 0, 'le manifeste applicatif doit contenir des sources');
-  assert.equal(new Set(files).size, files.length, 'une source ne doit apparaître qu’une fois dans le manifeste');
-  return files.map(file => {
-    assert.ok(file.endsWith('.js') && !file.includes('/') && !file.includes('..'), 'le manifeste ne doit contenir que des noms de fichiers applicatifs');
-    return fs.readFileSync(path.join(root, 'src', 'app', file), 'utf8');
-  }).join('');
-}
+const { readAppSource } = require('./helpers/read-app-source');
 
 test('le build autonome embarque le client officiel Urssaf et les seuls utilitaires de présentation', t => {
   const root = path.resolve(__dirname, '..');
