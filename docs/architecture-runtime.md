@@ -11,19 +11,21 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 1. `src/template.html` fournit le squelette HTML et les marqueurs de génération.
 2. `src/urssaf-api-client.mjs` contient le client de l'API officielle. Il est intégré au script final et expose l'interface attendue par l'application.
 3. `src/ui-utils.mjs` exporte les valeurs par défaut et les utilitaires purs de présentation.
-4. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs.
-5. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
-6. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
+4. `src/state-normalizers.mjs` exporte les règles de validation et de normalisation des scénarios et du foyer fiscal.
+5. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs.
+6. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
+7. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
-Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) extrait les utilitaires purs et le client Urssaf en véritables modules ES, puis les regroupe avec esbuild au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Les huit fragments applicatifs sont encore assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
+Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) a extrait les utilitaires purs et le client Urssaf en véritables modules ES. La [PR #95](https://github.com/KentDore/OnNet/pull/95) extrait les règles de normalisation des scénarios et du foyer fiscal. esbuild regroupe ces modules avec les fragments applicatifs au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Les huit fragments applicatifs sont encore assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
 
 ## Responsabilités actuelles
 
 | Source | Responsabilité principale | Dépendances ou points d'attention |
 | --- | --- | --- |
 | `00-state-and-calculations.js` | État des simulations, préparation des paramètres, cache et orchestration des appels Urssaf | État mutable utilisé par le rendu, les événements et le démarrage |
-| `10-persistence.js` | Validation, restauration et sauvegarde locale | Dépend des valeurs par défaut et des utilitaires communs ; la notification de sauvegarde est injectée plus tard |
-| `20-sharing.js` | Encodage/décodage des liens et restauration d'un partage | Réutilise la normalisation de la persistance et participe à l'initialisation de l'état |
+| `state-normalizers.mjs` | Validation pure des scénarios, normalisation du foyer fiscal et des identifiants | Dépend des utilitaires de présentation ; partagé par la restauration locale et le partage d'URL |
+| `10-persistence.js` | Lecture/écriture et restauration du stockage local | Utilise les normalisateurs ; la notification de sauvegarde est injectée plus tard |
+| `20-sharing.js` | Encodage/décodage des liens et restauration d'un partage | Réutilise directement les normalisateurs partagés et participe à l'initialisation de l'état |
 | `30-rendering.js` | Rendu des cartes, indicateurs, comparatifs et graphiques | Point de couplage majeur : lit l'état et les résultats, et est rappelé par de nombreux gestionnaires |
 | `40-household-and-navigation.js` | Foyer fiscal, navigation et interactions de structure | Modifie l'état puis déclenche rendu, sauvegarde ou recalcul |
 | `50-input-events.js` | Événements des formulaires et modifications de scénarios | Dépend des fonctions de validation, du rendu, de la persistance et du calcul |
@@ -54,6 +56,10 @@ Cette table décrit les responsabilités dominantes, pas une séparation stricte
 **Réalisée pour les utilitaires de présentation** : formatage, échappement HTML, parsing numérique, constantes d'interface et valeurs par défaut sont exportés par `src/ui-utils.mjs`. Le build les regroupe avec le client Urssaf et les fragments applicatifs au moyen d'esbuild. Le HTML final reste autonome et n'effectue aucune requête supplémentaire vers les modules source.
 
 Cette extraction est couverte par des tests unitaires dédiés et par les tests navigateur qui vérifient que les fonctions internes ne sont pas exposées sur `window`.
+
+### Étape 2 bis — Extraire les normalisateurs d'état
+
+Les règles pures de validation des scénarios, de normalisation du foyer fiscal et de renumérotation des identifiants sont désormais isolées dans `src/state-normalizers.mjs`. La persistance locale conserve son adaptateur `localStorage` dans le fragment applicatif, tandis que les fonctions de normalisation sont partagées par la restauration et le partage d'URL.
 
 ### Étape 3 — Rendre l'état explicite
 

@@ -2017,6 +2017,87 @@ function esc(s) {
   return String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]);
 }
 
+// src/state-normalizers.mjs
+var METRIC_KEYS = ["netImposable", "annuelNet", "netApresImpot", "netApresImpotHoraire", "netHoraire", "brutHoraire"];
+var METRIC_DEFAUT = "netHoraire";
+var FOYER_DEFAUT = { mode: "bareme", situation: "seul", couple: false, personnesCharge: 0, parentIsole: false, autresRevenus: 0, pasRate: 0 };
+function sanitizeScenario(raw) {
+  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
+  const clean = Object.assign({}, raw);
+  const limits = {
+    brut: [0, 1e6],
+    mutuelle: [0, 1e5],
+    mutuellePat: [0, 1e5],
+    joursResto: [0, 31],
+    valeurResto: [0, 500],
+    partResto: [0, 100],
+    nbMois: [1, 24],
+    primes: [0, 1e8]
+  };
+  for (const [key, range] of Object.entries(limits)) {
+    if (clean[key] === void 0) continue;
+    const n = Number(clean[key]);
+    if (!Number.isFinite(n) || n < range[0] || n > range[1]) return null;
+    clean[key] = n;
+  }
+  if (clean.brut === void 0 || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  if (clean.mutuellePat === void 0) {
+    clean.mutuellePat = clean.mutuelle === void 0 ? scenarioDefaults.mutuelle : clean.mutuelle;
+  }
+  clean.commune = typeof clean.commune === "string" && clean.commune.trim() ? clean.commune.trim().replace(/\s+/g, " ").slice(0, 80) : "Pac\xE9";
+  if (clean.commune === "Pac\xE9" && !clean.codePostal && !clean.departement) {
+    clean.codePostal = "35740";
+    clean.departement = "Ille-et-Vilaine";
+  }
+  clean.codePostal = typeof clean.codePostal === "string" && /^\d{5}$/.test(clean.codePostal) ? clean.codePostal : "";
+  clean.departement = typeof clean.departement === "string" ? clean.departement.trim().slice(0, 80) : "";
+  if (!["base", "ensemble"].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = "base";
+  if (typeof clean.name !== "string" || !clean.name.trim()) clean.name = "Salaire";
+  clean.name = clean.name.trim().slice(0, 80);
+  delete clean.statut;
+  delete clean.rate;
+  if (clean.dureeType !== "35" && clean.dureeType !== "39") clean.dureeType = "35";
+  delete clean.absenceType;
+  delete clean.absenceDuree;
+  delete clean.maintienPct;
+  delete clean.carenceCouverte;
+  if (!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
+  return clean;
+}
+function sanitizeFoyer(raw) {
+  const f = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
+  const nb = (v, min, max) => {
+    const n = Number(v);
+    return Number.isFinite(n) ? clamp(n, min, max) : 0;
+  };
+  const situation = ["seul", "commun", "concubinage"].includes(f.situation) ? f.situation : f.couple === true ? "commun" : "seul";
+  const couple = situation === "commun";
+  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
+  const parentIsole = situation === "seul" && personnesCharge > 0 && f.parentIsole === true;
+  return {
+    mode: f.mode === "taux" ? "taux" : "bareme",
+    situation,
+    couple,
+    personnesCharge,
+    parentIsole,
+    autresRevenus: couple ? nb(f.autresRevenus, 0, 1e8) : 0,
+    pasRate: nb(f.pasRate, 0, 100)
+  };
+}
+function normalizeScenarioIds(scenarios2, refId2, openCardIds2) {
+  const oldToIndex = /* @__PURE__ */ new Map();
+  const normalized = scenarios2.map((scenario, index) => {
+    if (Number.isSafeInteger(scenario.id) && scenario.id >= 0 && !oldToIndex.has(scenario.id)) {
+      oldToIndex.set(scenario.id, index);
+    }
+    return Object.assign({}, scenario, { id: index });
+  });
+  const refIndex = Number.isSafeInteger(refId2) ? oldToIndex.get(refId2) : void 0;
+  const normalizedRefId = refIndex === void 0 ? normalized.length ? normalized[0].id : null : normalized[refIndex].id;
+  const normalizedOpenCardIds = Array.isArray(openCardIds2) ? [...new Set(openCardIds2.filter((id) => Number.isSafeInteger(id) && oldToIndex.has(id)).map((id) => normalized[oldToIndex.get(id)].id))] : [];
+  return { scenarios: normalized, refId: normalizedRefId, openCardIds: normalizedOpenCardIds };
+}
+
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 var idCounter = 0;
@@ -2388,85 +2469,6 @@ function defaultScenarios() {
   ];
 }
 var STORAGE_KEY = "onnet.state.v1";
-var METRIC_KEYS = ["netImposable", "annuelNet", "netApresImpot", "netApresImpotHoraire", "netHoraire", "brutHoraire"];
-var METRIC_DEFAUT = "netHoraire";
-function sanitizeScenario(raw) {
-  if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
-  const clean = Object.assign({}, raw);
-  const limits = {
-    brut: [0, 1e6],
-    mutuelle: [0, 1e5],
-    mutuellePat: [0, 1e5],
-    joursResto: [0, 31],
-    valeurResto: [0, 500],
-    partResto: [0, 100],
-    nbMois: [1, 24],
-    primes: [0, 1e8]
-  };
-  for (const [key, range] of Object.entries(limits)) {
-    if (clean[key] === void 0) continue;
-    const n = Number(clean[key]);
-    if (!Number.isFinite(n) || n < range[0] || n > range[1]) return null;
-    clean[key] = n;
-  }
-  if (clean.brut === void 0 || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
-  if (clean.mutuellePat === void 0) {
-    clean.mutuellePat = clean.mutuelle === void 0 ? scenarioDefaults.mutuelle : clean.mutuelle;
-  }
-  clean.commune = typeof clean.commune === "string" && clean.commune.trim() ? clean.commune.trim().replace(/\s+/g, " ").slice(0, 80) : "Pac\xE9";
-  if (clean.commune === "Pac\xE9" && !clean.codePostal && !clean.departement) {
-    clean.codePostal = "35740";
-    clean.departement = "Ille-et-Vilaine";
-  }
-  clean.codePostal = typeof clean.codePostal === "string" && /^\d{5}$/.test(clean.codePostal) ? clean.codePostal : "";
-  clean.departement = typeof clean.departement === "string" ? clean.departement.trim().slice(0, 80) : "";
-  if (!["base", "ensemble"].includes(clean.treiziemeMoisBase)) clean.treiziemeMoisBase = "base";
-  if (typeof clean.name !== "string" || !clean.name.trim()) clean.name = "Salaire";
-  clean.name = clean.name.trim().slice(0, 80);
-  delete clean.statut;
-  delete clean.rate;
-  if (clean.dureeType !== "35" && clean.dureeType !== "39") clean.dureeType = "35";
-  delete clean.absenceType;
-  delete clean.absenceDuree;
-  delete clean.maintienPct;
-  delete clean.carenceCouverte;
-  if (!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
-  return clean;
-}
-var FOYER_DEFAUT = { mode: "bareme", situation: "seul", couple: false, personnesCharge: 0, parentIsole: false, autresRevenus: 0, pasRate: 0 };
-function sanitizeFoyer(raw) {
-  const f = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const nb = (v, min, max) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? clamp(n, min, max) : 0;
-  };
-  const situation = ["seul", "commun", "concubinage"].includes(f.situation) ? f.situation : f.couple === true ? "commun" : "seul";
-  const couple = situation === "commun";
-  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
-  const parentIsole = situation === "seul" && personnesCharge > 0 && f.parentIsole === true;
-  return {
-    mode: f.mode === "taux" ? "taux" : "bareme",
-    situation,
-    couple,
-    personnesCharge,
-    parentIsole,
-    autresRevenus: couple ? nb(f.autresRevenus, 0, 1e8) : 0,
-    pasRate: nb(f.pasRate, 0, 100)
-  };
-}
-function normalizeScenarioIds(scenarios2, refId2, openCardIds2) {
-  const oldToIndex = /* @__PURE__ */ new Map();
-  const normalized = scenarios2.map((scenario, index) => {
-    if (Number.isSafeInteger(scenario.id) && scenario.id >= 0 && !oldToIndex.has(scenario.id)) {
-      oldToIndex.set(scenario.id, index);
-    }
-    return Object.assign({}, scenario, { id: index });
-  });
-  const refIndex = Number.isSafeInteger(refId2) ? oldToIndex.get(refId2) : void 0;
-  const normalizedRefId = refIndex === void 0 ? normalized.length ? normalized[0].id : null : normalized[refIndex].id;
-  const normalizedOpenCardIds = Array.isArray(openCardIds2) ? [...new Set(openCardIds2.filter((id) => Number.isSafeInteger(id) && oldToIndex.has(id)).map((id) => normalized[oldToIndex.get(id)].id))] : [];
-  return { scenarios: normalized, refId: normalizedRefId, openCardIds: normalizedOpenCardIds };
-}
 function loadPersistedState() {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);

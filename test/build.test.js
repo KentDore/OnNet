@@ -5,8 +5,9 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
-const { readAppSource } = require('./helpers/read-app-source');
+const { pathToFileURL } = require('node:url');
 const { readStylesSource } = require('../scripts/source-loader');
+const normalizersPromise = import(pathToFileURL(path.join(__dirname, '..', 'src', 'state-normalizers.mjs')).href);
 
 test('package.json et package-lock.json utilisent la même version', () => {
   const root = path.resolve(__dirname, '..');
@@ -17,7 +18,7 @@ test('package.json et package-lock.json utilisent la même version', () => {
     'la version du package racine dans le lockfile doit suivre package.json');
 });
 
-test('le build autonome embarque le client officiel Urssaf et les seuls utilitaires de présentation', t => {
+test('le build autonome embarque le client officiel et les modules source', t => {
   const root = path.resolve(__dirname, '..');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnet-build-'));
   t.after(() => fs.rmSync(tempDir, { recursive: true, force: true }));
@@ -39,6 +40,10 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
     'aucun marqueur de police ne doit subsister après assemblage');
   assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
   assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
+  assert.match(html, /function sanitizeScenario\(raw\)/, 'le module de normalisation doit être intégré');
+  assert.match(html, /function sanitizeFoyer\(raw\)/, 'la normalisation du foyer doit être intégrée');
+  assert.match(html, /\b(?:const|let|var)\s+FOYER_DEFAUT\s*=/, 'la valeur par défaut du foyer doit être intégrée');
+  assert.match(html, /\b(?:const|let|var)\s+METRIC_KEYS\s*=/, 'les métriques autorisées doivent être intégrées');
   assert.match(html, /\b(?:const|let|var)\s+scenarioDefaults\s*=\s*\{/, 'les valeurs par défaut doivent être conservées');
   assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
   assert.match(html, /window\.OnNetUrssafApi\s*=\s*\{/);
@@ -46,23 +51,15 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal(html.includes('@@ONNET_CALC@@'), false);
   assert.equal(html.includes('const P = {'), false, 'aucune table locale de taux ne doit être embarquée');
-  assert.doesNotMatch(html, /from\s+[\"']\.\/src\/(?:ui-utils|urssaf-api-client)\.mjs[\"']/,
+  assert.doesNotMatch(html, /from\s+[\"']\.\/src\/(?:ui-utils|state-normalizers|urssaf-api-client)\.mjs[\"']/,
     'aucun import externe ne doit rendre le HTML autonome dépendant des sources');
   const scriptTags = [...html.matchAll(/<script\b([^>]*)>/g)].map(match => match[1].trim());
   assert.deepEqual(scriptTags, ['type="module"'],
     'le runtime doit être regroupé dans un unique module ES encapsulé');
 });
 
-test('la restauration renumérote les scénarios et conserve les références valides', () => {
-  const app = readAppSource();
-  const start = app.indexOf('function sanitizeScenario(raw){');
-  const end = app.indexOf('\nfunction loadPersistedState(){', start);
-  assert.notEqual(start, -1, 'sanitizeScenario doit être présent');
-  assert.notEqual(end, -1, 'le bloc de normalisation doit être délimité');
-  const factory = new Function('scenarioDefaults', app.slice(start, end) +
-    '\nreturn { sanitizeScenario, normalizeScenarioIds };');
-  const { sanitizeScenario, normalizeScenarioIds } = factory({ mutuelle:30 });
-
+test('la restauration renumérote les scénarios et conserve les références valides', async () => {
+  const { sanitizeScenario, normalizeScenarioIds } = await normalizersPromise;
   const restored = [
     { id: 9007199254740992, name: 'Identifiant non sûr', brut: 2800, mutuelle: 30 },
     { id: 42, name: 'Premier doublon', brut: 3000, mutuelle: 30 },
@@ -79,12 +76,24 @@ test('la restauration renumérote les scénarios et conserve les références va
   assert.deepEqual(result.openCardIds, [1]);
 });
 
-test('la restauration neutralise les paramètres d’absence des anciennes sauvegardes', () => {
-  const app = readAppSource();
-  const start = app.indexOf('function sanitizeScenario(raw){');
-  const end = app.indexOf('\nfunction loadPersistedState(){', start);
-  const factory = new Function('scenarioDefaults', app.slice(start, end) + '\nreturn sanitizeScenario;');
-  const sanitizeScenario = factory({ mutuelle:30 });
+test('la normalisation applique les valeurs historiques et rejette les scénarios hors limites', async () => {
+  const { sanitizeScenario } = await normalizersPromise;
+  const restored = sanitizeScenario({ brut: '2800', mutuelle: '30' });
+  assert.equal(restored.brut, 2800);
+  assert.equal(restored.mutuelle, 30);
+  assert.equal(restored.mutuellePat, 30);
+  assert.equal(restored.commune, 'Pacé');
+  assert.equal(restored.codePostal, '35740');
+  assert.equal(restored.departement, 'Ille-et-Vilaine');
+  assert.equal(restored.name, 'Salaire');
+  assert.equal(restored.dureeType, '35');
+  assert.equal(sanitizeScenario(null), null);
+  assert.equal(sanitizeScenario({ brut: -1 }), null);
+  assert.equal(sanitizeScenario({ brut: 3000, joursResto: 32 }), null);
+});
+
+test('la restauration neutralise les paramètres d’absence des anciennes sauvegardes', async () => {
+  const { sanitizeScenario } = await normalizersPromise;
   const restored = sanitizeScenario({
     id: 2, name: 'Ancien scénario', brut: 3000,
     absenceType: 'arret', absenceDuree: 5, maintienPct: 90, carenceCouverte: false
@@ -95,14 +104,8 @@ test('la restauration neutralise les paramètres d’absence des anciennes sauve
   assert.equal(restored.carenceCouverte, undefined);
 });
 
-test('la restauration utilise le premier scénario si la référence est invalide', () => {
-  const app = readAppSource();
-  const start = app.indexOf('function sanitizeScenario(raw){');
-  const end = app.indexOf('\nfunction loadPersistedState(){', start);
-  const factory = new Function('scenarioDefaults', app.slice(start, end) +
-    '\nreturn { sanitizeScenario, normalizeScenarioIds };');
-  const { sanitizeScenario, normalizeScenarioIds } = factory({ mutuelle:30 });
-
+test('la restauration utilise le premier scénario si la référence est invalide', async () => {
+  const { sanitizeScenario, normalizeScenarioIds } = await normalizersPromise;
   const restored = [
     { id: Number.MAX_SAFE_INTEGER, name: 'A', brut: 2800, mutuelle: 30 },
     { id: 8, name: 'B', brut: 3000, mutuelle: 30 }
@@ -112,6 +115,25 @@ test('la restauration utilise le premier scénario si la référence est invalid
   assert.equal(result.refId, 0);
   assert.deepEqual(result.openCardIds, [1]);
   assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
+});
+
+test('la normalisation du foyer fiscal préserve les compatibilités et borne les valeurs', async () => {
+  const { FOYER_DEFAUT, sanitizeFoyer } = await normalizersPromise;
+  assert.deepEqual(sanitizeFoyer(null), FOYER_DEFAUT);
+  assert.deepEqual(sanitizeFoyer({
+    couple: true, personnesCharge: 2, autresRevenus: '1200', pasRate: '12.5'
+  }), {
+    mode: 'bareme', situation: 'commun', couple: true, personnesCharge: 2,
+    parentIsole: false, autresRevenus: 1200, pasRate: 12.5
+  });
+  assert.deepEqual(sanitizeFoyer({
+    situation: 'seul', personnesCharge: 2, parentIsole: true,
+    autresRevenus: 1200, pasRate: 150, mode: 'taux'
+  }), {
+    mode: 'taux', situation: 'seul', couple: false, personnesCharge: 2,
+    parentIsole: true, autresRevenus: 0, pasRate: 100
+  });
+  assert.equal(sanitizeFoyer({ situation: 'concubinage', couple: true }).couple, false);
 });
 
 test('les fichiers HTML publiables restent synchronisés avec les sources', t => {
