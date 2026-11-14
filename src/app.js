@@ -2003,7 +2003,7 @@ function renderMutuelleTrFields(idPrefix){
         <span class="onboarding-mutuelle-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
         </span>
-        <span class="onboarding-mutuelle-label">Mutuelle</span>
+        <strong class="onboarding-mutuelle-label">Mutuelle</strong>
         <strong>30 € salarié</strong>
       </div>
       <div class="onboarding-tr">
