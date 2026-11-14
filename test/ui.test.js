@@ -243,6 +243,9 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
     await page.setViewportSize({ width: 390, height: 844 });
     assert.equal(await page.locator('#shareBtn').isVisible(), true);
     assert.equal(await page.locator('#headerMenu').count(), 1);
+    const shareColor = await page.locator('#shareBtn').evaluate(el => getComputedStyle(el).color);
+    const menuColor = await page.locator('#headerMenu summary').evaluate(el => getComputedStyle(el).color);
+    assert.equal(shareColor, menuColor, 'les actions de l’en-tête utilisent la même couleur de marque');
     assert.equal(await page.locator('#resetBtn').isVisible(), false);
     assert.equal(await page.locator('#printBtn').isVisible(), false);
     await page.locator('#headerMenu summary').click();
