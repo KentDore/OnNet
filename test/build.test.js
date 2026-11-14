@@ -76,6 +76,22 @@ test('la restauration renumérote les scénarios et conserve les références va
   assert.deepEqual(result.openCardIds, [1]);
 });
 
+test('la normalisation applique les valeurs historiques et rejette les scénarios hors limites', async () => {
+  const { sanitizeScenario } = await normalizersPromise;
+  const restored = sanitizeScenario({ brut: '2800', mutuelle: '30' });
+  assert.equal(restored.brut, 2800);
+  assert.equal(restored.mutuelle, 30);
+  assert.equal(restored.mutuellePat, 30);
+  assert.equal(restored.commune, 'Pacé');
+  assert.equal(restored.codePostal, '35740');
+  assert.equal(restored.departement, 'Ille-et-Vilaine');
+  assert.equal(restored.name, 'Salaire');
+  assert.equal(restored.dureeType, '35');
+  assert.equal(sanitizeScenario(null), null);
+  assert.equal(sanitizeScenario({ brut: -1 }), null);
+  assert.equal(sanitizeScenario({ brut: 3000, joursResto: 32 }), null);
+});
+
 test('la restauration neutralise les paramètres d’absence des anciennes sauvegardes', async () => {
   const { sanitizeScenario } = await normalizersPromise;
   const restored = sanitizeScenario({
