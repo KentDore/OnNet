@@ -521,12 +521,6 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
 
 /* Ajustements de cohérence visuelle du menu et du parcours mobile. */
-.header-menu-trigger{
-  background:var(--surface);
-  color:var(--accent);
-  border-color:var(--line);
-  border-radius:12px;
-}
 .header-menu[open] .header-menu-trigger,
 .header-menu-trigger:hover{
   background:var(--accent-soft);
