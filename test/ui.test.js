@@ -332,8 +332,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNetBeforeTax) / 169) < 0.02,
-      'le résumé horaire doit reprendre le net avant impôt Urssaf divisé par les 169 h du contrat 39 h');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNetBeforeTax) + 30) / 169) < 0.02,
+      'le taux horaire doit exclure la mutuelle salarié du net avant impôt, puis diviser par les 169 h du contrat 39 h');
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     await page.locator('#moreMetrics > summary').click();
     await page.waitForFunction(() => document.getElementById('moreMetrics')?.open === true);
@@ -345,9 +345,9 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     );
     const afterTaxHourlyValue = await page.locator('#comparePanel .bar-row').first().locator('.bar-value span').first().innerText();
     const actualHourly = parseEuro(afterTaxHourlyValue);
-    const expectedHourly = parseEuro(cardNetAfterTax) / 169;
+    const expectedHourly = (parseEuro(cardNetAfterTax) + 30) / 169;
     assert.ok(Math.abs(actualHourly - expectedHourly) < 0.02,
-      `net horaire après impôt incorrect : affiché=${afterTaxHourlyValue} (${actualHourly}), net mensuel=${cardNetAfterTax} (${parseEuro(cardNetAfterTax)}), attendu=${expectedHourly}, métrique active=${await afterTaxHourlyButton.getAttribute('aria-pressed')}, ligne=${await page.locator('#comparePanel .bar-row').first().innerText()}`);
+      `net horaire après impôt hors mutuelle incorrect : affiché=${afterTaxHourlyValue} (${actualHourly}), net mensuel=${cardNetAfterTax} (${parseEuro(cardNetAfterTax)}), attendu=${expectedHourly}, métrique active=${await afterTaxHourlyButton.getAttribute('aria-pressed')}, ligne=${await page.locator('#comparePanel .bar-row').first().innerText()}`);
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();

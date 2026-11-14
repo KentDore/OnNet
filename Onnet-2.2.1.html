@@ -2223,12 +2223,12 @@ function mapUrssafResultToOnNet(result){
     netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
     netApresImpot:result.netAfterTax,
-    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? result.netAfterTax / monthlyHours : null,
+    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? (result.netAfterTax + monthly.mutuelle) / monthlyHours : null,
     annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
     impotAnnuel:result.incomeTax,
     tauxImpot:result.calculatedTaxRate,
     brutHoraire:result.baseGross / HEURES_BASE,
-    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
+    netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
     tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
   };
 }
@@ -3227,11 +3227,11 @@ function renderMaquetteControls(computedOverride){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>À calculer<small>Net avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>En attente</strong></div><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
     else{
       const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
-      const hourly=hoursMonth>0?computed.r.netApres/hoursMonth:0;
+      const hourly=hoursMonth>0 && Number.isFinite(computed.r.netHoraire)?computed.r.netHoraire:0;
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
-      const afterTaxHourly=Number.isFinite(computed.r.netApresImpot)?computed.r.netApresImpot/hoursMonth:null;
+      const afterTaxHourly=Number.isFinite(computed.r.netApresImpotHoraire)?computed.r.netApresImpotHoraire:null;
       const afterTaxValue=afterTaxHourly===null?null:afterTaxHourly*factor;
       const afterTaxAmount=afterTaxValue===null?'Non disponible':(maquetteComparisonPeriod==='hour'?fmtHoraire(afterTaxValue):fmt(afterTaxValue));
       const mealInfo=Number(selected.joursResto||0)>0
