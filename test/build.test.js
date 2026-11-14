@@ -42,8 +42,8 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
   assert.match(html, /function sanitizeScenario\(raw\)/, 'le module de normalisation doit être intégré');
   assert.match(html, /function sanitizeFoyer\(raw\)/, 'la normalisation du foyer doit être intégrée');
-  assert.match(html, /\\b(?:const|let|var)\\s+FOYER_DEFAUT\\s*=/, 'la valeur par défaut du foyer doit être intégrée');
-  assert.match(html, /\\b(?:const|let|var)\\s+METRIC_KEYS\\s*=/, 'les métriques autorisées doivent être intégrées');
+  assert.match(html, /\b(?:const|let|var)\s+FOYER_DEFAUT\s*=/, 'la valeur par défaut du foyer doit être intégrée');
+  assert.match(html, /\b(?:const|let|var)\s+METRIC_KEYS\s*=/, 'les métriques autorisées doivent être intégrées');
   assert.match(html, /\b(?:const|let|var)\s+scenarioDefaults\s*=\s*\{/, 'les valeurs par défaut doivent être conservées');
   assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
   assert.match(html, /window\.OnNetUrssafApi\s*=\s*\{/);
