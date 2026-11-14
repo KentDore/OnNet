@@ -1264,3 +1264,19 @@ header.hero .trust-icon svg{width:19px;height:19px}
 
 /* Les messages de validation n'occupent aucun espace tant qu'ils sont vides. */
 .modal-msg:empty{display:none;}
+
+
+/* Résumé : rendre visible l'avantage réel des titres-restaurant, sans jargon. */
+#maquetteYourSalary .salary-meal-benefit{
+  grid-column:1/-1;display:flex;align-items:center;justify-content:space-between;
+  gap:12px;padding-top:11px;border-top:1px solid rgba(31,109,76,.12);
+  color:#214b34;font-size:13px;
+}
+#maquetteYourSalary .salary-meal-benefit span{display:flex;flex-direction:column;gap:2px;min-width:0}
+#maquetteYourSalary .salary-meal-benefit span strong{font-weight:750}
+#maquetteYourSalary .salary-meal-benefit small{color:#66766b;font-size:11px;font-weight:500}
+#maquetteYourSalary .salary-meal-benefit>b{color:#087348;font-size:16px;white-space:nowrap}
+@media(max-width:640px){
+  #maquetteYourSalary .salary-meal-benefit{font-size:12px;padding-top:9px}
+  #maquetteYourSalary .salary-meal-benefit>b{font-size:14px}
+}
