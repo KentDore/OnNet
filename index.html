@@ -1064,7 +1064,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
   color:#244B36;
   opacity:1;
 }
-.urssaf-status:not(.is-error){
+.urssaf-status:not(.is-error):not(.has-diagnostics){
   display:none !important;
 }
 .urssaf-status.is-error{
@@ -2144,7 +2144,7 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   if(!statusText) return;
   const status = document.getElementById('urssafStatus');
-  if(status) status.classList.remove('is-error');
+  if(status) status.classList.remove('is-error','has-diagnostics');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
@@ -2191,6 +2191,7 @@ function updateUrssafStatus(computed){
       ...warnings.map(warning => `<li>${esc(warning)}</li>`)
     ].join('');
     diagnostics.hidden = false;
+    if(status) status.classList.add('has-diagnostics');
   }
   // Aucun bouton de calcul : les résultats sont actualisés automatiquement.
 }
