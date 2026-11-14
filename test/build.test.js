@@ -47,7 +47,7 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal(html.includes('@@ONNET_CALC@@'), false);
   assert.equal(html.includes('const P = {'), false, 'aucune table locale de taux ne doit être embarquée');
-  const scriptTags = [...html.matchAll(/<script\\b([^>]*)>/g)].map(match => match[1].trim());
+  const scriptTags = [...html.matchAll(/<script\b([^>]*)>/g)].map(match => match[1].trim());
   assert.deepEqual(scriptTags, ['type="module"'],
     'le runtime doit être regroupé dans un unique module ES encapsulé');
 });
