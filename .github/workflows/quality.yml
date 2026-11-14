@@ -24,7 +24,14 @@ jobs:
         run: |
           node --check src/urssaf-api-client.mjs
           node --check src/ui-utils.js
-          node --check src/app.js
+          node --check src/app/00-state-and-calculations.js
+          node --check src/app/10-persistence.js
+          node --check src/app/20-sharing.js
+          node --check src/app/30-rendering.js
+          node --check src/app/40-household-and-navigation.js
+          node --check src/app/50-input-events.js
+          node --check src/app/60-notifications-and-modals.js
+          node --check src/app/70-optional-tools-and-startup.js
           node --check scripts/build.js
       # Le build synthétique reste hors du dépôt : les tests de calcul doivent lire l'artefact livré.
       - name: Construire le HTML autonome
