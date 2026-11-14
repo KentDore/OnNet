@@ -337,8 +337,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
-    assert.equal(await page.locator('#comparePanel .bar-row').count(), 0,
-      'aucun comparatif secondaire ne doit être affiché sous le graphique principal');
+    assert.equal(await page.locator('.metric-toggle').count(), 0,
+      'les boutons d’indicateurs secondaires ne doivent plus être présents');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
