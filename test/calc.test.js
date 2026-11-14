@@ -25,6 +25,7 @@ test('le build utilise l’API officielle et n’embarque pas l’ancien fichier
   assert.match(client, /https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate/);
   assert.match(build, /urssaf-api-client\.mjs/);
   assert.match(build, /ui-utils\.mjs/);
+  assert.match(build, /state-normalizers\.mjs/);
   assert.match(template, /@@ONNET_RUNTIME@@/);
   assert.doesNotMatch(template, /@@ONNET_API@@|@@ONNET_UTILS@@|@@ONNET_APP@@/);
   assert.doesNotMatch(template, /@@ONNET_CALC@@/);
