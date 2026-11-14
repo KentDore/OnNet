@@ -1,0 +1,40 @@
+
+/* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
+   latin, couvre les diacritiques françaises (à-ÿ, œ). Fraunces et Inter sont des
+   polices variables, donc un seul fichier par famille couvre toutes les graisses
+   utilisées sur la page. */
+@font-face {
+  font-family: 'Fraunces';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(data:font/woff2;base64,@@ONNET_FONT_FRAUNCES_VARIABLE@@) format('woff2');
+}
+@font-face {
+  font-family: 'Inter';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url(data:font/woff2;base64,@@ONNET_FONT_INTER_VARIABLE@@) format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url(data:font/woff2;base64,@@ONNET_FONT_IBM_PLEX_MONO_400@@) format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url(data:font/woff2;base64,@@ONNET_FONT_IBM_PLEX_MONO_500@@) format('woff2');
+}
+@font-face {
+  font-family: 'IBM Plex Mono';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url(data:font/woff2;base64,@@ONNET_FONT_IBM_PLEX_MONO_600@@) format('woff2');
+}

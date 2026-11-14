@@ -1,6 +1,7 @@
 'use strict';
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { readAppSource, readStylesSource } = require('./source-loader');
 
 async function main(){
   const version = process.argv[2];
@@ -9,20 +10,12 @@ async function main(){
   }
   const root = path.resolve(__dirname, '..');
   const template = await fs.readFile(path.join(root, 'src', 'template.html'), 'utf8');
-  const styles = await fs.readFile(path.join(root, 'src', 'styles.css'), 'utf8');
+  const styles = readStylesSource(root);
   const apiSource = await fs.readFile(path.join(root, 'src', 'urssaf-api-client.mjs'), 'utf8');
   const api = apiSource.replace(/^export\s+/gm, '') +
     '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n';
   const utils = await fs.readFile(path.join(root, 'src', 'ui-utils.js'), 'utf8');
-  const appFiles = JSON.parse(await fs.readFile(path.join(root, 'src', 'app', 'manifest.json'), 'utf8'));
-  if(!Array.isArray(appFiles) || appFiles.length === 0 ||
-     new Set(appFiles).size !== appFiles.length ||
-     appFiles.some(file => typeof file !== 'string' || !file.endsWith('.js') || file.includes('/') || file.includes('..'))){
-    throw new Error('Invalid application source manifest');
-  }
-  const app = (await Promise.all(appFiles.map(file =>
-    fs.readFile(path.join(root, 'src', 'app', file), 'utf8')
-  ))).join('');
+  const app = readAppSource(root);
   let html = template;
   for(const [token, value] of [
     ['@@ONNET_VERSION@@', version],

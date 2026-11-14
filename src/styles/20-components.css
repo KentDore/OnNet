@@ -1,0 +1,535 @@
+  /* ---- Encart d'analyse ---- */
+  .insight{
+    font-family:'Fraunces',serif; font-size:15.5px; line-height:1.5; color:var(--ink);
+    background:var(--accent-soft); border-radius:12px; padding:12px 16px; margin:14px 0 6px;
+  }
+  .insight strong{color:var(--accent);}
+  .insight.neutral{background:var(--bg); color:var(--ink-soft); font-family:'Inter',sans-serif; font-size:13px;}
+
+  /* ---- Graphique empilé de répartition ---- */
+  .stack-chart-scroll{overflow-x:auto; -webkit-overflow-scrolling:touch; padding:2px;}
+  .stack-chart{display:flex; gap:14px; align-items:flex-end; justify-content:center; flex-wrap:nowrap; padding:16px 2px 8px; width:max-content; min-width:100%;}
+  .stack-col{
+    display:flex; flex-direction:column; align-items:center; width:124px; flex:none;
+    background:var(--bg); border:1px solid var(--line); border-radius:16px; padding:16px 10px 14px;
+    transition:border-color .15s ease, background .15s ease;
+  }
+  .stack-col.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .stack-col[data-setref]{cursor:pointer;}
+  .stack-col[data-setref]:hover{border-color:var(--accent); background:var(--accent-soft);}
+  .stack-col[data-setref]:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .stack-brut{
+    font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; color:var(--ink-soft);
+    background:var(--surface); border:1px solid var(--line); border-radius:999px; padding:3px 10px; margin-bottom:12px; white-space:nowrap;
+  }
+  .stack-bar{width:60px; display:flex; flex-direction:column; gap:3px;}
+  .stack-seg{width:100%; min-height:0; border-radius:5px; box-shadow:0 1px 2px rgba(23,36,31,.08);}
+  .stack-seg:first-child{border-top-left-radius:12px; border-top-right-radius:12px;}
+  .stack-seg:last-child{border-bottom-left-radius:12px; border-bottom-right-radius:12px;}
+  .stack-seg-cotis{background:var(--stack-cotis);}
+  .stack-seg-mutuelle{background:var(--gold);}
+  .stack-seg-tr{background:var(--stack-tr);}
+  .stack-seg-net{background:linear-gradient(165deg, #2E8A62 0%, var(--accent) 75%); display:flex; align-items:flex-start; justify-content:center; padding-top:8px;}
+  .stack-net-tag{font-family:'IBM Plex Mono',monospace; font-size:10px; font-weight:600; letter-spacing:.06em; text-transform:uppercase; color:rgba(255,255,255,.85);}
+  .stack-ref-row{display:flex; align-items:center; gap:6px; margin-top:12px; max-width:104px;}
+  .stack-ref-dot{width:9px; height:9px; border-radius:50%; border:2px solid var(--line); background:var(--surface); flex:none;}
+  .stack-ref-dot.is-ref{border-color:var(--accent); background:var(--accent);}
+  .stack-name{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; line-height:1.3; color:var(--ink); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .stack-col.is-ref .stack-name{color:var(--accent);}
+  .stack-net{font-family:'Fraunces',serif; font-weight:600; font-size:19px; margin-top:2px;}
+  .stack-net-notr{font-family:'IBM Plex Mono',monospace; font-size:10px; color:var(--ink-soft); margin-top:1px;}
+  .stack-delta{font-family:'IBM Plex Mono',monospace; font-size:10.5px; font-weight:600; margin-top:6px; padding:2px 8px; border-radius:999px; background:var(--surface); border:1px solid var(--line); color:var(--ink-soft);}
+  .stack-delta.pos{background:var(--accent-soft); color:var(--accent); border-color:transparent;}
+  .stack-delta.neg{background:var(--warn-soft); color:var(--warn); border-color:transparent;}
+  .stack-legend{display:flex; flex-wrap:wrap; gap:16px; justify-content:center; margin-top:14px; padding-top:14px; border-top:1px solid var(--line);}
+  .stack-legend:empty{display:none;}
+  .legend-item{display:flex; align-items:center; gap:7px; font-size:12px; font-weight:500; color:var(--ink);}
+  .legend-swatch{width:10px; height:10px; border-radius:50%; flex:none; box-shadow:0 0 0 3px rgba(23,36,31,.05);}
+  @media (max-width:480px){ .stack-chart{gap:10px;} .stack-col{width:100px; padding:14px 8px 12px;} .stack-bar{width:48px;} .stack-ref-row{max-width:80px;} .stack-name{font-size:12px;} .stack-net{font-size:16px;} }
+
+  /* ---- Répartition compacte du salaire unique, calquée sur la V33 ---- */
+  .waterfall{display:block;padding:4px 0 2px;}
+  .wf-stack{display:flex;width:100%;height:24px;overflow:hidden;border-radius:999px;background:var(--bg);box-shadow:inset 0 1px 2px rgba(20,50,30,.08);}
+  .wf-stack-net{display:block;min-width:0;background:linear-gradient(90deg,#1f6d4c,#0c8758);}
+  .wf-stack-deductions{display:block;min-width:0;background:var(--gold);}
+  .wf-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;}
+  .wf-breakdown-item{display:flex;align-items:flex-start;gap:8px;min-width:0;color:var(--ink-soft);font-size:12px;line-height:1.4;}
+  .wf-breakdown-item strong{display:block;color:var(--ink);font-size:16px;font-weight:750;letter-spacing:-.3px;}
+  .wf-breakdown-item span:not(.wf-key){display:block;}
+  .wf-key{width:9px;height:9px;flex:0 0 9px;border-radius:3px;margin-top:5px;}
+  .wf-key-net{background:#1f6d4c;}
+  .wf-key-deductions{background:var(--gold);}
+  .wf-components{margin:12px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.5;}
+  .wf-note{margin:8px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.45;}
+  .wf-note strong{color:var(--ink);}
+  @media(max-width:480px){
+    .wf-breakdown{gap:8px;}
+    .wf-breakdown-item{gap:6px;font-size:11px;}
+    .wf-breakdown-item strong{font-size:15px;}
+    .wf-components,.wf-note{font-size:10.5px;}
+  }
+
+  /* ---- Puces d'augmentation ---- */
+  .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
+  .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
+  .raise-chip:hover{background:var(--btn-primary-bg); color:#fff;}
+  .raise-chip.eur{border-color:var(--gold); background:var(--gold-soft); color:var(--gold-ink);}
+  .raise-chip.eur:hover{background:var(--btn-gold-bg); color:#fff;}
+  .raise-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px;}
+  .raise-type-toggle{display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
+  .raise-type-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13.5px; padding:11px 16px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .raise-type-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
+  #raiseAmount{width:110px; font-family:'Inter',sans-serif; font-size:16px; padding:11px 14px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); flex:none;}
+  #raiseAmount:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
+  @media (max-width:480px){ .raise-controls{flex-direction:column; align-items:stretch;} #raiseAmount{width:100%;} .raise-controls .btn{width:100%;} }
+
+  /* ---- Comparaison secondaire ---- */
+  .ref-row{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:10px 0 16px;}
+  .ref-row label{font-size:13px; font-weight:600; color:var(--ink-soft); margin:0;}
+  .ref-row select{font-family:'Inter',sans-serif; font-size:16px; padding:9px 11px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink); max-width:100%;}
+  .metric-toggle{display:flex; gap:6px; margin-bottom:16px; flex-wrap:wrap;}
+  .metric-toggle button{flex:1; min-width:110px; font-family:'Inter',sans-serif; font-size:12.5px; font-weight:600; padding:9px 10px; border:1px solid var(--line); border-radius:9px; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .metric-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff; border-color:var(--btn-toggle-active-bg);}
+  .bar-row{margin-bottom:14px;}
+  .bar-row:last-child{margin-bottom:0;}
+  .bar-top{display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px; gap:8px;}
+  .bar-name{font-size:13.5px; font-weight:600; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .bar-value{font-family:'IBM Plex Mono',monospace; font-size:13.5px; white-space:nowrap; display:flex; align-items:center; gap:8px;}
+  .bar-delta{font-size:11px; font-weight:600; padding:2px 7px; border-radius:999px; background:var(--line); color:var(--ink-soft);}
+  .bar-delta.pos{background:var(--accent-soft); color:var(--accent);}
+  .bar-delta.neg{background:var(--warn-soft); color:var(--warn);}
+  .bar-track{background:var(--bg); border-radius:8px; height:10px; overflow:hidden;}
+  .bar-fill{height:100%; background:var(--accent); border-radius:8px; transition:width .2s ease;}
+  @media (prefers-reduced-motion:reduce){
+    .bar-fill{transition:none;}
+    .modal-overlay,.modal,.onboarding-tr-fields,.onboarding-tr-toggle button{transition:none!important;animation:none!important;}
+  }
+
+  .icon-inline{width:15px; height:15px; flex:none; margin-top:1px;}
+  .alert{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.5; border-radius:10px; padding:11px 13px; margin-top:14px;}
+  .alert-warn{background:var(--warn-soft); color:var(--warn); border:1px solid var(--warn-line);}
+  .alert-info{background:var(--gold-soft); color:var(--gold-ink); border:1px solid var(--gold-line);}
+
+  /* ---- Boutons pilule (réutilisés pour l'unité principale + la durée) ---- */
+  .pill-toggle{display:inline-flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; flex:none;}
+  .pill-toggle button{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; min-height:44px; padding:10px 13px; border:none; background:var(--bg); color:var(--ink-soft); cursor:pointer;}
+  .pill-toggle button[aria-pressed="true"]{background:var(--btn-toggle-active-bg); color:#fff;}
+  .pill-toggle.small button{padding:7px 12px; font-size:12px;}
+
+  /* ---- Barre des cartes (bascules globales + navigation) ---- */
+  .cards-bar{display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; flex-wrap:wrap;}
+  .cards-bar-toggles{display:flex; gap:8px; flex-wrap:wrap;}
+  .cards-bar-nav{display:flex; gap:6px;}
+  .nav-btn{width:44px; height:44px; border-radius:999px; border:1px solid var(--line); background:var(--surface); color:var(--ink); font-size:16px; cursor:pointer; line-height:1;}
+  .nav-btn:hover{border-color:var(--accent); color:var(--accent);}
+  .nav-btn:disabled{opacity:.3; cursor:default;}
+
+  /* ---- Rail de cartes défilant horizontalement ---- */
+  .cards-scroll{
+    overflow-x:auto; -webkit-overflow-scrolling:touch; scroll-snap-type:x proximity;
+    padding:2px 16px 12px; margin:0 -16px;
+    /* Sans ça, scroll-snap-align:start sur .card ignore le padding du
+       rail et aligne le bord de la carte sur celui du conteneur — ça
+       "mange" le padding gauche au repos, collant la 1ère carte à l'écran. */
+    scroll-padding-left:16px; scroll-padding-right:16px;
+  }
+  @media (min-width:640px){ .cards-scroll{margin:0; padding-left:2px; padding-right:2px; scroll-padding-left:2px; scroll-padding-right:2px;} }
+  .cards-scroll::-webkit-scrollbar{height:8px;}
+  .cards-scroll::-webkit-scrollbar-track{background:var(--line); border-radius:4px;}
+  .cards-scroll::-webkit-scrollbar-thumb{background:var(--scrollbar-thumb); border-radius:4px;}
+  .cards{display:flex; gap:16px;}
+  .card{
+    flex:0 0 272px; scroll-snap-align:start; position:relative;
+    background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px;
+  }
+  @media (min-width:480px){ .card{flex-basis:296px;} }
+  @keyframes card-enter{ from{ opacity:0; transform:scale(.94) translateY(6px); } to{ opacity:1; transform:scale(1) translateY(0); } }
+  .card-enter{ animation:card-enter .32s cubic-bezier(.25,.8,.3,1); }
+  @keyframes card-leave{ to{ opacity:0; transform:scale(.94) translateY(6px); } }
+  .card-leave{ animation:card-leave .2s cubic-bezier(.4,0,1,1) forwards; pointer-events:none; }
+  @keyframes rail-bounce-left{ 0%{ transform:translateX(0); } 35%{ transform:translateX(16px); } 100%{ transform:translateX(0); } }
+  @keyframes rail-bounce-right{ 0%{ transform:translateX(0); } 35%{ transform:translateX(-16px); } 100%{ transform:translateX(0); } }
+  .cards.bounce-left{ animation:rail-bounce-left .34s cubic-bezier(.34,1.56,.64,1); }
+  .cards.bounce-right{ animation:rail-bounce-right .34s cubic-bezier(.34,1.56,.64,1); }
+  @media (prefers-reduced-motion:reduce){ .card-enter, .card-leave, .cards.bounce-left, .cards.bounce-right{ animation:none; } }
+
+  /* ---------- Animations d'interface ----------
+     Règle suivie : rien ne s'anime sur un élément reconstruit à chaque frappe
+     (barres du graphique, montants), sous peine de scintillement permanent.
+     Seuls s'animent l'arrivée à l'écran, les survols et les retours au clic. */
+
+  @keyframes reveal-in{ from{ opacity:0; transform:translateY(12px); } to{ opacity:1; transform:none; } }
+  .reveal{ animation:reveal-in .5s cubic-bezier(.25,.8,.3,1) both; }
+  #comparePanel{ animation-delay:.04s; }
+  .cards-bar{ animation-delay:.10s; }
+  .situation-section{ animation-delay:.13s; }
+  .modules-section{ animation-delay:.18s; }
+  .disclaimer{ animation-delay:.22s; }
+
+  /* Retour au clic : le bouton s'enfonce légèrement. */
+  .btn{ transition:background-color .18s ease, transform .12s ease; }
+  .btn:active{ transform:scale(.975); }
+  .raise-chip{ transition:background-color .18s ease, color .18s ease, border-color .18s ease, transform .12s ease; }
+  .raise-chip:active{ transform:scale(.95); }
+  .pill-toggle button{ transition:background-color .2s ease, color .2s ease; }
+  .remove-btn{ transition:background-color .18s ease, color .18s ease, border-color .18s ease, transform .12s ease; }
+  .remove-btn:active{ transform:scale(.9); }
+
+  /* Survols : cartes, colonnes cliquables et modules. */
+  .card{ transition:border-color .2s ease, box-shadow .2s ease; }
+  .card-add{ transition:border-color .2s ease, color .2s ease, background-color .2s ease; }
+  .module-card{ transition:border-color .2s ease, box-shadow .2s ease; }
+  .module-card:hover{ border-color:var(--accent); }
+  .stack-col[data-setref]{ transition:transform .18s cubic-bezier(.25,.8,.3,1), box-shadow .18s ease; }
+  .stack-col[data-setref]:hover{ transform:translateY(-3px); box-shadow:0 6px 18px rgba(23,36,31,.10); }
+
+  @media (prefers-reduced-motion:reduce){
+    .reveal{ animation:none; }
+    .btn, .raise-chip, .remove-btn, .card, .card-add, .module-card, .stack-col[data-setref]{ transition:none; }
+    .btn:active, .raise-chip:active, .remove-btn:active, .stack-col[data-setref]:hover{ transform:none; }
+    /* Trois blocs reduced-motion ont été ajoutés à trois moments différents,
+       chacun ne couvrant que ce qui venait d'être ajouté ce jour-là : le
+       dépliage des modules (v1.6.0), le chevron (v1.5.1) et la modale/le
+       toast (antérieurs à tout ça) étaient passés entre les mailles. */
+    .toast, .modal-overlay, .modal, .onboarding-tr-fields, .onboarding-tr-toggle button{ transition:none; }
+    .module-switch, .module-switch::after, .module-chevron, .pill-toggle button{ transition:none; }
+    .module-body, .module-card.is-open .module-body{ transition:none; }
+  }
+  .card.is-ref{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent);}
+  .card-top{display:flex; justify-content:space-between; align-items:center; gap:8px;}
+  .drag-handle{flex:none; width:28px; height:32px; padding:0; border:0; border-radius:6px; background:transparent; color:var(--ink-soft); font-size:19px; line-height:1; cursor:grab; touch-action:none;}
+  .drag-handle:active{cursor:grabbing;}
+  .drag-handle:focus-visible{outline:2px solid var(--accent); outline-offset:1px;}
+  .card.is-dragging{opacity:.45;}
+  .card.drop-before{box-shadow:inset 3px 0 var(--accent);}
+  .card.drop-after{box-shadow:inset -3px 0 var(--accent);}
+  input.name-input{font-family:'Fraunces',serif; font-weight:550; font-size:18px; border:none; background:transparent; color:var(--ink); padding:4px 6px; margin:0 -6px; width:calc(100% + 12px); border-radius:6px; border-bottom:1px solid transparent;}
+  /* Un simple soulignement de 1px passait quasi inaperçu au clavier, très en
+     retrait de l'indicateur (contour 2px) de tous les autres champs. Un fond
+     teinté garde le registre « titre » (pas de boîte de formulaire) tout en
+     étant nettement plus perceptible qu'un trait fin. */
+  input.name-input:focus{outline:none; background:var(--accent-soft); border-bottom-color:var(--accent);}
+  .ref-badge{font-family:'IBM Plex Mono',monospace; font-size:9.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--accent); background:var(--accent-soft); padding:3px 7px; border-radius:999px; white-space:nowrap;}
+  .remove-btn{flex:none; width:34px; height:34px; border-radius:9px; border:1px solid var(--line); background:var(--bg); color:var(--ink-soft); font-size:15px; line-height:1; cursor:pointer;}
+  .remove-btn:hover{background:var(--warn-soft); color:var(--warn); border-color:var(--warn);}
+
+  .card-add{
+    border-style:dashed; background:transparent; appearance:none; -webkit-appearance:none;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    color:var(--ink-soft); font-family:'Inter',sans-serif; cursor:pointer; text-align:center; min-height:180px;
+  }
+  .card-add:hover{border-color:var(--accent); color:var(--accent); background:var(--accent-soft);}
+  .card-add:focus-visible{outline:2px solid var(--accent); outline-offset:2px;}
+  .card-add-icon{width:36px; height:36px; border-radius:999px; background:var(--bg); display:flex; align-items:center; justify-content:center; flex:none;}
+  .card-add-icon svg{width:18px; height:18px;}
+  .card-add:hover .card-add-icon{background:var(--surface);}
+  .card-add-label{font-weight:600; font-size:14px;}
+
+  .hero{margin:14px 0 16px; padding:14px 0 16px; border-top:1px solid var(--line); border-bottom:1px solid var(--line);}
+  .hero-value{font-family:'Fraunces',serif; font-weight:550; font-size:30px; line-height:1.1;}
+  .hero-label{font-size:12px; color:var(--ink-soft); margin-top:4px;}
+  .hero-pas{font-size:12px; color:var(--ink-soft); margin-top:8px; padding-top:8px; border-top:1px dashed var(--line);}
+  .hero-pas strong{color:var(--ink); font-weight:600;}
+
+  .field-row{margin-bottom:14px;}
+  .field-row:last-child{margin-bottom:0;}
+  .field-row label{display:block; font-size:13px; font-weight:600; color:var(--ink-soft); margin-bottom:6px;}
+  .field-row .sub-hint{font-size:11px; color:var(--ink-soft); margin-top:5px; line-height:1.45;}
+  .field-row .sub-hint.warn-hint{color:var(--warn); font-weight:600;}
+  .field-row input, .field-row select{width:100%; font-family:'Inter',sans-serif; font-size:16px; padding:12px 16px; border:1px solid var(--line); border-radius:10px; background:var(--bg); color:var(--ink); -webkit-appearance:none; appearance:none;}
+  .field-row input[data-key="brut"]{padding:13px 18px; font-size:18px; font-weight:600;}
+  .field-row input:focus, .field-row select:focus{outline:2px solid var(--accent); outline-offset:1px; border-color:var(--accent); background:var(--surface);}
+  .three-col{display:grid; grid-template-columns:repeat(3,1fr); gap:10px;}
+  .three-col .field-row label{white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .two-col{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  /* Aligner les champs quand les libellés n'occupent pas le même nombre de
+     lignes (« Personnes à charge » sur une, « Revenus du conjoint (€/an) » sur
+     deux, voire trois selon la largeur). Une hauteur minimale fixe ne suffit
+     pas puisque ce nombre varie : elle ne sert que de repli. */
+  .two-col .field-row > label{min-height:2.4em;}
+  @supports (grid-template-rows: subgrid){
+    .two-col{grid-template-rows:auto auto auto;}
+    .two-col > .field-row{display:grid; grid-template-rows:subgrid; grid-row:span 3;}
+    .two-col .field-row > label{min-height:0;}
+  }
+  .section-tag{font-family:'IBM Plex Mono',monospace; font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--gold-ink); margin:18px 0 10px; padding-bottom:5px; border-bottom:1px solid var(--line);}
+  .section-tag:first-child{margin-top:0;}
+
+  details.more{margin-top:8px; border-top:1px solid var(--line); padding-top:12px;}
+  details.more > summary{cursor:pointer; font-size:13px; font-weight:600; color:var(--accent); list-style:none; display:flex; align-items:center; gap:6px; padding:4px 0;}
+  details.more > summary::-webkit-details-marker{display:none;}
+  details.more > summary::before{content:"+"; font-family:'IBM Plex Mono',monospace; font-size:14px;}
+  details.more[open] > summary::before{content:"–";}
+  details.more .more-body{padding-top:14px;}
+
+  .subline{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 0; font-size:13px;}
+  .subline .val{font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap;}
+
+  .disclaimer{margin-top:24px; font-size:12px; line-height:1.6; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; max-width:82ch;}
+  /* Les 2-3 phrases qui comptent vraiment (pas un bulletin de paie, un seul
+     régime modélisé, le mode taux est optimiste) se distinguent du reste par
+     la couleur : sans ça, tout le bloc lit au même niveau et rien n'en
+     ressort avant d'avoir tout lu. */
+  .disclaimer-summary{color:var(--ink); margin:0;}
+  .disclaimer details.more{margin-top:10px;}
+  .disclaimer .more-body p{margin:0 0 2px;}
+  .sr-only{position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0;}
+  /* Révélé uniquement au focus clavier : masqué visuellement (via .sr-only)
+     tant qu'il n'est pas atteint, sinon un premier onglet visible sur une
+     page sans navigation répétée n'apporterait rien qu'un onglet en plus. */
+  /* Repère de focus uniforme pour les commandes clavier, y compris celles
+     qui n'avaient pas encore de style dédié. */
+  :where(button, input, select, textarea, summary, a, [tabindex]):focus-visible{
+    outline:2px solid var(--accent);
+    outline-offset:3px;
+  }
+
+  .skip-link{position:absolute; top:-40px; left:8px; z-index:1300; background:var(--accent); color:#fff; padding:10px 16px; border-radius:8px; font-family:'Inter',sans-serif; font-weight:600; font-size:14px; text-decoration:none; transition:top .15s ease;}
+  .skip-link:focus{top:8px; width:auto; height:auto; padding:10px 16px; margin:0; overflow:visible; clip:auto; white-space:normal;}
+
+  @media print{
+    body{background:#fff;}
+    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .cards-scroll{overflow:visible; margin:0; padding:0;}
+    .cards{flex-wrap:wrap;}
+    .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
+    .panel{break-inside:avoid; border-color:#bbb;}
+    .stack-chart-scroll{overflow:visible;}
+    .stack-chart{flex-wrap:wrap; width:auto; justify-content:flex-start;}
+    details.more > summary, .panel-nested > summary{display:none;}
+    details.more .more-body{padding-top:0;}
+  }
+
+
+/* Saisie numérique invalide : conserver la valeur visible et expliquer l'erreur. */
+.input-error{margin-top:5px;color:var(--warn, #b42318);font-size:.82rem;line-height:1.35}
+input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1px var(--warn, #b42318)}
+
+/* Repères salariaux — présentation sombre cohérente avec OnNet */
+.benchmark-panel{
+  margin-top:22px;
+  padding:clamp(18px,3vw,28px);
+  color:var(--ink);
+  background:var(--surface, #1b211f);
+  border:1px solid var(--line);
+  border-radius:24px;
+}
+.benchmark-panel .benchmark-heading{margin-bottom:20px}
+.benchmark-panel .benchmark-heading .hint{margin:7px 0 0;color:var(--ink-soft)}
+.benchmark-your-salary{
+  display:flex;align-items:center;justify-content:space-between;gap:14px;
+  padding:16px 18px;margin-bottom:14px;
+  background:var(--bg, #121715);border:1px solid var(--line);border-radius:16px;
+}
+.benchmark-your-salary>span{font-size:.92rem;color:var(--ink-soft)}
+.benchmark-your-salary>strong{font-size:clamp(1.35rem,3vw,1.8rem);font-weight:750;white-space:nowrap}
+.benchmark-your-salary small{font-size:.78rem;color:var(--ink-soft);font-weight:500}
+.benchmark-your-salary{flex-wrap:wrap}
+.benchmark-comparison-base{flex:1 0 100%;margin-top:-6px}
+.benchmark-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.benchmark-item{
+  min-width:0;padding:20px;
+  background:var(--bg, #121715);border:1px solid var(--line);border-radius:18px;
+}
+.benchmark-label{font-size:.94rem;font-weight:650;color:var(--ink);margin-bottom:12px}
+.benchmark-value{font-size:clamp(1.7rem,4vw,2.25rem);font-weight:800;letter-spacing:-.04em;color:var(--ink);line-height:1.15}
+.benchmark-meta{margin-top:8px;font-size:.8rem;line-height:1.5;color:var(--ink-soft)}
+.benchmark-result{display:flex;align-items:baseline;gap:7px;margin-top:20px;font-size:1.35rem;font-weight:750}
+.benchmark-result small{font-size:.9rem;font-weight:650}
+.benchmark-positive{color:var(--success, #48c78e)}
+.benchmark-negative{color:var(--warning, #e99a70)}
+.benchmark-context{margin-top:10px;font-size:.83rem;line-height:1.5;color:var(--ink-soft)}
+.benchmark-details{margin-top:12px;padding-top:10px;border-top:1px solid var(--line)}
+.benchmark-details summary,.benchmark-settings summary{cursor:pointer;font-weight:650;color:var(--ink);font-size:.88rem;line-height:1.4}
+.benchmark-details p{margin:9px 0 0;color:var(--ink-soft);font-size:.82rem;line-height:1.5}
+.benchmark-settings{margin-top:20px;padding-top:16px;border-top:1px solid var(--line)}
+.benchmark-settings-body{padding-top:14px}
+.benchmark-settings-body>p{font-size:.82rem;line-height:1.6;color:var(--ink-soft)}
+.benchmark-fields{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-top:14px}
+.benchmark-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:14px}
+@media(max-width:600px){
+  .benchmark-panel{padding:18px;border-radius:20px}
+  .benchmark-your-salary{align-items:flex-start;flex-direction:column;gap:6px}
+  .benchmark-grid,.benchmark-fields{grid-template-columns:1fr}
+  .benchmark-item{padding:18px}
+  .benchmark-result{margin-top:16px}
+}
+
+
+/* Choix des données de partage : lisible et utilisable sur mobile. */
+.share-options-group{
+  min-width:0;margin:0 0 12px;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+}
+.share-options-group legend{padding:0 5px;font-size:.82rem;font-weight:700;color:var(--ink)}
+.share-scenario-option,.share-extra-option{
+  display:flex;align-items:flex-start;gap:10px;padding:9px 2px;
+  color:var(--ink);font-size:.86rem;line-height:1.4;cursor:pointer;
+}
+.share-scenario-option+ .share-scenario-option,
+.share-extra-option+ .share-extra-option{border-top:1px solid var(--line)}
+.share-scenario-option input,.share-extra-option input{
+  width:17px;height:17px;flex:none;margin:2px 0 0;accent-color:var(--accent);
+}
+.share-scenario-option span,.share-extra-option span{min-width:0;display:block}
+.share-scenario-option small,.share-extra-option small{
+  display:block;margin-top:2px;color:var(--ink-soft);font-size:.76rem;line-height:1.4;
+}
+.share-scenario-option strong,.share-extra-option strong{font-weight:650}
+#shareCreateBtn:disabled{opacity:.45;cursor:not-allowed}
+.foyer-situation-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
+.foyer-situation-toggle button{padding-left:5px;padding-right:5px;white-space:normal}
+
+
+/* Repères salariaux compacts : priorité à la comparaison immédiate. */
+.benchmark-panel{padding:18px 20px;border-radius:20px}
+.benchmark-panel .benchmark-heading{margin-bottom:12px}
+.benchmark-your-salary{padding:11px 14px;margin-bottom:10px}
+.benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.benchmark-item{padding:14px;border-radius:14px}
+.benchmark-label{font-size:.86rem;margin-bottom:7px}
+.benchmark-value{font-size:clamp(1.35rem,2.8vw,1.8rem)}
+.benchmark-meta{margin-top:4px;font-size:.76rem}
+.benchmark-result{margin-top:10px;font-size:1.08rem}
+.benchmark-result small{font-size:.78rem}
+.benchmark-details{margin-top:9px;padding-top:8px;border-top:1px solid var(--line)}
+.benchmark-details summary{cursor:pointer;font-size:.78rem;font-weight:650;color:var(--ink-soft)}
+.benchmark-details p{margin:7px 0 0;font-size:.76rem;line-height:1.45;color:var(--ink-soft)}
+.benchmark-details a{color:var(--accent)}
+@media(max-width:600px){
+  .benchmark-panel{padding:14px;border-radius:16px}
+  .benchmark-your-salary{align-items:center;flex-direction:row;gap:8px;padding:10px 12px}
+  .benchmark-your-salary>span{font-size:.8rem}
+  .benchmark-your-salary>strong{font-size:1.2rem}
+  .benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+  .benchmark-item{padding:11px;min-width:0}
+  .benchmark-label{font-size:.78rem;line-height:1.3;min-height:2.0em}
+  .benchmark-value{font-size:clamp(1.12rem,5vw,1.45rem);letter-spacing:-.035em}
+  .benchmark-meta{font-size:.7rem;line-height:1.35}
+  .benchmark-result{font-size:.96rem;gap:4px;flex-wrap:wrap}
+  .benchmark-result small{font-size:.7rem}
+  .benchmark-details summary{font-size:.72rem}
+  .benchmark-details p{font-size:.7rem}
+  .benchmark-details{margin-top:9px;padding-top:8px}
+  .benchmark-settings{margin-top:12px;padding-top:10px}
+  .benchmark-disclaimer{margin-top:10px;font-size:.72rem;line-height:1.45}
+}
+
+
+/* Recherche et sélection de commune vérifiée */
+.commune-suggestions{position:relative;z-index:5;margin-top:6px;border:1px solid var(--border, #d0d5dd);border-radius:10px;overflow:hidden;background:var(--surface, #fff);box-shadow:0 8px 24px rgba(0,0,0,.08);}
+.commune-suggestions[hidden]{display:none;}
+.commune-option{display:block;width:100%;padding:10px 12px;border:0;border-bottom:1px solid var(--border, #e5e7eb);background:transparent;color:inherit;text-align:left;font:inherit;cursor:pointer;}
+.commune-option:last-child{border-bottom:0;}
+.commune-option:hover,.commune-option:focus-visible{background:var(--surface-secondary, #f3f4f6);outline:none;}
+.commune-search-status{padding:10px 12px;color:var(--muted, #667085);font-size:.9rem;}
+
+
+/* Statut URSSAF : information discrète, sans alerte permanente. */
+.urssaf-status{display:flex;align-items:center;gap:10px;margin:0 0 18px;padding:9px 0;border:0;border-bottom:1px solid var(--line);background:transparent;color:var(--ink-soft);}
+.urssaf-status-copy{display:flex;align-items:center;flex-wrap:wrap;gap:8px 12px;min-width:0;width:100%;}
+.urssaf-status-main{display:flex;align-items:center;gap:8px;flex:1 1 220px;margin:0;font-size:.78rem;line-height:1.4;color:var(--muted,var(--ink-soft));}
+.urssaf-status-main strong{font-weight:550;}
+.urssaf-status-dot{width:7px;height:7px;flex:none;border-radius:50%;background:#299764;}
+.urssaf-status #urssafCalculateBtn{margin:0;padding:7px 11px;font-size:.76rem;}
+.urssaf-status .result-source{flex:0 0 100%;margin:0;font-size:.72rem;}
+.urssaf-status .result-source summary{cursor:pointer;color:var(--muted,var(--ink-soft));}
+.urssaf-status .result-source ul{max-height:180px;overflow:auto;padding-left:18px;line-height:1.45;}
+.urssaf-status.is-error{padding:12px 14px;border:1px solid var(--warn-line);border-radius:12px;background:var(--warn-soft);color:var(--warn);}
+.urssaf-status.is-error .urssaf-status-dot{background:currentColor;}
+@media(max-width:600px){.urssaf-status{margin-bottom:12px;padding:7px 0;}.urssaf-status-copy{gap:7px 10px;}.urssaf-status-main{font-size:.72rem;}.urssaf-status #urssafCalculateBtn{font-size:.7rem;padding:6px 9px;}}
+
+/* Lisibilité du périmètre du graphique */
+.chart-scope-hint{margin:-4px 0 12px;font-size:12px;color:var(--ink-soft);line-height:1.45;}
+
+
+/* OnNet — actions discrètes et parcours d'entrée allégé */
+.header-actions{display:flex;align-items:center;gap:10px;flex:none;width:auto;}
+.header-actions .header-share-btn{min-height:42px;padding:9px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--accent);box-shadow:none;}
+.header-menu{position:relative;z-index:30;}
+.header-menu-trigger{
+  display:flex;align-items:center;justify-content:center;width:42px;height:42px;
+  list-style:none;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface);color:var(--accent);cursor:pointer;
+  transition:background .18s ease,border-color .18s ease,color .18s ease;
+}
+.header-menu-trigger::-webkit-details-marker{display:none;}
+.header-menu-trigger svg{width:19px;height:19px;}
+.header-menu[open] .header-menu-trigger,
+.header-menu-trigger:hover{background:var(--surface-secondary,var(--bg));border-color:var(--accent);color:var(--accent);}
+.header-menu-panel{
+  position:absolute;right:0;top:calc(100% + 9px);width:max-content;min-width:220px;
+  padding:6px;background:var(--surface);border:1px solid var(--line);border-radius:14px;
+  box-shadow:0 12px 32px rgba(20,35,27,.16);display:grid;gap:3px;
+}
+.header-menu-panel button{
+  display:flex;align-items:center;gap:10px;width:100%;min-height:42px;padding:9px 11px;
+  border:0;border-radius:9px;background:transparent;color:var(--ink);
+  font:500 13px 'Inter',sans-serif;text-align:left;cursor:pointer;
+}
+.header-menu-panel button:hover,.header-menu-panel button:focus-visible{
+  background:var(--surface-secondary,var(--bg));outline:none;
+}
+.header-menu-panel svg{width:17px;height:17px;flex:none;color:var(--ink-soft);}
+@media(max-width:639px){
+  .header-top{align-items:center;flex-wrap:nowrap;gap:10px;}
+  .header-actions{display:flex;width:auto;gap:8px;}
+  .header-actions .header-share-btn{min-width:42px;min-height:42px;padding:9px 12px;font-size:12px;}
+  .header-actions .header-share-btn svg{width:15px;height:15px;}
+  .header-menu-panel{min-width:210px;}
+}
+
+/* La mutuelle est une information, pas un formulaire à configurer. */
+.onboarding-benefits{display:grid;gap:10px;margin-top:16px;}
+.onboarding-mutuelle-note{
+  display:flex;align-items:center;gap:9px;min-height:42px;
+  padding:9px 12px;border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--bg));color:var(--ink-soft);
+  font:500 13px 'Inter',sans-serif;
+}
+.onboarding-mutuelle-icon{display:flex;align-items:center;justify-content:center;width:25px;height:25px;flex:none;border-radius:50%;background:rgba(35,119,83,.11);color:var(--accent);}
+.onboarding-mutuelle-icon svg{width:15px;height:15px;}
+.onboarding-mutuelle-label{color:var(--ink);font-size:12.5px;font-weight:650;}
+.onboarding-mutuelle-note strong:not(.onboarding-mutuelle-label){margin-left:auto;color:var(--ink);font-weight:600;white-space:nowrap;}
+.onboarding-benefits .onboarding-optional{margin:0;}
+.onboarding-benefits .onboarding-optional summary{font-size:13px;}
+@media(max-width:420px){
+  .onboarding-mutuelle-note{gap:7px;padding:8px 10px;font-size:12px;}
+}
+
+/* Source et consentement : une phrase visible, les détails à la demande. */
+.urssaf-status{display:block;padding:10px 0;margin-bottom:16px;}
+.urssaf-status-copy{display:grid;grid-template-columns:minmax(0,1fr);align-items:start;gap:8px;width:100%;}
+.urssaf-status-main{flex:none;font-size:.8rem;line-height:1.45;}
+.urssaf-data-details{font-size:.74rem;color:var(--ink-soft);}
+.urssaf-data-details summary{display:inline-flex;align-items:center;gap:5px;cursor:pointer;color:var(--accent);font-weight:550;}
+.urssaf-data-details summary:hover{text-decoration:underline;}
+.urssaf-data-notice{margin:7px 0 0;padding:10px 12px;border-radius:10px;background:var(--surface-secondary,var(--bg));font-size:.76rem;line-height:1.5;}
+.urssaf-consent-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;}
+.urssaf-status-message{margin:0;color:var(--ink-soft);font-size:.75rem;line-height:1.4;}
+.urssaf-status-message strong{font-weight:500;}
+.urssaf-status #urssafCalculateBtn{flex:none;margin:0;padding:9px 15px;font-size:.78rem;border-radius:999px;}
+.urssaf-status .result-source{margin:2px 0 0;font-size:.72rem;}
+.urssaf-status.is-error .urssaf-consent-row{gap:8px;}
+@media(max-width:600px){
+  .urssaf-status{margin-bottom:12px;padding:8px 0;}
+  .urssaf-status-main{font-size:.75rem;}
+  .urssaf-consent-row{align-items:stretch;gap:8px;}
+  .urssaf-status-message{font-size:.72rem;}
+  .urssaf-status #urssafCalculateBtn{width:100%;min-height:42px;font-size:.78rem;}
+}
+
+
+/* Ajustements de cohérence visuelle du menu et du parcours mobile. */
+.header-menu-trigger{
+  background:var(--surface);
+  color:var(--accent);
+  border-color:var(--line);
+  border-radius:12px;
+}
+.header-menu[open] .header-menu-trigger,
+.header-menu-trigger:hover{
+  background:var(--accent-soft);
+  border-color:var(--accent);
+  color:var(--accent);
+}
