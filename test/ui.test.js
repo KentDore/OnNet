@@ -718,6 +718,7 @@ test('normalise les entrées des titres-restaurant avant leur transmission à Ur
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       return state?.scenarios?.[0]?.joursResto === 21 && state.scenarios[0].partResto === 40;
     });
+    await waitForCalls(calls, 2);
     const request = calls.bodies.find(body =>
       body.situation['salarié . rémunération . frais professionnels . titres-restaurant'] === 'oui'
     );
