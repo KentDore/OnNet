@@ -703,7 +703,7 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', { tim
   }
 });
 
-test('normalise les entrées des titres-restaurant avant leur transmission à Urssaf', { timeout: 60000 }, async () => {
+test('bloque les paramètres de titres-restaurant hors plage avant transmission à Urssaf', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp({ emptyStorage: true });
   try {
     const modal = page.locator('#modalOverlay');
@@ -712,7 +712,14 @@ test('normalise les entrées des titres-restaurant avant leur transmission à Ur
     await modal.locator('#modalOnboardingJours').fill('20.5');
     await modal.locator('#modalOnboardingValeur').fill('8');
     await modal.locator('#modalOnboardingPart').fill('30');
-    await modal.locator('#modalOnboardingSubmit').click();
+    const submit = modal.locator('#modalOnboardingSubmit');
+    assert.equal(await submit.isDisabled(), true,
+      'le formulaire doit bloquer un nombre de titres fractionnaire et une part salarié hors plage');
+    await modal.locator('#modalOnboardingJours').fill('21');
+    assert.equal(await submit.isDisabled(), true, 'la part salarié hors plage doit toujours bloquer la validation');
+    await modal.locator('#modalOnboardingPart').fill('40');
+    assert.equal(await submit.isEnabled(), true);
+    await submit.click();
 
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
