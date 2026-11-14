@@ -1034,7 +1034,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
 });
 
 
-test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de salaire', { timeout: 60000 }, async () => {
+test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de salaire', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.locator('#addScenario').click();
@@ -1053,7 +1053,6 @@ test('affiche et préremplit correctement l’hypothèse 39 h dans l’ajout de 
     assert.equal(state.scenarios[1].dureeType, '39');
     await page.locator('#addScenario').click();
     assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
-    assert.equal(await hint.isVisible(), true);
     await page.locator('#modalAddCancel').click();
   } finally {
     await context.close();
