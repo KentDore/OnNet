@@ -330,8 +330,10 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       document.querySelector('.metric-toggle button[data-metric="netApresImpotHoraire"]')?.getAttribute('aria-pressed') === 'true'
     );
     const afterTaxHourlyValue = await page.locator('#comparePanel .bar-row').first().locator('.bar-value span').first().innerText();
-    assert.ok(Math.abs(parseEuro(afterTaxHourlyValue) - (parseEuro(cardNetAfterTax) / 169)) < 0.02,
-      'le net horaire après impôt doit diviser le net après impôt mensuel par les 169 h du contrat 39 h');
+    const actualHourly = parseEuro(afterTaxHourlyValue);
+    const expectedHourly = parseEuro(cardNetAfterTax) / 169;
+    assert.ok(Math.abs(actualHourly - expectedHourly) < 0.02,
+      `net horaire après impôt incorrect : affiché=${afterTaxHourlyValue} (${actualHourly}), net mensuel=${cardNetAfterTax} (${parseEuro(cardNetAfterTax)}), attendu=${expectedHourly}, métrique active=${await afterTaxHourlyButton.getAttribute('aria-pressed')}, ligne=${await page.locator('#comparePanel .bar-row').first().innerText()}`);
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
