@@ -2054,7 +2054,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
       trOui = b.dataset.tr === 'oui';
       trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
       trFields.hidden = !trOui;
-      if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
+      
     });
   });
   const read = () => {
@@ -2074,7 +2074,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 
 function showOnboardingModal(){
   const html = `
-    <p id="modalMsg" class="modal-msg">Renseignez votre salaire pour commencer la comparaison.</p>
+    <p id="modalMsg" class="modal-msg"></p>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
@@ -2086,7 +2086,6 @@ function showOnboardingModal(){
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalOnboardingInput" id="modalOnboardingLabel">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
-      <small id="modalOnboardingPeriodHint" hidden>L’équivalent mensuel sera calculé en divisant le montant annuel par 12.</small>
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -2094,7 +2093,6 @@ function showOnboardingModal(){
         <button type="button" data-duree="35" aria-pressed="true">35 h</button>
         <button type="button" data-duree="39" aria-pressed="false">39 h</button>
       </div>
-      <div class="sub-hint" id="modalOnboarding39Hint" hidden>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalOnboarding')}
@@ -2109,7 +2107,6 @@ function showOnboardingModal(){
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalOnboarding');
   const periodToggle = overlay.querySelector('#modalOnboardingPeriod');
   const periodLabel = overlay.querySelector('#modalOnboardingLabel');
-  const periodHint = overlay.querySelector('#modalOnboardingPeriodHint');
   let salaryPeriod = 'mois';
   periodToggle.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => {
@@ -2120,18 +2117,15 @@ function showOnboardingModal(){
       const annual = salaryPeriod === 'an';
       periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
       input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2500';
-      periodHint.hidden = !annual;
     });
   });
 
   let dureeType = '35';
   const dureeToggle = overlay.querySelector('#modalOnboardingDuree');
-  const dureeHint = overlay.querySelector('#modalOnboarding39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      dureeHint.hidden = dureeType !== '39';
     });
   });
 
@@ -2157,7 +2151,7 @@ function showOnboardingModal(){
 // silencieusement.
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
-    <p id="modalMsg" class="modal-msg">Nouveau salaire à comparer.</p>
+    <p id="modalMsg" class="modal-msg"></p>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
@@ -2169,7 +2163,6 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (€)</label>
       <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" placeholder="Ex. 2500" autocomplete="off">
-      <small id="modalAddPeriodHint" hidden>L’équivalent mensuel sera calculé en divisant le montant annuel par 12.</small>
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -2177,7 +2170,6 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
         <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
         <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
       </div>
-      <div class="sub-hint" id="modalAdd39Hint" ${dureePrefill === '39' ? '' : 'hidden'}>Calcul fondé sur le droit commun : 4 h supplémentaires rémunérées par semaine, majorées à 25 %. Les taux particuliers des conventions collectives ne sont pas pris en compte. Les RTT ne sont pas pris en compte.</div>
     </div>
 
     ${renderMutuelleTrFields('modalAdd')}
@@ -2193,7 +2185,6 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
   const periodToggle = overlay.querySelector('#modalAddPeriod');
   const periodLabel = overlay.querySelector('#modalAddLabel');
-  const periodHint = overlay.querySelector('#modalAddPeriodHint');
   let salaryPeriod = 'mois';
   periodToggle.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => {
@@ -2210,19 +2201,16 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       const annual = salaryPeriod === 'an';
       periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
       input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2500';
-      periodHint.hidden = !annual;
       updateSubmitState();
     });
   });
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
   const dureeToggle = overlay.querySelector('#modalAddDuree');
-  const dureeHint = overlay.querySelector('#modalAdd39Hint');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      dureeHint.hidden = dureeType !== '39';
     });
   });
 
