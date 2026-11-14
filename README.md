@@ -48,14 +48,17 @@ Le comparatif utilise la médiane nationale des salaires nets du secteur privé 
 
 Le client API se trouve dans `src/urssaf-api-client.mjs`. La logique de l’interface est répartie dans `src/app/` ; son `manifest.json` fixe l’ordre d’assemblage. Les styles sont répartis dans `src/styles/` avec un manifeste propre ; les polices WOFF2 sont stockées séparément dans `src/fonts/` puis réinjectées au build. Le build recompose exactement le CSS source, assemble les scripts dans un seul script classique et conserve ainsi le HTML autonome. Les sources se modifient dans `src/app/` et `src/styles/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
 
-Tests automatisés :
+Tests automatisés et contrôles de qualité :
 
 ```sh
 npm ci
+npm run lint
 npm run test:all
 node --test test/ui.test.js
 node --test test/build.test.js
 ```
+
+`npm run lint` exécute ESLint 10.15.0 et Stylelint 18.0.0 avec des versions fixées dans les scripts. Les règles bloquantes ciblent d’abord les erreurs JavaScript/CSS objectivement dangereuses ; les règles de style JavaScript sont encore en avertissement pour permettre de réduire progressivement la dette sans une réécriture massive. Les outils sont téléchargés à la première exécution s’ils ne sont pas déjà présents.
 
 Les tests navigateur nécessitent Playwright et Chromium ; la CI les installe automatiquement. Les parcours navigateur utilisent une API simulée : ils vérifient les interactions, les paramètres transmis et les états d’erreur, mais ne valident pas l’exactitude des montants de paie. La CI standard ne dépend pas de la disponibilité de l’API distante. `npm run test:all` couvre les tests du client API et du prototype Publicodes ; les tests UI et build sont lancés séparément par les deux commandes suivantes.
 

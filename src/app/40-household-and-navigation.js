@@ -91,36 +91,50 @@ function bindFoyerModule(){
     });
   });
   const charges = document.getElementById('foyerCharges');
-  if(charges) charges.addEventListener('change', () => {
-    foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
-    if(foyer.personnesCharge === 0) foyer.parentIsole = false;
-    syncFoyerUI();
-    updateComputed();
-  });
+  if(charges){
+    charges.addEventListener('change', () => {
+      foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
+      if(foyer.personnesCharge === 0) foyer.parentIsole = false;
+      syncFoyerUI();
+      updateComputed();
+    });
+  }
   const parentIsole = document.getElementById('foyerParentIsole');
-  if(parentIsole) parentIsole.addEventListener('change', () => {
-    foyer.parentIsole = parentIsole.checked;
-    syncFoyerUI();
-    updateComputed();
-  });
+  if(parentIsole){
+    parentIsole.addEventListener('change', () => {
+      foyer.parentIsole = parentIsole.checked;
+      syncFoyerUI();
+      updateComputed();
+    });
+  }
   const conjoint = document.getElementById('foyerConjoint');
-  if(conjoint) conjoint.addEventListener('input', () => {
+  if(conjoint){
+    conjoint.addEventListener('input', () => {
     if(!validateNumericInput(conjoint, false)) return;
     foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
     syncFoyerUI();
     updateComputed();
-  });
+      });
+  }
   const pasRate = document.getElementById('foyerPasRate');
-  if(pasRate) pasRate.addEventListener('input', () => {
+  if(pasRate){
+    pasRate.addEventListener('input', () => {
     if(!validateNumericInput(pasRate, false)) return;
     foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
     syncFoyerUI();
     updateComputed();
-  });
+      });
+  }
   // Refléter l'état restauré (localStorage ou lien partagé) dans les champs.
-  if(charges) charges.value = String(Math.min(4, foyer.personnesCharge));
-  if(conjoint) conjoint.value = String(foyer.autresRevenus);
-  if(pasRate) pasRate.value = String(foyer.pasRate);
+  if(charges){
+    charges.value = String(Math.min(4, foyer.personnesCharge));
+  }
+  if(conjoint){
+    conjoint.value = String(foyer.autresRevenus);
+  }
+  if(pasRate){
+    pasRate.value = String(foyer.pasRate);
+  }
   syncFoyerUI();
 }
 
@@ -140,7 +154,9 @@ function updateComputed(options = {}){
   computed.forEach(({s, r}) => {
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
-    if(basisRow) basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
+    if(basisRow){
+      basisRow.style.display = s.dureeType === '39' && s.nbMois > 12 ? '' : 'none';
+    }
     setText(`c-hero-${u}`, r && heroValue(r) !== null ? fmt(heroValue(r)) : '—');
     setText(`c-herolabel-${u}`, heroLabel());
 
