@@ -325,7 +325,10 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
     const afterTaxHourlyButton = page.locator('.metric-toggle button[data-metric="netApresImpotHoraire"]');
     assert.equal(await afterTaxHourlyButton.count(), 1, 'un indicateur de net horaire après impôt doit être disponible');
-    await afterTaxHourlyButton.click();
+    await afterTaxHourlyButton.evaluate(button => button.click());
+    await page.waitForFunction(() =>
+      document.querySelector('.metric-toggle button[data-metric="netApresImpotHoraire"]')?.getAttribute('aria-pressed') === 'true'
+    );
     const afterTaxHourlyValue = await page.locator('#comparePanel .bar-row').first().locator('.bar-value span').first().innerText();
     assert.ok(Math.abs(parseEuro(afterTaxHourlyValue) - (parseEuro(cardNetAfterTax) / 169)) < 0.02,
       'le net horaire après impôt doit diviser le net après impôt mensuel par les 169 h du contrat 39 h');
