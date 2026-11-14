@@ -1052,6 +1052,7 @@ function renderBenchmarks(computed){
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
+let mainSalaryInputPeriod='month';
 function applyDeclaredSalaryFromForm(){
   const scenario=findScenario(refId)||scenarios[0];
   const gross=document.getElementById('mainSalaryGross');
@@ -1059,7 +1060,7 @@ function applyDeclaredSalaryFromForm(){
   const hours=document.getElementById('mainSalaryHours');
   const raw=Number(gross?.value);
   if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
-  scenario.brut=period?.querySelector('[aria-pressed="true"]')?.dataset.period==='year'?Math.round(raw/12*100)/100:raw;
+  scenario.brut=mainSalaryInputPeriod==='year'?Math.round(raw/12*100)/100:raw;
   scenario.dureeType=hours?.value==='39'?'39':'35';
   scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
   scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
@@ -1097,7 +1098,7 @@ function renderMaquetteControls(computedOverride){
   const mealShare=document.getElementById('mainMealShare');
   const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
   if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
-    period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period==='month')));gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+    period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===mainSalaryInputPeriod)));gross.value=String(Math.round(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)*100)/100);hours.value=selected.dureeType;
     if(mealDays) mealDays.value=String(selected.joursResto||0);
     if(mealValue) mealValue.value=String(selected.valeurResto||0);
     if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
@@ -1121,7 +1122,10 @@ function renderMaquetteControls(computedOverride){
     period.addEventListener('click',event=>{
       const button=event.target.closest('button[data-period]');
       if(!button) return;
+      mainSalaryInputPeriod=button.dataset.period;
       period.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      const selected=findScenario(refId)||scenarios[0];
+      if(selected && gross) gross.value=String(Math.round(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)*100)/100);
       applyDeclaredSalaryFromForm();
     });
     period.dataset.onnetSalaryBound='true';
