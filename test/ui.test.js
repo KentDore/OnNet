@@ -316,7 +316,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
     const cardNetAfterTax = await page.locator('#cardsBody .hero-value').first().innerText();
     const cardNetBeforeTax = await page.locator('#cardsBody .hero-pas').first().innerText();
-    const benchmarkHourlyNet = await page.locator('.benchmark-your-salary strong').innerText();
+    const benchmarkHourlyNet = await page.locator('.benchmark-your-salary > strong').innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.match(await page.locator('#cardsBody .hero-label').first().innerText(), /Net après impôt estimé mensuel/);
     assert.match(cardNetBeforeTax, /Avant impôt/);
