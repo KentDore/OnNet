@@ -428,7 +428,22 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
       warningsHidden: document.getElementById('urssafWarnings')?.hidden,
       warningsHtml: document.getElementById('urssafWarnings')?.outerHTML,
       cardWarnings: document.getElementById('c-result-warnings-0')?.outerHTML,
-      resultState: document.querySelector('#cardsBody [data-card]')?.dataset.resultState
+      resultState: document.querySelector('#cardsBody [data-card]')?.dataset.resultState,
+      ancestors: (() => {
+        const nodes = [];
+        let el = document.getElementById('urssafWarnings');
+        while (el) {
+          const style = getComputedStyle(el);
+          const rect = el.getBoundingClientRect();
+          nodes.push({
+            tag: el.tagName, id: el.id, className: String(el.className),
+            hidden: el.hidden, display: style.display, visibility: style.visibility,
+            opacity: style.opacity, width: Math.round(rect.width), height: Math.round(rect.height)
+          });
+          el = el.parentElement;
+        }
+        return nodes;
+      })()
     }));
     console.log('ONNET_URSSAF_DIAGNOSTICS_DEBUG=' + JSON.stringify(diagnosticsDebug));
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
