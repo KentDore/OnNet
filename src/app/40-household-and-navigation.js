@@ -104,23 +104,33 @@ function bindFoyerModule(){
     updateComputed();
   });
   const conjoint = document.getElementById('foyerConjoint');
-  if(conjoint) conjoint.addEventListener('input', () => {
+  if(conjoint){
+    conjoint.addEventListener('input', () => {
     if(!validateNumericInput(conjoint, false)) return;
     foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
     syncFoyerUI();
     updateComputed();
-  });
+      });
+  }
   const pasRate = document.getElementById('foyerPasRate');
-  if(pasRate) pasRate.addEventListener('input', () => {
+  if(pasRate){
+    pasRate.addEventListener('input', () => {
     if(!validateNumericInput(pasRate, false)) return;
     foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
     syncFoyerUI();
     updateComputed();
-  });
+      });
+  }
   // Refléter l'état restauré (localStorage ou lien partagé) dans les champs.
-  if(charges) charges.value = String(Math.min(4, foyer.personnesCharge));
-  if(conjoint) conjoint.value = String(foyer.autresRevenus);
-  if(pasRate) pasRate.value = String(foyer.pasRate);
+  if(charges){
+    charges.value = String(Math.min(4, foyer.personnesCharge));
+  }
+  if(conjoint){
+    conjoint.value = String(foyer.autresRevenus);
+  }
+  if(pasRate){
+    pasRate.value = String(foyer.pasRate);
+  }
   syncFoyerUI();
 }
 
