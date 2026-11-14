@@ -1,7 +1,39 @@
 'use strict';
 const fs = require('node:fs/promises');
 const path = require('node:path');
+const { build } = require('esbuild');
 const { readAppSource, readStylesSource } = require('./source-loader');
+
+async function buildRuntime(root){
+  const app = readAppSource(root);
+  const contents = [
+    "import { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions } from './src/urssaf-api-client.mjs';",
+    "import { scenarioDefaults, ICON, HEURES_BASE, parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc } from './src/ui-utils.mjs';",
+    'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
+    app
+  ].join('\n\n');
+
+  const result = await build({
+    stdin: {
+      contents,
+      resolveDir: root,
+      sourcefile: 'src/runtime-entry.mjs',
+      loader: 'js'
+    },
+    bundle: true,
+    write: false,
+    format: 'esm',
+    platform: 'browser',
+    target: 'es2022',
+    treeShaking: true,
+    legalComments: 'none'
+  });
+
+  if(result.outputFiles.length !== 1){
+    throw new Error('Le build doit produire exactement un bundle JavaScript.');
+  }
+  return result.outputFiles[0].text;
+}
 
 async function main(){
   const version = process.argv[2];
@@ -11,18 +43,12 @@ async function main(){
   const root = path.resolve(__dirname, '..');
   const template = await fs.readFile(path.join(root, 'src', 'template.html'), 'utf8');
   const styles = readStylesSource(root);
-  const apiSource = await fs.readFile(path.join(root, 'src', 'urssaf-api-client.mjs'), 'utf8');
-  const api = apiSource.replace(/^export\s+/gm, '') +
-    '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n';
-  const utils = await fs.readFile(path.join(root, 'src', 'ui-utils.js'), 'utf8');
-  const app = readAppSource(root);
+  const runtime = await buildRuntime(root);
   let html = template;
   for(const [token, value] of [
     ['@@ONNET_VERSION@@', version],
     ['@@ONNET_STYLES@@', styles],
-    ['@@ONNET_API@@', api],
-    ['@@ONNET_UTILS@@', utils],
-    ['@@ONNET_APP@@', app]
+    ['@@ONNET_RUNTIME@@', runtime]
   ]){
     if(!html.includes(token)) throw new Error('Template marker missing: ' + token);
     html = html.replace(token, value);

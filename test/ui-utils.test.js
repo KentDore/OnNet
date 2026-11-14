@@ -2,22 +2,14 @@
 
 const { test } = require('node:test');
 const assert = require('node:assert/strict');
-const fs = require('node:fs');
 const path = require('node:path');
+const { pathToFileURL } = require('node:url');
 
 const root = path.resolve(__dirname, '..');
-const source = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8');
+const utilsPromise = import(pathToFileURL(path.join(root, 'src', 'ui-utils.mjs')).href);
 
-// Évalue le fichier source dans un scope isolé pour tester ses fonctions pures
-// sans dépendre du DOM ni du runtime complet de l'application.
-const utils = new Function(source + `
-  return {
-    parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc,
-    scenarioDefaults, ICON, HEURES_BASE
-  };
-`)();
-
-test('parseNum accepte les montants français et refuse les saisies partielles', () => {
+test('parseNum accepte les montants français et refuse les saisies partielles', async () => {
+  const utils = await utilsPromise;
   assert.equal(utils.parseNum('1 234,56'), 1234.56);
   assert.equal(utils.parseNum(' 2 300 '), 2300);
   assert.equal(utils.parseNum('.5'), 0.5);
@@ -29,7 +21,8 @@ test('parseNum accepte les montants français et refuse les saisies partielles',
   assert.equal(utils.parseNum('Infinity'), 0);
 });
 
-test('clamp borne une valeur sans la modifier lorsqu’elle est dans l’intervalle', () => {
+test('clamp borne une valeur sans la modifier lorsqu’elle est dans l’intervalle', async () => {
+  const utils = await utilsPromise;
   assert.equal(utils.clamp(-1, 0, 10), 0);
   assert.equal(utils.clamp(11, 0, 10), 10);
   assert.equal(utils.clamp(5, 0, 10), 5);
@@ -37,7 +30,8 @@ test('clamp borne une valeur sans la modifier lorsqu’elle est dans l’interva
   assert.equal(utils.clamp(11, 0, undefined), 11);
 });
 
-test('les formatters affichent les montants et taux en français', () => {
+test('les formatters affichent les montants et taux en français', async () => {
+  const utils = await utilsPromise;
   assert.equal(utils.fmt(1234.56), Math.round(1234.56).toLocaleString('fr-FR') + ' €');
   assert.equal(utils.fmt('invalide'), '—');
   assert.equal(utils.fmtHoraire(12.5), '12,50 €/h');
@@ -51,11 +45,13 @@ test('les formatters affichent les montants et taux en français', () => {
   assert.equal(utils.fmtSigned(NaN), '—');
 });
 
-test('esc échappe les cinq caractères HTML sensibles', () => {
+test('esc échappe les cinq caractères HTML sensibles', async () => {
+  const utils = await utilsPromise;
   assert.equal(utils.esc(`<>&"'`), '&lt;&gt;&amp;&quot;&#39;');
 });
 
-test('les constantes d’interface conservent leurs clés attendues', () => {
+test('les constantes d’interface conservent leurs clés attendues', async () => {
+  const utils = await utilsPromise;
   assert.deepEqual(Object.keys(utils.scenarioDefaults).sort(),
     ['joursResto', 'mutuelle', 'nbMois', 'partResto', 'valeurResto'].sort());
   assert.deepEqual(Object.keys(utils.ICON).sort(), ['info', 'plus', 'warn']);

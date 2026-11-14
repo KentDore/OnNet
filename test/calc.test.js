@@ -24,8 +24,9 @@ test('le calculateur principal ne contient plus de moteur de cotisations ou d’
 test('le build utilise l’API officielle et n’embarque pas l’ancien fichier de calcul', () => {
   assert.match(client, /https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate/);
   assert.match(build, /urssaf-api-client\.mjs/);
-  assert.match(build, /ui-utils\.js/);
-  assert.match(template, /@@ONNET_API@@/);
+  assert.match(build, /ui-utils\.mjs/);
+  assert.match(template, /@@ONNET_RUNTIME@@/);
+  assert.doesNotMatch(template, /@@ONNET_API@@|@@ONNET_UTILS@@|@@ONNET_APP@@/);
   assert.doesNotMatch(template, /@@ONNET_CALC@@/);
 });
 

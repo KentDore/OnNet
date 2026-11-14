@@ -5,6 +5,9 @@ on:
   push:
     branches: [main, migration/publicodes-urssaf]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -17,13 +20,19 @@ jobs:
           node-version: 22
       - name: Installer Playwright
         run: |
-          npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1 eslint@10.15.0 stylelint@18.0.0
+          npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1 eslint@10.15.0 stylelint@18.0.0 esbuild@0.28.2
           # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
           npx --no-install playwright install chromium
+      - name: Générer les fichiers HTML depuis les sources
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          node scripts/build.js "$VERSION" "$RUNNER_TEMP/Onnet-$VERSION.html"
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
       - name: Vérifier la syntaxe JavaScript
         run: |
           node --check src/urssaf-api-client.mjs
-          node --check src/ui-utils.js
+          node --check src/ui-utils.mjs
           node --check src/app/00-state-and-calculations.js
           node --check src/app/10-persistence.js
           node --check src/app/20-sharing.js
@@ -50,6 +59,25 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
+      - name: Synchroniser les HTML générés dans la branche de la PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git fetch origin "$PR_BRANCH"
+          git checkout --detach FETCH_HEAD
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html "Onnet-$VERSION.html"
+          if git diff --cached --quiet; then
+            echo "Les HTML sont déjà synchronisés."
+            exit 0
+          fi
+          git commit -m "build: synchroniser les HTML générés"
+          git push origin "HEAD:$PR_BRANCH"
       - name: Publier les captures visuelles desktop et mobile
         if: always()
         uses: actions/upload-artifact@v7

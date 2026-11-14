@@ -29,8 +29,6 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
 
   const html = fs.readFileSync(output, 'utf8');
   const styles = readStylesSource(root).trim();
-  const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
-  const app = readAppSource(root).trim();
 
   assert.ok(html.includes(styles));
   assert.equal(styles.split('@font-face').length - 1, 5,
@@ -39,14 +37,17 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
     'les cinq ressources WOFF2 doivent être réinjectées dans les styles');
   assert.doesNotMatch(styles, /@@ONNET_FONT_/,
     'aucun marqueur de police ne doit subsister après assemblage');
-  assert.ok(html.includes(utils));
-  assert.ok(html.includes(app));
-  assert.ok(html.includes("const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'"));
-  assert.ok(html.includes('window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };'));
+  assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
+  assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
+  assert.match(html, /\b(?:const|let|var)\s+scenarioDefaults\s*=\s*\{/, 'les valeurs par défaut doivent être conservées');
+  assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
+  assert.match(html, /window\.OnNetUrssafApi\s*=\s*\{/);
   assert.ok(html.includes('brand-version">v9.9.9</span>'));
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal(html.includes('@@ONNET_CALC@@'), false);
   assert.equal(html.includes('const P = {'), false, 'aucune table locale de taux ne doit être embarquée');
+  assert.doesNotMatch(html, /from\s+[\"']\.\/src\/(?:ui-utils|urssaf-api-client)\.mjs[\"']/,
+    'aucun import externe ne doit rendre le HTML autonome dépendant des sources');
   const scriptTags = [...html.matchAll(/<script\b([^>]*)>/g)].map(match => match[1].trim());
   assert.deepEqual(scriptTags, ['type="module"'],
     'le runtime doit être regroupé dans un unique module ES encapsulé');
@@ -134,15 +135,11 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   const generated = fs.readFileSync(output, 'utf8');
   const published = fs.readFileSync(artifactPath, 'utf8');
   const styles = readStylesSource(root).trim();
-  const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
-  const app = readAppSource(root).trim();
   assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
   assert.equal(generated, published, 'le build doit reproduire exactement le HTML autonome publié');
   assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
-  assert.ok(published.includes(utils), 'le fichier publié doit embarquer les utilitaires actuels');
-  assert.ok(published.includes(app), 'le fichier publié doit embarquer le JavaScript actuel');
   assert.ok(generated.includes(styles), 'le build doit toujours intégrer le CSS source');
-  assert.ok(generated.includes(utils), 'le build doit toujours intégrer les utilitaires source');
-  assert.ok(generated.includes(app), 'le build doit toujours intégrer le JavaScript source');
+  assert.match(published, /function parseNum\(v\)/, 'le bundle publié doit inclure les utilitaires');
+  assert.match(generated, /function parseNum\(v\)/, 'le build doit inclure les utilitaires');
   assert.equal(published.includes('@@ONNET_'), false, 'aucun marqueur de template ne doit rester');
 });
