@@ -184,9 +184,13 @@ async function addSecondScenario(page, gross = '3200') {
   await page.locator('#maquetteAddSalary').click();
   await page.locator('#modalAddInput').fill(gross);
   await page.locator('#modalAddSubmit').click();
-  await page.waitForFunction(() =>
-    document.querySelectorAll('#cardsBody [data-card]').length === 2
-  );
+  await page.waitForFunction(() => {
+    const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+    return cards.length === 2 &&
+      cards.every(card => card.dataset.resultState === 'ready') &&
+      document.querySelectorAll('#stackChart .stack-col').length === 2 &&
+      document.querySelectorAll('#stackLegend .legend-item').length === 4;
+  }, null, { timeout: 20000 });
 }
 
 test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du formulaire', { timeout: 60000 }, async () => {
@@ -419,6 +423,14 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
+    const diagnosticsDebug = await page.evaluate(() => ({
+      status: document.getElementById('urssafStatusText')?.textContent,
+      warningsHidden: document.getElementById('urssafWarnings')?.hidden,
+      warningsHtml: document.getElementById('urssafWarnings')?.outerHTML,
+      cardWarnings: document.getElementById('c-result-warnings-0')?.outerHTML,
+      resultState: document.querySelector('#cardsBody [data-card]')?.dataset.resultState
+    }));
+    console.log('ONNET_URSSAF_DIAGNOSTICS_DEBUG=' + JSON.stringify(diagnosticsDebug));
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
@@ -1239,14 +1251,14 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    const secondCard = page.locator('#cardsBody [data-card]').nth(1);
-    await page.locator('#stackChart [data-setref="1"]').click();
+    await page.locator('#maquetteOfferTabs button').nth(1).click();
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
-      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready')
+      [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
+      document.querySelector('#benchmarkBody .benchmark-meta')?.textContent.includes('repère 35 h'),
+      null, { timeout: 20000 }
     );
-    await page.locator('#stackChart [data-setref="1"]').click();
 
     const smic35 = await waitForBenchmarkRequest(request =>
       Math.abs(Number.parseFloat(request.situation[overtimeKey] || '0')) < 0.001
