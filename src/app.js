@@ -2030,7 +2030,6 @@ function renderMutuelleTrFields(idPrefix){
             <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
             <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${idPrefix}Part" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
           </div>
-          <p class="sub-hint">Nombre de titres entier (0 à 31) ; part salariale comprise entre 40 et 50 %.</p>
         </div>
       </div>
     </div>`;
