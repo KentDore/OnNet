@@ -760,11 +760,11 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 
 /* OnNet — actions discrètes et parcours d'entrée allégé */
 .header-actions{display:flex;align-items:center;gap:10px;flex:none;width:auto;}
-.header-actions .header-share-btn{min-height:42px;padding:9px 15px;border-radius:999px;}
+.header-actions .header-share-btn{min-height:42px;padding:9px 15px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink-soft);}
 .header-menu{position:relative;z-index:30;}
 .header-menu-trigger{
   display:flex;align-items:center;justify-content:center;width:42px;height:42px;
-  list-style:none;border:1px solid var(--line);border-radius:50%;
+  list-style:none;border:1px solid var(--line);border-radius:12px;
   background:var(--surface);color:var(--ink-soft);cursor:pointer;
   transition:background .18s ease,border-color .18s ease,color .18s ease;
 }
