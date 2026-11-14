@@ -6,6 +6,7 @@ const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
 const { readAppSource } = require('./helpers/read-app-source');
+const { readStylesSource } = require('../scripts/source-loader');
 
 test('le build autonome embarque le client officiel Urssaf et les seuls utilitaires de présentation', t => {
   const root = path.resolve(__dirname, '..');
@@ -18,11 +19,17 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   assert.equal(run.status, 0, run.stderr);
 
   const html = fs.readFileSync(output, 'utf8');
-  const styles = fs.readFileSync(path.join(root, 'src', 'styles.css'), 'utf8').trim();
+  const styles = readStylesSource(root).trim();
   const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
   const app = readAppSource(root).trim();
 
   assert.ok(html.includes(styles));
+  assert.equal((styles.match(/@font-face\\s*\\{/g) || []).length, 5,
+    'les cinq polices doivent être intégrées au CSS final');
+  assert.equal((styles.match(/data:font\\/woff2;base64,/g) || []).length, 5,
+    'les cinq ressources WOFF2 doivent être réinjectées dans les styles');
+  assert.doesNotMatch(styles, /@@ONNET_FONT_/,
+    'aucun marqueur de police ne doit subsister après assemblage');
   assert.ok(html.includes(utils));
   assert.ok(html.includes(app));
   assert.ok(html.includes("const DEFAULT_ENDPOINT = 'https://mon-entreprise.urssaf.fr/api/v1/evaluate'"));
@@ -115,7 +122,7 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   assert.equal(run.status, 0, run.stderr);
   const generated = fs.readFileSync(output, 'utf8');
   const published = fs.readFileSync(artifactPath, 'utf8');
-  const styles = fs.readFileSync(path.join(root, 'src', 'styles.css'), 'utf8').trim();
+  const styles = readStylesSource(root).trim();
   const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
   const app = readAppSource(root).trim();
   assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
