@@ -142,12 +142,12 @@ function mapUrssafResultToOnNet(result){
     netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
     netApresImpot:result.netAfterTax,
-    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? result.netAfterTax / monthlyHours : null,
+    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? (result.netAfterTax + monthly.mutuelle) / monthlyHours : null,
     annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
     impotAnnuel:result.incomeTax,
     tauxImpot:result.calculatedTaxRate,
     brutHoraire:result.baseGross / HEURES_BASE,
-    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
+    netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
     tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
   };
 }
