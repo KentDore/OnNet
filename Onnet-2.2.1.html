@@ -159,11 +159,14 @@
   .modal-overlay.show .modal{opacity:1;transform:translateY(0) scale(1);}
   /* Les champs TR apparaissent sans saut de mise en page brutal. Le contenu
      reste dans le flux et la hauteur de la modale reste contrôlée. */
-  .onboarding-tr-fields{
-    display:grid;grid-template-rows:1fr;opacity:1;
-    transition:grid-template-rows .28s cubic-bezier(.22,1,.36,1),opacity .2s ease;
+  .onboarding-tr-fields{display:grid;grid-template-rows:1fr;opacity:1;}
+  /* Respecte l’attribut HTML hidden : les champs repliés restent réellement masqués. */
+  .onboarding-tr-fields[hidden]{display:none;}
+  .onboarding-tr-fields:not([hidden]){animation:onboardingFieldsIn .28s cubic-bezier(.22,1,.36,1) both;}
+  @keyframes onboardingFieldsIn{
+    from{grid-template-rows:0fr;opacity:0;}
+    to{grid-template-rows:1fr;opacity:1;}
   }
-  .onboarding-tr-fields[hidden]{display:grid;grid-template-rows:0fr;opacity:0;pointer-events:none;}
   .onboarding-tr-fields>.three-col{min-height:0;overflow:hidden;}
   .onboarding-tr-toggle button{transition:background-color .2s ease,color .2s ease,transform .16s ease;}
   .onboarding-tr-toggle button:active{transform:scale(.96);}
@@ -417,7 +420,10 @@
   .bar-delta.neg{background:var(--warn-soft); color:var(--warn);}
   .bar-track{background:var(--bg); border-radius:8px; height:10px; overflow:hidden;}
   .bar-fill{height:100%; background:var(--accent); border-radius:8px; transition:width .2s ease;}
-  @media (prefers-reduced-motion:reduce){ .bar-fill{transition:none;} }
+  @media (prefers-reduced-motion:reduce){
+    .bar-fill{transition:none;}
+    .modal-overlay,.modal,.onboarding-tr-fields,.onboarding-tr-toggle button{transition:none!important;animation:none!important;}
+  }
 
   .icon-inline{width:15px; height:15px; flex:none; margin-top:1px;}
   .alert{display:flex; gap:8px; align-items:flex-start; font-size:12.5px; line-height:1.5; border-radius:10px; padding:11px 13px; margin-top:14px;}
