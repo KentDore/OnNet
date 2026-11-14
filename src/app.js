@@ -1165,8 +1165,12 @@ function renderMaquetteControls(computedOverride){
       const mealEmployee=Number(computed.r.tr?.totalSalarie||0);
       const mealEmployer=Number(computed.r.tr?.totalEmployeur||0);
       const mealTotal=mealEmployee+mealEmployer;
+      const periodScale=maquetteComparisonPeriod==='hour'?(hoursMonth>0?1/hoursMonth:0):maquetteComparisonPeriod==='year'?12:1;
+      const periodFmt=n=>maquetteComparisonPeriod==='hour'?fmtHoraire(n):fmt(n);
+      const netWithoutMeal=Number(computed.r.m?.netSocial||0)*periodScale;
+      const netWithMeal=(Number(computed.r.m?.netApres||0)+mealTotal)*periodScale;
       const mealBenefit=mealTotal>0.5
-        ? '<div class="salary-meal-benefit"><span><strong>'+fmt(mealTotal)+' de titres-restaurant / mois</strong><small>Votre part : '+fmt(mealEmployee)+' · Part employeur : '+fmt(mealEmployer)+'</small></span></div>'
+        ? '<div class="salary-meal-benefit"><div><span>Total des titres-restaurant</span><strong>'+periodFmt(mealTotal*periodScale)+'</strong></div><div><span>Net sans TR</span><strong>'+periodFmt(netWithoutMeal)+'</strong></div><div><span>Net avec TR</span><strong>'+periodFmt(netWithMeal)+'</strong></div></div>'
         : '';
       summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h</div>'+mealBenefit+'</div>';
     }
