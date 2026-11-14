@@ -29,7 +29,6 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
 
   const html = fs.readFileSync(output, 'utf8');
   const styles = readStylesSource(root).trim();
-    const app = readAppSource(root).trim();
 
   assert.ok(html.includes(styles));
   assert.equal(styles.split('@font-face').length - 1, 5,
@@ -38,11 +37,11 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
     'les cinq ressources WOFF2 doivent être réinjectées dans les styles');
   assert.doesNotMatch(styles, /@@ONNET_FONT_/,
     'aucun marqueur de police ne doit subsister après assemblage');
-  assert.match(html, /function parseNum\\(v\\)/, 'le module utilitaire doit être intégré au bundle');
-  assert.match(html, /function fmtHoraire\\(n\\)/, 'les fonctions de formatage doivent être conservées');
+  assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
+  assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
   assert.match(html, /const scenarioDefaults =/, 'les valeurs par défaut doivent être conservées');
-  assert.match(html, /DEFAULT_ENDPOINT\\s*=\\s*[\"']https:\\/\\/mon-entreprise\\.urssaf\\.fr\\/api\\/v1\\/evaluate[\"']/);
-  assert.match(html, /window\\.OnNetUrssafApi\\s*=\\s*\\{/);
+  assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
+  assert.match(html, /window\.OnNetUrssafApi\s*=\s*\{/);
   assert.ok(html.includes('brand-version">v9.9.9</span>'));
   assert.equal(html.includes('@@ONNET_'), false);
   assert.equal(html.includes('@@ONNET_CALC@@'), false);
@@ -134,7 +133,6 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   const generated = fs.readFileSync(output, 'utf8');
   const published = fs.readFileSync(artifactPath, 'utf8');
   const styles = readStylesSource(root).trim();
-  const app = readAppSource(root).trim();
   assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
   assert.equal(generated, published, 'le build doit reproduire exactement le HTML autonome publié');
   assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
