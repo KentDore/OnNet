@@ -1423,3 +1423,21 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     await context.close();
   }
 });
+
+
+test('le runtime applicatif est encapsulé sans exposer ses fonctions internes', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent: false });
+  try {
+    const runtime = await page.evaluate(() => ({
+      appReady: Boolean(document.getElementById('mainSalaryGross')),
+      urssafClientReady: typeof window.OnNetUrssafApi?.calculateWithUrssafApi === 'function',
+      rendererExposed: typeof window.renderCard !== 'undefined'
+    }));
+    assert.equal(runtime.appReady, true);
+    assert.equal(runtime.urssafClientReady, true);
+    assert.equal(runtime.rendererExposed, false,
+      'les fonctions internes ne doivent plus polluer l’objet window');
+  } finally {
+    await context.close();
+  }
+});
