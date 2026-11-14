@@ -46,8 +46,11 @@
       <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
       
       <div class="declaration-fields">
-        <label for="mainSalaryPeriod">Période du salaire brut</label>
-        <select id="mainSalaryPeriod"><option value="month" selected>Mensuel</option><option value="year">Annuel</option></select>
+        <span class="declaration-field-label">Période du salaire brut</span>
+        <div class="pill-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
+          <button type="button" data-period="month" aria-pressed="true">Mensuel</button>
+          <button type="button" data-period="year" aria-pressed="false">Annuel</button>
+        </div>
         <label for="mainSalaryGross">Salaire brut (€)</label>
         <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
         <label for="mainSalaryHours">Base horaire</label>
@@ -90,25 +93,11 @@
       <div id="benchmarkBody" aria-live="polite"></div>
     </section>
 
-    <details class="panel-nested" id="moreMetrics">
-      <summary>D'autres chiffres utiles selon ce que vous cherchez à savoir</summary>
-      <div class="panel-nested-body">
-        <div class="ref-row">
-          <label for="refSelect">Salaire de référence</label>
-          <select id="refSelect"></select>
-        </div>
-        <div class="metric-toggle" role="group" aria-label="Indicateur comparé">
-          <button data-metric="netHoraire" aria-pressed="true">Net horaire avant impôt</button>
-          <button data-metric="netApresImpotHoraire" aria-pressed="false">Net horaire après impôt</button>
-          <button data-metric="brutHoraire" aria-pressed="false">Brut horaire</button>
-          <button data-metric="netImposable" aria-pressed="false">Net imposable</button>
-          <button data-metric="netApresImpot" aria-pressed="false">Net après impôt</button>
-          <button data-metric="annuelNet" aria-pressed="false">Net annuel</button>
-        </div>
-        <div class="hint" id="metricHint" style="margin:-6px 0 14px;"></div>
-        <div id="barsBody" aria-live="polite"></div>
-      </div>
-    </details>
+    <div class="internal-metrics-state" hidden>
+      <select id="refSelect"></select>
+      <div id="metricHint"></div>
+      <div id="barsBody"></div>
+    </div>
   </div>
 
   <details class="advanced-workspace reveal" id="advancedWorkspace">
