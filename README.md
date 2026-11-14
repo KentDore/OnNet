@@ -50,7 +50,7 @@ La cartographie des responsabilités, des couplages actuels et de la trajectoire
 
 ## Développement et tests
 
-Le client API se trouve dans `src/urssaf-api-client.mjs` les fonctions pures d'interface dans `src/ui-utils.mjs` et la normalisation des scénarios/foyers dans `src/state-normalizers.mjs`. Le build les regroupe avec les fragments de `src/app/` grâce à esbuild, dans un seul script de type module embarqué. Le HTML publié reste autonome : aucune requête supplémentaire vers les fichiers source n'est nécessaire. Les fragments applicatifs partagent encore le même espace lexical ; leur modularisation indépendante reste une étape distincte. Les sources se modifient dans `src/app/` et `src/styles/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
+Le client API se trouve dans `src/urssaf-api-client.mjs`, les fonctions pures d'interface dans `src/ui-utils.mjs` et la normalisation des scénarios/foyers dans `src/state-normalizers.mjs`. Le build les regroupe avec les fragments de `src/app/` grâce à esbuild, dans un seul script de type module embarqué. Le HTML publié reste autonome : aucune requête supplémentaire vers les fichiers source n'est nécessaire. Les fragments applicatifs partagent encore le même espace lexical ; leur modularisation indépendante reste une étape distincte. Les sources se modifient dans `src/app/` et `src/styles/`, pas dans le HTML généré. Le fichier `index.html` est généré depuis ces sources et ne doit pas être modifié indépendamment.
 
 Tests automatisés et contrôles de qualité :
 
