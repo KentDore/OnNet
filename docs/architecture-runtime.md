@@ -10,12 +10,12 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 
 1. `src/template.html` fournit le squelette HTML et les marqueurs de génération.
 2. `src/urssaf-api-client.mjs` contient le client de l'API officielle. Il est intégré au script final et expose l'interface attendue par l'application.
-3. `src/ui-utils.js` fournit les valeurs par défaut et les utilitaires de présentation.
+3. `src/ui-utils.mjs` exporte les valeurs par défaut et les utilitaires purs de présentation.
 4. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs.
 5. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
 6. `scripts/build.js` génère le HTML autonome. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
-Depuis la fusion de la [PR #91](https://github.com/KentDore/OnNet/pull/91), le client Urssaf, les utilitaires et les fragments applicatifs sont regroupés dans un unique `<script type="module">`. Les fonctions et variables internes ne polluent donc plus `window` ; `window.OnNetUrssafApi` reste le point d'accès volontaire. Cette amélioration encapsule le runtime, mais ne crée pas encore des modules ES indépendants : les fragments applicatifs partagent toujours le même espace lexical et leur ordre d'assemblage reste important.
+Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) extrait les utilitaires purs et le client Urssaf en véritables modules ES, puis les regroupe avec esbuild au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Les huit fragments applicatifs sont encore assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
 
 ## Responsabilités actuelles
 
@@ -51,9 +51,9 @@ Cette table décrit les responsabilités dominantes, pas une séparation stricte
 
 ### Étape 2 — Extraire les utilitaires purs
 
-Cible initiale possible : formatage, échappement HTML et parsing numérique. Ces fonctions ne doivent dépendre ni du DOM, ni du stockage, ni de l'état des scénarios. Les valeurs par défaut et constantes métier seront traitées séparément pour éviter de déplacer des responsabilités qui ne sont pas purement utilitaires.
+**Réalisée pour les utilitaires de présentation** : formatage, échappement HTML, parsing numérique, constantes d'interface et valeurs par défaut sont exportés par `src/ui-utils.mjs`. Le build les regroupe avec le client Urssaf et les fragments applicatifs au moyen d'esbuild. Le HTML final reste autonome et n'effectue aucune requête supplémentaire vers les modules source.
 
-L'extraction devra préserver le HTML autonome : les modules seront regroupés au build, sans imposer de requêtes supplémentaires à l'ouverture ni rendre le fichier autonome dépendant de fichiers externes.
+Cette extraction est couverte par des tests unitaires dédiés et par les tests navigateur qui vérifient que les fonctions internes ne sont pas exposées sur `window`.
 
 ### Étape 3 — Rendre l'état explicite
 
