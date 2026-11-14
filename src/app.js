@@ -103,7 +103,8 @@ function mapUrssafResultToOnNet(result){
   }
   const gross = result.grossCalculated;
   const overtimeHours = result.overtimeHours;
-  const monthlyHours = HEURES_BASE + overtimeHours;
+  // Le dénominateur doit refléter exactement la durée contractuelle annualisée : 35 h ou 39 h par semaine.
+  const monthlyHours = (overtimeHours > 0 ? 39 : 35) * 52 / 12;
   // Le total des cotisations salarié inclut déjà la part salariale de mutuelle.
   // On isole cette ligne pour conserver la décomposition visuelle sans la compter deux fois.
   const otherEmployeeContributions = Math.max(0, result.employeeContributions - result.employeeHealth);
@@ -881,7 +882,7 @@ function renderStack(computed){
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
       <div class="stack-net">${fmt(net)}</div>
-      ${tr > 0.5 ? `<div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${tr > 0.5 ? `<div class="stack-net-notr">TR salarié : ${fmt(tr)} · employeur : ${fmt(r.tr.totalEmployeur)}</div><div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -908,7 +909,7 @@ function renderWaterfall(computed){
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
   const trNote = tr > 0.5
-    ? `Sans TR : <strong>${fmt(netSansTR)}</strong> · TR perçus : <strong>${fmt(trValeurFaciale)}</strong>`
+    ? `Net avant impôt hors retenue des TR : <strong>${fmt(netSansTR)}</strong> · ${s.joursResto} jours × ${fmt(s.valeurResto)} · part salarié : <strong>${fmt(tr)}</strong> · part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> · valeur créditée : <strong>${fmt(trValeurFaciale)}</strong>`
     : '';
   return `
   <div class="waterfall">
@@ -2017,10 +2018,11 @@ function renderMutuelleTrFields(idPrefix){
         </div>
         <div id="${idPrefix}TrFields" class="onboarding-tr-fields" hidden>
           <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="text" inputmode="decimal" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="${idPrefix}Valeur" value="8" data-max="500"></div>
-            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="text" inputmode="decimal" id="${idPrefix}Part" value="50"></div>
+            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${idPrefix}Jours" value="21"></div>
+            <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
+            <div class="field-row"><label for="${idPrefix}Part">Part salariale (%)</label><input type="number" inputmode="decimal" min="40" max="50" step="any" id="${idPrefix}Part" value="50"></div>
           </div>
+          <p class="sub-hint">Nombre de titres entier (0 à 31) ; part salariale comprise entre 40 et 50 %.</p>
         </div>
       </div>
     </div>`;
@@ -2043,15 +2045,19 @@ function bindMutuelleTrFields(overlay, idPrefix){
       if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
-  return () => {
+  const read = () => {
     const result = { mutuelle:30, mutuellePat:30, joursResto:0 };
     if(trOui){
-      result.joursResto = Math.max(0, Math.min(31, parseNum(joursInput.value)));
+      result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
-      result.partResto = Math.max(0, Math.min(100, parseNum(partInput.value)));
+      result.partResto = clamp(parseNum(partInput.value), 40, 50);
     }
     return result;
   };
+  read.isValid = () => !trOui || [joursInput, valeurInput, partInput].every(input =>
+    input.value.trim() !== '' && input.checkValidity()
+  );
+  return read;
 }
 
 function showOnboardingModal(){
@@ -2120,6 +2126,10 @@ function showOnboardingModal(){
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
+    if(!readMutuelleTr.isValid()){
+      setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      return;
+    }
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
     const result = Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr());
     closeModal(result);
@@ -2207,6 +2217,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
+    if(!readMutuelleTr.isValid()){
+      setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      return;
+    }
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
     closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
   };

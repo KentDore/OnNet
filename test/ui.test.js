@@ -703,6 +703,40 @@ test('ne propose pas de réessayer pour les paramètres hors périmètre', { tim
   }
 });
 
+test('bloque les paramètres de titres-restaurant hors plage avant transmission à Urssaf', { timeout: 60000 }, async () => {
+  const { context, page, calls } = await openApp({ emptyStorage: true });
+  try {
+    const modal = page.locator('#modalOverlay');
+    await modal.waitFor({ state: 'visible' });
+    await modal.locator('#modalOnboardingTrToggle [data-tr="oui"]').click();
+    await modal.locator('#modalOnboardingInput').fill('2500');
+    await modal.locator('#modalOnboardingJours').fill('20.5');
+    await modal.locator('#modalOnboardingValeur').fill('8');
+    await modal.locator('#modalOnboardingPart').fill('30');
+    const submit = modal.locator('#modalOnboardingSubmit');
+    await submit.click();
+    assert.equal(await modal.isVisible(), true, 'une saisie invalide ne doit pas fermer la modale');
+    assert.match(await modal.locator('#modalMsg').innerText(), /Vérifiez les titres-restaurant/);
+    await modal.locator('#modalOnboardingJours').fill('21');
+    await modal.locator('#modalOnboardingPart').fill('40');
+    await submit.click();
+
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.joursResto === 21 && state.scenarios[0].partResto === 40;
+    });
+    await waitForCalls(calls, 2);
+    const request = calls.bodies.find(body =>
+      body.situation['salarié . rémunération . frais professionnels . titres-restaurant'] === 'oui'
+    );
+    assert.ok(request, 'une requête avec titres-restaurant doit parvenir au moteur');
+    assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . nombre'], '21 titres-restaurant/mois');
+    assert.equal(request.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur'], '60.000000%');
+  } finally {
+    await context.close();
+  }
+});
+
 test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
@@ -711,6 +745,14 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     const part = card.locator('[data-key="partResto"]');
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
+    const breakdown = await page.locator('.wf-note').innerText();
+    assert.match(breakdown, /21 jours × 8 €/);
+    assert.match(breakdown, /part salarié/);
+    assert.match(breakdown, /part employeur/);
+    await addSecondScenario(page);
+    const stackTicketDetails = await page.locator('#stackChart .stack-col .stack-net-notr').allTextContents();
+    assert.ok(stackTicketDetails.some(text => text.includes('TR salarié : 84 € · employeur : 84 €')),
+      'le graphique comparatif doit afficher les deux contributions aux titres-restaurant');
   } finally {
     await context.close();
   }
