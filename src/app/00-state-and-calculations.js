@@ -1,0 +1,377 @@
+"use strict";
+
+
+// ---------- État ----------
+let idCounter = 0;
+
+// L'accord de transmission est donné par la saisie/validation du formulaire.
+// Il reste limité à la session et n'est jamais mémorisé sur l'appareil.
+let urssafConsentGranted = false;
+let urssafGeneration = 0;
+let urssafDebounceTimer = null;
+let urssafRequestQueue = Promise.resolve();
+let urssafLastRequestAt = 0;
+const urssafResultCache = new Map();
+const urssafErrorCache = new Map();
+let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+
+function currentCalculationDate(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+
+function taxInputForFoyer(f){
+  if(f.mode === 'taux'){
+    return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
+  }
+  return {
+    modeImpot:'barème',
+    situationFamille:f.couple ? 'couple' : 'célibataire',
+    enfantsACharge:Number(f.personnesCharge) || 0,
+    parentIsole:!f.couple && f.parentIsole === true,
+    autresRevenusImposables:f.couple ? (Number(f.autresRevenus) || 0) : 0
+  };
+}
+
+function scenarioCalculationDate(s){
+  return currentCalculationDate();
+}
+
+function calculationKey(s, f){
+  return JSON.stringify({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto) || 0,
+    nbMois:Number(s.nbMois || 12),
+    primes:Number(s.primes || 0),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
+  });
+}
+
+function unsupportedCalculationReason(s){
+  if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
+    return 'Le salaire brut doit être strictement supérieur à 0 € pour effectuer une simulation.';
+  }
+  if(Number(s.nbMois || 12) !== 12){
+    return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
+  }
+  if(Number(s.primes || 0) > 0){
+    return 'Ce scénario comporte des primes annuelles libres qui ne sont pas encore raccordées à l’API Urssaf.';
+  }
+  if(!String(s.codePostal || '').trim() || !String(s.departement || '').trim()){
+    return 'Sélectionnez une commune dans les suggestions pour renseigner son code postal et son département avant le calcul.';
+  }
+  return null;
+}
+
+function buildUrssafInput(s, f){
+  const reason = unsupportedCalculationReason(s);
+  if(reason) throw new Error(reason);
+  return Object.assign({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date:scenarioCalculationDate(s),
+    benchmarkOnly:Boolean(s.isBenchmark)
+  }, s.isBenchmark ? {} : taxInputForFoyer(f));
+}
+
+function mapUrssafResultToOnNet(result){
+  if(result.benchmarkOnly){
+    return {
+      engine:result.engine,
+      checkedAt:result.checkedAt,
+      missingVariables:result.missingVariables,
+      warnings:result.warnings,
+      netApres:result.netBeforeTax
+    };
+  }
+  const gross = result.grossCalculated;
+  const overtimeHours = result.overtimeHours;
+  // Le dénominateur doit refléter exactement la durée contractuelle annualisée : 35 h ou 39 h par semaine.
+  const monthlyHours = (overtimeHours > 0 ? 39 : 35) * 52 / 12;
+  // Le total des cotisations salarié inclut déjà la part salariale de mutuelle.
+  // On isole cette ligne pour conserver la décomposition visuelle sans la compter deux fois.
+  const otherEmployeeContributions = Math.max(0, result.employeeContributions - result.employeeHealth);
+  const monthly = {
+    brutTotal:gross,
+    netApres:result.netBeforeTax,
+    netImposable:result.taxableNet,
+    cotisNettes:otherEmployeeContributions,
+    mutuelle:result.employeeHealth,
+    netSocial:result.netBeforeTax + result.mealTicketEmployee
+  };
+  const annual = {
+    brutTotal:gross * 12,
+    netApres:result.netBeforeTax * 12,
+    netImposable:result.taxableNet * 12
+  };
+  const tr = {
+    totalSalarie:result.mealTicketEmployee,
+    totalEmployeur:result.mealTicketEmployer,
+    reintegre:result.mealTicketNonDeductible,
+    motif:result.mealTicketNonDeductible > 0.005 ? 'api' : null
+  };
+  return {
+    engine:result.engine,
+    checkedAt:result.checkedAt,
+    missingVariables:result.missingVariables,
+    warnings:result.warnings,
+    hasHS:overtimeHours > 0,
+    heuresSup:overtimeHours,
+    brutHS:result.overtimePay,
+    tr,
+    m:monthly,
+    a:annual,
+    netApres:monthly.netApres,
+    netImposable:monthly.netImposable,
+    annuelNet:annual.netApres,
+    netApresImpot:result.netAfterTax,
+    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? (result.netAfterTax + monthly.mutuelle) / monthlyHours : null,
+    annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
+    impotAnnuel:result.incomeTax,
+    tauxImpot:result.calculatedTaxRate,
+    brutHoraire:result.baseGross / HEURES_BASE,
+    netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
+    tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
+  };
+}
+
+function getSmicGross(){
+  return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
+}
+
+function getSmicGrossTarget(baseGross, weeklyHours){
+  const overtimeHours=Number(weeklyHours)===39?4*52/12:0;
+  if(!overtimeHours) return baseGross;
+  // En 39 h : SMIC de base 35 h + 4 h supplémentaires hebdomadaires à +25 %.
+  return Math.round(baseGross*(1+overtimeHours*1.25/HEURES_BASE)*100)/100;
+}
+
+function buildSmicScenario(base){
+  const amount = getSmicGross();
+  if(!Number.isFinite(amount) || amount <= 0) return null;
+  const weeklyHours=Number(base.dureeType)===39?39:35;
+  return Object.assign({}, base, {
+    id:-1, name:'Référence SMIC', brut:getSmicGrossTarget(amount,weeklyHours), dureeType:String(weeklyHours),
+    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
+    nbMois:12, primes:0, isBenchmark:true
+  });
+}
+
+function getCurrentComputed(){
+  return scenarios.map(s => ({s, r:urssafResultCache.get(calculationKey(s,foyer)) || null}));
+}
+
+function getCalculationError(s, f){
+  const key = calculationKey(s, f || foyer);
+  return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
+}
+
+function getCachedSmicResult(){
+  const base = findScenario(refId) || scenarios[0];
+  if(!base) return null;
+  const scenario = buildSmicScenario(base);
+  if(!scenario) return null;
+  return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
+}
+
+function queuedUrssafFetch(url, options){
+  const request = urssafRequestQueue.then(async () => {
+    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
+    if(delay) await new Promise(resolve => setTimeout(resolve, delay));
+    urssafLastRequestAt = Date.now();
+    return window.fetch(url, options);
+  });
+  urssafRequestQueue = request.catch(() => {});
+  return request;
+}
+
+function updateUrssafStatus(computed){
+  const statusText = document.getElementById('urssafStatusText');
+  if(!statusText) return;
+  const status = document.getElementById('urssafStatus');
+  if(status) status.classList.remove('is-error','has-diagnostics');
+  const diagnostics = document.getElementById('urssafWarnings');
+  const diagnosticsList = document.getElementById('urssafWarningsList');
+  if(diagnostics) diagnostics.hidden = true;
+  if(diagnosticsList) diagnosticsList.innerHTML = '';
+  if(!urssafConsentGranted){
+    statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
+    return;
+  }
+  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
+  const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicResult = getCachedSmicResult();
+  const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
+  const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
+    (officialSmicState.status === 'error');
+  const smicPending = !smicResult && !smicError;
+  const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
+  if(smicPending) pending.push({s:smicScenario,r:null});
+  if(failed.length || smicError){
+    statusText.textContent = 'Le calcul n’a pas abouti. Vérifiez votre connexion puis réessayez.';
+    if(status) status.classList.add('is-error');
+    statusText.textContent += ' Modifiez un paramètre pour relancer le calcul.';
+    return;
+  }
+  if(unsupported.length){
+    statusText.textContent = 'Un ou plusieurs salaires nécessitent un ajustement. Consultez le message affiché dans la carte concernée.';
+    statusText.textContent += ' Modifiez les paramètres concernés pour relancer le calcul.';
+    return;
+  }
+  if(pending.length){
+    statusText.textContent = 'Mise à jour des calculs…';
+    return;
+  }
+  const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
+  if(officialSmicState.status === 'ready') ready.push(officialSmicState);
+  const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
+  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
+  const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
+  statusText.textContent = 'Calculs à jour.';
+  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
+    diagnosticsList.innerHTML = [
+      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
+      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
+    ].join('');
+    diagnostics.hidden = false;
+    if(status) status.classList.add('has-diagnostics');
+  }
+  // Aucun bouton de calcul : les résultats sont actualisés automatiquement.
+}
+
+let officialSmicPromise = null;
+async function refreshOfficialSmic(forceRetry){
+  if(officialSmicPromise) return officialSmicPromise;
+  if(officialSmicState.status === 'ready' && !forceRetry) return officialSmicState;
+  officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+  updateUrssafStatus(getCurrentComputed());
+  officialSmicPromise = (async () => {
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
+        throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+      );
+      if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
+      officialSmicState = { status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null };
+    }catch(error){
+      officialSmicState = { status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' };
+    }finally{
+      officialSmicPromise = null;
+      updateComputed({skipUrssafSchedule:true});
+      if(urssafConsentGranted && officialSmicState.status === 'ready') scheduleUrssafCalculations(true,false);
+    }
+    return officialSmicState;
+  })();
+  return officialSmicPromise;
+}
+
+async function executeUrssafCalculations(generation, forceRetry){
+  if(officialSmicState.status !== 'ready'){
+    await refreshOfficialSmic(forceRetry === true);
+    if(generation !== urssafGeneration) return;
+  }
+
+  const jobs = scenarios.map(s => Object.assign({},s));
+  const base = findScenario(refId) || scenarios[0];
+  const smicScenario = base ? buildSmicScenario(base) : null;
+  if(smicScenario) jobs.push(smicScenario);
+  const seen = new Set();
+  for(const s of jobs){
+    if(generation !== urssafGeneration) return;
+    const key = calculationKey(s,foyer);
+    if(seen.has(key) || urssafResultCache.has(key)) continue;
+    seen.add(key);
+    if(forceRetry) urssafErrorCache.delete(key);
+    if(urssafErrorCache.has(key)) continue;
+    const unsupported = unsupportedCalculationReason(s);
+    if(unsupported) continue;
+    try{
+      if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.calculateWithUrssafApi !== 'function'){
+        throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
+      }
+      const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
+        buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
+      );
+      // Une réponse valide reste réutilisable pour ses paramètres exacts,
+      // même si une saisie plus récente a rendu son affichage obsolète.
+      urssafResultCache.set(key,mapUrssafResultToOnNet(result));
+      urssafErrorCache.delete(key);
+      if(urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
+    }catch(error){
+      // Une erreur obsolète ne doit pas bloquer une prochaine tentative.
+      if(generation === urssafGeneration){
+        urssafErrorCache.set(key,error instanceof Error ? error.message : 'Erreur de calcul Urssaf inconnue.');
+      }
+    }
+    if(generation !== urssafGeneration) return;
+    updateUrssafStatus(getCurrentComputed());
+  }
+  if(generation === urssafGeneration) updateComputed({skipUrssafSchedule:true});
+}
+
+function scheduleUrssafCalculations(immediate, forceRetry){
+  if(urssafDebounceTimer) clearTimeout(urssafDebounceTimer);
+  const generation = ++urssafGeneration;
+  const computed = getCurrentComputed();
+  updateUrssafStatus(computed);
+  if(!urssafConsentGranted) return;
+  const run = () => executeUrssafCalculations(generation, forceRetry === true);
+  if(immediate) run();
+  else urssafDebounceTimer = setTimeout(run, 300);
+}
+
+// Id du scénario tout juste créé, pour lui appliquer une animation d'entrée
+// une seule fois (effacé à la fin du render() qui l'utilise).
+let justAddedId = null;
+function mkScenario(over){
+  const base = {
+    id: idCounter++, name:'Salaire', brut:2800, commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
+    mutuelle:scenarioDefaults.mutuelle, mutuellePat:scenarioDefaults.mutuelle,
+    joursResto:scenarioDefaults.joursResto, valeurResto:scenarioDefaults.valeurResto,
+    partResto:scenarioDefaults.partResto,
+    dureeType:'35', nbMois:scenarioDefaults.nbMois, primes:0,
+    treiziemeMoisBase:'base',
+  };
+  const scenario = Object.assign(base, over || {});
+  if(over && Object.prototype.hasOwnProperty.call(over, 'commune') && over.commune !== 'Pacé' &&
+     !Object.prototype.hasOwnProperty.call(over, 'codePostal') && !Object.prototype.hasOwnProperty.call(over, 'departement')){
+    scenario.codePostal = '';
+    scenario.departement = '';
+  }
+  // Compatibilité avec les créations historiques : la part employeur suit
+  // la part salarié, sauf lorsqu'une valeur distincte est fournie.
+  if(!over || !Object.prototype.hasOwnProperty.call(over, 'mutuellePat')){
+    scenario.mutuellePat = scenario.mutuelle;
+  }
+  return scenario;
+}
+
+function defaultScenarios(){
+  return [
+    mkScenario({ name:'Poste actuel', brut:2300, dureeType:'39', joursResto:21, valeurResto:8 })
+  ];
+}
+

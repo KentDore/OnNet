@@ -5,6 +5,7 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 const { spawnSync } = require('node:child_process');
+const { readAppSource } = require('./helpers/read-app-source');
 
 test('le build autonome embarque le client officiel Urssaf et les seuls utilitaires de présentation', t => {
   const root = path.resolve(__dirname, '..');
@@ -19,7 +20,7 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   const html = fs.readFileSync(output, 'utf8');
   const styles = fs.readFileSync(path.join(root, 'src', 'styles.css'), 'utf8').trim();
   const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
-  const app = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8').trim();
+  const app = readAppSource(root).trim();
 
   assert.ok(html.includes(styles));
   assert.ok(html.includes(utils));
@@ -34,8 +35,7 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
 });
 
 test('la restauration renumérote les scénarios et conserve les références valides', () => {
-  const appPath = path.join(__dirname, '..', 'src', 'app.js');
-  const app = fs.readFileSync(appPath, 'utf8');
+  const app = readAppSource();
   const start = app.indexOf('function sanitizeScenario(raw){');
   const end = app.indexOf('\nfunction loadPersistedState(){', start);
   assert.notEqual(start, -1, 'sanitizeScenario doit être présent');
@@ -61,7 +61,7 @@ test('la restauration renumérote les scénarios et conserve les références va
 });
 
 test('la restauration neutralise les paramètres d’absence des anciennes sauvegardes', () => {
-  const app = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js'), 'utf8');
+  const app = readAppSource();
   const start = app.indexOf('function sanitizeScenario(raw){');
   const end = app.indexOf('\nfunction loadPersistedState(){', start);
   const factory = new Function('scenarioDefaults', app.slice(start, end) + '\nreturn sanitizeScenario;');
@@ -77,7 +77,7 @@ test('la restauration neutralise les paramètres d’absence des anciennes sauve
 });
 
 test('la restauration utilise le premier scénario si la référence est invalide', () => {
-  const app = fs.readFileSync(path.join(__dirname, '..', 'src', 'app.js'), 'utf8');
+  const app = readAppSource();
   const start = app.indexOf('function sanitizeScenario(raw){');
   const end = app.indexOf('\nfunction loadPersistedState(){', start);
   const factory = new Function('scenarioDefaults', app.slice(start, end) +
@@ -117,8 +117,9 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   const published = fs.readFileSync(artifactPath, 'utf8');
   const styles = fs.readFileSync(path.join(root, 'src', 'styles.css'), 'utf8').trim();
   const utils = fs.readFileSync(path.join(root, 'src', 'ui-utils.js'), 'utf8').trim();
-  const app = fs.readFileSync(path.join(root, 'src', 'app.js'), 'utf8').trim();
+  const app = readAppSource(root).trim();
   assert.equal(index, published, 'index.html et le fichier autonome doivent rester identiques');
+  assert.equal(generated, published, 'le build doit reproduire exactement le HTML autonome publié');
   assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
   assert.ok(published.includes(utils), 'le fichier publié doit embarquer les utilitaires actuels');
   assert.ok(published.includes(app), 'le fichier publié doit embarquer le JavaScript actuel');
