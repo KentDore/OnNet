@@ -8,6 +8,15 @@ const { spawnSync } = require('node:child_process');
 const { readAppSource } = require('./helpers/read-app-source');
 const { readStylesSource } = require('../scripts/source-loader');
 
+test('package.json et package-lock.json utilisent la même version', () => {
+  const root = path.resolve(__dirname, '..');
+  const packageJson = JSON.parse(fs.readFileSync(path.join(root, 'package.json'), 'utf8'));
+  const packageLock = JSON.parse(fs.readFileSync(path.join(root, 'package-lock.json'), 'utf8'));
+  assert.equal(packageLock.version, packageJson.version, 'la version racine du lockfile doit suivre package.json');
+  assert.equal(packageLock.packages?.['']?.version, packageJson.version,
+    'la version du package racine dans le lockfile doit suivre package.json');
+});
+
 test('le build autonome embarque le client officiel Urssaf et les seuls utilitaires de présentation', t => {
   const root = path.resolve(__dirname, '..');
   const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'onnet-build-'));
