@@ -1,0 +1,10 @@
+[
+  "00-state-and-calculations.js",
+  "10-persistence.js",
+  "20-sharing.js",
+  "30-rendering.js",
+  "40-household-and-navigation.js",
+  "50-input-events.js",
+  "60-notifications-and-modals.js",
+  "70-optional-tools-and-startup.js"
+]
