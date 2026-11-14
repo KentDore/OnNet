@@ -160,6 +160,9 @@ async function openApp(options = {}) {
   await page.goto(baseUrl);
   if (options.advancedOpen !== false && !options.emptyStorage) {
     await page.locator('#advancedWorkspace').evaluate(el => { el.open = true; });
+    if (options.legacyCardsOpen !== false) {
+      await page.locator('#legacySalaryCards').evaluate(el => { el.open = true; });
+    }
   }
   if (pageErrors.length) {
     await context.close();
@@ -844,6 +847,8 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
     await advanced.getByText('Paramètres avancés et outils', { exact: true }).click();
+    assert.equal(await page.locator('#cardsScroll').isVisible(), false);
+    await page.locator('#legacySalaryCards > summary').click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), true);
     assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
