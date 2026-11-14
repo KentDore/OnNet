@@ -335,19 +335,10 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNetBeforeTax) + 30) / 169) < 0.02,
       'le taux horaire doit exclure la mutuelle salarié du net avant impôt, puis diviser par les 169 h du contrat 39 h');
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
-    await page.locator('#moreMetrics > summary').click();
-    await page.waitForFunction(() => document.getElementById('moreMetrics')?.open === true);
-    const afterTaxHourlyButton = page.locator('.metric-toggle button[data-metric="netApresImpotHoraire"]');
-    assert.equal(await afterTaxHourlyButton.count(), 1, 'un indicateur de net horaire après impôt doit être disponible');
-    await afterTaxHourlyButton.evaluate(button => button.click());
-    await page.waitForFunction(() =>
-      document.querySelector('.metric-toggle button[data-metric="netApresImpotHoraire"]')?.getAttribute('aria-pressed') === 'true'
-    );
-    const afterTaxHourlyValue = await page.locator('#comparePanel .bar-row').first().locator('.bar-value span').first().innerText();
-    const actualHourly = parseEuro(afterTaxHourlyValue);
-    const expectedHourly = (parseEuro(cardNetAfterTax) + 30) / 169;
-    assert.ok(Math.abs(actualHourly - expectedHourly) < 0.02,
-      `net horaire après impôt hors mutuelle incorrect : affiché=${afterTaxHourlyValue} (${actualHourly}), net mensuel=${cardNetAfterTax} (${parseEuro(cardNetAfterTax)}), attendu=${expectedHourly}, métrique active=${await afterTaxHourlyButton.getAttribute('aria-pressed')}, ligne=${await page.locator('#comparePanel .bar-row').first().innerText()}`);
+    assert.equal(await page.locator('#moreMetrics').count(), 0,
+      'les indicateurs secondaires ne doivent plus encombrer les résultats');
+    assert.equal(await page.locator('.metric-toggle').count(), 0,
+      'les boutons d’indicateurs secondaires ne doivent plus être présents');
     assert.equal(await page.locator('#cardsBody [data-result-state="ready"]').count(), 1);
   } finally {
     await context.close();
@@ -1132,6 +1123,14 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
     assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
     assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
+    const period = page.locator('#mainSalaryPeriod');
+    assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
+    assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
+    await period.locator('[data-period="year"]').click();
+    assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
+    const situationGap = await page.locator('.declaration-inline').evaluate(el => parseFloat(getComputedStyle(el).marginTop));
+    assert.ok(situationGap >= 16, 'un espacement doit séparer la situation des repères salariaux');
   } finally {
     await context.close();
   }

@@ -865,14 +865,16 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .unified-heading{margin-bottom:18px}
 .unified-heading h2,.comparison-subhead h3{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
 .unified-heading .sub{font-size:13px;color:#68716b}
-.declaration-inline{padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
+.declaration-inline{margin-top:16px;padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
 .declaration-inline-title{display:block;margin-bottom:13px}
 .declaration-inline-title strong{display:block;color:#315640;font-size:14px;font-weight:800}
 .declaration-inline-title span{display:block;margin-top:3px;color:#7c887f;font-size:11px}
 .declaration-fields{display:flex;flex-direction:column;gap:5px}
-.declaration-fields>label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
-.declaration-fields>label:first-child{margin-top:0}
+.declaration-fields>label,.declaration-fields>.declaration-field-label{display:block;margin:8px 0 0;color:#405e4a;font-size:12px;font-weight:750}
+.declaration-fields>label:first-child,.declaration-fields>.declaration-field-label:first-child{margin-top:0}
 .declaration-fields>select,.declaration-fields>input{display:block;width:100%;min-height:46px;margin:0;padding:10px 12px;border:1px solid #d9e4db;border-radius:10px;background:#fff;color:#234532;font:500 14px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.declaration-fields .declaration-period-toggle{align-self:flex-start;width:100%;max-width:none;box-sizing:border-box;}
+.declaration-fields .declaration-period-toggle button{flex:1;}
 .declaration-mutuelle{display:flex;flex-direction:row;align-items:center;gap:8px;align-self:flex-end;width:225px;max-width:100%;margin-top:9px;padding:9px 11px;border:1px solid #deebe0;border-radius:10px;background:#eff7f0;font-size:11px}
 .declaration-mutuelle strong{white-space:nowrap;font-size:11px}
 .declaration-update{width:100%;min-height:46px;margin:12px 0 0;border:0;border-radius:11px;background:linear-gradient(135deg,#1f7653,#0e6847);color:#fff;font-size:13px;font-weight:800;box-shadow:0 3px 8px rgba(17,91,57,.12)}
