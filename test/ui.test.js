@@ -919,6 +919,13 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
       'aucune mention facultatif ne doit apparaître à côté des titres-restaurant');
     assert.equal(await modal.locator('.onboarding-mutuelle-label').evaluate(el => getComputedStyle(el).fontWeight), '650',
       'le libellé Mutuelle doit avoir le même niveau de graisse que Titres-restaurant');
+    assert.equal(await modal.locator('.onboarding-mutuelle-label').evaluate(el => getComputedStyle(el).fontSize), '12.5px');
+    assert.equal(await modal.locator('.onboarding-tr-heading strong').evaluate(el => getComputedStyle(el).fontSize), '12.5px',
+      'Titres-restaurant doit conserver la même taille que Mutuelle sur desktop');
+    await page.setViewportSize({ width:390, height:844 });
+    assert.equal(await modal.locator('.onboarding-mutuelle-label').evaluate(el => getComputedStyle(el).fontSize), '12.5px');
+    assert.equal(await modal.locator('.onboarding-tr-heading strong').evaluate(el => getComputedStyle(el).fontSize), '12.5px',
+      'les deux libellés doivent conserver 12,5 px sur mobile');
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
     assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
