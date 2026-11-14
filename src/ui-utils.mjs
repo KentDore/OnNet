@@ -17,8 +17,8 @@ export const HEURES_BASE = 151.67;
 
 export function parseNum(v){
   if(v === null || v === undefined) return 0;
-  const s = String(v).replace(/\\s/g,'').replace(',', '.');
-  if(!/^(?:\\d+(?:\\.\\d*)?|\\.\\d+)$/.test(s)) return 0;
+  const s = String(v).replace(/\s/g,'').replace(',', '.');
+  if(!/^(?:\d+(?:\.\d*)?|\.\d+)$/.test(s)) return 0;
   const n = Number(s);
   return Number.isFinite(n) ? n : 0;
 }
