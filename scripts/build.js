@@ -14,7 +14,15 @@ async function main(){
   const api = apiSource.replace(/^export\s+/gm, '') +
     '\nwindow.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };\n';
   const utils = await fs.readFile(path.join(root, 'src', 'ui-utils.js'), 'utf8');
-  const app = await fs.readFile(path.join(root, 'src', 'app.js'), 'utf8');
+  const appFiles = JSON.parse(await fs.readFile(path.join(root, 'src', 'app', 'manifest.json'), 'utf8'));
+  if(!Array.isArray(appFiles) || appFiles.length === 0 ||
+     new Set(appFiles).size !== appFiles.length ||
+     appFiles.some(file => typeof file !== 'string' || !/^[a-z0-9-]+\\.js$/.test(file))){
+    throw new Error('Invalid application source manifest');
+  }
+  const app = (await Promise.all(appFiles.map(file =>
+    fs.readFile(path.join(root, 'src', 'app', file), 'utf8')
+  ))).join('');
   let html = template;
   for(const [token, value] of [
     ['@@ONNET_VERSION@@', version],
