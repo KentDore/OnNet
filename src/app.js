@@ -2072,6 +2072,12 @@ function bindMutuelleTrFields(overlay, idPrefix){
   return read;
 }
 
+function formatSalaryInput(input){
+  const value = parseNum(input.value);
+  if(!(value > 0)) return;
+  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
+}
+
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
@@ -2085,7 +2091,7 @@ function showOnboardingModal(){
     </div>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalOnboardingInput" id="modalOnboardingLabel">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2500" autocomplete="off">
+      <input type="text" inputmode="decimal" id="modalOnboardingInput" placeholder="Ex. 2 500" autocomplete="off">
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -2116,7 +2122,7 @@ function showOnboardingModal(){
       });
       const annual = salaryPeriod === 'an';
       periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
-      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2500';
+      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2 500';
     });
   });
 
@@ -2141,6 +2147,7 @@ function showOnboardingModal(){
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
+  input.addEventListener('blur', () => formatSalaryInput(input));
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
   submitBtn.addEventListener('click', trySubmit);
   return pending;
@@ -2200,7 +2207,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       });
       const annual = salaryPeriod === 'an';
       periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
-      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2500';
+      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2 500';
       updateSubmitState();
     });
   });
@@ -2227,6 +2234,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
   input.addEventListener('input', updateSubmitState);
+  input.addEventListener('blur', () => formatSalaryInput(input));
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
   submitBtn.addEventListener('click', trySubmit);
   overlay.querySelector('#modalAddCancel').addEventListener('click', () => closeModal(false));
