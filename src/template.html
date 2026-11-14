@@ -42,6 +42,15 @@
         <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
         <label for="mainSalaryHours">Base horaire</label>
         <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
+        <div class="declaration-benefits" aria-label="Titres-restaurant">
+          <strong class="declaration-benefits-title">Titres-restaurant (facultatif)</strong>
+          <div class="declaration-benefits-grid">
+            <div><label for="mainMealDays">Jours par mois</label><input id="mainMealDays" type="number" min="0" max="31" step="1" value="0" inputmode="numeric"></div>
+            <div><label for="mainMealValue">Valeur du titre (€)</label><input id="mainMealValue" type="number" min="0" max="500" step="0.01" value="0" inputmode="decimal"></div>
+            <div><label for="mainMealShare">Part salariale</label><select id="mainMealShare"><option value="50">50 %</option><option value="40">40 %</option></select></div>
+          </div>
+          <p>Sans titres-restaurant, laissez les valeurs à zéro. La part employeur est calculée automatiquement.</p>
+        </div>
         <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
       </div>
       <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
