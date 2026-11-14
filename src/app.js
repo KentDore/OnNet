@@ -1928,6 +1928,7 @@ function openModal(bodyHtml, opts){
   // de confirmation (pas de champ) restent centrées, plus naturel.
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
+  if(o.className) box.classList.add(o.className);
 
   lockBodyScroll();
   const previousFocus = document.activeElement;
@@ -2106,7 +2107,7 @@ function showOnboardingModal(){
     <div class="modal-actions" style="margin-top:18px;">
       <button type="button" class="btn btn-primary" id="modalOnboardingSubmit" style="width:100%;" disabled>Continuer et lancer le calcul</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingPeriod button', dismissible: false });
+  const pending = openModal(html, { initialFocusSelector: '#modalOnboardingPeriod button', dismissible: false, className: 'modal-onboarding' });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalOnboardingInput');
   const submitBtn = overlay.querySelector('#modalOnboardingSubmit');
