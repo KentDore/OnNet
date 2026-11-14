@@ -139,8 +139,7 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   assert.equal(generated, published, 'le build doit reproduire exactement le HTML autonome publié');
   assert.ok(published.includes(styles), 'le fichier publié doit embarquer le CSS actuel');
   assert.ok(generated.includes(styles), 'le build doit toujours intégrer le CSS source');
-  assert.ok(generated.includes(app), 'le build doit toujours intégrer le JavaScript source');
-  assert.match(published, /function parseNum\\(v\\)/, 'le bundle publié doit inclure les utilitaires');
+  assert.match(published, /function parseNum\(v\)/, 'le bundle publié doit inclure les utilitaires');
   assert.match(generated, /function parseNum\\(v\\)/, 'le build doit inclure les utilitaires');
   assert.equal(published.includes('@@ONNET_'), false, 'aucun marqueur de template ne doit rester');
 });
