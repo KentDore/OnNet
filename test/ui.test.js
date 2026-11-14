@@ -922,6 +922,26 @@ test('l’onboarding garde les paramètres secondaires repliés et n’affiche q
     assert.equal(await modal.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await modal.locator('#modalOnboardingMutuellePat').count(), 0);
     assert.ok((await modal.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
+    await page.setViewportSize({ width:390, height:844 });
+    const mutuelleLayout = await modal.locator('.onboarding-mutuelle-note').evaluate(el => {
+      const rect = selector => {
+        const box = el.querySelector(selector).getBoundingClientRect();
+        return { left:box.left, right:box.right };
+      };
+      const note = el.getBoundingClientRect();
+      return {
+        note:{ left:note.left, right:note.right },
+        icon:rect('.onboarding-mutuelle-icon'),
+        label:rect('.onboarding-mutuelle-label'),
+        amount:rect('strong:not(.onboarding-mutuelle-label)')
+      };
+    });
+    assert.ok(mutuelleLayout.label.left <= mutuelleLayout.icon.right + 16,
+      'le libellé Mutuelle doit suivre immédiatement son icône, sans centrage');
+    assert.ok(mutuelleLayout.amount.left > mutuelleLayout.label.right,
+      'le montant doit rester à droite du libellé');
+    assert.ok(mutuelleLayout.note.right - mutuelleLayout.amount.right <= 16,
+      'le montant doit rester aligné à droite de la ligne');
     const overtimeHint = modal.locator('#modalOnboarding39Hint');
     assert.equal(await overtimeHint.isVisible(), false);
     await modal.locator('#modalOnboardingDuree [data-duree="39"]').click();
