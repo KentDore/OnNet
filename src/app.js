@@ -2287,7 +2287,7 @@ if(loadedFromShare){
 }
 
 document.getElementById('printBtn').addEventListener('click', () => {
-  const toOpen = Array.from(document.querySelectorAll('details.more, #moreMetrics'));
+  const toOpen = Array.from(document.querySelectorAll('details.more, #moreMetrics, #legacySalaryCards'));
   const prevOpen = toOpen.map(d => d.open);
   toOpen.forEach(d => { d.open = true; });
 

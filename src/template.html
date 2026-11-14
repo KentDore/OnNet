@@ -114,25 +114,29 @@
   <details class="advanced-workspace reveal" id="advancedWorkspace">
     <summary>Paramètres avancés et outils</summary>
     <p class="advanced-workspace-intro">Les fiches détaillées, réglages fiscaux et outils complémentaires restent disponibles ici, sans alourdir le parcours principal.</p>
+  <details class="legacy-salary-details" id="legacySalaryCards">
+    <summary>Fiches détaillées des salaires</summary>
+    <p class="legacy-salary-intro">Les réglages détaillés de chaque offre restent accessibles ici. Le comparatif principal reste dans « Votre salaire, en perspective ».</p>
   <div class="cards-bar reveal">
-    <div class="cards-bar-toggles">
-      <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
-        <button data-amt="net" aria-pressed="true">Net</button>
-        <button data-amt="brut" aria-pressed="false">Brut</button>
+      <div class="cards-bar-toggles">
+        <div class="pill-toggle" id="amtToggle" role="group" aria-label="Brut ou net">
+          <button data-amt="net" aria-pressed="true">Net</button>
+          <button data-amt="brut" aria-pressed="false">Brut</button>
+        </div>
+        <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
+          <button data-period="mois" aria-pressed="true">Mensuel</button>
+          <button data-period="an" aria-pressed="false">Annuel</button>
+        </div>
       </div>
-      <div class="pill-toggle" id="periodToggle" role="group" aria-label="Mensuel ou annuel">
-        <button data-period="mois" aria-pressed="true">Mensuel</button>
-        <button data-period="an" aria-pressed="false">Annuel</button>
+      <div class="cards-bar-nav">
+        <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
+        <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
       </div>
     </div>
-    <div class="cards-bar-nav">
-      <button class="nav-btn" id="scrollPrev" aria-label="Salaire précédent">‹</button>
-      <button class="nav-btn" id="scrollNext" aria-label="Salaire suivant">›</button>
+    <div class="cards-scroll" id="cardsScroll">
+      <div class="cards" id="cardsBody"></div>
     </div>
-  </div>
-  <div class="cards-scroll" id="cardsScroll">
-    <div class="cards" id="cardsBody"></div>
-  </div>
+  </details>
 
   <section class="situation-section reveal" aria-label="Votre situation">
     <div class="modules-head">

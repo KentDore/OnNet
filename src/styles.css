@@ -939,8 +939,8 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .advanced-workspace>summary::after{content:"+";float:right;color:var(--accent);font-size:16px;}
 .advanced-workspace[open]>summary::after{content:"−";}
 .advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
-.advanced-workspace>.cards-bar{margin-bottom:10px;}
-.advanced-workspace>.cards-scroll{margin-bottom:14px;}
+.legacy-salary-details .cards-bar{margin-bottom:10px;}
+.legacy-salary-details .cards-scroll{margin-bottom:14px;}
 .advanced-workspace>.situation-section,.advanced-workspace>.modules-section{margin-bottom:16px;}
 @media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
 
@@ -1193,3 +1193,14 @@ header.hero .trust-icon svg{width:19px;height:19px}
   #maquetteYourSalary .benchmark-after-tax>strong{font-size:18px}
   #maquetteYourSalary .benchmark-comparison-base{font-size:11px}
 }
+
+
+/* Les anciennes fiches restent accessibles à la demande, sans doubler le comparatif principal. */
+.legacy-salary-details{margin:0 0 14px;padding:0 12px;border:1px solid var(--line);border-radius:12px;background:transparent;}
+.legacy-salary-details>summary{padding:12px 0;color:var(--ink-soft);font-size:12px;font-weight:700;cursor:pointer;list-style:none;}
+.legacy-salary-details>summary::-webkit-details-marker{display:none;}
+.legacy-salary-details>summary::after{content:"+";float:right;color:var(--accent);font-size:15px;}
+.legacy-salary-details[open]>summary::after{content:"−";}
+.legacy-salary-intro{margin:0 0 12px;color:var(--ink-soft);font-size:11px;line-height:1.45;}
+.legacy-salary-details .cards-bar{margin:0 0 10px;}
+.legacy-salary-details .cards-scroll{margin:0 0 10px;}
