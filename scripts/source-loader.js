@@ -22,7 +22,7 @@ function readManifestFiles(root, directory, manifestFile, extension, label){
 
   for(const file of files){
     if(typeof file !== 'string' || !file.endsWith(extension) ||
-       /[\\\\/]/.test(file) || file.includes('..')){
+       file.includes(String.fromCharCode(92)) || file.includes('/') || file.includes('..')){
       throw new Error(`Le manifeste ${label} contient un nom de fichier invalide.`);
     }
   }
