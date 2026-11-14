@@ -2045,7 +2045,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
       if(trOui) setTimeout(() => trFields.scrollIntoView({ behavior:'smooth', block:'nearest' }), 50);
     });
   });
-  return () => {
+  const read = () => {
     const result = { mutuelle:30, mutuellePat:30, joursResto:0 };
     if(trOui){
       result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
@@ -2054,6 +2054,10 @@ function bindMutuelleTrFields(overlay, idPrefix){
     }
     return result;
   };
+  read.isValid = () => !trOui || [joursInput, valeurInput, partInput].every(input =>
+    input.value.trim() !== '' && input.checkValidity()
+  );
+  return read;
 }
 
 function showOnboardingModal(){
@@ -2122,6 +2126,10 @@ function showOnboardingModal(){
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
+    if(!readMutuelleTr.isValid()){
+      setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      return;
+    }
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
     const result = Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr());
     closeModal(result);
@@ -2209,6 +2217,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const trySubmit = () => {
     const v = parseNum(input.value);
     if(!(v > 0)) return;
+    if(!readMutuelleTr.isValid()){
+      setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      return;
+    }
     const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
     closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
   };
