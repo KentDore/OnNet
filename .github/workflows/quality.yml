@@ -5,6 +5,9 @@ on:
   push:
     branches: [main, migration/publicodes-urssaf]
 
+permissions:
+  contents: write
+
 jobs:
   test:
     runs-on: ubuntu-24.04
@@ -26,14 +29,6 @@ jobs:
           node scripts/build.js "$VERSION" "$RUNNER_TEMP/Onnet-$VERSION.html"
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
-      - name: Publier le HTML généré pour mise à jour de la PR
-        uses: actions/upload-artifact@v7
-        with:
-          name: onnet-generated-html
-          path: |
-            index.html
-            Onnet-*.html
-          retention-days: 1
       - name: Vérifier la syntaxe JavaScript
         run: |
           node --check src/urssaf-api-client.mjs
@@ -64,6 +59,25 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
+      - name: Synchroniser les HTML générés dans la branche de la PR
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          PR_BRANCH: ${{ github.head_ref }}
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          git fetch origin "$PR_BRANCH"
+          git checkout --detach FETCH_HEAD
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html "Onnet-$VERSION.html"
+          if git diff --cached --quiet; then
+            echo "Les HTML sont déjà synchronisés."
+            exit 0
+          fi
+          git commit -m "build: synchroniser les HTML générés"
+          git push origin "HEAD:$PR_BRANCH"
       - name: Publier les captures visuelles desktop et mobile
         if: always()
         uses: actions/upload-artifact@v7
