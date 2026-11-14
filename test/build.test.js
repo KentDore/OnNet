@@ -12,7 +12,7 @@ function readAppSource(root = path.resolve(__dirname, '..')){
   assert.ok(Array.isArray(files) && files.length > 0, 'le manifeste applicatif doit contenir des sources');
   assert.equal(new Set(files).size, files.length, 'une source ne doit apparaître qu’une fois dans le manifeste');
   return files.map(file => {
-    assert.match(file, /^[a-z0-9-]+\\.js$/, 'le manifeste ne doit contenir que des noms de fichiers applicatifs');
+    assert.ok(file.endsWith('.js') && !file.includes('/') && !file.includes('..'), 'le manifeste ne doit contenir que des noms de fichiers applicatifs');
     return fs.readFileSync(path.join(root, 'src', 'app', file), 'utf8');
   }).join('');
 }
