@@ -24,9 +24,9 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
   const app = readAppSource(root).trim();
 
   assert.ok(html.includes(styles));
-  assert.equal((styles.match(/@font-face\\s*\\{/g) || []).length, 5,
+  assert.equal(styles.split('@font-face').length - 1, 5,
     'les cinq polices doivent être intégrées au CSS final');
-  assert.equal((styles.match(/data:font\\/woff2;base64,/g) || []).length, 5,
+  assert.equal(styles.split('data:font/woff2;base64,').length - 1, 5,
     'les cinq ressources WOFF2 doivent être réinjectées dans les styles');
   assert.doesNotMatch(styles, /@@ONNET_FONT_/,
     'aucun marqueur de police ne doit subsister après assemblage');
