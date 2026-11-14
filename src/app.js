@@ -141,6 +141,7 @@ function mapUrssafResultToOnNet(result){
     netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
     netApresImpot:result.netAfterTax,
+    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? result.netAfterTax / monthlyHours : null,
     annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
     impotAnnuel:result.incomeTax,
     tauxImpot:result.calculatedTaxRate,
@@ -380,7 +381,7 @@ const NUMERIC_KEYS = ['brut','mutuelle','mutuellePat','joursResto','valeurResto'
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
-const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netHoraire','brutHoraire'];
+const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netApresImpotHoraire','netHoraire','brutHoraire'];
 const METRIC_DEFAUT = 'netHoraire';
 function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -724,6 +725,7 @@ const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
   netApresImpot: 'Le net après prélèvement à la source évalué par le modèle fiscal officiel Mon-entreprise / Urssaf selon les paramètres du foyer transmis.',
+  netApresImpotHoraire: 'Le net après prélèvement à la source, divisé par les heures réellement travaillées dans le mois.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -941,7 +943,7 @@ function renderInsight(computed){
   const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
   const metricLabel = {
     netImposable:'net imposable', annuelNet:'net annuel',
-    netApresImpot:'net après impôt', netHoraire:'net horaire',
+    netApresImpot:'net après impôt', netApresImpotHoraire:'net horaire après impôt', netHoraire:'net horaire',
     brutHoraire:'brut horaire'
   }[metric] || 'valeur sélectionnée';
   const format = isHourly ? fmtHoraire : fmt;
@@ -951,7 +953,7 @@ function renderInsight(computed){
   return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
-const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
+const HOURLY_METRICS = new Set(['netHoraire', 'netApresImpotHoraire', 'brutHoraire']);
 
 function renderBars(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
