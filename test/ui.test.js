@@ -323,6 +323,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNetBeforeTax) / 169) < 0.02,
       'le résumé horaire doit reprendre le net avant impôt Urssaf divisé par les 169 h du contrat 39 h');
     assert.equal(parseEuro(cardNetAfterTax), parseEuro(cardNetBeforeTax) - 100, 'la valeur principale doit afficher le net après impôt renvoyé par le moteur');
+    await page.locator('#moreMetrics > summary').click();
+    await page.waitForFunction(() => document.getElementById('moreMetrics')?.open === true);
     const afterTaxHourlyButton = page.locator('.metric-toggle button[data-metric="netApresImpotHoraire"]');
     assert.equal(await afterTaxHourlyButton.count(), 1, 'un indicateur de net horaire après impôt doit être disponible');
     await afterTaxHourlyButton.evaluate(button => button.click());
