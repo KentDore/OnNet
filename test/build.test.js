@@ -39,7 +39,7 @@ test('le build autonome embarque le client officiel Urssaf et les seuls utilitai
     'aucun marqueur de police ne doit subsister après assemblage');
   assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
   assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
-  assert.match(html, /\\b(?:const|let|var)\\s+scenarioDefaults\\s*=\\s*\\{/, 'les valeurs par défaut doivent être conservées');
+  assert.match(html, /\b(?:const|let|var)\s+scenarioDefaults\s*=\s*\{/, 'les valeurs par défaut doivent être conservées');
   assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
   assert.match(html, /window\.OnNetUrssafApi\s*=\s*\{/);
   assert.ok(html.includes('brand-version">v9.9.9</span>'));
