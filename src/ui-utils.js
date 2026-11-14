@@ -3,7 +3,7 @@
 // Utilitaires d'interface uniquement. Aucun calcul de cotisations, de net ou d'impôt.
 // Les montants de paie proviennent exclusivement de l'API officielle Mon-entreprise / Urssaf.
 let scenarioDefaults = {
-  mutuelle: 30, joursResto: 21, valeurResto: 8,
+  mutuelle: 30, joursResto: 0, valeurResto: 0,
   partResto: 50, nbMois: 12
 };
 

@@ -1053,6 +1053,9 @@ function applyDeclaredSalaryFromForm(){
   if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
   scenario.brut=period?.value==='year'?Math.round(raw/12*100)/100:raw;
   scenario.dureeType=hours?.value==='39'?'39':'35';
+  scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
+  scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
+  scenario.partResto=Number(document.getElementById('mainMealShare')?.value)||50;
   // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
   urssafConsentGranted=true;
   saveState();
@@ -1081,8 +1084,15 @@ function renderMaquetteControls(computedOverride){
   const period=document.getElementById('mainSalaryPeriod');
   const gross=document.getElementById('mainSalaryGross');
   const hours=document.getElementById('mainSalaryHours');
-  if(selected && period && gross && hours && ![period,gross,hours].includes(document.activeElement)){
+  const mealDays=document.getElementById('mainMealDays');
+  const mealValue=document.getElementById('mainMealValue');
+  const mealShare=document.getElementById('mainMealShare');
+  const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
+  if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
     period.value='month';gross.value=String(Math.round(Number(selected.brut)*100)/100);hours.value=selected.dureeType;
+    if(mealDays) mealDays.value=String(selected.joursResto||0);
+    if(mealValue) mealValue.value=String(selected.valeurResto||0);
+    if(mealShare) mealShare.value=String(selected.partResto||50);
   }
   const selectedId=(findScenario(refId)||scenarios[0])?.id;
   const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
@@ -1107,6 +1117,13 @@ function renderMaquetteControls(computedOverride){
     hours.addEventListener('change',applyDeclaredSalaryFromForm);
     hours.dataset.onnetSalaryBound='true';
   }
+  [mealDays,mealValue,mealShare].forEach(field=>{
+    if(field && field.dataset.onnetSalaryBound!=='true'){
+      field.addEventListener('change',applyDeclaredSalaryFromForm);
+      field.addEventListener('input',applyDeclaredSalaryFromForm);
+      field.dataset.onnetSalaryBound='true';
+    }
+  });
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span>Votre net avant impôt</span><strong>À calculer</strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
@@ -1116,7 +1133,13 @@ function renderMaquetteControls(computedOverride){
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:selected.dureeType*52/12;
       const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
-      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h · mutuelle salarié : '+fmt(selected.mutuelle||0)+' / mois</div></div>';
+      const afterTaxHourly=Number.isFinite(computed.r.netApresImpot)?computed.r.netApresImpot/hoursMonth:null;
+      const afterTaxValue=afterTaxHourly===null?null:afterTaxHourly*factor;
+      const afterTaxAmount=afterTaxValue===null?'Non disponible':(maquetteComparisonPeriod==='hour'?fmtHoraire(afterTaxValue):fmt(afterTaxValue));
+      const mealInfo=Number(selected.joursResto||0)>0
+        ? ' · TR : '+selected.joursResto+' j × '+fmt(selected.valeurResto)+' (part salarié '+(selected.partResto||50)+' %)'
+        : ' · sans titres-restaurant';
+      summary.innerHTML='<div class="benchmark-your-salary"><span class="sr-only">Votre net avant impôt</span><span><b>VOUS</b>　'+esc(selected.name)+'</span><strong>'+amount+' <small>/ '+unit+' avant impôt</small></strong><div class="benchmark-after-tax"><span>Net après impôt estimé / '+unit+'</span><strong>'+afterTaxAmount+'</strong></div><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h'+mealInfo+'</div></div>';
     }
   }
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
