@@ -473,8 +473,8 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
-    await openSalaryEditor(page);
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
@@ -853,7 +853,7 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#editOfferMonths').count(), 1);
     assert.equal(await page.locator('#editOfferBonus').count(), 1);
     await page.locator('#editOfferCancel').click();
-    assert.equal(await page.locator('.modal-edit-offer').count(), 0);
+    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
   } finally {
     await context.close();
   }
@@ -1211,6 +1211,7 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
     
     await page.locator('#editOfferCancel').click();
+    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
     assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'la fenêtre se ferme à l’annulation');
   } finally {
     await context.close();
