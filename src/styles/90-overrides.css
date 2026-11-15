@@ -318,7 +318,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 @media(max-width:640px){
  #maquetteYourSalary{grid-template-columns:1fr;gap:9px}
  .offer-comparison-card{padding:14px}
- .comparison-subhead-actions{align-items:flex-start}
+ .comparison-subhead-actions{align-items:center}
  .comparison-subhead-actions .add-salary{min-height:38px;padding:8px 10px;font-size:11px;white-space:nowrap}
  .salary-editor-heading{display:block}
  .salary-editor-back{margin-bottom:12px}
