@@ -849,6 +849,28 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 }
 
 
+/* Fenêtre flottante de modification complète d'une offre. */
+.modal.modal-edit-offer{width:min(720px,calc(100vw - 28px));max-height:min(88vh,900px);overflow:auto;padding:22px 24px;}
+.modal-edit-offer .edit-offer-modal{display:grid;gap:12px;}
+.modal-edit-offer .edit-offer-section{margin:8px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;}
+.modal-edit-offer .field-row{min-width:0;margin:0;}
+.modal-edit-offer .field-row label{display:block;margin:0 0 6px;font-size:12px;font-weight:650;color:var(--ink-soft);}
+.modal-edit-offer input,.modal-edit-offer select{box-sizing:border-box;width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:500 14px 'Inter',sans-serif;}
+.modal-edit-offer input:focus,.modal-edit-offer select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.modal-edit-offer .two-col,.modal-edit-offer .three-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.modal-edit-offer .three-col{grid-template-columns:repeat(3,minmax(0,1fr));}
+.modal-edit-offer .pill-toggle{width:100%;}
+.modal-edit-offer .pill-toggle button{flex:1;min-width:0;padding:8px 10px;font-size:12px;}
+.modal-edit-offer .edit-offer-note{margin:0;padding:10px 12px;border-radius:9px;background:var(--surface-secondary,var(--bg));color:var(--ink-soft);font-size:11px;line-height:1.5;}
+.modal-edit-offer .modal-actions{position:sticky;bottom:-22px;margin:8px -24px -22px;padding:14px 24px;background:var(--surface);border-top:1px solid var(--line);}
+@media(max-width:560px){
+  .modal.modal-edit-offer{width:calc(100vw - 16px);max-height:92vh;padding:16px 14px;}
+  .modal-edit-offer .two-col,.modal-edit-offer .three-col{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .modal-edit-offer .modal-actions{bottom:-16px;margin:8px -14px -16px;padding:12px 14px;}
+}
+@media(max-width:360px){.modal-edit-offer .three-col{grid-template-columns:1fr;}}
+
+
 /* Maquette UX V33 — structure et proportions reprises du HTML fourni. */
 :root{--maquette-bg:#f5f3ee;--maquette-green:#1f6d4c;--maquette-dark:#075334}
 body{background:linear-gradient(180deg,#fafbf9 0%,var(--maquette-bg) 100%)}
@@ -864,9 +886,8 @@ header.hero .trust{display:inline-flex;align-items:center;gap:10px;margin-top:13
 header.hero .trust strong{display:block;color:#176b45;font-size:12px}
 header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54px;pointer-events:none}
 .unified-salary-panel{padding:clamp(18px,3vw,26px);border-radius:23px}
-.unified-heading{margin-bottom:18px}
-.unified-heading h2,.comparison-subhead h3{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
-.unified-heading .sub{font-size:13px;color:#68716b}
+.comparison-subhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0;border:0}
+.comparison-subhead h2{margin:0;color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
 .declaration-inline{margin-top:16px;padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
 .declaration-inline-title{display:block;margin-bottom:13px}
 .declaration-inline-title strong{display:block;color:#315640;font-size:14px;font-weight:800}
@@ -890,9 +911,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .offer-tab{min-width:0;min-height:52px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#45614e;font-size:13px;font-weight:800}
 .offer-tab.active{border-color:#cfe3d4;background:#fff;color:#176b49;box-shadow:0 1px 3px rgba(24,80,48,.07)}
 .offer-tab small{display:block;margin-top:3px;color:#7b8a7f;font-size:10px;font-weight:600}
-.comparison-subhead{margin:20px 0 11px;padding-top:16px;border-top:1px solid #e7ede8}
-.comparison-subhead h3{margin:0;font-size:19px}
-.comparison-subhead p{margin:4px 0 0;color:#78837c;font-size:12px}
+
 .comparison-period{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px;padding:10px 12px;border:1px solid #e0ebe2;border-radius:13px;background:#f7faf7}
 .comparison-period>span{color:#3f5d49;font-size:12px;font-weight:750}
 .comparison-period-tabs{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eaf1eb}
@@ -938,7 +957,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
  .declaration-update{min-height:45px}
  .integrated-offers{margin-top:14px;padding-top:12px}
  .offer-tab{min-height:49px}
- .comparison-subhead{margin-top:16px;padding-top:14px}
+ .comparison-subhead{margin:0 0 10px;padding:0}
  .comparison-period{margin-bottom:12px;padding:9px 10px}
  .comparison-period-tabs button{min-width:48px;padding:8px 7px}
  #maquetteYourSalary .benchmark-your-salary{padding:13px;border-radius:15px;gap:7px}
@@ -1316,7 +1335,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 @media(max-width:640px){
  #maquetteYourSalary{grid-template-columns:1fr;gap:9px}
  .offer-comparison-card{padding:14px}
- .comparison-subhead-actions{align-items:flex-start}
+ .comparison-subhead-actions{align-items:center}
  .comparison-subhead-actions .add-salary{min-height:38px;padding:8px 10px;font-size:11px;white-space:nowrap}
  .salary-editor-heading{display:block}
  .salary-editor-back{margin-bottom:12px}
@@ -1469,42 +1488,15 @@ body.salary-editor-open .integrated-offers{display:none!important}
 
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
-    <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Vos offres</h3><p>Gérez vos propositions et leurs paramètres de contrat.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
+    <div class="comparison-subhead comparison-subhead-actions"><h2 id="maquetteCompareTitle">Vos offres</h2><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
 
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
 
-    <div class="declaration-inline" id="salaryEditor" aria-labelledby="salaryEditorTitle">
-      <div class="salary-editor-heading"><button type="button" id="salaryEditorBack" class="salary-editor-back">← Retour au comparatif</button><div class="declaration-inline-title"><strong id="salaryEditorTitle">Modifier cette offre</strong><span>Les changements sont recalculés automatiquement.</span></div></div>
-      
-      
-      <div class="declaration-fields">
-        <span class="declaration-field-label">Période du salaire brut</span>
-        <div class="pill-toggle period-choice-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
-          <button type="button" data-period="month" aria-pressed="true">Mensuel</button>
-          <button type="button" data-period="year" aria-pressed="false">Annuel</button>
-        </div>
-        <label for="mainSalaryGross">Salaire brut (€)</label>
-        <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
-        <label for="mainSalaryHours">Base horaire</label>
-        <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
-        <div class="declaration-benefits" aria-label="Titres-restaurant">
-          <strong class="declaration-benefits-title">Titres-restaurant</strong>
-          <div class="declaration-benefits-grid">
-            <div><label for="mainMealDays">Jours par mois</label><input id="mainMealDays" type="number" min="0" max="31" step="1" value="0" inputmode="numeric"></div>
-            <div><label for="mainMealValue">Valeur du titre (€)</label><input id="mainMealValue" type="number" min="0" max="500" step="0.01" value="0" inputmode="decimal"></div>
-            <div class="meal-share-field"><span class="meal-share-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="mainMealShare" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
-          </div>
-          <p>Sans titres-restaurant, laissez les valeurs à zéro. La part employeur est calculée automatiquement.</p>
-        </div>
-        <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
-      </div>
-      <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
-    </div>
-  </section>
+    <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
+ </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
@@ -2008,7 +2000,8 @@ function sanitizeScenario(raw) {
     valeurResto: [0, 500],
     partResto: [0, 100],
     nbMois: [1, 24],
-    primes: [0, 1e8]
+    primes: [0, 1e8],
+    salaireSaisi: [0, 12e5]
   };
   for (const [key, range] of Object.entries(limits)) {
     if (clean[key] === void 0) continue;
@@ -2017,6 +2010,15 @@ function sanitizeScenario(raw) {
     clean[key] = n;
   }
   if (clean.brut === void 0 || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  if (clean.salaireSaisi !== void 0 || clean.salaireSaisiPeriode !== void 0) {
+    const enteredAmount = Number(clean.salaireSaisi);
+    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0 || !["mois", "an"].includes(clean.salaireSaisiPeriode)) {
+      delete clean.salaireSaisi;
+      delete clean.salaireSaisiPeriode;
+    } else {
+      clean.salaireSaisi = enteredAmount;
+    }
+  }
   if (clean.mutuellePat === void 0) {
     clean.mutuellePat = clean.mutuelle === void 0 ? scenarioDefaults.mutuelle : clean.mutuelle;
   }
@@ -2648,6 +2650,8 @@ function buildShareUrl(options) {
     name: s.name,
     brut: s.brut,
     dureeType: s.dureeType,
+    salaireSaisi: s.salaireSaisi,
+    salaireSaisiPeriode: s.salaireSaisiPeriode,
     commune: s.commune || "Pac\xE9",
     codePostal: s.codePostal || "",
     departement: s.departement || "",
@@ -2847,7 +2851,7 @@ function renderCard(s, r, showRemove) {
     </div>
 
     <div class="scenario-edit-hint">
-      Salaire brut et dur\xE9e du travail modifiables dans \xAB Votre situation \xBB, en haut de page.
+      Les param\xE8tres du contrat se modifient depuis le bouton \xAB Modifier cette offre \xBB.
       ${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : "Taux effectif : \u2014"}
     </div>
 
@@ -3047,47 +3051,13 @@ function renderBenchmarks(computed) {
   return '<div class="benchmark-grid">' + smicCard + medianCard + "</div>";
 }
 var maquetteComparisonPeriod = "hour";
-var mainSalaryInputPeriod = "month";
-var salaryEditorOpen = false;
-function setSalaryEditor(open) {
-  salaryEditorOpen = !!open;
-  document.body.classList.toggle("salary-editor-open", salaryEditorOpen);
-  if (salaryEditorOpen) {
-    const title = document.getElementById("salaryEditorTitle");
-    const selected = findScenario(refId) || scenarios[0];
-    if (title) title.textContent = "Modifier \u2014 " + (selected?.name || "cette offre");
-  }
-}
-function applyDeclaredSalaryFromForm() {
-  const scenario = findScenario(refId) || scenarios[0];
-  const gross = document.getElementById("mainSalaryGross");
-  const period = document.getElementById("mainSalaryPeriod");
-  const hours = document.getElementById("mainSalaryHours");
-  const raw = Number(gross?.value);
-  if (!scenario || !Number.isFinite(raw) || raw <= 0 || raw > 12e5) return;
-  scenario.brut = mainSalaryInputPeriod === "year" ? Math.round(raw / 12 * 100) / 100 : raw;
-  scenario.dureeType = hours?.value === "39" ? "39" : "35";
-  scenario.joursResto = Number(document.getElementById("mainMealDays")?.value) || 0;
-  scenario.valeurResto = Number(document.getElementById("mainMealValue")?.value) || 0;
-  scenario.partResto = Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share) || 50;
-  urssafSessionState.grantConsent();
-  saveState();
-  render();
-  scheduleUrssafCalculations(false, false);
-}
 function renderMaquetteControls(computedOverride) {
+  document.querySelectorAll("[data-maquette-period]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.maquettePeriod === maquetteComparisonPeriod));
+  });
   const benchmarkPanel = document.querySelector("#comparePanel .benchmark-panel");
   const benchmarkMount = document.getElementById("benchmarkMount");
   if (benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement !== benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
-  const back = document.getElementById("salaryEditorBack");
-  if (back && back.dataset.bound !== "true") {
-    back.addEventListener("click", () => {
-      setSalaryEditor(false);
-      render();
-      document.getElementById("maquetteYourSalary")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-    back.dataset.bound = "true";
-  }
   const tabs = document.getElementById("maquetteOfferTabs");
   if (tabs) tabs.replaceChildren();
   if (tabs) scenarios.forEach((scenario, index) => {
@@ -3106,9 +3076,8 @@ function renderMaquetteControls(computedOverride) {
     button.append(small);
     button.addEventListener("click", () => {
       refId = scenario.id;
-      setSalaryEditor(true);
+      saveState();
       render();
-      document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     item.append(button);
     const actions = document.createElement("div");
@@ -3129,68 +3098,6 @@ function renderMaquetteControls(computedOverride) {
     item.append(actions);
     tabs?.append(item);
   });
-  const selected = findScenario(refId) || scenarios[0];
-  document.querySelectorAll("[data-maquette-period]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.maquettePeriod === maquetteComparisonPeriod)));
-  const period = document.getElementById("mainSalaryPeriod");
-  const gross = document.getElementById("mainSalaryGross");
-  const hours = document.getElementById("mainSalaryHours");
-  const mealDays = document.getElementById("mainMealDays");
-  const mealValue = document.getElementById("mainMealValue");
-  const mealShare = document.getElementById("mainMealShare");
-  const mainFields = [period, gross, hours, mealDays, mealValue, mealShare].filter(Boolean);
-  if (selected && period && gross && hours && !mainFields.includes(document.activeElement)) {
-    period.querySelectorAll("button[data-period]").forEach((button) => button.setAttribute("aria-pressed", String(button.dataset.period === mainSalaryInputPeriod)));
-    gross.value = String(Math.round(Number(selected.brut) * (mainSalaryInputPeriod === "year" ? 12 : 1) * 100) / 100);
-    hours.value = selected.dureeType;
-    if (mealDays) mealDays.value = String(selected.joursResto || 0);
-    if (mealValue) mealValue.value = String(selected.valeurResto || 0);
-    if (mealShare) mealShare.querySelectorAll("button").forEach((button) => button.setAttribute("aria-pressed", String(Number(button.dataset.share) === (Number(selected.partResto) || 50))));
-  }
-  const selectedId = (findScenario(refId) || scenarios[0])?.id;
-  const computed = (computedOverride || getCurrentComputed()).find((x) => x.s.id === selectedId);
-  const mutuelleText = document.getElementById("mainSalaryMutuelleText");
-  if (mutuelleText && selected) mutuelleText.textContent = fmt(selected.mutuelle || 0) + " / mois d\xE9duits de votre net (part salari\xE9).";
-  if (gross) {
-    gross.oninput = null;
-    gross.onchange = null;
-    if (gross.dataset.onnetSalaryBound !== "true") {
-      gross.addEventListener("input", applyDeclaredSalaryFromForm);
-      gross.addEventListener("change", applyDeclaredSalaryFromForm);
-      gross.dataset.onnetSalaryBound = "true";
-    }
-  }
-  if (period && period.dataset.onnetSalaryBound !== "true") {
-    period.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-period]");
-      if (!button) return;
-      mainSalaryInputPeriod = button.dataset.period;
-      period.querySelectorAll("button[data-period]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-      const selected2 = findScenario(refId) || scenarios[0];
-      if (selected2 && gross) gross.value = String(Math.round(Number(selected2.brut) * (mainSalaryInputPeriod === "year" ? 12 : 1) * 100) / 100);
-      applyDeclaredSalaryFromForm();
-    });
-    period.dataset.onnetSalaryBound = "true";
-  }
-  if (hours && hours.dataset.onnetSalaryBound !== "true") {
-    hours.addEventListener("change", applyDeclaredSalaryFromForm);
-    hours.dataset.onnetSalaryBound = "true";
-  }
-  [mealDays, mealValue].forEach((field) => {
-    if (field && field.dataset.onnetSalaryBound !== "true") {
-      field.addEventListener("change", applyDeclaredSalaryFromForm);
-      field.addEventListener("input", applyDeclaredSalaryFromForm);
-      field.dataset.onnetSalaryBound = "true";
-    }
-  });
-  if (mealShare && mealShare.dataset.onnetSalaryBound !== "true") {
-    mealShare.addEventListener("click", (event) => {
-      const button = event.target.closest("button[data-share]");
-      if (!button) return;
-      mealShare.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-      applyDeclaredSalaryFromForm();
-    });
-    mealShare.dataset.onnetSalaryBound = "true";
-  }
   const summary = document.getElementById("maquetteYourSalary");
   if (summary) {
     const allComputed = computedOverride || getCurrentComputed();
@@ -3199,18 +3106,13 @@ function renderMaquetteControls(computedOverride) {
       const hourly = r && Number.isFinite(r.netHoraire) ? r.netHoraire : null;
       const factor = maquetteComparisonPeriod === "hour" ? 1 : maquetteComparisonPeriod === "year" ? weekly * 52 : hoursMonth;
       const value = hourly === null ? null : hourly * factor;
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4><button type="button" class="offer-rename-button" data-rename-offer="' + s.id + '">Renommer</button></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '">D\xE9finir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut / mois \xB7 " + weekly + ' h / semaine</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '">D\xE9finir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + (s.salaireSaisiPeriode === "an" && Number.isFinite(Number(s.salaireSaisi)) ? fmt(s.salaireSaisi) + " brut / an" : fmt(s.brut) + " brut / mois") + " \xB7 " + weekly + ' h / semaine</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
       summary.addEventListener("click", (event) => {
         const remove = event.target.closest("[data-delete-offer]");
         if (remove) {
           removeScenario(Number(remove.dataset.deleteOffer));
-          return;
-        }
-        const rename = event.target.closest("[data-rename-offer]");
-        if (rename) {
-          renameScenario(Number(rename.dataset.renameOffer));
           return;
         }
         const reference = event.target.closest("[data-set-offer-reference]");
@@ -3222,15 +3124,20 @@ function renderMaquetteControls(computedOverride) {
         }
         const button = event.target.closest("[data-edit-offer]");
         if (!button) return;
-        refId = Number(button.dataset.editOffer);
-        setSalaryEditor(true);
-        render();
-        document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+        const scenario = findScenario(Number(button.dataset.editOffer));
+        if (!scenario) return;
+        showEditScenarioModal(scenario).then((answers) => {
+          if (!answers) return;
+          Object.assign(scenario, answers);
+          urssafSessionState.grantConsent();
+          saveState();
+          render();
+          scheduleUrssafCalculations(false, false);
+        });
       });
       summary.dataset.editBound = "true";
     }
   }
-  document.body.classList.toggle("salary-editor-open", salaryEditorOpen);
   const status = document.getElementById("urssafStatus"), mount = document.getElementById("maquetteUrssafMount");
   if (status && mount && status.parentElement !== mount) mount.appendChild(status);
 }
@@ -3696,14 +3603,14 @@ function onStructural(e) {
 function onCheck(e) {
 }
 var addScenarioPending = false;
-async function addScenario(openEditor = false) {
+async function addScenario() {
   if (addScenarioPending || modalState) return;
   addScenarioPending = true;
   const trigger = document.getElementById("maquetteAddSalary");
   if (trigger) trigger.disabled = true;
   try {
     const last = scenarios[scenarios.length - 1];
-    const answers = await showAddScenarioModal(last.brut, last.dureeType);
+    const answers = await showAddScenarioModal(last.brut, last.dureeType, "Offre " + (scenarios.length + 1));
     if (!answers) return;
     urssafSessionState.grantConsent();
     disableCardSnap();
@@ -3714,11 +3621,9 @@ async function addScenario(openEditor = false) {
     }, answers));
     scenarios.push(created);
     justAddedId = created.id;
-    if (openEditor) setSalaryEditor(true);
     render();
     setTimeout(() => {
-      if (openEditor) document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      else scrollToNewCard();
+      scrollToNewCard();
     }, 220);
   } finally {
     addScenarioPending = false;
@@ -3980,7 +3885,7 @@ function bindMutuelleTrFields(overlay, idPrefix) {
 function formatSalaryInput(input) {
   const value = parseNum(input.value);
   if (!(value > 0)) return;
-  input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(value);
+  input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 15 }).format(value);
 }
 function showOnboardingModal() {
   const html = `
@@ -4044,8 +3949,8 @@ function showOnboardingModal() {
       setText("modalMsg", "V\xE9rifiez les titres-restaurant : 0 \xE0 31 jours entiers, 0 \xE0 500 \u20AC par titre et une part salariale de 40 \xE0 50 %.");
       return;
     }
-    const brutMensuel = salaryPeriod === "an" ? Math.round(v / 12 * 100) / 100 : v;
-    const result = Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr());
+    const brutMensuel = salaryPeriod === "an" ? v / 12 : v;
+    const result = Object.assign({ brut: brutMensuel, dureeType, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener("input", () => {
@@ -4061,52 +3966,13 @@ function showOnboardingModal() {
   submitBtn.addEventListener("click", trySubmit);
   return pending;
 }
-function renameScenario(id) {
-  const scenario = findScenario(id);
-  if (!scenario || modalState) return;
-  const html = `
-    <p id="modalMsg" class="modal-msg">Choisissez un nom pour retrouver cette offre dans le comparatif.</p>
-    <div class="field-row">
-      <label for="renameOfferInput">Nom de l\u2019offre</label>
-      <input type="text" id="renameOfferInput" maxlength="60" value="${esc(scenario.name)}" autocomplete="off">
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
-      <button type="button" class="btn btn-primary" id="renameOfferSave">Enregistrer</button>
-    </div>`;
-  openModal(html, { initialFocusSelector: "#renameOfferInput" });
-  const overlay = document.getElementById("modalOverlay");
-  const input = overlay.querySelector("#renameOfferInput");
-  const save = () => {
-    const name = input.value.trim().slice(0, 60);
-    if (!name) {
-      input.setCustomValidity("Saisissez un nom pour cette offre.");
-      input.reportValidity();
-      return;
-    }
-    const current = findScenario(id);
-    if (!current) {
-      closeModal(false);
-      return;
-    }
-    current.name = name;
-    saveState();
-    closeModal(true);
-    render();
-  };
-  input.addEventListener("input", () => input.setCustomValidity(""));
-  input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      save();
-    }
-  });
-  overlay.querySelector("#renameOfferSave").addEventListener("click", save);
-  overlay.querySelector("[data-modal-cancel]").addEventListener("click", () => closeModal(false));
-}
-function showAddScenarioModal(brutPrefill, dureePrefill) {
+function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="modalAddName">Nom de l\u2019offre <span class="field-optional">(facultatif)</span></label>
+      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || "Nouvelle offre")}" autocomplete="off">
+    </div>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqu\xE9 en</label>
@@ -4136,6 +4002,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill) {
   const pending = openModal(html, { initialFocusSelector: "#modalAddInput", dismissible: true });
   const overlay = document.getElementById("modalOverlay");
   const input = overlay.querySelector("#modalAddInput");
+  const nameInput = overlay.querySelector("#modalAddName");
   const submitBtn = overlay.querySelector("#modalAddSubmit");
   const readMutuelleTr = bindMutuelleTrFields(overlay, "modalAdd");
   const periodToggle = overlay.querySelector("#modalAddPeriod");
@@ -4147,7 +4014,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill) {
       const current = parseNum(input.value);
       if (current > 0) {
         const converted = salaryPeriod === "mois" ? current * 12 : current / 12;
-        input.value = String(Math.round(converted * 100) / 100).replace(".", ",");
+        input.value = String(converted).replace(".", ",");
       }
       salaryPeriod = button.dataset.period;
       periodToggle.querySelectorAll("button").forEach((x) => {
@@ -4174,8 +4041,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill) {
       setText("modalMsg", "V\xE9rifiez les titres-restaurant : 0 \xE0 31 jours entiers, 0 \xE0 500 \u20AC par titre et une part salariale de 40 \xE0 50 %.");
       return;
     }
-    const brutMensuel = salaryPeriod === "an" ? Math.round(v / 12 * 100) / 100 : v;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
+    const brutMensuel = salaryPeriod === "an" ? v / 12 : v;
+    const defaultName = String(namePrefill || "Nouvelle offre").trim() || "Nouvelle offre";
+    const name = nameInput.value.trim().slice(0, 60) || defaultName;
+    closeModal(Object.assign({ brut: brutMensuel, dureeType, name, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr()));
   };
   const updateSubmitState = () => {
     submitBtn.disabled = !(parseNum(input.value) > 0);
@@ -4191,6 +4060,184 @@ function showAddScenarioModal(brutPrefill, dureePrefill) {
   });
   submitBtn.addEventListener("click", trySubmit);
   overlay.querySelector("#modalAddCancel").addEventListener("click", () => closeModal(false));
+  return pending;
+}
+function showEditScenarioModal(scenario) {
+  const initialPeriod = scenario.salaireSaisiPeriode === "an" ? "an" : "mois";
+  const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0 ? Number(scenario.salaireSaisi) : Number(scenario.brut) * (initialPeriod === "an" ? 12 : 1);
+  const html = `
+    <div class="edit-offer-modal">
+      <p id="modalMsg" class="modal-msg">Modifiez les param\xE8tres du contrat. Les changements seront enregistr\xE9s \xE0 la validation.</p>
+      <div class="field-row">
+        <label for="editOfferName">Nom de l\u2019offre</label>
+        <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
+      </div>
+      <div class="edit-offer-section">R\xE9mun\xE9ration</div>
+      <div class="field-row">
+        <label>Montant brut indiqu\xE9 en</label>
+        <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="P\xE9riode du salaire brut">
+          <button type="button" data-period="mois" aria-pressed="${initialPeriod === "mois"}">Mensuel</button>
+          <button type="button" data-period="an" aria-pressed="${initialPeriod === "an"}">Annuel</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod === "an" ? "annuel" : "mensuel"} (\u20AC)</label>
+        <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace(".", ",")}" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <label for="editOfferHours">Base horaire</label>
+        <select id="editOfferHours"><option value="35" ${scenario.dureeType === "35" ? "selected" : ""}>35 h / semaine</option><option value="39" ${scenario.dureeType === "39" ? "selected" : ""}>39 h / semaine</option></select>
+      </div>
+      <div class="edit-offer-section">Lieu de travail</div>
+      <div class="field-row">
+        <label for="editOfferCommune">Commune de l\u2019\xE9tablissement</label>
+        <input type="text" id="editOfferCommune" value="${esc(scenario.codePostal && scenario.departement ? scenario.commune + " \u2014 " + scenario.codePostal + " (" + scenario.departement + ")" : scenario.commune + " \u2014 s\xE9lection requise")}" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="editOfferCommuneSuggestions">
+        <div class="commune-suggestions" id="editOfferCommuneSuggestions" role="listbox" hidden></div>
+        <div class="sub-hint" id="editOfferCommuneHint">${scenario.codePostal && scenario.departement ? "Lieu v\xE9rifi\xE9 : " + esc(scenario.codePostal) + " \u2014 " + esc(scenario.departement) + "." : "S\xE9lectionnez une commune v\xE9rifi\xE9e dans les suggestions."}</div>
+      </div>
+      <div class="edit-offer-section">Mutuelle</div>
+      <div class="two-col">
+        <div class="field-row"><label for="editOfferMutuelle">Part salari\xE9 (\u20AC / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(scenario.mutuelle ?? 0).replace(".", ",")}"></div>
+        <div class="field-row"><label for="editOfferMutuellePat">Part employeur (\u20AC / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuellePat" value="${String(scenario.mutuellePat ?? 0).replace(".", ",")}"></div>
+      </div>
+      <div class="edit-offer-section">Titres-restaurant</div>
+      <div class="three-col">
+        <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto) || 0}"></div>
+        <div class="field-row"><label for="editOfferMealValue">Valeur (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto || 0).replace(".", ",")}"></div>
+        <div class="field-row"><label for="editOfferMealShare">Part salari\xE9 (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto ?? 50)}"></div>
+      </div>
+      <div class="edit-offer-section">Mensualit\xE9s et primes</div>
+      <div class="two-col">
+        <div class="field-row"><label for="editOfferMonths">Mensualit\xE9s / an</label><input type="number" id="editOfferMonths" min="1" max="24" step="1" value="${Number(scenario.nbMois) || 12}"></div>
+        <div class="field-row"><label for="editOfferBonus">Primes annuelles (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferBonus" value="${String(scenario.primes || 0).replace(".", ",")}"></div>
+      </div>
+      <div class="field-row">
+        <label for="editOffer13thBase">Base du 13\u1D49 / 14\u1D49 mois</label>
+        <select id="editOffer13thBase"><option value="base" ${scenario.treiziemeMoisBase !== "ensemble" ? "selected" : ""}>Salaire de base</option><option value="ensemble" ${scenario.treiziemeMoisBase === "ensemble" ? "selected" : ""}>Salaire et \xE9l\xE9ments variables</option></select>
+      </div>
+      <p class="edit-offer-note">Les primes et mensualit\xE9s au-del\xE0 de 12 sont conserv\xE9es dans l\u2019offre, mais ne sont pas encore int\xE9gr\xE9es au calcul Urssaf. Le r\xE9sultat affich\xE9 ne les inclut donc pas.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
+        <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
+      </div>
+    </div>`;
+  const pending = openModal(html, { initialFocusSelector: "#editOfferName", className: "modal-edit-offer", dismissible: true });
+  const overlay = document.getElementById("modalOverlay");
+  const input = (id) => overlay.querySelector("#" + id);
+  let period = initialPeriod;
+  let location2 = {
+    commune: scenario.commune || "Pac\xE9",
+    codePostal: scenario.codePostal || "",
+    departement: scenario.departement || "",
+    codeCommune: scenario.codeCommune || "",
+    codeDepartement: scenario.codeDepartement || ""
+  };
+  let locationVerified = !!(location2.codePostal && location2.departement);
+  let communeSequence = 0;
+  let communeTimer = null;
+  const periodToggle = input("editOfferPeriod");
+  const grossInput = input("editOfferGross");
+  periodToggle.querySelectorAll("button[data-period]").forEach((button) => button.addEventListener("click", () => {
+    if (button.dataset.period === period) return;
+    const amount = parseNum(grossInput.value);
+    if (!(amount > 0)) return;
+    const converted = period === "mois" ? amount * 12 : amount / 12;
+    period = button.dataset.period;
+    grossInput.value = String(converted).replace(".", ",");
+    periodToggle.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    input("editOfferGrossLabel").textContent = "Salaire brut " + (period === "an" ? "annuel" : "mensuel") + " (\u20AC)";
+  }));
+  const communeInput = input("editOfferCommune");
+  const suggestionList = input("editOfferCommuneSuggestions");
+  communeInput.addEventListener("input", () => {
+    const query = communeInput.value.trim();
+    locationVerified = false;
+    location2.codePostal = "";
+    location2.departement = "";
+    location2.codeCommune = "";
+    location2.codeDepartement = "";
+    input("editOfferCommuneHint").textContent = "S\xE9lectionnez une commune v\xE9rifi\xE9e dans les suggestions.";
+    if (communeTimer) clearTimeout(communeTimer);
+    const sequence = ++communeSequence;
+    if (query.length < 2) {
+      suggestionList.hidden = true;
+      suggestionList.innerHTML = "";
+      return;
+    }
+    suggestionList.hidden = false;
+    suggestionList.innerHTML = '<div class="commune-search-status">Recherche des communes\u2026</div>';
+    communeTimer = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ fields: "nom,code,codesPostaux,departement,codeDepartement", limit: "8" });
+        if (/^\d{2,5}$/.test(query)) params.set("codePostal", query);
+        else {
+          params.set("nom", query);
+          params.set("boost", "population");
+        }
+        const response = await fetch("https://geo.api.gouv.fr/communes?" + params.toString(), { headers: { Accept: "application/json" } });
+        if (!response.ok) throw new Error("Recherche indisponible");
+        const rows = await response.json();
+        if (sequence !== communeSequence || !modalState) return;
+        const options = [];
+        for (const item of Array.isArray(rows) ? rows : []) {
+          const department = item.departement?.nom;
+          for (const postcode of Array.isArray(item.codesPostaux) ? item.codesPostaux : []) {
+            if (item.nom && department) options.push({ commune: item.nom, codePostal: postcode, departement: department, codeCommune: item.code, codeDepartement: item.codeDepartement });
+            if (options.length >= 8) break;
+          }
+          if (options.length >= 8) break;
+        }
+        suggestionList.innerHTML = options.length ? options.map((option, index) => '<button type="button" class="commune-option" data-option="' + index + '">' + esc(option.commune) + " \u2014 " + esc(option.codePostal) + " (" + esc(option.departement) + ")</button>").join("") : '<div class="commune-search-status">Aucune commune trouv\xE9e.</div>';
+        suggestionList._options = options;
+        suggestionList.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => {
+          const selected = options[Number(button.dataset.option)];
+          if (!selected) return;
+          location2 = selected;
+          locationVerified = true;
+          communeInput.value = selected.commune + " \u2014 " + selected.codePostal + " (" + selected.departement + ")";
+          input("editOfferCommuneHint").textContent = "Lieu v\xE9rifi\xE9 : " + selected.codePostal + " \u2014 " + selected.departement + ".";
+          suggestionList.hidden = true;
+          updateSaveState();
+        }));
+      } catch (error) {
+        if (sequence === communeSequence) {
+          suggestionList.innerHTML = '<div class="commune-search-status">Impossible de v\xE9rifier la commune. R\xE9essayez.</div>';
+        }
+      }
+    }, 250);
+    updateSaveState();
+  });
+  const requiredNumbers = ["editOfferGross", "editOfferMutuelle", "editOfferMutuellePat", "editOfferMealValue", "editOfferBonus"];
+  const validNumber = (id) => input(id).value.trim() !== "" && numericEntryValid(input(id).value) && Number.isFinite(parseNum(input(id).value));
+  const updateSaveState = () => {
+    const gross = parseNum(grossInput.value);
+    const valid = gross > 0 && gross <= 12e5 && locationVerified && requiredNumbers.slice(1).every(validNumber) && Number(input("editOfferMealDays").value) >= 0 && Number(input("editOfferMealDays").value) <= 31 && Number.isInteger(Number(input("editOfferMealDays").value)) && Number(input("editOfferMonths").value) >= 1 && Number(input("editOfferMonths").value) <= 24 && Number.isInteger(Number(input("editOfferMonths").value)) && parseNum(input("editOfferMutuelle").value) >= 0 && parseNum(input("editOfferMutuelle").value) <= 1e5 && parseNum(input("editOfferMutuellePat").value) >= 0 && parseNum(input("editOfferMutuellePat").value) <= 1e5 && parseNum(input("editOfferMealValue").value) >= 0 && parseNum(input("editOfferMealValue").value) <= 500 && Number(input("editOfferMealShare").value) >= 40 && Number(input("editOfferMealShare").value) <= 50 && parseNum(input("editOfferBonus").value) >= 0;
+    input("editOfferSave").disabled = !valid;
+  };
+  [...requiredNumbers, "editOfferMealDays", "editOfferMealValue", "editOfferMealShare", "editOfferMonths"].forEach((id) => input(id).addEventListener("input", updateSaveState));
+  input("editOfferName").addEventListener("input", updateSaveState);
+  updateSaveState();
+  input("editOfferSave").addEventListener("click", () => {
+    const gross = parseNum(grossInput.value);
+    const result = {
+      name: input("editOfferName").value.trim().slice(0, 80) || "Offre",
+      brut: period === "an" ? gross / 12 : gross,
+      salaireSaisi: gross,
+      salaireSaisiPeriode: period,
+      dureeType: input("editOfferHours").value === "39" ? "39" : "35",
+      ...location2,
+      mutuelle: parseNum(input("editOfferMutuelle").value),
+      mutuellePat: parseNum(input("editOfferMutuellePat").value),
+      joursResto: Number(input("editOfferMealDays").value),
+      valeurResto: parseNum(input("editOfferMealValue").value),
+      partResto: Number(input("editOfferMealShare").value),
+      nbMois: Number(input("editOfferMonths").value),
+      primes: parseNum(input("editOfferBonus").value),
+      treiziemeMoisBase: input("editOffer13thBase").value === "ensemble" ? "ensemble" : "base"
+    };
+    closeModal(result);
+  });
+  input("editOfferCancel").addEventListener("click", () => closeModal(false));
   return pending;
 }
 var headerMenu = document.getElementById("headerMenu");
@@ -4308,6 +4355,8 @@ function addRaiseScenario(type, value) {
   const label = type === "pct" ? `+${value} %` : `+${fmt(value)}`;
   const clone = Object.assign({}, base);
   delete clone.id;
+  delete clone.salaireSaisi;
+  delete clone.salaireSaisiPeriode;
   disableCardSnap();
   const created = mkScenario(Object.assign(clone, {
     name: `${base.name} ${label}`,
@@ -4394,14 +4443,14 @@ refreshOfficialSmic(false);
 if (!loadedFromShare && location.hash && new URLSearchParams(location.hash.slice(1)).has("share")) {
   showToastImpl("Lien de partage invalide ou incomplet : les donn\xE9es n\u2019ont pas pu \xEAtre charg\xE9es.");
 }
-document.querySelectorAll("[data-maquette-period]").forEach((button) => {
-  button.addEventListener("click", () => {
-    maquetteComparisonPeriod = button.dataset.maquettePeriod;
-    metric = "netHoraire";
-    render();
-  });
+document.addEventListener("click", (event) => {
+  const button = event.target.closest("[data-maquette-period]");
+  if (!button) return;
+  maquetteComparisonPeriod = button.dataset.maquettePeriod;
+  metric = "netHoraire";
+  render();
 });
-document.getElementById("maquetteAddSalary")?.addEventListener("click", () => addScenario(true));
+document.getElementById("maquetteAddSalary")?.addEventListener("click", () => addScenario());
 if (showOnboarding) {
   showOnboardingModal().then((result) => {
     Object.assign(scenarios[0], result);
