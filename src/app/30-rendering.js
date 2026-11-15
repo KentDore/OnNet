@@ -426,7 +426,6 @@ function renderMaquetteControls(computedOverride){
         if(!button)return;
         const scenario=findScenario(Number(button.dataset.editOffer));
         if(!scenario) return;
-        refId=scenario.id;
         showEditScenarioModal(scenario).then(answers=>{
           if(!answers) return;
           Object.assign(scenario,answers);
