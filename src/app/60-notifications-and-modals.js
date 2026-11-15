@@ -251,12 +251,16 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function formatSalaryInput(input){
   const value = parseNum(input.value);
   if(!(value > 0)) return;
-  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
+  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 10 }).format(value);
 }
 
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="modalAddName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
+      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || 'Nouvelle offre')}" autocomplete="off">
+    </div>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
@@ -318,8 +322,8 @@ function showOnboardingModal(){
       setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
       return;
     }
-    const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    const result = Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr());
+    const brutMensuel = salaryPeriod === 'an' ? v / 12 : v;
+    const result = Object.assign({ brut: brutMensuel, dureeType, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr());
     closeModal(result);
   };
   input.addEventListener('input', () => { submitBtn.disabled = !(parseNum(input.value) > 0); });
@@ -333,39 +337,7 @@ function showOnboardingModal(){
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
 
-function renameScenario(id){
-  const scenario=findScenario(id);
-  if(!scenario || modalState) return;
-  const html=`
-    <p id="modalMsg" class="modal-msg">Choisissez un nom pour retrouver cette offre dans le comparatif.</p>
-    <div class="field-row">
-      <label for="renameOfferInput">Nom de l’offre</label>
-      <input type="text" id="renameOfferInput" maxlength="60" value="${esc(scenario.name)}" autocomplete="off">
-    </div>
-    <div class="modal-actions">
-      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
-      <button type="button" class="btn btn-primary" id="renameOfferSave">Enregistrer</button>
-    </div>`;
-  openModal(html,{initialFocusSelector:'#renameOfferInput'});
-  const overlay=document.getElementById('modalOverlay');
-  const input=overlay.querySelector('#renameOfferInput');
-  const save=()=>{
-    const name=input.value.trim().slice(0,60);
-    if(!name){input.setCustomValidity('Saisissez un nom pour cette offre.');input.reportValidity();return;}
-    const current=findScenario(id);
-    if(!current){closeModal(false);return;}
-    current.name=name;
-    saveState();
-    closeModal(true);
-    render();
-  };
-  input.addEventListener('input',()=>input.setCustomValidity(''));
-  input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();save();}});
-  overlay.querySelector('#renameOfferSave').addEventListener('click',save);
-  overlay.querySelector('[data-modal-cancel]').addEventListener('click',()=>closeModal(false));
-}
-
-function showAddScenarioModal(brutPrefill, dureePrefill){
+function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
         ${renderUrssafConsentNotice()}
@@ -397,6 +369,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
   const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
+  const nameInput = overlay.querySelector('#modalAddName');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
   const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
   const periodToggle = overlay.querySelector('#modalAddPeriod');
@@ -408,7 +381,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       const current = parseNum(input.value);
       if(current > 0){
         const converted = salaryPeriod === 'mois' ? current * 12 : current / 12;
-        input.value = String(Math.round(converted * 100) / 100).replace('.', ',');
+        input.value = String(converted).replace('.', ',');
       }
       salaryPeriod = button.dataset.period;
       periodToggle.querySelectorAll('button').forEach(x => {
@@ -437,8 +410,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill){
       setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
       return;
     }
-    const brutMensuel = salaryPeriod === 'an' ? Math.round((v / 12) * 100) / 100 : v;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType }, readMutuelleTr()));
+    const brutMensuel = salaryPeriod === 'an' ? v / 12 : v;
+    const defaultName = String(namePrefill || 'Nouvelle offre').trim() || 'Nouvelle offre';
+    const name = nameInput.value.trim().slice(0, 60) || defaultName;
+    closeModal(Object.assign({ brut: brutMensuel, dureeType, name, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr()));
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
