@@ -168,7 +168,14 @@ function showShareModal(url){
 }
 
 // Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
-function renderUrssafConsentNotice(){
+function renderUrssafConsentNotice(compact = false){
+  if(compact){
+    return `
+      <div class="onboarding-consent onboarding-consent-compact">
+        <span class="onboarding-consent-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
+        <p>Au clic sur Enregistrer, le salaire et ses paramètres sont transmis à l’API Urssaf.</p>
+      </div>`;
+  }
   return `
     <div class="onboarding-consent">
       <div class="onboarding-consent-top">
@@ -444,9 +451,9 @@ function showEditScenarioModal(scenario){
         <label for="editOfferName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
-      ${renderUrssafConsentNotice()}
-      <div class="field-row">
-        <label>Votre salaire est indiqué en</label>
+      ${renderUrssafConsentNotice(true)}
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Votre salaire est indiqué en</span>
         <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="Période du salaire brut">
           <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
           <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
@@ -456,7 +463,7 @@ function showEditScenarioModal(scenario){
         <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
         <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
       </div>
-      <div class="field-row">
+      <div class="field-row edit-offer-inline-row">
         <span class="field-label">Base horaire</span>
         <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
           <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
