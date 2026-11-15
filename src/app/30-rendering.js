@@ -115,14 +115,16 @@ function renderStack(computed){
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
-    const pxCotis = Math.round(cotis * scale), pxMutuelle = Math.round(mutuelle * scale);
-    const pxTr = Math.round(tr * scale), pxNet = Math.max(22, Math.round(net * scale));
+    const pxCotis = Math.max(0, Math.round(cotis * scale)), pxMutuelle = Math.max(0, Math.round(mutuelle * scale));
+    const pxTr = Math.max(0, Math.round(tr * scale)), pxNet = Math.max(0, Math.round(net * scale));
     const barHtml = `
-      <div class="stack-bar">
-        <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
-        <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
-        <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-        <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
+      <div class="stack-bar-stage">
+        <div class="stack-bar">
+          <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
+          <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
+          <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
+          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
+        </div>
       </div>`;
     return `
     <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
@@ -328,13 +330,32 @@ function renderMaquetteControls(computedOverride){
   if(!tabs) return;
   tabs.replaceChildren();
   scenarios.forEach((scenario,index)=>{
+    const item=document.createElement('div');
+    item.className='offer-tab-item';
     const button=document.createElement('button');
     button.type='button';button.className='offer-tab'+(scenario.id===refId?' active':'');
     button.setAttribute('aria-pressed',String(scenario.id===refId));
-    button.append(document.createTextNode(scenario.name));
+    const name=document.createElement('span');name.className='offer-tab-name';name.textContent=scenario.name;button.append(name);
     const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
     button.addEventListener('click',()=>{refId=scenario.id;render();});
-    tabs.append(button);
+    item.append(button);
+    const actions=document.createElement('div');actions.className='offer-tab-actions';
+    const rename=document.createElement('button');rename.type='button';rename.className='offer-tab-action';rename.textContent='✎';rename.setAttribute('aria-label','Renommer '+scenario.name);rename.title='Renommer ce poste';
+    rename.addEventListener('click',event=>{
+      event.stopPropagation();
+      const next=window.prompt('Nouveau nom du poste',scenario.name);
+      if(next===null) return;
+      const value=next.trim().slice(0,60);
+      if(!value) return;
+      scenario.name=value;render();
+    });
+    actions.append(rename);
+    if(scenarios.length>1){
+      const remove=document.createElement('button');remove.type='button';remove.className='offer-tab-action is-danger';remove.textContent='×';remove.setAttribute('aria-label','Supprimer '+scenario.name);remove.title='Supprimer ce poste';
+      remove.addEventListener('click',event=>{event.stopPropagation();removeScenario(scenario.id);});
+      actions.append(remove);
+    }
+    item.append(actions);tabs.append(item);
   });
   const selected=findScenario(refId)||scenarios[0];
   document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
