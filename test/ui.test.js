@@ -347,7 +347,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'la base mensuelle doit rester égale au SMIC officiel 35 h');
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
-    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer vos offres/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
       const position = selector => [...panel.children].findIndex(node => node.matches(selector));
@@ -362,9 +362,9 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.match(medianMethod, /2\s?238/);
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
-    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .benchmark-your-salary > strong').innerText();
+    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .offer-comparison-net').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net avant impôt mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
@@ -884,17 +884,14 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
-test('un poste peut être renommé directement dans le sélecteur principal', { timeout: 60000 }, async () => {
+test('une offre ouvre un écran de modification dédié', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
-    const tab = page.locator('#maquetteOfferTabs .offer-tab').first();
-    const original = await tab.locator('.offer-tab-name').innerText();
-    await page.getByRole('button', { name:'Renommer '+original }).click();
-    const input = page.locator('#maquetteOfferTabs .offer-tab-rename-input');
-    assert.equal(await input.isVisible(), true);
-    await input.fill('Poste renommé');
-    await input.press('Enter');
-    assert.equal(await page.locator('#maquetteOfferTabs .offer-tab-name').first().innerText(), 'Poste renommé');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true);
+    assert.equal(await page.locator('#salaryEditorTitle').innerText(), 'Modifier — Poste actuel');
+    await page.locator('#salaryEditorBack').click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false);
   } finally {
     await context.close();
   }
@@ -931,12 +928,12 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
       assert.ok(Math.abs(layout.stages[0].bottom - layout.stages[1].bottom) <= 1,
         `les barres doivent partager la même ligne de base à ${width}px : ${JSON.stringify(layout.stages)}`);
       assert.ok(layout.stages.every(stage => stage.width > 0));
-      assert.ok(layout.actions.every(action => action.visible && action.label === 'Modifier'));
+      assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
 
-    const secondName = await page.locator('#maquetteOfferTabs .offer-tab-name').nth(1).innerText();
+    const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
     await page.getByRole('button', { name: 'Supprimer ' + secondName }).click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
@@ -1228,8 +1225,9 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
     await period.locator('[data-period="year"]').click();
     assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
-    const situationGap = await page.locator('.declaration-inline').evaluate(el => parseFloat(getComputedStyle(el).marginTop));
-    assert.ok(situationGap >= 16, 'un espacement doit séparer la situation des repères salariaux');
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué hors du mode édition');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît uniquement après sélection d’une offre');
   } finally {
     await context.close();
   }
@@ -1475,7 +1473,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    await page.locator('#maquetteOfferTabs button.offer-tab').nth(1).click();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
