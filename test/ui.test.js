@@ -1451,7 +1451,7 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
           return { top:rect.top, left:rect.left, right:rect.right, width:rect.width };
         });
         return {
-          columns:getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length,
+          columns:getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length,
           scrollWidth:el.scrollWidth, clientWidth:el.clientWidth, cards
         };
       });
