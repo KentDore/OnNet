@@ -745,7 +745,7 @@ test('la part salariale des titres-restaurant alterne entre 50 % par défaut et 
 });
 
 test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp();
+  const { context, page, calls } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
@@ -753,6 +753,15 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
     const waterfallRows = await page.locator('.waterfall .salary-net-summary-row').allTextContents();
+    console.log('ONNET_TR_SUMMARY_DEBUG=' + JSON.stringify({
+      rows:waterfallRows,
+      requests:calls.bodies.map(body => ({
+        enabled:body.situation['salarié . rémunération . frais professionnels . titres-restaurant'],
+        count:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . nombre'],
+        value:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'],
+        employerRate:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur']
+      }))
+    }));
     assert.equal(waterfallRows.length, 3, 'le récapitulatif affiche trois valeurs lorsque les TR sont activés');
     assert.match(waterfallRows[0], /Net sans TR/);
     assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
