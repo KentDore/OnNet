@@ -1584,3 +1584,72 @@ test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', 
     await context.close();
   }
 });
+
+
+test('compare correctement une offre 35 h et une offre 39 h sur les trois périodes', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await addSecondScenario(page, '3200');
+    await openSalaryEditor(page, 1);
+    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return state?.scenarios?.[1]?.dureeType === '35' &&
+        cards.length === 2 && cards.every(card => card.dataset.resultState === 'ready') &&
+        document.querySelectorAll('#stackChart .comparison-offer-card').length === 2 &&
+        (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour');
+    }, null, { timeout: 20000 });
+    await page.locator('#salaryEditorBack').click();
+
+    const source = await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return {
+        hours: Object.fromEntries(state.scenarios.map(s => [String(s.id), Number(s.dureeType)])),
+        monthlyNet: Object.fromEntries(cards.map(card => [
+          card.dataset.card,
+          card.querySelector('.hero-value')?.textContent || ''
+        ]))
+      };
+    });
+    assert.deepEqual(Object.values(source.hours).sort(), [35, 39]);
+    const parseEuro = value => Number(String(value).replace(/[^0-9,.-]/g, '').replace(',', '.'));
+
+    const readComparison = async () => page.locator('#stackChart .comparison-offer-card').evaluateAll(cards =>
+      cards.map(card => ({
+        id: card.dataset.comparisonOffer,
+        label: card.querySelector('.comparison-offer-value-label')?.textContent || '',
+        value: card.querySelector('.comparison-offer-value')?.textContent || ''
+      }))
+    );
+
+    await page.locator('[data-maquette-period="hour"]').click();
+    let values = await readComparison();
+    assert.equal(values.length, 2);
+    for (const item of values) {
+      const monthlyNet = parseEuro(source.monthlyNet[item.id]);
+      const monthlyHours = source.hours[item.id] * 52 / 12;
+      assert.ok(Math.abs(parseEuro(item.value) - monthlyNet / monthlyHours) < 0.02,
+        `le taux horaire de l’offre ${item.id} doit utiliser ses propres heures contractuelles`);
+    }
+
+    await page.locator('[data-maquette-period="month"]').click();
+    values = await readComparison();
+    for (const item of values) {
+      assert.match(item.label, /Net mensuel/);
+      assert.ok(Math.abs(parseEuro(item.value) - parseEuro(source.monthlyNet[item.id])) < 0.03,
+        `le net mensuel de l’offre ${item.id} doit rester celui calculé pour son contrat`);
+    }
+
+    await page.locator('[data-maquette-period="year"]').click();
+    values = await readComparison();
+    for (const item of values) {
+      assert.match(item.label, /Net annuel/);
+      assert.ok(Math.abs(parseEuro(item.value) - parseEuro(source.monthlyNet[item.id]) * 12) < 0.10,
+        `le net annuel de l’offre ${item.id} doit être cohérent avec ses 12 mensualités`);
+    }
+  } finally {
+    await context.close();
+  }
+});
