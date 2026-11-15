@@ -26,7 +26,6 @@ function apiResponse(expressions, overrides = {}) {
   const nodeValues = {
     'salarié . rémunération . brut': 2300,
     'salarié . rémunération . net . à payer avant impôt': 1810,
-    'salarié . rémunération . net . imposable': 1880,
     'salarié . cotisations . salarié': 490,
     'salarié . rémunération . heures supplémentaires': 0,
     'salarié . cotisations . prévoyances . santé . salarié': 30,
@@ -34,10 +33,6 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . montant': 168,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 70,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . net . payé après impôt': 1700,
-    'impôt . montant': 1320,
-    "impôt . taux d'imposition": 10,
-    "impôt . taux neutre d'impôt sur le revenu": 4.1
   }
   return {
     evaluate: expressions.map(expression => {
