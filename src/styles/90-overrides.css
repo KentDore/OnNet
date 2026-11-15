@@ -327,3 +327,31 @@ body.salary-editor-open .integrated-offers{display:none!important}
 .offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
 .offer-comparison-remove{width:28px;height:28px;min-height:28px;padding:0;border:1px solid #eadbd5;border-radius:8px;background:#fff;color:#a94d35;font-size:17px;line-height:1}
 .offer-comparison-remove:focus-visible,.offer-comparison-edit:focus-visible,.salary-editor-back:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
+
+
+/* Actions explicites sur chaque offre : nom modifiable et référence choisie. */
+.offer-comparison-name{
+ display:block;width:100%;min-width:0;max-width:100%;margin-top:4px;padding:2px 0;
+ border:0;border-bottom:1px solid transparent;border-radius:0;background:transparent;
+ color:#244b36;font:700 15px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.offer-comparison-name:hover,.offer-comparison-name:focus{border-bottom-color:#a9cdb5;outline:none}
+.offer-comparison-name:focus{background:#f6faf7}
+.offer-reference-select{
+ min-height:28px;padding:5px 8px;border:1px solid #cfe3d4;border-radius:8px;
+ background:#f0f8f2;color:#176b49;font-size:10px;font-weight:750;line-height:1.2;
+}
+.offer-reference-select:focus-visible,.offer-comparison-name:focus-visible{
+ outline:2px solid #1b7652;outline-offset:2px
+}
+.offer-comparison-card-actions{flex-wrap:wrap;justify-content:flex-end}
+.offer-comparison-card.is-reference{border-width:2px}
+.offer-reference-label{display:inline-flex;align-items:center;min-height:28px;padding:5px 9px}
+@media(max-width:640px){
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-item{padding:16px 14px}
+ .offer-comparison-card-head{gap:10px;margin-bottom:12px}
+ .offer-comparison-name{font-size:15px}
+ .offer-comparison-card-actions{max-width:48%;gap:5px}
+ .offer-reference-select{max-width:100%;white-space:normal}
+}
