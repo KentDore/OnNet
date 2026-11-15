@@ -433,7 +433,7 @@ function renderMaquetteControls(computedOverride){
       const amount=value===null?'Calcul en cours':(maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value));
       const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
-        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4>'+esc(s.name)+'</h4></div>'+(s.id===refId?'<span class="offer-reference-label">Actuelle</span>':'')+'</div>'+
+        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4>'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Actuelle</span>':'')+(computed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
         '<strong class="offer-comparison-net">'+amount+(value===null?'':' <small>/ '+unit+'</small>')+'</strong>'+
         '<div class="offer-comparison-meta">Net avant impôt · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
@@ -441,6 +441,8 @@ function renderMaquetteControls(computedOverride){
     }).join('');
     if(summary.dataset.editBound!=='true'){
       summary.addEventListener('click',event=>{
+        const remove=event.target.closest('[data-delete-offer]');
+        if(remove){removeScenario(Number(remove.dataset.deleteOffer));return;}
         const button=event.target.closest('[data-edit-offer]');
         if(!button)return;
         refId=Number(button.dataset.editOffer);
