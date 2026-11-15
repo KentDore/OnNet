@@ -2,7 +2,7 @@
   "name": "onnet",
   "version": "2.2.1",
   "private": true,
-  "description": "Comparateur de salaires utilisant l’API officielle Mon-entreprise / Urssaf ; Publicodes conservé pour les diagnostics.",
+  "description": "Comparateur de salaires utilisant l’API officielle Mon-entreprise / Urssaf.",
   "engines": {
     "node": ">=20"
   },
@@ -14,7 +14,6 @@
     "compare:urssaf-api": "node scripts/compare-urssaf-api.mjs",
     "diagnose:urssaf-meal-tickets": "node scripts/diagnose-urssaf-meal-tickets.mjs",
     "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs",
-    "diagnose:publicodes-tax": "node scripts/diagnose-publicodes-tax.mjs",
     "test:urssaf-api": "node --test test/urssaf-api-client.test.mjs",
     "test:all": "npm run test:publicodes && npm run test:urssaf-api && node --test test/ui-utils.test.js test/urssaf-calculation.test.mjs test/rate-limited-fetch.test.mjs test/smic-reference.test.mjs test/urssaf-calculation-cache.test.mjs test/urssaf-session-state.test.mjs test/persistence-codec.test.mjs",
     "lint:js": "npx --yes eslint@10.15.0 --config eslint.config.mjs \"src/**/*.js\" \"src/**/*.mjs\" \"scripts/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.js\" \"test/**/*.mjs\"",
