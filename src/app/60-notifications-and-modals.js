@@ -251,7 +251,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function formatSalaryInput(input){
   const value = parseNum(input.value);
   if(!(value > 0)) return;
-  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 10 }).format(value);
+  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 15 }).format(value);
 }
 
 function showOnboardingModal(){
