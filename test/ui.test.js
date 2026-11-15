@@ -1654,3 +1654,34 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
     await context.close();
   }
 });
+
+
+test('conserve exactement un brut annuel saisi et propose un nom facultatif', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    assert.equal(await page.locator('#maquetteCompareTitle').innerText(), 'Vos offres');
+    assert.equal(await page.locator('.offer-rename-button').count(), 0,
+      'le renommage ne doit plus être proposé sur les cartes');
+    await page.locator('#maquetteAddSalary').click();
+    assert.equal(await page.locator('#modalAddName').inputValue(), 'Offre 2');
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddName').fill('');
+    await page.locator('#modalAddSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.length === 2 &&
+        state.scenarios[1].salaireSaisi === 29500 &&
+        state.scenarios[1].salaireSaisiPeriode === 'an' &&
+        document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2;
+    }, null, { timeout: 20000 });
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[1]);
+    assert.equal(saved.name, 'Offre 2', 'le nom proposé doit rester utilisable si le champ facultatif est vide');
+    assert.equal(saved.brut, 29500 / 12,
+      'le brut mensuel interne doit conserver la précision issue du brut annuel');
+    assert.equal(saved.brut * 12, 29500,
+      'reconstituer l’annuel ne doit pas produire 29 499,96 €');
+  } finally {
+    await context.close();
+  }
+});
