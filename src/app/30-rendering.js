@@ -172,7 +172,7 @@ function renderStackLegend(){
 }
 
 function renderWaterfall(computed){
-  const { r } = computed[0];
+  const { s, r } = computed[0];
   const m = r.m;
   const brut = Math.max(0, m.brutTotal);
   const net = Math.max(0, m.netApres);
