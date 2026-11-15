@@ -370,7 +370,7 @@ function renderBenchmarks(computed){
   return '<div class="benchmark-grid">'+smicCard+medianCard+'</div>';
 }
 // ---------- Rendu ----------
-let maquetteComparisonPeriod='hour';
+let maquetteComparisonPeriod='month';
 
 
 function renderMaquetteControls(computedOverride){
