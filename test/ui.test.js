@@ -101,7 +101,18 @@ test.after(async () => {
 });
 
 async function openApp(options = {}) {
-  const context = await browser.newContext();
+  const context = await browser.newContext(options.touch
+    ? { hasTouch:true, isMobile:true, viewport:{ width:390, height:844 } }
+    : {});
+  if(options.mockVibrate){
+    await context.addInitScript(() => {
+      window.__onnetVibrations = [];
+      Object.defineProperty(navigator, 'vibrate', {
+        configurable:true,
+        value:pattern => { window.__onnetVibrations.push(pattern); return true; }
+      });
+    });
+  }
   context.setDefaultTimeout(10000);
   context.setDefaultNavigationTimeout(15000);
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
@@ -1749,3 +1760,27 @@ test('la fenêtre de modification conserve tous les paramètres avancés d’une
     await context.close();
   }
 });
+
+test('les actions tactiles utiles vibrent brièvement seulement si l’API est disponible', { timeout:60000 }, async () => {
+  const desktop = await openApp({ mockVibrate:true });
+  try{
+    await desktop.page.locator('[data-maquette-period="month"]').click();
+    assert.deepEqual(await desktop.page.evaluate(() => window.__onnetVibrations), [],
+      'un clic souris ne doit pas déclencher de vibration');
+  }finally{
+    await desktop.context.close();
+  }
+
+  const mobile = await openApp({ touch:true, mockVibrate:true });
+  try{
+    await mobile.page.locator('[data-maquette-period="month"]').tap();
+    assert.deepEqual(await mobile.page.evaluate(() => window.__onnetVibrations), [8],
+      'une sélection tactile doit produire une impulsion courte');
+    await mobile.page.locator('#maquetteAddSalary').tap();
+    assert.deepEqual(await mobile.page.evaluate(() => window.__onnetVibrations), [8,8],
+      'l’ajout d’une offre doit produire le même retour discret');
+  }finally{
+    await mobile.context.close();
+  }
+});
+
