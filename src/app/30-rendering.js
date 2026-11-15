@@ -11,7 +11,7 @@ function renderCard(s, r, showRemove){
   const uid = s.id;
   const isRef = s.id === refId;
   const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
-  const calculationError = getCalculationError(s,foyer);
+  const calculationError = getCalculationError(s);
   const trMotifs = {
     sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
     sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
@@ -162,7 +162,7 @@ function renderWaterfall(computed){
     : '';
   return `
   <div class="waterfall">
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant impôt : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
       <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
       <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
     </div>
@@ -192,8 +192,7 @@ function renderInsight(computed){
   const delta = valueOf(best) - valueOf(ref);
   const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
   const metricLabel = {
-    netImposable:'net imposable', annuelNet:'net annuel',
-    netApresImpot:'net après impôt', 'net horaire après impôt', netHoraire:'net horaire',
+    annuelNet:'net annuel', netHoraire:'net horaire',
     brutHoraire:'brut horaire'
   }[metric] || 'valeur sélectionnée';
   const format = isHourly ? fmtHoraire : fmt;
