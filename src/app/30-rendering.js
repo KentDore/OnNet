@@ -255,7 +255,7 @@ function renderComparisonCards(computed){
       ? '<span class="comparison-reference-note">Offre de référence</span>'
       : delta===null
         ? '<span class="comparison-reference-note">Écart indisponible</span>'
-        : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+(config.key==='hour'?'vs ':config.unit+' vs ')+esc(reference.s.name)+'</span></div>';
+        : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+(config.key==='hour'?'vs ':'/ '+config.unit+' vs ')+esc(reference.s.name)+'</span></div>';
     const trTotal=getMealTicketTotal(s,r);
     const details=trTotal>0.5
       ? '<details class="offer-net-details"><summary>Détail des titres-restaurant</summary>'+renderSalaryNetSummary(r.m.netSocial,trTotal,r.netApres+trTotal)+'</details>'
@@ -267,7 +267,7 @@ function renderComparisonCards(computed){
       '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
       '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
       '<div class="comparison-offer-value">'+(value===null?'—':config.format(value))+(value===null||config.key==='hour'?'':'<small>/ '+config.unit+'</small>')+'</div>'+
-      '<div class="comparison-offer-meta"><span>'+fmt(s.brut)+' brut / mois</span><span>'+weekly.toLocaleString('fr-FR')+' h / semaine</span></div>'+
+      '<div class="comparison-offer-meta"><span>Brut : '+fmt(s.brut)+' / mois</span><span>'+weekly.toLocaleString('fr-FR')+' h / semaine</span></div>'+
       deltaHtml+
       details+
       '</article>';
