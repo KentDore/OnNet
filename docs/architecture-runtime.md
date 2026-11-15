@@ -36,6 +36,8 @@ Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est en
 
 Cette table décrit les responsabilités dominantes, pas une séparation stricte. Plusieurs fonctions et variables sont encore utilisées en dehors du fragment où elles sont définies.
 
+Les vérifications GitHub Actions reconstruisent `index.html` et `Onnet-2.2.1.html` depuis les sources avant les tests. La synchronisation vers la branche de la PR n'a lieu que si sa tête correspond encore au commit testé ; une exécution plus ancienne ne peut donc pas écraser les artefacts d'un commit plus récent.
+
 ## Constats critiques
 
 - **Le découpage est d'abord organisationnel.** L'ordre du manifeste est une dépendance d'exécution : changer cet ordre peut casser l'application.
