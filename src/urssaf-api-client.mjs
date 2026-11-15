@@ -104,7 +104,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     'salarié . régimes spécifiques . taux réduits': 'non',
     'salarié . régimes spécifiques . DFS': 'non',
     'salarié . régimes spécifiques . impatriés': 'non',
-    "situation personnelle . domiciliation fiscale à l'étranger": 'non',
     'salarié . temps de travail . heures supplémentaires': `${overtimeHours} heure/mois`,
     'salarié . cotisations . prévoyances . santé . montant': money(totalHealth),
     'salarié . cotisations . prévoyances . santé . taux employeur': percent(employerHealthRate),
