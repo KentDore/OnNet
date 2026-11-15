@@ -877,7 +877,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     }
 
     const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
-    await page.getByRole('button', { name: 'Supprimer ' + secondName }).click();
+    await page.locator('#maquetteYourSalary [data-delete-offer]').nth(1).click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 1 &&
@@ -1274,6 +1274,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
 
     // Aligner la capture sur les données d'exemple de la maquette V33.
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     
     await page.waitForFunction(() =>
@@ -1421,7 +1422,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    await openSalaryEditor(page, 1);
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
