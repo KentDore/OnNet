@@ -350,7 +350,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Vos offres/);
-    assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
+    assert.match(await page.locator('.comparison-period').innerText(), /Mois/i,
+      'la comparaison doit être mensuelle par défaut');
     assert.equal(await page.locator('.declaration-inline').count(), 0,
       'l’éditeur flottant remplace le formulaire intégré à la page');
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
@@ -365,8 +366,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
       'les fiches ne doivent pas afficher de ligne fiscale');
     assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet) / 169) < 0.02,
-      'le taux horaire doit refléter le net bancaire réellement versé, divisé par les 169 h du contrat 39 h');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet)) < 0.02,
+      'la valeur du comparatif mensuel doit correspondre au net bancaire mensuel de la fiche');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
