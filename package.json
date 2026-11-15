@@ -16,7 +16,7 @@
     "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs",
     "diagnose:publicodes-tax": "node scripts/diagnose-publicodes-tax.mjs",
     "test:urssaf-api": "node --test test/urssaf-api-client.test.mjs",
-    "test:all": "npm run test:publicodes && npm run test:urssaf-api && node --test test/ui-utils.test.js test/urssaf-calculation.test.mjs test/rate-limited-fetch.test.mjs",
+    "test:all": "npm run test:publicodes && npm run test:urssaf-api && node --test test/ui-utils.test.js test/urssaf-calculation.test.mjs test/rate-limited-fetch.test.mjs test/smic-reference.test.mjs",
     "lint:js": "npx --yes eslint@10.15.0 --config eslint.config.mjs \"src/**/*.js\" \"src/**/*.mjs\" \"scripts/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.js\" \"test/**/*.mjs\"",
     "lint:css": "npx --yes stylelint@18.0.0 --config .stylelintrc.json \"src/styles/**/*.css\"",
     "lint": "npm run lint:js && npm run lint:css"
