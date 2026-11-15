@@ -964,6 +964,9 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
     const valueUnit = page.locator('#stackChart .comparison-offer-value small');
     assert.equal(await valueLabel.innerText(), 'Net horaire · avant impôt');
     assert.equal(await valueUnit.count(), 0, 'le taux horaire contient déjà son unité €/h');
+    for (const result of await page.locator('#benchmarkMount .benchmark-result').allTextContents()) {
+      assert.doesNotMatch(result, /€\\/h\\s*\\/\\s*heure/, 'les écarts horaires ne doivent pas répéter l’unité');
+    }
     await month.click();
     assert.equal(await month.getAttribute('aria-pressed'), 'true');
     assert.equal(await hour.getAttribute('aria-pressed'), 'false');
