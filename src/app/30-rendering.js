@@ -11,7 +11,7 @@ function renderCard(s, r, showRemove){
   const uid = s.id;
   const isRef = s.id === refId;
   const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);
-  const calculationError = getCalculationError(s,foyer);
+  const calculationError = getCalculationError(s);
   const trMotifs = {
     sous50: 'Part patronale sous 50 % : vérifiez la valeur reconnue par le moteur Urssaf.',
     sur60: 'Part patronale au-delà de 60 % : vérifiez la valeur reconnue par le moteur Urssaf.',
@@ -104,6 +104,32 @@ function renderAddCard(){
 // ---------- Graphique empilé de répartition ----------
 const STACK_COLORS = { cotis:'var(--stack-cotis)', mutuelle:'var(--gold)', tr:'var(--stack-tr)', net:'var(--accent)' };
 
+function getMealTicketTotal(scenario, result){
+  const employee = result?.tr?.totalSalarie;
+  const employer = result?.tr?.totalEmployeur;
+  const hasEmployee = employee !== null && employee !== undefined && Number.isFinite(Number(employee));
+  const hasEmployer = employer !== null && employer !== undefined && Number.isFinite(Number(employer));
+  if(hasEmployee && hasEmployer){
+    return Math.max(0, Number(employee)) + Math.max(0, Number(employer));
+  }
+  // Repli d'affichage lorsque l'un des deux montants est absent de la réponse :
+  // nombre de titres déclarés × valeur faciale saisie.
+  return Math.max(0, Number(scenario?.joursResto) || 0) * Math.max(0, Number(scenario?.valeurResto) || 0);
+}
+
+function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR){
+  const rows = trTotal > 0.5
+    ? [
+      { label:'Net sans TR', value:netSansTR },
+      { label:'TR — total des deux parts', value:trTotal },
+      { label:'Net avec TR', value:netAvecTR, final:true }
+    ]
+    : [{ label:'Net', value:netAvecTR, final:true }];
+  return `<div class="salary-net-summary" aria-label="Récapitulatif du net et des titres-restaurant">${rows.map(row =>
+    `<div class="salary-net-summary-row${row.final ? ' is-final' : ''}"><span>${row.label}</span><strong>${fmt(row.value)}</strong></div>`
+  ).join('')}</div>`;
+}
+
 function renderStack(computed){
   const sorted = [...computed].sort((a,b) => b.r.m.netApres - a.r.m.netApres);
   const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
@@ -112,6 +138,7 @@ function renderStack(computed){
   return sorted.map(({s, r}) => {
     const m = r.m;
     const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
+    const trTotal = getMealTicketTotal(s, r);
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
@@ -123,15 +150,14 @@ function renderStack(computed){
           <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
           <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
           <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
+          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net bancaire : ${fmt(net)}" role="img" aria-label="Net bancaire : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
         </div>
       </div>`;
     return `
     <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
-      <div class="stack-net">${fmt(net)}</div>
-      ${tr > 0.5 ? `<div class="stack-net-notr">TR salarié : ${fmt(tr)} · employeur : ${fmt(r.tr.totalEmployeur)}</div><div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -152,32 +178,19 @@ function renderWaterfall(computed){
   const net = Math.max(0, m.netApres);
   const deductions = Math.max(0, brut - net);
   const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
-  const cotis = Math.max(0, m.cotisNettes);
-  const mutuelle = Math.max(0, m.mutuelle);
-  const tr = Math.max(0, r.tr.totalSalarie);
-  const netSansTR = m.netSocial;
-  const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  const trNote = tr > 0.5
-    ? `Net avant impôt hors retenue des TR : <strong>${fmt(netSansTR)}</strong> · ${s.joursResto} jours × ${fmt(s.valeurResto)} · part salarié : <strong>${fmt(tr)}</strong> · part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> · valeur créditée : <strong>${fmt(trValeurFaciale)}</strong>`
-    : '';
+  const netSansTR = Math.max(0, m.netSocial);
+  const trTotal = getMealTicketTotal(s, r);
   return `
   <div class="waterfall">
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant impôt : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+    ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net bancaire : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
       <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
       <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
     </div>
-    <div class="wf-breakdown">
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-net" aria-hidden="true"></span>
-        <div><strong>${fmt(net)}</strong><span>Net avant impôt</span></div>
-      </div>
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
-        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
-      </div>
+    <div class="wf-bar-legend" aria-hidden="true">
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net bancaire</span>
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-deductions"></span>Retenues sur le brut</span>
     </div>
-    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} · mutuelle ${fmt(mutuelle)} · titres-restaurant (part salarié) ${fmt(tr)}</p>
-    ${trNote ? `<p class="wf-note">${trNote}</p>` : ''}
   </div>`;
 }
 
@@ -192,8 +205,7 @@ function renderInsight(computed){
   const delta = valueOf(best) - valueOf(ref);
   const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
   const metricLabel = {
-    netImposable:'net imposable', annuelNet:'net annuel',
-    netApresImpot:'net après impôt', netApresImpotHoraire:'net horaire après impôt', netHoraire:'net horaire',
+    annuelNet:'net annuel', netHoraire:'net horaire',
     brutHoraire:'brut horaire'
   }[metric] || 'valeur sélectionnée';
   const format = isHourly ? fmtHoraire : fmt;
@@ -203,7 +215,7 @@ function renderInsight(computed){
   return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
-const HOURLY_METRICS = new Set(['netHoraire', 'netApresImpotHoraire', 'brutHoraire']);
+const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
 
 function renderBars(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
@@ -303,6 +315,16 @@ function renderBenchmarks(computed){
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
 let mainSalaryInputPeriod='month';
+let salaryEditorOpen=false;
+function setSalaryEditor(open){
+  salaryEditorOpen=!!open;
+  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
+  if(salaryEditorOpen){
+    const title=document.getElementById('salaryEditorTitle');
+    const selected=findScenario(refId)||scenarios[0];
+    if(title) title.textContent='Modifier — '+(selected?.name||'cette offre');
+  }
+}
 function applyDeclaredSalaryFromForm(){
   const scenario=findScenario(refId)||scenarios[0];
   const gross=document.getElementById('mainSalaryGross');
@@ -326,10 +348,14 @@ function renderMaquetteControls(computedOverride){
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
   if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
+  const back=document.getElementById('salaryEditorBack');
+  if(back && back.dataset.bound!=='true'){
+    back.addEventListener('click',()=>{setSalaryEditor(false);render();document.getElementById('maquetteYourSalary')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    back.dataset.bound='true';
+  }
   const tabs=document.getElementById('maquetteOfferTabs');
-  if(!tabs) return;
-  tabs.replaceChildren();
-  scenarios.forEach((scenario,index)=>{
+  if(tabs) tabs.replaceChildren();
+  if(tabs) scenarios.forEach((scenario,index)=>{
     const item=document.createElement('div');
     item.className='offer-tab-item';
     const button=document.createElement('button');
@@ -337,34 +363,15 @@ function renderMaquetteControls(computedOverride){
     button.setAttribute('aria-pressed',String(scenario.id===refId));
     const name=document.createElement('span');name.className='offer-tab-name';name.textContent=scenario.name;button.append(name);
     const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
-    button.addEventListener('click',()=>{refId=scenario.id;render();});
+    button.addEventListener('click',()=>{refId=scenario.id;setSalaryEditor(true);render();document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});});
     item.append(button);
     const actions=document.createElement('div');actions.className='offer-tab-actions';
-    const rename=document.createElement('button');rename.type='button';rename.className='offer-tab-action';rename.textContent='Modifier';rename.setAttribute('aria-label','Renommer '+scenario.name);rename.title='Renommer ce poste';
-    rename.addEventListener('click',event=>{
-      event.stopPropagation();
-      const input=document.createElement('input');input.type='text';input.className='offer-tab-rename-input';input.value=scenario.name;input.maxLength=60;input.setAttribute('aria-label','Nouveau nom du poste');
-      name.replaceWith(input);rename.hidden=true;input.focus();input.select();
-      let finished=false;
-      const finish=save=>{
-        if(finished) return;finished=true;
-        const value=input.value.trim().slice(0,60);
-        if(save && value) scenario.name=value;
-        render();
-      };
-      input.addEventListener('keydown',keyEvent=>{
-        if(keyEvent.key==='Enter'){keyEvent.preventDefault();finish(true);}
-        if(keyEvent.key==='Escape'){keyEvent.preventDefault();finish(false);}
-      });
-      input.addEventListener('blur',()=>finish(true));
-    });
-    actions.append(rename);
     if(scenarios.length>1){
       const remove=document.createElement('button');remove.type='button';remove.className='offer-tab-action is-danger';remove.textContent='×';remove.setAttribute('aria-label','Supprimer '+scenario.name);remove.title='Supprimer ce poste';
       remove.addEventListener('click',event=>{event.stopPropagation();removeScenario(scenario.id);});
       actions.append(remove);
     }
-    item.append(actions);tabs.append(item);
+    item.append(actions);tabs?.append(item);
   });
   const selected=findScenario(refId)||scenarios[0];
   document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
@@ -430,26 +437,36 @@ function renderMaquetteControls(computedOverride){
   }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
-    if(!computed || !computed.r){summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>À calculer<small>Net avant impôt</small></strong><div class="benchmark-meta benchmark-comparison-base">Le résultat apparaîtra après le calcul de votre salaire.</div></div>';}
-    else{
-      const weekly=Number(selected.dureeType), hoursMonth=weekly*52/12;
-      const hourly=hoursMonth>0 && Number.isFinite(computed.r.netHoraire)?computed.r.netHoraire:0;
+    const allComputed=computedOverride||getCurrentComputed();
+    summary.innerHTML=allComputed.map(({s,r},index)=>{
+      const weekly=Number(s.dureeType), hoursMonth=weekly*52/12;
+      const hourly=r && Number.isFinite(r.netHoraire)?r.netHoraire:null;
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
-      const value=hourly*factor, unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
-      const amount=maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value);
-      const mealEmployee=Number(computed.r.tr?.totalSalarie||0);
-      const mealEmployer=Number(computed.r.tr?.totalEmployeur||0);
-      const mealTotal=mealEmployee+mealEmployer;
-      const periodScale=maquetteComparisonPeriod==='hour'?(hoursMonth>0?1/hoursMonth:0):maquetteComparisonPeriod==='year'?12:1;
-      const periodFmt=n=>maquetteComparisonPeriod==='hour'?fmtHoraire(n):fmt(n);
-      const netWithoutMeal=Number(computed.r.m?.netSocial||0)*periodScale;
-      const netWithMeal=(Number(computed.r.m?.netApres||0)+mealTotal)*periodScale;
-      const mealBenefit=mealTotal>0.5
-        ? '<div class="salary-meal-benefit"><div><span>Net sans TR</span><strong>'+periodFmt(netWithoutMeal)+'</strong></div><div><span>TR</span><strong>'+periodFmt(mealTotal*periodScale)+'</strong></div><div><span>Net avec TR</span><strong>'+periodFmt(netWithMeal)+'</strong></div></div>'
-        : '';
-      summary.innerHTML='<div class="benchmark-your-salary"><span><b>VOUS</b><span>'+esc(selected.name)+'</span></span><strong>'+amount+' <small>Net avant impôt / '+unit+'</small></strong><div class="benchmark-meta benchmark-comparison-base">'+fmt(selected.brut)+' brut / mois · '+weekly+' h</div>'+mealBenefit+'</div>';
+      const value=hourly===null?null:hourly*factor;
+      const amount=value===null?'Calcul en cours':(maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value));
+      const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
+      return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
+        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4>'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Actuelle</span>':'')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
+        '<strong class="offer-comparison-net">'+amount+(value===null?'':' <small>/ '+unit+'</small>')+'</strong>'+
+        '<div class="offer-comparison-meta">Net · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
+        '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
+      '</article>';
+    }).join('');
+    if(summary.dataset.editBound!=='true'){
+      summary.addEventListener('click',event=>{
+        const remove=event.target.closest('[data-delete-offer]');
+        if(remove){removeScenario(Number(remove.dataset.deleteOffer));return;}
+        const button=event.target.closest('[data-edit-offer]');
+        if(!button)return;
+        refId=Number(button.dataset.editOffer);
+        setSalaryEditor(true);
+        render();
+        document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      summary.dataset.editBound='true';
     }
   }
+  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
   if(status && mount && status.parentElement!==mount) mount.appendChild(status);
 }
@@ -500,9 +517,7 @@ function render(){
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
-  updateFoyerImpot(computed);
-  syncFoyerUI();
-  document.getElementById('refSelect').innerHTML = scenarios
+    document.getElementById('refSelect').innerHTML = scenarios
     .map(s => `<option value="${s.id}" ${s.id===refId?'selected':''}>${esc(s.name)}</option>`).join('');
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();

@@ -47,11 +47,10 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.match(html, /function createUrssafCalculationCache\(options\s*=\s*\{\}\)/, 'le cache Urssaf doit être intégré');
   assert.match(html, /function buildSmicScenario\(base, amount\)/, 'la construction du scénario SMIC doit être intégrée');
   assert.match(html, /function createRateLimitedFetch\(fetchImpl, options\s*=\s*\{\}\)/, 'la file réseau temporisée doit être intégrée');
-  assert.match(html, /function buildUrssafCalculationKey\(s, f, date\)/, 'la clé de cache des calculs doit être intégrée');
-  assert.match(html, /function buildUrssafInput\(s, f, date\)/, 'les adaptateurs de calcul Urssaf doivent être intégrés');
+  assert.match(html, /function buildUrssafCalculationKey\([^)]*\)/, 'la clé de cache des calculs doit être intégrée');
+  assert.match(html, /function buildUrssafInput\([^)]*\)/, 'les adaptateurs de calcul Urssaf doivent être intégrés');
   assert.match(html, /function mapUrssafResultToOnNet\(result\)/, 'la conversion des réponses Urssaf doit être intégrée');
-  assert.match(html, /function sanitizeFoyer\(raw\)/, 'la normalisation du foyer doit être intégrée');
-  assert.match(html, /\b(?:const|let|var)\s+FOYER_DEFAUT\s*=/, 'la valeur par défaut du foyer doit être intégrée');
+  assert.doesNotMatch(html, /sanitizeFoyer|FOYER_DEFAUT|foyerModule|foyerPasRate/, 'aucun module de foyer fiscal ne doit être embarqué');
   assert.match(html, /\b(?:const|let|var)\s+METRIC_KEYS\s*=/, 'les métriques autorisées doivent être intégrées');
   assert.match(html, /\b(?:const|let|var)\s+scenarioDefaults\s*=\s*\{/, 'les valeurs par défaut doivent être conservées');
   assert.match(html, /DEFAULT_ENDPOINT\s*=\s*[\"']https:\/\/mon-entreprise\.urssaf\.fr\/api\/v1\/evaluate[\"']/);
@@ -126,23 +125,10 @@ test('la restauration utilise le premier scénario si la référence est invalid
   assert.deepEqual(result.scenarios.map(s => s.id), [0, 1]);
 });
 
-test('la normalisation du foyer fiscal préserve les compatibilités et borne les valeurs', async () => {
-  const { FOYER_DEFAUT, sanitizeFoyer } = await normalizersPromise;
-  assert.deepEqual(sanitizeFoyer(null), FOYER_DEFAUT);
-  assert.deepEqual(sanitizeFoyer({
-    couple: true, personnesCharge: 2, autresRevenus: '1200', pasRate: '12.5'
-  }), {
-    mode: 'bareme', situation: 'commun', couple: true, personnesCharge: 2,
-    parentIsole: false, autresRevenus: 1200, pasRate: 12.5
-  });
-  assert.deepEqual(sanitizeFoyer({
-    situation: 'seul', personnesCharge: 2, parentIsole: true,
-    autresRevenus: 1200, pasRate: 150, mode: 'taux'
-  }), {
-    mode: 'taux', situation: 'seul', couple: false, personnesCharge: 2,
-    parentIsole: true, autresRevenus: 0, pasRate: 100
-  });
-  assert.equal(sanitizeFoyer({ situation: 'concubinage', couple: true }).couple, false);
+test('les normalisateurs n’exposent plus de paramètres fiscaux', async () => {
+  const normalizers = await normalizersPromise;
+  assert.equal(Object.hasOwn(normalizers, 'sanitizeFoyer'), false);
+  assert.equal(Object.hasOwn(normalizers, 'FOYER_DEFAUT'), false);
 });
 
 test('les fichiers HTML publiables restent synchronisés avec les sources', t => {

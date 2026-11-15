@@ -1,21 +1,13 @@
 "use strict";
 
-import { scenarioDefaults, clamp } from './ui-utils.mjs';
+import { scenarioDefaults } from './ui-utils.mjs';
 
 // Métriques de la section « D'autres chiffres utiles ». Le net mensuel n'y
 // figure pas : c'est déjà ce que montre le graphique juste au-dessus.
 // Une métrique inconnue (état sauvegardé ou lien partagé antérieur, par exemple
 // l'ancien « Coût employeur » ou l'ancien « Net ») retombe sur METRIC_DEFAUT.
-export const METRIC_KEYS = ['netImposable','annuelNet','netApresImpot','netApresImpotHoraire','netHoraire','brutHoraire'];
+export const METRIC_KEYS = ['annuelNet','netHoraire','brutHoraire'];
 export const METRIC_DEFAUT = 'netHoraire';
-
-// Le foyer fiscal est un réglage global (une personne, pas un salaire) : il est
-// donc stocké à part des scénarios, et normalisé de la même façon qu'eux.
-// mode 'bareme' : impôt reconstitué au barème à partir de la situation du foyer.
-// mode 'taux'   : le taux de prélèvement à la source réel, saisi directement,
-//                 s'applique tel quel — les champs de situation n'ont alors
-//                 plus de rôle dans le calcul et disparaissent de l'UI.
-export const FOYER_DEFAUT = { mode:'bareme', situation:'seul', couple:false, personnesCharge:0, parentIsole:false, autresRevenus:0, pasRate:0 };
 
 export function sanitizeScenario(raw){
   if(!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
@@ -61,28 +53,7 @@ export function sanitizeScenario(raw){
   return clean;
 }
 
-export function sanitizeFoyer(raw){
-  const f = (raw && typeof raw === 'object' && !Array.isArray(raw)) ? raw : {};
-  const nb = (v, min, max) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? clamp(n, min, max) : 0;
-  };
-  // Rétrocompatibilité : les anciens états ne connaissent que couple=true/false.
-  const situation = ['seul','commun','concubinage'].includes(f.situation)
-    ? f.situation : (f.couple === true ? 'commun' : 'seul');
-  const couple = situation === 'commun';
-  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
-  const parentIsole = situation === 'seul' && personnesCharge > 0 && f.parentIsole === true;
-  return {
-    mode: f.mode === 'taux' ? 'taux' : 'bareme',
-    situation,
-    couple,
-    personnesCharge,
-    parentIsole,
-    autresRevenus: couple ? nb(f.autresRevenus, 0, 100000000) : 0,
-    pasRate: nb(f.pasRate, 0, 100)
-  };
-}
+
 
 export function normalizeScenarioIds(scenarios, refId, openCardIds){
   // Les identifiants restaurés ne sont jamais conservés : une suite compacte

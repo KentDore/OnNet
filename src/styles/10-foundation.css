@@ -210,7 +210,6 @@
   .panel-advanced > summary::after{color:var(--ink-soft);}
 
   /* ---- Modules (panneaux complémentaires : augmentation, absence, ...) ---- */
-  .situation-section{margin-bottom:16px;}
   .modules-section{margin-bottom:16px;}
   .modules-head{margin-bottom:10px;}
   .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
@@ -222,7 +221,7 @@
      supposait 3 cartes et donnait ~230px chacune pile à la limite — trop
      étroit pour « Simuler une augmentation », qui repassait à la ligne mot
      par mot. La grille s'adapte maintenant au nombre de cartes réellement
-     présentes (deux depuis que Foyer fiscal a sa propre section) et ne
+     présentes et ne
      descend jamais sous une largeur où le texte tient. */
   .modules-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:12px; align-items:start;}
   .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
@@ -241,10 +240,6 @@
   .module-card.is-open .module-switch{background:var(--accent);}
   .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
-  /* Le bloc « Foyer fiscal » se déplie, il ne s'active pas : un chevron plutôt
-     qu'un interrupteur, qui laisserait croire qu'on peut couper l'estimation. */
-  .module-chevron{flex:none; width:20px; height:20px; color:var(--ink-soft); transition:transform .15s ease, color .15s ease;}
-  .module-card.is-open .module-chevron{transform:rotate(180deg); color:var(--accent);}
   /* Le bloc est replié au chargement : l'avertissement doit remonter dans le
      bandeau, sinon le garde-fou reste invisible tant qu'on n'ouvre pas. */
   .module-desc.is-warn{color:var(--warn); font-weight:600;}

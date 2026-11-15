@@ -11,7 +11,7 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 1. `src/template.html` fournit le squelette HTML et les marqueurs de génération.
 2. `src/urssaf-api-client.mjs` contient le client de l'API officielle. Il est intégré au script final et expose l'interface attendue par l'application.
 3. `src/ui-utils.mjs` exporte les valeurs par défaut et les utilitaires purs de présentation.
-4. `src/state-normalizers.mjs` exporte les règles de validation et de normalisation des scénarios et du foyer fiscal.
+4. `src/state-normalizers.mjs` exporte les règles de validation et de normalisation des scénarios.
 5. `src/urssaf-calculation.mjs` isole les règles pures de calcul : clé de cache, validation du périmètre, construction des paramètres transmis et conversion des réponses Urssaf vers le modèle interne.
 6. `src/urssaf-calculation-cache.mjs` encapsule les caches de résultats et d'erreurs, avec éviction FIFO bornée pour les résultats.
 7. `src/persistence-codec.mjs` encode et restaure les sauvegardes JSON de façon pure ; le fragment UI conserve uniquement l'adaptateur `localStorage`.
@@ -22,7 +22,7 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 12. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
 13. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs, les adaptateurs de calcul, le cache, le codec de persistance, l'état de session, le repère SMIC, l'ordonnanceur réseau et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-2.2.1.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
-Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) a extrait les utilitaires purs et le client Urssaf en véritables modules ES. La [PR #95](https://github.com/KentDore/OnNet/pull/95) extrait les règles de normalisation des scénarios et du foyer fiscal. La PR #96 isole les adaptateurs purs entre l'état de l'application et le contrat de l'API Urssaf. La PR #97 ajoute à ce module la construction pure de la clé qui identifie les paramètres d'un calcul et gouverne la réutilisation du cache. La PR #98 sépare l'ordonnanceur de requêtes réseau, avec des dépendances de temps injectées pour tester la sérialisation et la reprise après erreur. La PR #99 isole le calcul du scénario SMIC, notamment le cas 39 h avec quatre heures supplémentaires majorées. La PR #100 sort les caches Urssaf du fichier d'orchestration et verrouille leur éviction FIFO ainsi que l'indépendance des instances. La PR #101 isole le consentement et l'état du SMIC réellement partagés entre les fragments, sans déplacer l'orchestration. La PR #102 extrait le codec JSON des sauvegardes locales tout en laissant l'accès à `localStorage` dans le fragment adaptateur.
+Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) a extrait les utilitaires purs et le client Urssaf en véritables modules ES. La [PR #95](https://github.com/KentDore/OnNet/pull/95) extrait les règles de normalisation des scénarios. La PR #96 isole les adaptateurs purs entre l'état de l'application et le contrat de l'API Urssaf. La PR #97 ajoute à ce module la construction pure de la clé qui identifie les paramètres d'un calcul et gouverne la réutilisation du cache. La PR #98 sépare l'ordonnanceur de requêtes réseau, avec des dépendances de temps injectées pour tester la sérialisation et la reprise après erreur. La PR #99 isole le calcul du scénario SMIC, notamment le cas 39 h avec quatre heures supplémentaires majorées. La PR #100 sort les caches Urssaf du fichier d'orchestration et verrouille leur éviction FIFO ainsi que l'indépendance des instances. La PR #101 isole le consentement et l'état du SMIC réellement partagés entre les fragments, sans déplacer l'orchestration. La PR #102 extrait le codec JSON des sauvegardes locales tout en laissant l'accès à `localStorage` dans le fragment adaptateur.
 
 L'instance `urssafSessionState` est créée une seule fois dans le premier fragment applicatif, puis consommée par les fragments de rendu, d'événements et de démarrage. Son interface ne s'expose pas sur `window` ; les accesseurs SMIC renvoient des copies défensives et le consentement reste strictement en mémoire.
 
@@ -33,7 +33,7 @@ Le wrapper démarre la première requête sans attente, puis impose au moins 350
 | Source | Responsabilité principale | Dépendances ou points d'attention |
 | --- | --- | --- |
 | `00-state-and-calculations.js` | État des simulations, cache et orchestration des appels Urssaf | État mutable utilisé par le rendu, les événements et le démarrage ; délègue désormais les transformations pures au module de calcul |
-| `state-normalizers.mjs` | Validation pure des scénarios, normalisation du foyer fiscal et des identifiants | Dépend des utilitaires de présentation ; partagé par la restauration locale et le partage d'URL |
+| `state-normalizers.mjs` | Validation pure des scénarios et normalisation des identifiants | Dépend des utilitaires de présentation ; partagé par la restauration locale et le partage d'URL |
 | `urssaf-calculation.mjs` | Clé d'identification des paramètres de calcul, validation du périmètre, construction des entrées API et conversion des réponses | Fonctions pures testées séparément ; ne gère ni état de cache, ni stockage, ni requête réseau |
 | `rate-limited-fetch.mjs` | File réseau séquentielle et intervalle minimal entre les démarrages de requêtes | Dépendances réseau, horloge et temporisation injectées ; testable sans navigateur |
 | `smic-reference.mjs` | Construction du scénario de référence SMIC, avec ou sans 4 heures supplémentaires | Formules pures testées pour les durées 35 h et 39 h ; aucune lecture de l'état applicatif |
@@ -43,7 +43,7 @@ Le wrapper démarre la première requête sans attente, puis impose au moins 350
 | `10-persistence.js` | Adaptateur de lecture/écriture du stockage local, autosauvegarde et notifications d'échec | Utilise le codec pur ; conserve les accès navigateur et l'injection de la notification |
 | `20-sharing.js` | Encodage/décodage des liens et restauration d'un partage | Réutilise directement les normalisateurs partagés et participe à l'initialisation de l'état |
 | `30-rendering.js` | Rendu des cartes, indicateurs, comparatifs et graphiques | Point de couplage majeur : lit l'état et les résultats, et est rappelé par de nombreux gestionnaires |
-| `40-household-and-navigation.js` | Foyer fiscal, navigation et interactions de structure | Modifie l'état puis déclenche rendu, sauvegarde ou recalcul |
+| `40-household-and-navigation.js` | Navigation et interactions de structure | Modifie l'état puis déclenche rendu, sauvegarde ou recalcul |
 | `50-input-events.js` | Événements des formulaires et modifications de scénarios | Dépend des fonctions de validation, du rendu, de la persistance et du calcul |
 | `60-notifications-and-modals.js` | Notifications, modales et formulaires complémentaires | Utilisé par le partage et les événements ; certaines fonctions sont injectées dans d'autres fragments |
 | `70-optional-tools-and-startup.js` | Modules facultatifs, outils d'augmentation et démarrage | Appelle les fonctions précédentes et termine l'initialisation |
@@ -57,7 +57,7 @@ Les vérifications GitHub Actions reconstruisent `index.html` et `Onnet-2.2.1.ht
 ## Constats critiques
 
 - **Le découpage est d'abord organisationnel.** L'ordre du manifeste est une dépendance d'exécution : changer cet ordre peut casser l'application.
-- **L'état est partagé implicitement.** Les scénarios, le foyer fiscal, la référence sélectionnée, les résultats Urssaf et le consentement sont lus ou modifiés par plusieurs fragments.
+- **L'état est partagé implicitement.** Les scénarios et la référence sélectionnée, les résultats Urssaf et le consentement sont lus ou modifiés par plusieurs fragments.
 - **Le rendu est trop central.** Il est appelé par plusieurs domaines fonctionnels. Le déplacer ou le convertir en module sans interface d'état stable aurait un risque élevé.
 - **Des fonctions sont affectées après leur déclaration.** Par exemple, des implémentations de notification et des indicateurs d'initialisation sont définis dans un fragment puis renseignés ou utilisés plus tard.
 - **Le lint reflète cette contrainte.** La règle `prefer-const` est désactivée pour les fragments applicatifs, car une variable déclarée dans un fragment peut être réaffectée dans un autre. Ce contournement est limité aux fragments concernés, mais il signale une dette d'architecture.
@@ -79,7 +79,7 @@ Cette extraction est couverte par des tests unitaires dédiés et par les tests 
 
 ### Étape 2 bis — Extraire les normalisateurs d'état
 
-Les règles pures de validation des scénarios, de normalisation du foyer fiscal et de renumérotation des identifiants sont désormais isolées dans `src/state-normalizers.mjs`. La persistance locale conserve son adaptateur `localStorage` dans le fragment applicatif, tandis que les fonctions de normalisation sont partagées par la restauration et le partage d'URL.
+Les règles pures de validation des scénarios, de validation des scénarios et de renumérotation des identifiants sont désormais isolées dans `src/state-normalizers.mjs`. La persistance locale conserve son adaptateur `localStorage` dans le fragment applicatif, tandis que les fonctions de normalisation sont partagées par la restauration et le partage d'URL.
 
 ### Étape 3 — Rendre l'état explicite
 

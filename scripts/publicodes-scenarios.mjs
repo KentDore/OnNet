@@ -22,8 +22,7 @@ for (const scenario of scenarios) {
     gross: Number(result.grossCalculated.toFixed(2)),
     baseGross: Number(result.baseGross.toFixed(2)),
     overtimeGross: Number(result.overtimePay.toFixed(2)),
-    netBeforeTax: Number(result.netBeforeTax.toFixed(2)),
-    taxableNet: Number(result.taxableNet.toFixed(2)),
+    netCalculated: Number(result.netCalculated.toFixed(2)),
     employeeHealth: Number(result.employeeHealth.toFixed(2)),
     employerHealth: Number(result.employerHealth.toFixed(2))
   }))

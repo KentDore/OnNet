@@ -26,7 +26,6 @@ function apiResponse(expressions, overrides = {}) {
   const nodeValues = {
     'salarié . rémunération . brut': 2300,
     'salarié . rémunération . net . à payer avant impôt': 1810,
-    'salarié . rémunération . net . imposable': 1880,
     'salarié . cotisations . salarié': 490,
     'salarié . rémunération . heures supplémentaires': 0,
     'salarié . cotisations . prévoyances . santé . salarié': 30,
@@ -34,10 +33,6 @@ function apiResponse(expressions, overrides = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . montant': 168,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': 70,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . net . payé après impôt': 1700,
-    'impôt . montant': 1320,
-    "impôt . taux d'imposition": 10,
-    "impôt . taux neutre d'impôt sur le revenu": 4.1
   }
   return {
     evaluate: expressions.map(expression => {
@@ -173,7 +168,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
   assert.equal(result.endpoint, 'https://mon-entreprise.urssaf.fr/api/v1/evaluate')
   assert.equal(result.netBeforeTax, 1810)
-  assert.equal(result.taxableNet, 1880)
+  assert.equal(result.taxableNet, undefined)
   assert.equal(result.mealTicketAmount, 168)
   assert.equal(result.mealTicketEmployee, 98)
   assert.equal(result.mealTicketEmployer, 70)
@@ -287,7 +282,7 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
       const overtime = 4 * 52 / 12
       // Taux fictif de 10 % pour vérifier que le client s'appuie sur le brut retourné par l'API.
       values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.10
-      values.evaluate[4].nodeValue = 250
+      values.evaluate[3].nodeValue = 250
       return response(values)
     })
   })
@@ -300,141 +295,6 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
   assert.ok(result.baseGross < 2300, 'Le salaire de base 35 h doit être inférieur au brut total 39 h')
   assert.equal(result.overtimePay, 250)
   assert.equal(requests.length, 2, 'Le calibrage doit converger sans connaître le taux de majoration')
-})
-
-test('active le taux personnalisé après annualisation du net imposable', async () => {
-  const requests = []
-  const result = await calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé', tauxPAS: 10 }), {
-    fetchImpl: mockFetch(body => {
-      requests.push(body)
-      return response(apiResponse(body.expressions))
-    })
-  })
-
-  assert.equal(requests.length, 2)
-  const request = requests[1]
-  assert.equal(request.situation['impôt . méthode de calcul'], "'taux personnalisé'")
-  assert.equal(request.situation['impôt . taux personnalisé'], '10.000000%')
-  assert.equal(request.situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(result.netAfterTax, 1700)
-  assert.equal(result.incomeTax, 1320)
-  assert.equal(result.calculatedTaxRate, 10)
-  assert.equal(result.mealTicketEmployee, 98)
-  assert.equal(result.mealTicketAmount, 168)
-})
-
-test('calcule le taux neutre avec la grille officielle puis le montant via l’API', async () => {
-  const requests = []
-  const result = await calculateWithUrssafApi(scenario({ modeImpot: 'neutre' }), {
-    fetchImpl: mockFetch(body => {
-      requests.push(body)
-      const payload = apiResponse(body.expressions)
-      const effectiveRateIndex = body.expressions.indexOf("impôt . taux d'imposition")
-      if (effectiveRateIndex >= 0 && body.situation['impôt . taux personnalisé'] === '4.100000%') {
-        payload.evaluate[effectiveRateIndex].nodeValue = 4.1
-      }
-      return response(payload)
-    })
-  })
-
-  assert.equal(requests.length, 3)
-  assert.equal(requests[1].situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(requests[1].situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
-  assert.equal(requests[1].situation['impôt . foyer fiscal . enfants à charge'], '0 enfant')
-  assert.deepEqual(requests[1].expressions, ["impôt . taux neutre d'impôt sur le revenu"])
-  assert.equal(requests[2].situation['impôt . méthode de calcul'], "'taux personnalisé'")
-  assert.equal(requests[2].situation['impôt . taux personnalisé'], '4.100000%')
-  assert.ok(requests[2].expressions.includes("impôt . taux d'imposition"))
-  assert.equal(result.calculatedTaxRate, 4.1)
-  assert.equal(result.netAfterTax, 1700)
-  assert.equal(result.incomeTax, 1320)
-})
-
-test('configure le barème officiel avec revenu annuel et foyer fiscal', async () => {
-  const requests = []
-  await calculateWithUrssafApi(scenario({
-    modeImpot: 'barème',
-    situationFamille: 'célibataire',
-    enfantsACharge: 1,
-    parentIsole: true
-  }), {
-    fetchImpl: mockFetch(body => {
-      requests.push(body)
-      return response(apiResponse(body.expressions))
-    })
-  })
-
-  assert.equal(requests.length, 2)
-  const request = requests[1]
-  assert.equal(request.situation['impôt . méthode de calcul'], "'barème standard'")
-  assert.equal(request.situation['impôt . revenu imposable'], '22560.00 €/an')
-  assert.equal(request.situation["impôt . foyer fiscal . revenu imposable . revenu d'activité"], '22560.00 €/an')
-  assert.equal(request.situation['impôt . foyer fiscal . situation de famille'], "'célibataire'")
-  assert.equal(request.situation['impôt . foyer fiscal . enfants à charge'], '1 enfant')
-  assert.equal(request.situation['impôt . foyer fiscal . parent isolé'], 'oui')
-
-  await assert.rejects(
-    calculateWithUrssafApi(scenario({
-      modeImpot: 'barème',
-      situationFamille: 'couple',
-      enfantsACharge: 0,
-      parentIsole: true
-    }), { fetchImpl: mockFetch(() => response(apiResponse([]))) }),
-    /parentIsole/
-  )
-  await assert.rejects(
-    calculateWithUrssafApi(scenario({ modeImpot: 'barème' }), {
-      fetchImpl: mockFetch(() => response(apiResponse([])))
-    }),
-    /situationFamille doit être renseignée/
-  )
-})
-
-test('transmet les autres revenus imposables du foyer en couple et exige une valeur explicite', async () => {
-  let request
-  await calculateWithUrssafApi(scenario({
-    modeImpot: 'barème',
-    situationFamille: 'couple',
-    enfantsACharge: 1,
-    autresRevenusImposables: 24000
-  }), {
-    fetchImpl: mockFetch(body => {
-      request = body
-      return response(apiResponse(body.expressions))
-    })
-  })
-
-  assert.equal(
-    request.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
-    '24000.00 €/an'
-  )
-  assert.equal(request.situation["impôt . foyer fiscal . revenu imposable . revenu d'activité"], '22560.00 €/an')
-
-  await assert.rejects(
-    calculateWithUrssafApi(scenario({
-      modeImpot: 'barème',
-      situationFamille: 'couple',
-      enfantsACharge: 0
-    }), {
-      fetchImpl: mockFetch(() => response(apiResponse([])))
-    }),
-    /autresRevenusImposables doit être renseigné/
-  )
-
-  await calculateWithUrssafApi(scenario({
-    modeImpot: 'barème',
-    situationFamille: 'couple',
-    enfantsACharge: 0,
-    autresRevenusImposables: 0
-  }), {
-    fetchImpl: mockFetch(body => {
-      assert.equal(
-        body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'],
-        '0.00 €/an'
-      )
-      return response(apiResponse(body.expressions))
-    })
-  })
 })
 
 test('remonte les variables par défaut et avertissements de l’API', async () => {
@@ -495,7 +355,6 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ brut: 0 }), { fetchImpl }), /strictement supérieur à 0/)
   await assert.rejects(calculateWithUrssafApi(scenario({ dureeType: '37' }), { fetchImpl }), /dureeType/)
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto: 2.5 }), { fetchImpl }), /entier/)
-  await assert.rejects(calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé' }), { fetchImpl }), /tauxPAS/)
   await assert.rejects(calculateWithUrssafApi(scenario({ date: '2026-02-31' }), { fetchImpl }), /date calendaire valide/)
   assert.equal(calls, 0)
 })

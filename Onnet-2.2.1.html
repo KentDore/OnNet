@@ -257,7 +257,6 @@
   .panel-advanced > summary::after{color:var(--ink-soft);}
 
   /* ---- Modules (panneaux complémentaires : augmentation, absence, ...) ---- */
-  .situation-section{margin-bottom:16px;}
   .modules-section{margin-bottom:16px;}
   .modules-head{margin-bottom:10px;}
   .modules-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 3px;}
@@ -269,7 +268,7 @@
      supposait 3 cartes et donnait ~230px chacune pile à la limite — trop
      étroit pour « Simuler une augmentation », qui repassait à la ligne mot
      par mot. La grille s'adapte maintenant au nombre de cartes réellement
-     présentes (deux depuis que Foyer fiscal a sa propre section) et ne
+     présentes et ne
      descend jamais sous une largeur où le texte tient. */
   .modules-grid{display:grid; grid-template-columns:repeat(auto-fit, minmax(min(240px, 100%), 1fr)); gap:12px; align-items:start;}
   .module-card{background:var(--surface); border:1px solid var(--line); border-radius:16px; overflow:hidden;}
@@ -288,10 +287,6 @@
   .module-card.is-open .module-switch{background:var(--accent);}
   .module-card.is-open .module-icon{background:var(--btn-primary-bg); color:#fff;}
   .module-card.is-open .module-switch::after{transform:translateX(14px);}
-  /* Le bloc « Foyer fiscal » se déplie, il ne s'active pas : un chevron plutôt
-     qu'un interrupteur, qui laisserait croire qu'on peut couper l'estimation. */
-  .module-chevron{flex:none; width:20px; height:20px; color:var(--ink-soft); transition:transform .15s ease, color .15s ease;}
-  .module-card.is-open .module-chevron{transform:rotate(180deg); color:var(--accent);}
   /* Le bloc est replié au chargement : l'avertissement doit remonter dans le
      bandeau, sinon le garde-fou reste invisible tant qu'on n'ouvre pas. */
   .module-desc.is-warn{color:var(--warn); font-weight:600;}
@@ -374,21 +369,27 @@
   .wf-stack{display:flex;width:100%;height:24px;overflow:hidden;border-radius:999px;background:var(--bg);box-shadow:inset 0 1px 2px rgba(20,50,30,.08);}
   .wf-stack-net{display:block;min-width:0;background:linear-gradient(90deg,#1f6d4c,#0c8758);}
   .wf-stack-deductions{display:block;min-width:0;background:var(--gold);}
-  .wf-breakdown{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px;}
-  .wf-breakdown-item{display:flex;align-items:flex-start;gap:8px;min-width:0;color:var(--ink-soft);font-size:12px;line-height:1.4;}
-  .wf-breakdown-item strong{display:block;color:var(--ink);font-size:16px;font-weight:750;letter-spacing:-.3px;}
-  .wf-breakdown-item span:not(.wf-key){display:block;}
-  .wf-key{width:9px;height:9px;flex:0 0 9px;border-radius:3px;margin-top:5px;}
+  .salary-net-summary{margin-top:12px;border:1px solid var(--line);border-radius:11px;overflow:hidden;background:var(--surface);}
+  .salary-net-summary-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:9px 12px;color:var(--ink-soft);font-size:12px;line-height:1.35;}
+  .salary-net-summary-row+.salary-net-summary-row{border-top:1px solid var(--line);}
+  .salary-net-summary-row span{min-width:0;}
+  .salary-net-summary-row strong{flex:none;color:var(--ink);font-size:14px;font-weight:750;white-space:nowrap;}
+  .salary-net-summary-row.is-final{background:var(--accent-soft);color:var(--accent);font-weight:700;}
+  .salary-net-summary-row.is-final strong{color:var(--accent);font-size:15px;}
+  .stack-col .salary-net-summary{margin-top:6px;border-radius:8px;}
+  .stack-col .salary-net-summary-row{gap:6px;padding:5px 7px;font-size:10px;line-height:1.3;}
+  .stack-col .salary-net-summary-row strong{font-size:11px;}
+  .stack-col .salary-net-summary-row.is-final strong{font-size:13px;}
+  .wf-bar-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:9px;color:var(--ink-soft);font-size:10.5px;}
+  .wf-bar-legend-item{display:inline-flex;align-items:center;gap:6px;}
+  .wf-key{width:8px;height:8px;flex:0 0 8px;border-radius:3px;}
   .wf-key-net{background:#1f6d4c;}
   .wf-key-deductions{background:var(--gold);}
-  .wf-components{margin:12px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.5;}
-  .wf-note{margin:8px 0 0;color:var(--ink-soft);font-size:11px;line-height:1.45;}
-  .wf-note strong{color:var(--ink);}
   @media(max-width:480px){
-    .wf-breakdown{gap:8px;}
-    .wf-breakdown-item{gap:6px;font-size:11px;}
-    .wf-breakdown-item strong{font-size:15px;}
-    .wf-components,.wf-note{font-size:10.5px;}
+    .salary-net-summary-row{gap:8px;padding:9px 10px;font-size:11px;}
+    .salary-net-summary-row strong{font-size:13px;}
+    .wf-bar-legend{gap:10px;font-size:10px;}
+    .stack-col .salary-net-summary-row{gap:5px;padding:5px 6px;font-size:9.5px;}
   }
 
   /* ---- Puces d'augmentation ---- */
@@ -484,7 +485,6 @@
   .reveal{ animation:reveal-in .5s cubic-bezier(.25,.8,.3,1) both; }
   #comparePanel{ animation-delay:.04s; }
   .cards-bar{ animation-delay:.10s; }
-  .situation-section{ animation-delay:.13s; }
   .modules-section{ animation-delay:.18s; }
   .disclaimer{ animation-delay:.22s; }
 
@@ -611,7 +611,7 @@
 
   @media print{
     body{background:#fff;}
-    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .header-top .print-btn, .header-actions, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
     .cards-scroll{overflow:visible; margin:0; padding:0;}
     .cards{flex-wrap:wrap;}
     .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
@@ -699,8 +699,6 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 }
 .share-scenario-option strong,.share-extra-option strong{font-weight:650}
 #shareCreateBtn:disabled{opacity:.45;cursor:not-allowed}
-.foyer-situation-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.foyer-situation-toggle button{padding-left:5px;padding-right:5px;white-space:normal}
 
 
 /* Repères salariaux compacts : priorité à la comparaison immédiate. */
@@ -1008,7 +1006,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
 .legacy-salary-details .cards-bar{margin-bottom:10px;}
 .legacy-salary-details .cards-scroll{margin-bottom:14px;}
-.advanced-workspace>.situation-section,.advanced-workspace>.modules-section{margin-bottom:16px;}
+ .advanced-workspace>.modules-section{margin-bottom:16px;}
 @media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
 
 /* Respect de la V33 : formulaire vertical sur desktop comme sur mobile. */
@@ -1289,6 +1287,45 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .offer-tab-rename-input{width:100%;min-width:0;height:32px;padding:4px 7px;border:1px solid var(--accent);border-radius:7px;background:var(--surface);color:var(--ink);font:600 13px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
 .offer-tab-rename-input:focus{outline:2px solid color-mix(in srgb,var(--accent) 25%,transparent);outline-offset:1px;}
 
+/* Parcours simplifié : comparaison réelle des offres, édition sur un écran distinct. */
+.integrated-offers,#maquetteOfferTabs{display:none!important}
+.comparison-subhead-actions{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.comparison-subhead-actions>div{min-width:0}
+.comparison-subhead-actions .add-salary{flex:none;min-height:42px;padding:9px 13px;border:1px solid #cfe3d4;border-radius:999px;background:#eaf5ed;color:#176b49;font-size:12px;font-weight:800}
+#maquetteYourSalary{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.offer-comparison-card{display:flex;flex-direction:column;min-width:0;padding:16px;border:1px solid #e1eae3;border-radius:16px;background:#fff}
+.offer-comparison-card.is-reference{border-color:#b9dbc4;background:linear-gradient(145deg,#f0f9f2,#fff)}
+.offer-comparison-card-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;margin-bottom:15px}
+.offer-comparison-index{display:block;color:#77867b;font-size:9px;font-weight:800;letter-spacing:.08em}
+.offer-comparison-card h4{margin:4px 0 0;color:#244b36;font-size:15px;line-height:1.25;overflow-wrap:anywhere}
+.offer-reference-label{padding:4px 7px;border-radius:999px;background:#e2f2e6;color:#176b49;font-size:9px;font-weight:800;white-space:nowrap}
+.offer-comparison-net{display:block;color:#075d3a;font-size:clamp(22px,4vw,30px);line-height:1.1;overflow-wrap:anywhere}
+.offer-comparison-net small{font-size:12px;font-weight:650}
+.offer-comparison-meta{margin-top:9px;color:#718076;font-size:11px;line-height:1.4}
+.offer-comparison-edit{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:42px;margin-top:16px;padding:0 11px;border:1px solid #d8e6db;border-radius:10px;background:#f7faf7;color:#176b49;font-size:12px;font-weight:750;text-align:left}
+.salary-editor-heading{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
+.salary-editor-back{flex:none;min-height:38px;padding:7px 10px;border:1px solid #dce8df;border-radius:9px;background:#fff;color:#176b49;font-size:11px;font-weight:750}
+.salary-editor-heading .declaration-inline-title{margin:0;min-width:0}
+.declaration-inline{display:none}
+body.salary-editor-open .declaration-inline{display:block}
+body.salary-editor-open #maquetteYourSalary,
+body.salary-editor-open .comparison-period,
+body.salary-editor-open .comparison-subhead{display:none}
+body.salary-editor-open #benchmarkMount{display:none}
+body.salary-editor-open .integrated-offers{display:none!important}
+@media(max-width:640px){
+ #maquetteYourSalary{grid-template-columns:1fr;gap:9px}
+ .offer-comparison-card{padding:14px}
+ .comparison-subhead-actions{align-items:flex-start}
+ .comparison-subhead-actions .add-salary{min-height:38px;padding:8px 10px;font-size:11px;white-space:nowrap}
+ .salary-editor-heading{display:block}
+ .salary-editor-back{margin-bottom:12px}
+}
+
+.offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
+.offer-comparison-remove{width:28px;height:28px;min-height:28px;padding:0;border:1px solid #eadbd5;border-radius:8px;background:#fff;color:#a94d35;font-size:17px;line-height:1}
+.offer-comparison-remove:focus-visible,.offer-comparison-edit:focus-visible,.salary-editor-back:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1315,18 +1352,16 @@ header.hero .trust-icon svg{width:19px;height:19px}
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-      <div class="integrated-offers">
-        <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
-        <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
-      </div>
+    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Comparer vos offres</h3><p>Comparez le net réellement obtenu pour chaque proposition.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
 
-    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
 
-    <div class="declaration-inline">
-      <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+    <div class="declaration-inline" id="salaryEditor" aria-labelledby="salaryEditorTitle">
+      <div class="salary-editor-heading"><button type="button" id="salaryEditorBack" class="salary-editor-back">← Retour au comparatif</button><div class="declaration-inline-title"><strong id="salaryEditorTitle">Modifier cette offre</strong><span>Les changements sont recalculés automatiquement.</span></div></div>
+      
       
       <div class="declaration-fields">
         <span class="declaration-field-label">Période du salaire brut</span>
@@ -1363,7 +1398,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
-    <p class="sub">Du brut au net avant impôt.</p>
+    <p class="sub">Du brut au net.</p>
     
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
@@ -1410,90 +1445,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
     </div>
   </details>
 
-  <section class="situation-section reveal" aria-label="Votre situation" hidden>
-    <div class="modules-head">
-      <h2 class="modules-title">Situation fiscale</h2>
-      <p class="modules-sub">Pour estimer votre impôt.</p>
-    </div>
 
-      <div class="module-card" id="foyerModule">
-        <button type="button" class="module-toggle-head" id="foyerModuleToggle" aria-expanded="false" aria-controls="foyerModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"></path><path d="M9 21v-7h6v7"></path></svg></span>
-          <span class="module-info">
-            <span class="module-name">Foyer fiscal</span>
-            <span class="module-desc" id="foyerModuleDesc">Seul(e), sans personne à charge</span>
-          </span>
-          <svg class="module-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        <div class="module-body" id="foyerModuleBody">
-          <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
-
-          <div class="field-row">
-            <label>Calcul de l'impôt</label>
-            <div class="pill-toggle" id="foyerMode" role="group" aria-label="Mode de calcul de l'impôt" style="width:100%;">
-              <button type="button" data-mode="bareme" aria-pressed="true" style="flex:1;">Estimer au barème</button>
-              <button type="button" data-mode="taux" aria-pressed="false" style="flex:1;">J'ai mon taux</button>
-            </div>
-          </div>
-
-          <div id="foyerBaremeFields">
-            <div class="field-row">
-              <label>Situation</label>
-              <div class="pill-toggle foyer-situation-toggle" id="foyerSituation" role="group" aria-label="Situation fiscale" style="width:100%;">
-                <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-                <button type="button" data-foyer="commun" aria-pressed="false" style="flex:1;">Marié / PACS</button>
-                <button type="button" data-foyer="concubinage" aria-pressed="false" style="flex:1;">Concubinage</button>
-              </div>
-            </div>
-
-            <div class="two-col">
-              <div class="field-row">
-                <label for="foyerCharges">Personnes à charge</label>
-                <select id="foyerCharges">
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-              <div class="field-row" id="foyerConjointRow" style="display:none;">
-                <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
-                <input type="text" inputmode="decimal" id="foyerConjoint" value="0">
-                <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
-              </div>
-            </div>
-            <div class="field-row" id="foyerParentIsoleRow" style="display:none;">
-              <label for="foyerParentIsole" style="display:flex;align-items:center;gap:9px;">
-                <input type="checkbox" id="foyerParentIsole" style="width:auto;margin:0;">
-                Parent isolé (case T)
-              </label>
-              <div class="sub-hint">À cocher uniquement si vous vivez seul(e), sans concubin, et assumez la charge principale ou exclusive d'au moins un enfant. La résidence alternée n'est pas modélisée ici.</div>
-            </div>
-
-            <div class="alert alert-warn" id="foyerWarn" style="display:none;">
-              <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
-            </div>
-            <div class="alert alert-info" id="foyerConcubinageInfo" style="display:none;">
-              <span>ⓘ</span><span>En concubinage, chacun fait sa propre déclaration. Les revenus de votre partenaire ne sont pas ajoutés à votre foyer fiscal. Indiquez uniquement les personnes à charge rattachées à votre déclaration.</span>
-            </div>
-          </div>
-
-          <div id="foyerTauxFields" style="display:none;">
-            <div class="field-row">
-              <label for="foyerPasRate">Taux de prélèvement à la source (%)</label>
-              <input type="text" inputmode="decimal" id="foyerPasRate" value="0">
-              <div class="sub-hint" style="margin-bottom:0;">Indiqué sur votre avis d'imposition ou votre bulletin de paie.</div>
-            </div>
-
-            <div class="alert alert-warn" id="foyerPasWarn" style="display:none;">
-              <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Ce taux correspond à votre situation actuelle. Appliqué tel quel à un salaire plus élevé, il sous-estime l'impôt réel — car le taux véritable augmente avec le revenu — et donc surestime l'écart entre les salaires comparés.</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-  </section>
 
   <section class="modules-section reveal" aria-label="Modules complémentaires">
     <div class="modules-head">
@@ -1535,12 +1487,12 @@ header.hero .trust-icon svg{width:19px;height:19px}
   </details>
 
   <div class="disclaimer reveal">
-    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue pas un bulletin de paie garanti conforme.</p>
     <details class="more">
       <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
         <div class="section-tag">Source des calculs</div>
-        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations ni l’impôt. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
+        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
         <div class="section-tag">Hypothèses transmises au moteur</div>
         <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, sans avantages en nature, primes libres, remboursements de transport spécifiques ni régime particulier (DFS, taux réduits ou impatrié). La commune et le département de l’établissement sont sélectionnés séparément. Le scénario 39 h suppose 4 heures supplémentaires hebdomadaires majorées de 25 %. La mutuelle et les titres-restaurant sont renseignés séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
@@ -1549,7 +1501,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
         <p>Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore modélisés dans le calculateur principal par l’API. Ces scénarios sont signalés comme non calculables : OnNet n’affiche pas d’estimation issue de l’ancien moteur local.</p>
 
         <div class="section-tag">Limites du modèle</div>
-        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Certaines règles fiscales du modèle sont expérimentales ou simplifiées. Le net après impôt reste une estimation, pas un avis d’imposition. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
+        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
       </div>
     </details>
   </div>
@@ -1566,17 +1518,13 @@ var MAX_GROSS_CALIBRATION_ATTEMPTS = 3;
 var EXPRESSIONS = Object.freeze({
   gross: "salari\xE9 . r\xE9mun\xE9ration . brut",
   netBeforeTax: "salari\xE9 . r\xE9mun\xE9ration . net . \xE0 payer avant imp\xF4t",
-  taxableNet: "salari\xE9 . r\xE9mun\xE9ration . net . imposable",
   employeeContributions: "salari\xE9 . cotisations . salari\xE9",
   overtimePay: "salari\xE9 . r\xE9mun\xE9ration . heures suppl\xE9mentaires",
   employeeHealth: "salari\xE9 . cotisations . pr\xE9voyances . sant\xE9 . salari\xE9",
   employerHealth: "salari\xE9 . cotisations . pr\xE9voyances . sant\xE9 . employeur",
   mealTicketAmount: "salari\xE9 . r\xE9mun\xE9ration . frais professionnels . titres-restaurant . montant",
   mealTicketEmployer: "salari\xE9 . r\xE9mun\xE9ration . frais professionnels . titres-restaurant . employeur",
-  mealTicketNonDeductible: "salari\xE9 . r\xE9mun\xE9ration . frais professionnels . non d\xE9ductible",
-  netAfterTax: "salari\xE9 . r\xE9mun\xE9ration . net . pay\xE9 apr\xE8s imp\xF4t",
-  incomeTax: "imp\xF4t . montant",
-  taxRate: "imp\xF4t . taux d'imposition"
+  mealTicketNonDeductible: "salari\xE9 . r\xE9mun\xE9ration . frais professionnels . non d\xE9ductible"
 });
 function numberInRange(value, name, min, max) {
   const number = Number(value);
@@ -1653,7 +1601,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     "salari\xE9 . r\xE9gimes sp\xE9cifiques . taux r\xE9duits": "non",
     "salari\xE9 . r\xE9gimes sp\xE9cifiques . DFS": "non",
     "salari\xE9 . r\xE9gimes sp\xE9cifiques . impatri\xE9s": "non",
-    "situation personnelle . domiciliation fiscale \xE0 l'\xE9tranger": "non",
     "salari\xE9 . temps de travail . heures suppl\xE9mentaires": `${overtimeHours} heure/mois`,
     "salari\xE9 . cotisations . pr\xE9voyances . sant\xE9 . montant": money(totalHealth),
     "salari\xE9 . cotisations . pr\xE9voyances . sant\xE9 . taux employeur": percent(employerHealthRate),
@@ -1663,63 +1610,6 @@ function buildSituation(input, baseGross, overtimeHours) {
     "salari\xE9 . r\xE9mun\xE9ration . frais professionnels . titres-restaurant . taux employeur": percent(employerMealTicketRate),
     "date": formatDate(input.date)
   };
-  if (input.modeImpot !== void 0 && input.modeImpot !== null && input.modeImpot !== "") {
-    const modes = {
-      "personnalis\xE9": "taux personnalis\xE9",
-      "neutre": "taux neutre",
-      "bar\xE8me": "bar\xE8me standard"
-    };
-    const mode = String(input.modeImpot);
-    if (!Object.prototype.hasOwnProperty.call(modes, mode)) {
-      throw new TypeError("modeImpot doit \xEAtre personnalis\xE9, neutre ou bar\xE8me.");
-    }
-    situation["imp\xF4t . m\xE9thode de calcul"] = `'${modes[mode]}'`;
-    if (mode === "personnalis\xE9") {
-      const taxRate = numberInRange(input.tauxPAS, "tauxPAS", 0, 100);
-      situation["imp\xF4t . taux personnalis\xE9"] = percent(taxRate);
-    }
-    if (mode === "neutre") {
-      situation["imp\xF4t . foyer fiscal . situation de famille"] = "'c\xE9libataire'";
-      situation["imp\xF4t . foyer fiscal . enfants \xE0 charge"] = "0 enfant";
-    }
-    if (mode === "bar\xE8me") {
-      const familyStatus = input.situationFamille;
-      if (!["c\xE9libataire", "couple", "veuf"].includes(familyStatus)) {
-        throw new TypeError("situationFamille doit \xEAtre renseign\xE9e : c\xE9libataire, couple ou veuf.");
-      }
-      if (input.enfantsACharge === void 0 || input.enfantsACharge === null) {
-        throw new TypeError("enfantsACharge doit \xEAtre renseign\xE9 pour le calcul au bar\xE8me.");
-      }
-      const children = integerInRange(input.enfantsACharge, "enfantsACharge", 0, 20);
-      if (familyStatus === "c\xE9libataire" && children > 0 && typeof input.parentIsole !== "boolean") {
-        throw new TypeError("parentIsole doit \xEAtre renseign\xE9 pour une personne c\xE9libataire avec enfant(s).");
-      }
-      const singleParent = input.parentIsole ?? false;
-      if (typeof singleParent !== "boolean") {
-        throw new TypeError("parentIsole doit \xEAtre un bool\xE9en.");
-      }
-      if (singleParent && (familyStatus !== "c\xE9libataire" || children === 0)) {
-        throw new TypeError("parentIsole exige une personne c\xE9libataire avec au moins un enfant \xE0 charge.");
-      }
-      situation["imp\xF4t . foyer fiscal . situation de famille"] = `'${familyStatus}'`;
-      situation["imp\xF4t . foyer fiscal . enfants \xE0 charge"] = `${children} enfant`;
-      if (familyStatus === "couple") {
-        if (input.autresRevenusImposables === void 0 || input.autresRevenusImposables === null) {
-          throw new TypeError("autresRevenusImposables doit \xEAtre renseign\xE9 pour un foyer en couple (indiquer 0 si aucun autre revenu).");
-        }
-        const otherIncome = numberInRange(input.autresRevenusImposables, "autresRevenusImposables", 0, 1e8);
-        situation["imp\xF4t . foyer fiscal . revenu imposable . autres revenus imposables"] = `${otherIncome.toFixed(2)} \u20AC/an`;
-      } else if (input.autresRevenusImposables !== void 0 && input.autresRevenusImposables !== null) {
-        const otherIncome = numberInRange(input.autresRevenusImposables, "autresRevenusImposables", 0, 1e8);
-        if (otherIncome > 0) {
-          situation["imp\xF4t . foyer fiscal . revenu imposable . autres revenus imposables"] = `${otherIncome.toFixed(2)} \u20AC/an`;
-        }
-      }
-      if (singleParent) {
-        situation["imp\xF4t . foyer fiscal . parent isol\xE9"] = "oui";
-      }
-    }
-  }
   return situation;
 }
 function normalizeMissingVariables(value) {
@@ -1863,13 +1753,11 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
   }
   const overtimeHours = durationType === "39" ? MONTHLY_OVERTIME_HOURS_39H : 0;
   let baseGross = durationType === "39" ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours) : grossTarget;
-  const taxMode = input.modeImpot === void 0 || input.modeImpot === null || input.modeImpot === "" ? null : String(input.modeImpot);
   const benchmarkOnly = input.benchmarkOnly === true;
   const hasMealTickets = !benchmarkOnly && numberInRange(input.joursResto ?? 0, "joursResto", 0, 31) > 0;
   const socialExpressions = benchmarkOnly ? [EXPRESSIONS.gross, EXPRESSIONS.netBeforeTax] : [
     EXPRESSIONS.gross,
     EXPRESSIONS.netBeforeTax,
-    EXPRESSIONS.taxableNet,
     EXPRESSIONS.employeeContributions,
     EXPRESSIONS.overtimePay,
     EXPRESSIONS.employeeHealth,
@@ -1896,49 +1784,6 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
       throw new Error(`Le brut calcul\xE9 par l\u2019API (${grossCalculated.toFixed(2)} \u20AC) ne correspond pas au brut demand\xE9 (${grossTarget.toFixed(2)} \u20AC).`);
     }
     baseGross *= grossTarget / grossCalculated;
-  }
-  if (taxMode !== null) {
-    const annualTaxableSalary = finalEvaluation.values[2] * 12;
-    finalSituation["imp\xF4t . revenu imposable"] = `${annualTaxableSalary.toFixed(2)} \u20AC/an`;
-    if (taxMode === "bar\xE8me") {
-      finalSituation["imp\xF4t . foyer fiscal . revenu imposable . revenu d'activit\xE9"] = `${annualTaxableSalary.toFixed(2)} \u20AC/an`;
-    }
-    let neutralRateEvaluation = null;
-    if (taxMode === "neutre") {
-      neutralRateEvaluation = await evaluateRequest(
-        fetchImpl,
-        endpoint,
-        timeoutMs,
-        finalSituation,
-        ["imp\xF4t . taux neutre d'imp\xF4t sur le revenu"]
-      );
-      const neutralRate = neutralRateEvaluation.values[0];
-      if (!Number.isFinite(neutralRate) || neutralRate < 0 || neutralRate > 100) {
-        throw new Error("L\u2019API Urssaf n\u2019a pas renvoy\xE9 un taux neutre exploitable.");
-      }
-      finalSituation["imp\xF4t . m\xE9thode de calcul"] = "'taux personnalis\xE9'";
-      finalSituation["imp\xF4t . taux personnalis\xE9"] = percent(neutralRate);
-    }
-    const taxEvaluation = await evaluateRequest(
-      fetchImpl,
-      endpoint,
-      timeoutMs,
-      finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
-    );
-    finalEvaluation = {
-      values: taxEvaluation.values,
-      missingVariables: [.../* @__PURE__ */ new Set([
-        ...finalEvaluation.missingVariables,
-        ...neutralRateEvaluation?.missingVariables ?? [],
-        ...taxEvaluation.missingVariables
-      ])],
-      warnings: [.../* @__PURE__ */ new Set([
-        ...finalEvaluation.warnings,
-        ...neutralRateEvaluation?.warnings ?? [],
-        ...taxEvaluation.warnings
-      ])]
-    };
   }
   const values = finalEvaluation.values;
   if (benchmarkOnly) {
@@ -1968,19 +1813,14 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
     baseGross,
     overtimeHours,
     netBeforeTax: values[1],
-    taxableNet: values[2],
-    employeeContributions: values[3],
-    overtimePay: values[4],
-    employeeHealth: values[5],
-    employerHealth: values[6],
-    taxMode,
-    mealTicketAmount: hasMealTickets ? values[7] : 0,
-    mealTicketEmployee: hasMealTickets ? values[7] - values[8] : 0,
-    mealTicketEmployer: hasMealTickets ? values[8] : 0,
-    mealTicketNonDeductible: hasMealTickets ? values[9] : 0,
-    netAfterTax: taxMode === null ? null : values[socialExpressions.length],
-    incomeTax: taxMode === null ? null : values[socialExpressions.length + 1],
-    calculatedTaxRate: taxMode === null ? null : values[socialExpressions.length + 2],
+    employeeContributions: values[2],
+    overtimePay: values[3],
+    employeeHealth: values[4],
+    employerHealth: values[5],
+    mealTicketAmount: hasMealTickets ? values[6] : 0,
+    mealTicketEmployee: hasMealTickets ? values[6] - values[7] : 0,
+    mealTicketEmployer: hasMealTickets ? values[7] : 0,
+    mealTicketNonDeductible: hasMealTickets ? values[8] : 0,
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: (/* @__PURE__ */ new Date()).toISOString()
@@ -2038,9 +1878,8 @@ function esc(s) {
 }
 
 // src/state-normalizers.mjs
-var METRIC_KEYS = ["netImposable", "annuelNet", "netApresImpot", "netApresImpotHoraire", "netHoraire", "brutHoraire"];
+var METRIC_KEYS = ["annuelNet", "netHoraire", "brutHoraire"];
 var METRIC_DEFAUT = "netHoraire";
-var FOYER_DEFAUT = { mode: "bareme", situation: "seul", couple: false, personnesCharge: 0, parentIsole: false, autresRevenus: 0, pasRate: 0 };
 function sanitizeScenario(raw) {
   if (!raw || typeof raw !== "object" || Array.isArray(raw)) return null;
   const clean = Object.assign({}, raw);
@@ -2084,26 +1923,6 @@ function sanitizeScenario(raw) {
   if (!Number.isSafeInteger(clean.id) || clean.id < 0) delete clean.id;
   return clean;
 }
-function sanitizeFoyer(raw) {
-  const f = raw && typeof raw === "object" && !Array.isArray(raw) ? raw : {};
-  const nb = (v, min, max) => {
-    const n = Number(v);
-    return Number.isFinite(n) ? clamp(n, min, max) : 0;
-  };
-  const situation = ["seul", "commun", "concubinage"].includes(f.situation) ? f.situation : f.couple === true ? "commun" : "seul";
-  const couple = situation === "commun";
-  const personnesCharge = Math.floor(nb(f.personnesCharge, 0, 4));
-  const parentIsole = situation === "seul" && personnesCharge > 0 && f.parentIsole === true;
-  return {
-    mode: f.mode === "taux" ? "taux" : "bareme",
-    situation,
-    couple,
-    personnesCharge,
-    parentIsole,
-    autresRevenus: couple ? nb(f.autresRevenus, 0, 1e8) : 0,
-    pasRate: nb(f.pasRate, 0, 100)
-  };
-}
 function normalizeScenarioIds(scenarios2, refId2, openCardIds2) {
   const oldToIndex = /* @__PURE__ */ new Map();
   const normalized = scenarios2.map((scenario, index) => {
@@ -2120,6 +1939,7 @@ function normalizeScenarioIds(scenarios2, refId2, openCardIds2) {
 
 // src/urssaf-calculation.mjs
 function buildUrssafCalculationKey(s, f, date) {
+  const calculationDate = date ?? f;
   return JSON.stringify({
     brut: Number(s.brut),
     dureeType: String(s.dureeType),
@@ -2133,21 +1953,8 @@ function buildUrssafCalculationKey(s, f, date) {
     commune: String(s.commune || "Pac\xE9").trim(),
     codePostal: String(s.codePostal || ""),
     departement: String(s.departement || ""),
-    date,
-    fiscal: s.isBenchmark ? null : taxInputForFoyer(f)
+    date: calculationDate
   });
-}
-function taxInputForFoyer(f) {
-  if (f.mode === "taux") {
-    return { modeImpot: "personnalis\xE9", tauxPAS: Number(f.pasRate) || 0 };
-  }
-  return {
-    modeImpot: "bar\xE8me",
-    situationFamille: f.couple ? "couple" : "c\xE9libataire",
-    enfantsACharge: Number(f.personnesCharge) || 0,
-    parentIsole: !f.couple && f.parentIsole === true,
-    autresRevenusImposables: f.couple ? Number(f.autresRevenus) || 0 : 0
-  };
 }
 function unsupportedCalculationReason(s) {
   if (!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0) {
@@ -2165,9 +1972,10 @@ function unsupportedCalculationReason(s) {
   return null;
 }
 function buildUrssafInput(s, f, date) {
+  const calculationDate = date ?? f;
   const reason = unsupportedCalculationReason(s);
   if (reason) throw new Error(reason);
-  return Object.assign({
+  return {
     brut: Number(s.brut),
     dureeType: String(s.dureeType),
     mutuelle: Number(s.mutuelle) || 0,
@@ -2178,9 +1986,9 @@ function buildUrssafInput(s, f, date) {
     commune: String(s.commune || "Pac\xE9").trim(),
     codePostal: String(s.codePostal || ""),
     departement: String(s.departement || ""),
-    date,
+    date: calculationDate,
     benchmarkOnly: Boolean(s.isBenchmark)
-  }, s.isBenchmark ? {} : taxInputForFoyer(f));
+  };
 }
 function mapUrssafResultToOnNet(result) {
   if (result.benchmarkOnly) {
@@ -2199,15 +2007,13 @@ function mapUrssafResultToOnNet(result) {
   const monthly = {
     brutTotal: gross,
     netApres: result.netBeforeTax,
-    netImposable: result.taxableNet,
     cotisNettes: otherEmployeeContributions,
     mutuelle: result.employeeHealth,
     netSocial: result.netBeforeTax + result.mealTicketEmployee
   };
   const annual = {
     brutTotal: gross * 12,
-    netApres: result.netBeforeTax * 12,
-    netImposable: result.taxableNet * 12
+    netApres: result.netBeforeTax * 12
   };
   const tr = {
     totalSalarie: result.mealTicketEmployee,
@@ -2227,15 +2033,9 @@ function mapUrssafResultToOnNet(result) {
     m: monthly,
     a: annual,
     netApres: monthly.netApres,
-    netImposable: monthly.netImposable,
     annuelNet: annual.netApres,
-    netApresImpot: result.netAfterTax,
-    netApresImpotHoraire: Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? (result.netAfterTax + monthly.mutuelle) / monthlyHours : null,
-    annuelNetApresImpot: result.netAfterTax === null ? null : result.netAfterTax * 12,
-    impotAnnuel: result.incomeTax,
-    tauxImpot: result.calculatedTaxRate,
     brutHoraire: result.baseGross / HEURES_BASE,
-    netHoraire: monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
+    netHoraire: monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
     tauxEffectif: gross > 0 ? result.employeeContributions / gross * 100 : 0
   };
 }
@@ -2404,7 +2204,6 @@ function deserializePersistedState(raw) {
       displayAmt: data.displayAmt,
       displayPeriod: data.displayPeriod,
       openCardIds: restored.openCardIds,
-      foyer: sanitizeFoyer(data.foyer),
       onboardingCompleted: data.onboardingCompleted === true || data.onboardingCompleted !== false && !legacyPristine
     };
   } catch {
@@ -2419,7 +2218,6 @@ function serializePersistedState(state) {
     metric: state.metric,
     displayAmt: state.displayAmt,
     displayPeriod: state.displayPeriod,
-    foyer: state.foyer,
     onboardingCompleted: state.onboardingCompleted,
     openCardIds: [...state.openCardIds]
   });
@@ -2444,10 +2242,10 @@ function getSmicGross() {
   return state.status === "ready" ? state.amount : null;
 }
 function getCurrentComputed() {
-  return scenarios.map((s) => ({ s, r: urssafCalculationCache.getResult(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))) || null }));
+  return scenarios.map((s) => ({ s, r: urssafCalculationCache.getResult(buildUrssafCalculationKey(s, scenarioCalculationDate(s))) || null }));
 }
-function getCalculationError(s, f) {
-  const key = buildUrssafCalculationKey(s, f || foyer, scenarioCalculationDate(s));
+function getCalculationError(s) {
+  const key = buildUrssafCalculationKey(s, scenarioCalculationDate(s));
   return urssafCalculationCache.getError(key) || unsupportedCalculationReason(s);
 }
 function getCachedSmicResult() {
@@ -2455,7 +2253,7 @@ function getCachedSmicResult() {
   if (!base) return null;
   const scenario = buildSmicScenario(base, getSmicGross());
   if (!scenario) return null;
-  return urssafCalculationCache.getResult(buildUrssafCalculationKey(scenario, foyer, scenarioCalculationDate(scenario))) || null;
+  return urssafCalculationCache.getResult(buildUrssafCalculationKey(scenario, scenarioCalculationDate(scenario))) || null;
 }
 var queuedUrssafFetch = createRateLimitedFetch(
   (url, options) => window.fetch(url, options),
@@ -2475,12 +2273,12 @@ function updateUrssafStatus(computed) {
     statusText.textContent = "Renseignez votre salaire pour autoriser sa transmission \xE0 l\u2019API Urssaf. Aucune donn\xE9e salariale n\u2019est transmise avant cette saisie.";
     return;
   }
-  const failed = computed.filter(({ s, r }) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))));
+  const failed = computed.filter(({ s, r }) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s, scenarioCalculationDate(s))));
   const unsupported = computed.filter(({ s, r }) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base, getSmicGross()) : null;
   const smicResult = getCachedSmicResult();
-  const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario, foyer, scenarioCalculationDate(smicScenario)) : null;
+  const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario, scenarioCalculationDate(smicScenario)) : null;
   const smicError = smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey) || smicState.status === "error";
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({ s, r }) => !r && !getCalculationError(s));
@@ -2571,7 +2369,7 @@ async function executeUrssafCalculations(generation, forceRetry) {
   const seen = /* @__PURE__ */ new Set();
   for (const s of jobs) {
     if (generation !== urssafGeneration) return;
-    const key = buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s));
+    const key = buildUrssafCalculationKey(s, scenarioCalculationDate(s));
     if (seen.has(key) || urssafCalculationCache.hasResult(key)) continue;
     seen.add(key);
     if (forceRetry) urssafCalculationCache.deleteError(key);
@@ -2583,7 +2381,7 @@ async function executeUrssafCalculations(generation, forceRetry) {
         throw new Error("Le client de calcul Urssaf n\u2019est pas charg\xE9. Rechargez la page.");
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
-        buildUrssafInput(s, foyer, scenarioCalculationDate(s)),
+        buildUrssafInput(s, scenarioCalculationDate(s)),
         { fetchImpl: queuedUrssafFetch }
       );
       urssafCalculationCache.setResult(key, mapUrssafResultToOnNet(result));
@@ -2661,7 +2459,6 @@ function saveState() {
       metric,
       displayAmt,
       displayPeriod,
-      foyer,
       onboardingCompleted,
       openCardIds
     }));
@@ -2713,8 +2510,7 @@ function loadShareState() {
       refId: restored.refId,
       metric: data.metric,
       displayAmt: data.displayAmt,
-      displayPeriod: data.displayPeriod,
-      foyer: sanitizeFoyer(data.foyer)
+      displayPeriod: data.displayPeriod
     };
   } catch (e) {
     return null;
@@ -2751,8 +2547,7 @@ function buildShareUrl(options) {
     refId: sharedScenarios.some((s) => s.id === refId) ? refId : sharedScenarios[0].id,
     metric,
     displayAmt,
-    displayPeriod,
-    foyer: opts.includeFoyer ? { ...foyer } : { ...FOYER_DEFAUT }
+    displayPeriod
   };
   const encoded = toBase64Url(JSON.stringify(payload));
   return location.href.split("#")[0] + "#share=" + encoded;
@@ -2794,10 +2589,7 @@ function showShareOptionsModal() {
         <input type="checkbox" id="shareIncludeDetails">
         <span><strong>D\xE9tails de paie</strong><small>Mutuelle salari\xE9/employeur et titres restaurant.</small></span>
       </label>
-      <label class="share-extra-option" for="shareIncludeFoyer">
-        <input type="checkbox" id="shareIncludeFoyer">
-        <span><strong>Situation fiscale</strong><small>Situation du foyer, personnes \xE0 charge, revenus du conjoint et taux de pr\xE9l\xE8vement.</small></span>
-      </label>
+
     </fieldset>
     <div class="alert alert-warn" style="margin-top:12px;">
       <span>${ICON.warn}</span><span>Les salaires s\xE9lectionn\xE9s sont toujours inclus. Le lien n'est pas chiffr\xE9 ni prot\xE9g\xE9 par mot de passe : toute personne qui le re\xE7oit peut lire les donn\xE9es qu'il contient.</span>
@@ -2820,8 +2612,7 @@ function showShareOptionsModal() {
     const scenarioIds = [...overlay.querySelectorAll(".share-scenario-option input:checked")].map((input) => Number(input.value));
     closeModal({
       scenarioIds,
-      includeDetails: overlay.querySelector("#shareIncludeDetails").checked,
-      includeFoyer: overlay.querySelector("#shareIncludeFoyer").checked
+      includeDetails: overlay.querySelector("#shareIncludeDetails").checked
     });
   });
   updateAvailability();
@@ -2861,7 +2652,6 @@ var metric;
 var openCardIds;
 var displayAmt;
 var displayPeriod;
-var foyer;
 if (initialSource) {
   scenarios = initialSource.scenarios.map((sv) => mkScenario(sv));
   idCounter = scenarios.length;
@@ -2871,7 +2661,6 @@ if (initialSource) {
   displayPeriod = initialSource.displayPeriod === "an" ? "an" : "mois";
   const validIds = new Set(scenarios.map((s) => s.id));
   openCardIds = new Set(Array.isArray(initialSource.openCardIds) ? initialSource.openCardIds.filter((id) => validIds.has(id)) : []);
-  foyer = sanitizeFoyer(initialSource.foyer);
 } else {
   scenarios = defaultScenarios();
   refId = scenarios[0].id;
@@ -2879,13 +2668,9 @@ if (initialSource) {
   openCardIds = /* @__PURE__ */ new Set();
   displayAmt = "net";
   displayPeriod = "mois";
-  foyer = sanitizeFoyer(FOYER_DEFAUT);
 }
 var metricHints = {
-  netImposable: "La base retenue pour l'imp\xF4t sur le revenu \u2014 utile pour anticiper votre d\xE9claration.",
-  annuelNet: "Le total net sur l'ann\xE9e, primes comprises, <em>avant</em> pr\xE9l\xE8vement \xE0 la source \u2014 pratique quand les salaires compar\xE9s n'ont pas le m\xEAme nombre de mensualit\xE9s (ex. 13\u1D49 mois).",
-  netApresImpot: "Le net apr\xE8s pr\xE9l\xE8vement \xE0 la source \xE9valu\xE9 par le mod\xE8le fiscal officiel Mon-entreprise / Urssaf selon les param\xE8tres du foyer transmis.",
-  netApresImpotHoraire: "Le net apr\xE8s pr\xE9l\xE8vement \xE0 la source, divis\xE9 par les heures r\xE9ellement travaill\xE9es dans le mois.",
+  annuelNet: "Le total net sur l\u2019ann\xE9e, primes comprises \u2014 pratique quand les salaires compar\xE9s n\u2019ont pas le m\xEAme nombre de mensualit\xE9s (ex. 13\u1D49 mois).",
   netHoraire: "Le net ramen\xE9 aux heures r\xE9ellement travaill\xE9es dans le mois \u2014 pratique pour comparer un 35h et un 39h sur une base commune.",
   brutHoraire: "Le taux horaire de base du contrat, hors majoration des heures suppl\xE9mentaires \u2014 le chiffre qu'on retrouve en g\xE9n\xE9ral sur une offre d'emploi."
 };
@@ -2901,7 +2686,7 @@ function heroValue(r) {
 }
 function heroLabel() {
   if (displayAmt === "brut") return "Brut " + (displayPeriod === "mois" ? "mensuel" : "annuel");
-  return "Net avant imp\xF4t " + (displayPeriod === "mois" ? "mensuel" : "annuel");
+  return "Net " + (displayPeriod === "mois" ? "mensuel" : "annuel");
 }
 function num(id, key, uid, value, opts) {
   const o = opts || {};
@@ -2914,7 +2699,7 @@ function renderCard(s, r, showRemove) {
   const uid = s.id;
   const isRef = s.id === refId;
   const trWarn = !!(r && r.tr && r.tr.reintegre > 5e-3);
-  const calculationError = getCalculationError(s, foyer);
+  const calculationError = getCalculationError(s);
   const trMotifs = {
     sous50: "Part patronale sous 50 % : v\xE9rifiez la valeur reconnue par le moteur Urssaf.",
     sur60: "Part patronale au-del\xE0 de 60 % : v\xE9rifiez la valeur reconnue par le moteur Urssaf.",
@@ -3000,6 +2785,26 @@ function renderAddCard() {
   </button>`;
 }
 var STACK_COLORS = { cotis: "var(--stack-cotis)", mutuelle: "var(--gold)", tr: "var(--stack-tr)", net: "var(--accent)" };
+function getMealTicketTotal(scenario, result) {
+  const employee = result?.tr?.totalSalarie;
+  const employer = result?.tr?.totalEmployeur;
+  const hasEmployee = employee !== null && employee !== void 0 && Number.isFinite(Number(employee));
+  const hasEmployer = employer !== null && employer !== void 0 && Number.isFinite(Number(employer));
+  if (hasEmployee && hasEmployer) {
+    return Math.max(0, Number(employee)) + Math.max(0, Number(employer));
+  }
+  return Math.max(0, Number(scenario?.joursResto) || 0) * Math.max(0, Number(scenario?.valeurResto) || 0);
+}
+function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR) {
+  const rows = trTotal > 0.5 ? [
+    { label: "Net sans TR", value: netSansTR },
+    { label: "TR \u2014 total des deux parts", value: trTotal },
+    { label: "Net avec TR", value: netAvecTR, final: true }
+  ] : [{ label: "Net", value: netAvecTR, final: true }];
+  return `<div class="salary-net-summary" aria-label="R\xE9capitulatif du net et des titres-restaurant">${rows.map(
+    (row) => `<div class="salary-net-summary-row${row.final ? " is-final" : ""}"><span>${row.label}</span><strong>${fmt(row.value)}</strong></div>`
+  ).join("")}</div>`;
+}
 function renderStack(computed) {
   const sorted = [...computed].sort((a, b) => b.r.m.netApres - a.r.m.netApres);
   const maxBrut = Math.max(...computed.map((x) => x.r.m.brutTotal), 1);
@@ -3008,6 +2813,7 @@ function renderStack(computed) {
   return sorted.map(({ s, r }) => {
     const m = r.m;
     const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
+    const trTotal = getMealTicketTotal(s, r);
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? "pos" : delta < 0 ? "neg" : "";
@@ -3019,15 +2825,14 @@ function renderStack(computed) {
           <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
           <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
           <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
+          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net bancaire : ${fmt(net)}" role="img" aria-label="Net bancaire : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
         </div>
       </div>`;
     return `
     <div class="stack-col ${s.id === refId ? "is-ref" : ""} ${s.id === justAddedId ? "card-enter" : ""}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="D\xE9finir ${esc(s.name)} comme salaire de r\xE9f\xE9rence"` : 'aria-current="true"'}>
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? "is-ref" : ""}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
-      <div class="stack-net">${fmt(net)}</div>
-      ${tr > 0.5 ? `<div class="stack-net-notr">TR salari\xE9 : ${fmt(tr)} \xB7 employeur : ${fmt(r.tr.totalEmployeur)}</div><div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ""}
+      ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join("");
@@ -3046,30 +2851,19 @@ function renderWaterfall(computed) {
   const net = Math.max(0, m.netApres);
   const deductions = Math.max(0, brut - net);
   const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
-  const cotis = Math.max(0, m.cotisNettes);
-  const mutuelle = Math.max(0, m.mutuelle);
-  const tr = Math.max(0, r.tr.totalSalarie);
-  const netSansTR = m.netSocial;
-  const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  const trNote = tr > 0.5 ? `Net avant imp\xF4t hors retenue des TR : <strong>${fmt(netSansTR)}</strong> \xB7 ${s.joursResto} jours \xD7 ${fmt(s.valeurResto)} \xB7 part salari\xE9 : <strong>${fmt(tr)}</strong> \xB7 part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> \xB7 valeur cr\xE9dit\xE9e : <strong>${fmt(trValeurFaciale)}</strong>` : "";
+  const netSansTR = Math.max(0, m.netSocial);
+  const trTotal = getMealTicketTotal(s, r);
   return `
   <div class="waterfall">
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avant imp\xF4t : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+    ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net bancaire : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
       <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
       <span class="wf-stack-deductions" style="width:${(100 - ratio).toFixed(3)}%"></span>
     </div>
-    <div class="wf-breakdown">
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-net" aria-hidden="true"></span>
-        <div><strong>${fmt(net)}</strong><span>Net avant imp\xF4t</span></div>
-      </div>
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
-        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
-      </div>
+    <div class="wf-bar-legend" aria-hidden="true">
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net bancaire</span>
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-deductions"></span>Retenues sur le brut</span>
     </div>
-    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} \xB7 mutuelle ${fmt(mutuelle)} \xB7 titres-restaurant (part salari\xE9) ${fmt(tr)}</p>
-    ${trNote ? `<p class="wf-note">${trNote}</p>` : ""}
   </div>`;
 }
 function renderInsight(computed) {
@@ -3083,10 +2877,7 @@ function renderInsight(computed) {
   const delta = valueOf(best) - valueOf(ref);
   const unit = isHourly ? "par heure" : metric === "annuelNet" ? "par an" : "par mois";
   const metricLabel = {
-    netImposable: "net imposable",
     annuelNet: "net annuel",
-    netApresImpot: "net apr\xE8s imp\xF4t",
-    netApresImpotHoraire: "net horaire apr\xE8s imp\xF4t",
     netHoraire: "net horaire",
     brutHoraire: "brut horaire"
   }[metric] || "valeur s\xE9lectionn\xE9e";
@@ -3096,7 +2887,7 @@ function renderInsight(computed) {
   }
   return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? "plus" : "moins"} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
-var HOURLY_METRICS = /* @__PURE__ */ new Set(["netHoraire", "netApresImpotHoraire", "brutHoraire"]);
+var HOURLY_METRICS = /* @__PURE__ */ new Set(["netHoraire", "brutHoraire"]);
 function renderBars(computed) {
   const ref = computed.find((x) => x.s.id === refId) || computed[0];
   const isHourly = HOURLY_METRICS.has(metric);
@@ -3181,6 +2972,16 @@ function renderBenchmarks(computed) {
 }
 var maquetteComparisonPeriod = "hour";
 var mainSalaryInputPeriod = "month";
+var salaryEditorOpen = false;
+function setSalaryEditor(open) {
+  salaryEditorOpen = !!open;
+  document.body.classList.toggle("salary-editor-open", salaryEditorOpen);
+  if (salaryEditorOpen) {
+    const title = document.getElementById("salaryEditorTitle");
+    const selected = findScenario(refId) || scenarios[0];
+    if (title) title.textContent = "Modifier \u2014 " + (selected?.name || "cette offre");
+  }
+}
 function applyDeclaredSalaryFromForm() {
   const scenario = findScenario(refId) || scenarios[0];
   const gross = document.getElementById("mainSalaryGross");
@@ -3202,10 +3003,18 @@ function renderMaquetteControls(computedOverride) {
   const benchmarkPanel = document.querySelector("#comparePanel .benchmark-panel");
   const benchmarkMount = document.getElementById("benchmarkMount");
   if (benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement !== benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
+  const back = document.getElementById("salaryEditorBack");
+  if (back && back.dataset.bound !== "true") {
+    back.addEventListener("click", () => {
+      setSalaryEditor(false);
+      render();
+      document.getElementById("maquetteYourSalary")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+    back.dataset.bound = "true";
+  }
   const tabs = document.getElementById("maquetteOfferTabs");
-  if (!tabs) return;
-  tabs.replaceChildren();
-  scenarios.forEach((scenario, index) => {
+  if (tabs) tabs.replaceChildren();
+  if (tabs) scenarios.forEach((scenario, index) => {
     const item = document.createElement("div");
     item.className = "offer-tab-item";
     const button = document.createElement("button");
@@ -3221,50 +3030,13 @@ function renderMaquetteControls(computedOverride) {
     button.append(small);
     button.addEventListener("click", () => {
       refId = scenario.id;
+      setSalaryEditor(true);
       render();
+      document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
     });
     item.append(button);
     const actions = document.createElement("div");
     actions.className = "offer-tab-actions";
-    const rename = document.createElement("button");
-    rename.type = "button";
-    rename.className = "offer-tab-action";
-    rename.textContent = "Modifier";
-    rename.setAttribute("aria-label", "Renommer " + scenario.name);
-    rename.title = "Renommer ce poste";
-    rename.addEventListener("click", (event) => {
-      event.stopPropagation();
-      const input = document.createElement("input");
-      input.type = "text";
-      input.className = "offer-tab-rename-input";
-      input.value = scenario.name;
-      input.maxLength = 60;
-      input.setAttribute("aria-label", "Nouveau nom du poste");
-      name.replaceWith(input);
-      rename.hidden = true;
-      input.focus();
-      input.select();
-      let finished = false;
-      const finish = (save) => {
-        if (finished) return;
-        finished = true;
-        const value = input.value.trim().slice(0, 60);
-        if (save && value) scenario.name = value;
-        render();
-      };
-      input.addEventListener("keydown", (keyEvent) => {
-        if (keyEvent.key === "Enter") {
-          keyEvent.preventDefault();
-          finish(true);
-        }
-        if (keyEvent.key === "Escape") {
-          keyEvent.preventDefault();
-          finish(false);
-        }
-      });
-      input.addEventListener("blur", () => finish(true));
-    });
-    actions.append(rename);
     if (scenarios.length > 1) {
       const remove = document.createElement("button");
       remove.type = "button";
@@ -3279,7 +3051,7 @@ function renderMaquetteControls(computedOverride) {
       actions.append(remove);
     }
     item.append(actions);
-    tabs.append(item);
+    tabs?.append(item);
   });
   const selected = findScenario(refId) || scenarios[0];
   document.querySelectorAll("[data-maquette-period]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.maquettePeriod === maquetteComparisonPeriod)));
@@ -3345,25 +3117,34 @@ function renderMaquetteControls(computedOverride) {
   }
   const summary = document.getElementById("maquetteYourSalary");
   if (summary) {
-    if (!computed || !computed.r) {
-      summary.innerHTML = '<div class="benchmark-your-salary"><span><b>VOUS</b><span>Votre salaire</span></span><strong>\xC0 calculer<small>Net avant imp\xF4t</small></strong><div class="benchmark-meta benchmark-comparison-base">Le r\xE9sultat appara\xEEtra apr\xE8s le calcul de votre salaire.</div></div>';
-    } else {
-      const weekly = Number(selected.dureeType), hoursMonth = weekly * 52 / 12;
-      const hourly = hoursMonth > 0 && Number.isFinite(computed.r.netHoraire) ? computed.r.netHoraire : 0;
+    const allComputed = computedOverride || getCurrentComputed();
+    summary.innerHTML = allComputed.map(({ s, r }, index) => {
+      const weekly = Number(s.dureeType), hoursMonth = weekly * 52 / 12;
+      const hourly = r && Number.isFinite(r.netHoraire) ? r.netHoraire : null;
       const factor = maquetteComparisonPeriod === "hour" ? 1 : maquetteComparisonPeriod === "year" ? weekly * 52 : hoursMonth;
-      const value = hourly * factor, unit = maquetteComparisonPeriod === "hour" ? "heure" : maquetteComparisonPeriod === "year" ? "an" : "mois";
-      const amount = maquetteComparisonPeriod === "hour" ? fmtHoraire(value) : fmt(value);
-      const mealEmployee = Number(computed.r.tr?.totalSalarie || 0);
-      const mealEmployer = Number(computed.r.tr?.totalEmployeur || 0);
-      const mealTotal = mealEmployee + mealEmployer;
-      const periodScale = maquetteComparisonPeriod === "hour" ? hoursMonth > 0 ? 1 / hoursMonth : 0 : maquetteComparisonPeriod === "year" ? 12 : 1;
-      const periodFmt = (n) => maquetteComparisonPeriod === "hour" ? fmtHoraire(n) : fmt(n);
-      const netWithoutMeal = Number(computed.r.m?.netSocial || 0) * periodScale;
-      const netWithMeal = (Number(computed.r.m?.netApres || 0) + mealTotal) * periodScale;
-      const mealBenefit = mealTotal > 0.5 ? '<div class="salary-meal-benefit"><div><span>Net sans TR</span><strong>' + periodFmt(netWithoutMeal) + "</strong></div><div><span>TR</span><strong>" + periodFmt(mealTotal * periodScale) + "</strong></div><div><span>Net avec TR</span><strong>" + periodFmt(netWithMeal) + "</strong></div></div>" : "";
-      summary.innerHTML = '<div class="benchmark-your-salary"><span><b>VOUS</b><span>' + esc(selected.name) + "</span></span><strong>" + amount + " <small>Net avant imp\xF4t / " + unit + '</small></strong><div class="benchmark-meta benchmark-comparison-base">' + fmt(selected.brut) + " brut / mois \xB7 " + weekly + " h</div>" + mealBenefit + "</div>";
+      const value = hourly === null ? null : hourly * factor;
+      const amount = value === null ? "Calcul en cours" : maquetteComparisonPeriod === "hour" ? fmtHoraire(value) : fmt(value);
+      const unit = maquetteComparisonPeriod === "hour" ? "heure" : maquetteComparisonPeriod === "year" ? "an" : "mois";
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + "</span><h4>" + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">Actuelle</span>' : "") + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><strong class="offer-comparison-net">' + amount + (value === null ? "" : " <small>/ " + unit + "</small>") + '</strong><div class="offer-comparison-meta">Net \xB7 ' + fmt(s.brut) + " \u20AC brut / mois \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+    }).join("");
+    if (summary.dataset.editBound !== "true") {
+      summary.addEventListener("click", (event) => {
+        const remove = event.target.closest("[data-delete-offer]");
+        if (remove) {
+          removeScenario(Number(remove.dataset.deleteOffer));
+          return;
+        }
+        const button = event.target.closest("[data-edit-offer]");
+        if (!button) return;
+        refId = Number(button.dataset.editOffer);
+        setSalaryEditor(true);
+        render();
+        document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      summary.dataset.editBound = "true";
     }
   }
+  document.body.classList.toggle("salary-editor-open", salaryEditorOpen);
   const status = document.getElementById("urssafStatus"), mount = document.getElementById("maquetteUrssafMount");
   if (status && mount && status.parentElement !== mount) mount.appendChild(status);
 }
@@ -3408,8 +3189,6 @@ function render() {
   bindRefPickers();
   document.getElementById("benchmarkBody").innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
-  updateFoyerImpot(computed);
-  syncFoyerUI();
   document.getElementById("refSelect").innerHTML = scenarios.map((s) => `<option value="${s.id}" ${s.id === refId ? "selected" : ""}>${esc(s.name)}</option>`).join("");
   document.getElementById("cardsBody").innerHTML = computed.map(({ s, r }) => renderCard(s, r, scenarios.length > 1)).join("") + renderAddCard();
   bindCardDragAndDrop();
@@ -3547,120 +3326,6 @@ function bindRefPickers() {
     });
   });
 }
-function foyerResume() {
-  if (foyer.mode === "taux") return `Taux personnel : ${foyer.pasRate.toFixed(1)} %`;
-  const n = foyer.personnesCharge;
-  const situationLabel = foyer.situation === "commun" ? "Mari\xE9(e) / PACS" : foyer.situation === "concubinage" ? "Concubinage (imposition s\xE9par\xE9e)" : "Seul(e)";
-  const bouts = [situationLabel];
-  bouts.push(n === 0 ? "sans personne \xE0 charge" : n === 1 ? "1 personne \xE0 charge" : `${n} personnes \xE0 charge`);
-  if (foyer.parentIsole) bouts.push("parent isol\xE9 (case T)");
-  if (foyer.couple && foyer.autresRevenus > 0) bouts.push(`conjoint ${fmt(foyer.autresRevenus)}/an`);
-  return bouts.join(", ");
-}
-function updateFoyerImpot(computed) {
-  const ref = computed.find((x) => x.s.id === refId) || computed[0];
-  if (ref && ref.r) setText("foyerImpot", `${fmt(ref.r.impotAnnuel / 12)} / mois (${Number(ref.r.tauxImpot || 0).toFixed(1)} %)`);
-  else setText("foyerImpot", "\u2014");
-}
-function syncFoyerUI() {
-  document.querySelectorAll("#foyerMode button").forEach((b) => {
-    b.setAttribute("aria-pressed", b.dataset.mode === foyer.mode ? "true" : "false");
-  });
-  setShown("foyerBaremeFields", foyer.mode !== "taux");
-  setShown("foyerTauxFields", foyer.mode === "taux");
-  document.querySelectorAll("#foyerSituation button").forEach((b) => {
-    b.setAttribute("aria-pressed", b.dataset.foyer === foyer.situation ? "true" : "false");
-  });
-  setShown("foyerConcubinageInfo", foyer.situation === "concubinage");
-  const parentIsolePossible = foyer.situation === "seul" && foyer.personnesCharge > 0;
-  setShown("foyerParentIsoleRow", parentIsolePossible);
-  const parentIsoleInput = document.getElementById("foyerParentIsole");
-  if (parentIsoleInput) parentIsoleInput.checked = parentIsolePossible && foyer.parentIsole;
-  if (!parentIsolePossible) foyer.parentIsole = false;
-  setShown("foyerConjointRow", foyer.couple);
-  const alerteBareme = foyer.couple && !(foyer.autresRevenus > 0);
-  setShown("foyerWarn", alerteBareme);
-  const brutsDistincts = new Set(scenarios.map((s) => s.brut)).size > 1;
-  const alerteTaux = foyer.mode === "taux" && brutsDistincts;
-  setShown("foyerPasWarn", alerteTaux);
-  const alerte = foyer.mode === "taux" ? alerteTaux : alerteBareme;
-  let resume = foyerResume();
-  if (alerte) {
-    resume = foyer.mode === "taux" ? "Taux personnel \u2014 \xE9cart entre salaires optimiste" : "Mari\xE9/PACS \u2014 revenus du conjoint \xE0 renseigner";
-  }
-  setText("foyerModuleDesc", resume);
-  const desc = document.getElementById("foyerModuleDesc");
-  if (desc) desc.classList.toggle("is-warn", alerte);
-  setHTML("foyerImpotHint", foyer.mode === "taux" ? `Le taux personnalis\xE9 transmis \xE0 l\u2019Urssaf s\u2019applique selon les r\xE8gles de son mod\xE8le fiscal. Ce taux est constant dans vos sc\xE9narios : il peut donc limiter la pertinence d\u2019une comparaison entre salaires tr\xE8s diff\xE9rents.` : `Estimation calcul\xE9e par le mod\xE8le fiscal officiel Mon-entreprise / Urssaf \xE0 partir du foyer renseign\xE9. Le mod\xE8le est simplifi\xE9 et certaines r\xE8gles sont signal\xE9es comme exp\xE9rimentales ; ce r\xE9sultat ne remplace pas un avis d\u2019imposition. V\xE9rifiez les avertissements \xE9ventuels du moteur.`);
-}
-function bindFoyerModule() {
-  document.querySelectorAll("#foyerMode button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      foyer.mode = btn.dataset.mode === "taux" ? "taux" : "bareme";
-      syncFoyerUI();
-      updateComputed();
-    });
-  });
-  document.querySelectorAll("#foyerSituation button").forEach((btn) => {
-    btn.addEventListener("click", () => {
-      foyer.situation = ["seul", "commun", "concubinage"].includes(btn.dataset.foyer) ? btn.dataset.foyer : "seul";
-      foyer.couple = foyer.situation === "commun";
-      if (!foyer.couple) {
-        foyer.autresRevenus = 0;
-        const champ = document.getElementById("foyerConjoint");
-        if (champ) champ.value = "0";
-      }
-      if (foyer.situation !== "seul") foyer.parentIsole = false;
-      syncFoyerUI();
-      updateComputed();
-    });
-  });
-  const charges = document.getElementById("foyerCharges");
-  if (charges) {
-    charges.addEventListener("change", () => {
-      foyer.personnesCharge = Math.max(0, Math.min(4, Math.floor(parseNum(charges.value))));
-      if (foyer.personnesCharge === 0) foyer.parentIsole = false;
-      syncFoyerUI();
-      updateComputed();
-    });
-  }
-  const parentIsole = document.getElementById("foyerParentIsole");
-  if (parentIsole) {
-    parentIsole.addEventListener("change", () => {
-      foyer.parentIsole = parentIsole.checked;
-      syncFoyerUI();
-      updateComputed();
-    });
-  }
-  const conjoint = document.getElementById("foyerConjoint");
-  if (conjoint) {
-    conjoint.addEventListener("input", () => {
-      if (!validateNumericInput(conjoint, false)) return;
-      foyer.autresRevenus = Math.max(0, parseNum(conjoint.value));
-      syncFoyerUI();
-      updateComputed();
-    });
-  }
-  const pasRate = document.getElementById("foyerPasRate");
-  if (pasRate) {
-    pasRate.addEventListener("input", () => {
-      if (!validateNumericInput(pasRate, false)) return;
-      foyer.pasRate = clamp(parseNum(pasRate.value), 0, 100);
-      syncFoyerUI();
-      updateComputed();
-    });
-  }
-  if (charges) {
-    charges.value = String(Math.min(4, foyer.personnesCharge));
-  }
-  if (conjoint) {
-    conjoint.value = String(foyer.autresRevenus);
-  }
-  if (pasRate) {
-    pasRate.value = String(foyer.pasRate);
-  }
-  syncFoyerUI();
-}
 function setText(id, txt) {
   const el = document.getElementById(id);
   if (el) el.textContent = txt;
@@ -3679,8 +3344,6 @@ function updateComputed(options = {}) {
   bindRefPickers();
   document.getElementById("benchmarkBody").innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
-  updateFoyerImpot(computed);
-  syncFoyerUI();
   computed.forEach(({ s, r }) => {
     const u = s.id;
     const basisRow = document.getElementById(`c-13m-basis-row-${u}`);
@@ -3693,7 +3356,7 @@ function updateComputed(options = {}) {
     if (hint) hint.innerHTML = r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : "Taux effectif : \u2014";
     const state = document.getElementById(`c-result-state-${u}`);
     const card = document.querySelector(`#cardsBody [data-card="${u}"]`);
-    const error = getCalculationError(s, foyer);
+    const error = getCalculationError(s);
     if (state) state.textContent = r ? "Calcul\xE9 via l\u2019API officielle Mon-entreprise (Urssaf)." : error || "Calcul en attente de validation par l\u2019API Urssaf.";
     if (card) card.dataset.resultState = r ? "ready" : error ? "error" : "pending";
     const warnings = document.getElementById(`c-result-warnings-${u}`);
@@ -3932,7 +3595,7 @@ function onStructural(e) {
 }
 function onCheck(e) {
 }
-async function addScenario() {
+async function addScenario(openEditor = false) {
   const last = scenarios[scenarios.length - 1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if (!answers) return;
@@ -3945,8 +3608,12 @@ async function addScenario() {
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
+  if (openEditor) setSalaryEditor(true);
   render();
-  setTimeout(scrollToNewCard, 220);
+  setTimeout(() => {
+    if (openEditor) document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    else scrollToNewCard();
+  }, 220);
 }
 async function removeScenario(id) {
   if (scenarios.length <= 1) return;
@@ -4134,7 +3801,7 @@ function renderUrssafConsentNotice() {
       </div>
       <details class="onboarding-consent-details">
         <summary>Quelles donn\xE9es sont transmises ?</summary>
-        <p>En validant ce formulaire, vous autorisez la transmission \xE0 l\u2019API officielle Mon-entreprise de l\u2019Urssaf des param\xE8tres n\xE9cessaires au calcul : salaire brut, dur\xE9e du travail, commune, mutuelle, titres-restaurant et situation fiscale.</p>
+        <p>En validant ce formulaire, vous autorisez la transmission \xE0 l\u2019API officielle Mon-entreprise de l\u2019Urssaf des param\xE8tres n\xE9cessaires au calcul : salaire brut, dur\xE9e du travail, commune, mutuelle et titres-restaurant.</p>
       </details>
     </div>`;
 }
@@ -4467,8 +4134,6 @@ function bindModuleToggle(cardId, toggleId, bodyId) {
     card.classList.toggle("is-open", willOpen);
   });
 }
-bindModuleToggle("foyerModule", "foyerModuleToggle", "foyerModuleBody");
-bindFoyerModule();
 bindModuleToggle("raiseModule", "raiseModuleToggle", "raiseModuleBody");
 var raiseType = "pct";
 var RAISE_PCT_PRESETS = [2, 3, 5, 10];
@@ -4583,7 +4248,7 @@ document.querySelectorAll("[data-maquette-period]").forEach((button) => {
     render();
   });
 });
-document.getElementById("maquetteAddSalary")?.addEventListener("click", () => addScenario());
+document.getElementById("maquetteAddSalary")?.addEventListener("click", () => addScenario(true));
 if (showOnboarding) {
   showOnboardingModal().then((result) => {
     Object.assign(scenarios[0], result);

@@ -58,8 +58,7 @@ async function runSocial(name, input) {
     assertNoEngineErrors(name, result.warnings)
     for (const [label, value] of [
       ['brut calculé', result.grossCalculated],
-      ['net avant impôt', result.netBeforeTax],
-      ['net imposable', result.taxableNet],
+      ['net calculé', result.netBeforeTax],
       ['cotisations salariales', result.employeeContributions]
     ]) assertFinite(label, value)
     const expectedGross = input.allowGrossReintegration
@@ -69,7 +68,7 @@ async function runSocial(name, input) {
       throw new Error(`Brut retourné (${result.grossCalculated}) différent du brut attendu (${expectedGross}).`)
     }
     if (result.netBeforeTax <= 0 || result.netBeforeTax > result.grossCalculated) {
-      throw new Error(`Net avant impôt incohérent : ${result.netBeforeTax} €.`)
+      throw new Error(`Net calculé incohérent : ${result.netBeforeTax} €.`)
     }
     if (input.joursResto > 0) {
       for (const [label, value] of [
@@ -82,8 +81,7 @@ async function runSocial(name, input) {
     checks.push({
       scenario: name,
       brut: round(result.grossCalculated),
-      netAvantImpot: round(result.netBeforeTax),
-      netImposable: round(result.taxableNet),
+      netCalcule: round(result.netBeforeTax),
       cotisationsSalariales: round(result.employeeContributions),
       heuresSupplementaires: round(result.overtimePay),
       mutuelleSalariale: round(result.employeeHealth),
@@ -98,44 +96,6 @@ async function runSocial(name, input) {
   } catch (error) {
     failures.push({ scenario: name, error: error.message })
     return null
-  }
-}
-
-async function runTax(name, input) {
-  console.error(`[fiscal] ${name}`)
-  try {
-    const result = await calculateWithUrssafApi({ commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine', ...input, date }, { fetchImpl: throttledFetch })
-    assertLocationResolved(result)
-    assertNoEngineErrors(name, result.warnings)
-    for (const [label, value] of [
-      ['net avant impôt', result.netBeforeTax],
-      ['net après impôt', result.netAfterTax],
-      ['montant du prélèvement', result.incomeTax],
-      ['taux appliqué', result.calculatedTaxRate]
-    ]) assertFinite(label, value)
-    if (result.calculatedTaxRate < 0 || result.calculatedTaxRate > 100) {
-      throw new Error(`Taux d'imposition hors plage : ${result.calculatedTaxRate} %.`)
-    }
-    if (result.netAfterTax > result.netBeforeTax + 0.01 || result.incomeTax < 0) {
-      throw new Error('Relation net après impôt / prélèvement incohérente.')
-    }
-    // Le modèle renvoie le montant annuel d'impôt ; le net après PAS est mensuel.
-    // Vérifier leur cohérence évite de valider deux champs numériques mais discordants.
-    const monthlyTax = result.incomeTax / 12
-    if (Math.abs((result.netBeforeTax - result.netAfterTax) - monthlyTax) > 0.03) {
-      throw new Error(`Net après impôt incohérent avec l'impôt annuel : écart mensuel ${(result.netBeforeTax - result.netAfterTax).toFixed(2)} €, impôt annualisé / 12 ${monthlyTax.toFixed(2)} €.`)
-    }
-    checks.push({
-      scenario: name,
-      netAvantImpot: round(result.netBeforeTax),
-      netApresImpot: round(result.netAfterTax),
-      impot: round(result.incomeTax),
-      tauxApplique: round(result.calculatedTaxRate),
-      variablesParDefaut: result.missingVariables,
-      avertissements: result.warnings
-    })
-  } catch (error) {
-    failures.push({ scenario: name, error: error.message })
   }
 }
 
@@ -184,29 +144,11 @@ if (social39NoTickets && social39WithTickets) {
   if (Math.abs(netDifference - ticketEmployeeShare) > 0.03) {
     failures.push({
       scenario: 'cohérence du net bancaire avec les titres-restaurant',
-      error: `Le net avant impôt ne reflète pas exactement la part salariale des titres : différence ${netDifference.toFixed(2)} €, part salarié ${ticketEmployeeShare.toFixed(2)} €.`
+      error: `Le net calculé ne reflète pas exactement la part salariale des titres : différence ${netDifference.toFixed(2)} €, part salarié ${ticketEmployeeShare.toFixed(2)} €.`
     })
   }
 }
 
-await runTax('taux personnalisé 10 %', {
-  brut: 2300, dureeType: '35', modeImpot: 'personnalisé', tauxPAS: 10
-})
-await runTax('taux neutre', {
-  brut: 2300, dureeType: '35', modeImpot: 'neutre'
-})
-await runTax('barème standard, célibataire sans enfant', {
-  brut: 2300, dureeType: '35', modeImpot: 'barème',
-  situationFamille: 'célibataire', enfantsACharge: 0
-})
-await runTax('barème standard, couple avec 24 000 € autres revenus', {
-  brut: 2300, dureeType: '35', modeImpot: 'barème',
-  situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000
-})
-await runTax('barème standard, parent isolé avec un enfant', {
-  brut: 2300, dureeType: '35', modeImpot: 'barème',
-  situationFamille: 'célibataire', enfantsACharge: 1, parentIsole: true
-})
 
 const report = {
   schemaVersion: 1,

@@ -7,11 +7,7 @@ const MAJORATION_HEURES_SUP_DEFAUT = 25
 
 const RULES = Object.freeze({
   gross: 'salarié . rémunération . brut',
-  netBeforeTax: 'salarié . rémunération . net . à payer avant impôt',
-  taxableNet: 'salarié . rémunération . net . imposable',
-  netAfterTax: 'salarié . rémunération . net . payé après impôt',
-  incomeTax: 'impôt . montant',
-  calculatedTaxRate: "impôt . taux d'imposition",
+  net: 'salarié . rémunération . net . à payer avant impôt',
   employeeContributions: 'salarié . cotisations . salarié',
   overtimePay: 'salarié . rémunération . heures supplémentaires',
   employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
@@ -130,13 +126,6 @@ export function calculatePublicodes(input = {}) {
   const employeeMealTicketRate = numberInRange(input.partResto ?? 50, 'partResto', 0, 100)
   const employerMealTicketRate = 100 - employeeMealTicketRate
 
-  const taxMode = input.modeImpot === undefined ? null : String(input.modeImpot)
-  if (taxMode !== null && taxMode !== 'personnalisé') {
-    throw new TypeError('Les modes neutre et barème nécessitent les règles fiscales communes, non intégrées à ce prototype.')
-  }
-  const taxRate = taxMode === 'personnalisé'
-    ? numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
-    : null
   const situation = {
     'salarié': 'oui',
     'salarié . contrat': "'CDI'",
@@ -186,22 +175,7 @@ export function calculatePublicodes(input = {}) {
   if (Math.abs(grossCalculated - brut) > 0.005) {
     throw new Error(`Le brut reconstitué (${grossCalculated.toFixed(2)} €) diffère du brut demandé (${brut.toFixed(2)} €) de plus de 0,005 €.`)
   }
-  const netBeforeTax = evaluateNumber(engine, RULES.netBeforeTax)
-  const taxableNet = evaluateNumber(engine, RULES.taxableNet)
-  let netAfterTax = null
-  let incomeTax = null
-  let calculatedTaxRate = null
-  if (taxMode === 'personnalisé') {
-    // Les règles du paquet social attendent une base annuelle pour le PAS.
-    // On annualise le net imposable mensuel récurrent du scénario.
-    situation['impôt . méthode de calcul'] = "'taux personnalisé'"
-    situation['impôt . taux personnalisé'] = percent(taxRate)
-    situation['impôt . revenu imposable'] = `${(taxableNet * 12).toFixed(2)} €/an`
-    engine.setSituation(situation)
-    netAfterTax = evaluateNumber(engine, RULES.netAfterTax)
-    incomeTax = evaluateNumber(engine, RULES.incomeTax)
-    calculatedTaxRate = evaluateNumber(engine, RULES.calculatedTaxRate)
-  }
+  const netCalculated = evaluateNumber(engine, RULES.net)
   const employeeContributions = evaluateNumber(engine, RULES.employeeContributions)
   const overtimePay = evaluateNumber(engine, RULES.overtimePay)
   const employeeHealthCalculated = evaluateNumber(engine, RULES.employeeHealth)
@@ -218,12 +192,7 @@ export function calculatePublicodes(input = {}) {
     baseGross,
     overtimeHours,
     overtimePay,
-    netBeforeTax,
-    taxableNet,
-    netAfterTax,
-    incomeTax,
-    calculatedTaxRate,
-    taxMode,
+    netCalculated,
     employeeContributions,
     employeeHealth: employeeHealthCalculated,
     employerHealth: employerHealthCalculated

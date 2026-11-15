@@ -3,6 +3,7 @@ import { HEURES_BASE } from './ui-utils.mjs';
 // Adaptateurs purs entre l'état OnNet et le contrat de l'API Mon-entreprise.
 
 export function buildUrssafCalculationKey(s, f, date){
+  const calculationDate = date ?? f;
   return JSON.stringify({
     brut:Number(s.brut),
     dureeType:String(s.dureeType),
@@ -16,23 +17,11 @@ export function buildUrssafCalculationKey(s, f, date){
     commune:String(s.commune || 'Pacé').trim(),
     codePostal:String(s.codePostal || ''),
     departement:String(s.departement || ''),
-    date,
-    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
+    date:calculationDate
   });
 }
 
-export function taxInputForFoyer(f){
-  if(f.mode === 'taux'){
-    return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
-  }
-  return {
-    modeImpot:'barème',
-    situationFamille:f.couple ? 'couple' : 'célibataire',
-    enfantsACharge:Number(f.personnesCharge) || 0,
-    parentIsole:!f.couple && f.parentIsole === true,
-    autresRevenusImposables:f.couple ? (Number(f.autresRevenus) || 0) : 0
-  };
-}
+
 
 export function unsupportedCalculationReason(s){
   if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
@@ -51,9 +40,10 @@ export function unsupportedCalculationReason(s){
 }
 
 export function buildUrssafInput(s, f, date){
+  const calculationDate = date ?? f;
   const reason = unsupportedCalculationReason(s);
   if(reason) throw new Error(reason);
-  return Object.assign({
+  return {
     brut:Number(s.brut),
     dureeType:String(s.dureeType),
     mutuelle:Number(s.mutuelle) || 0,
@@ -64,9 +54,9 @@ export function buildUrssafInput(s, f, date){
     commune:String(s.commune || 'Pacé').trim(),
     codePostal:String(s.codePostal || ''),
     departement:String(s.departement || ''),
-    date,
+    date:calculationDate,
     benchmarkOnly:Boolean(s.isBenchmark)
-  }, s.isBenchmark ? {} : taxInputForFoyer(f));
+  };
 }
 
 export function mapUrssafResultToOnNet(result){
@@ -89,7 +79,6 @@ export function mapUrssafResultToOnNet(result){
   const monthly = {
     brutTotal:gross,
     netApres:result.netBeforeTax,
-    netImposable:result.taxableNet,
     cotisNettes:otherEmployeeContributions,
     mutuelle:result.employeeHealth,
     netSocial:result.netBeforeTax + result.mealTicketEmployee
@@ -97,7 +86,6 @@ export function mapUrssafResultToOnNet(result){
   const annual = {
     brutTotal:gross * 12,
     netApres:result.netBeforeTax * 12,
-    netImposable:result.taxableNet * 12
   };
   const tr = {
     totalSalarie:result.mealTicketEmployee,
@@ -117,15 +105,9 @@ export function mapUrssafResultToOnNet(result){
     m:monthly,
     a:annual,
     netApres:monthly.netApres,
-    netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
-    netApresImpot:result.netAfterTax,
-    netApresImpotHoraire:Number.isFinite(result.netAfterTax) && monthlyHours > 0 ? (result.netAfterTax + monthly.mutuelle) / monthlyHours : null,
-    annuelNetApresImpot:result.netAfterTax === null ? null : result.netAfterTax * 12,
-    impotAnnuel:result.incomeTax,
-    tauxImpot:result.calculatedTaxRate,
     brutHoraire:result.baseGross / HEURES_BASE,
-    netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
+    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
     tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
   };
 }

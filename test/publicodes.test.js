@@ -50,12 +50,14 @@ test('35 h : transmet le brut comme salaire de base et aucune heure supplémenta
   near(result.grossCalculated, 3000, 0.02, 'brut reconstitué')
 })
 
-test('calcule un net avant impôt et un net imposable finis', () => {
+test('calcule un net mensuel et les cotisations salariales', () => {
   const result = calculatePublicodes(scenario())
-  assert.ok(result.netBeforeTax > 0)
-  assert.ok(result.netBeforeTax < result.grossCalculated)
-  assert.ok(result.taxableNet > 0)
+  assert.ok(result.netCalculated > 0)
+  assert.ok(result.netCalculated < result.grossCalculated)
   assert.ok(result.employeeContributions > 0)
+  for (const key of ['taxableNet', 'netAfterTax', 'incomeTax', 'calculatedTaxRate', 'taxMode']) {
+    assert.equal(Object.hasOwn(result, key), false, `la sortie ${key} ne doit pas exister`)
+  }
 })
 
 test('convertit les deux parts de mutuelle en montant total et taux employeur', () => {
@@ -85,7 +87,7 @@ test('les titres-restaurant réduisent le net du montant de la part salariale', 
     valeurResto: 8,
     partResto: 50
   }))
-  near(withoutTickets.netBeforeTax - withTickets.netBeforeTax, 84, 0.03, 'retenue titres-restaurant')
+  near(withoutTickets.netCalculated - withTickets.netCalculated, 84, 0.03, 'retenue titres-restaurant')
 })
 
 test('rejette les valeurs de saisie hors limites et les durées inconnues', () => {
@@ -110,19 +112,4 @@ test('39 h : conserve le brut demandé sur plusieurs montants', () => {
     const result = calculatePublicodes(scenario({ brut }))
     near(result.grossCalculated, brut, 0.005, `brut reconstitué pour ${brut} €`)
   }
-})
-
-
-test('le taux personnalisé est appliqué par le modèle fiscal officiel', () => {
-  const result = calculatePublicodes(scenario({ modeImpot: 'personnalisé', tauxPAS: 10 }))
-  near(result.calculatedTaxRate, 10, 0.001, 'taux personnalisé évalué')
-  assert.ok(result.incomeTax > 0, `impôt calculé invalide : ${result.incomeTax}`)
-  assert.ok(result.netAfterTax < result.netBeforeTax)
-  near(result.netBeforeTax - result.netAfterTax, result.taxableNet * 0.1, 0.5, 'retenue au taux personnalisé')
-})
-
-test('refuse un taux personnalisé absent et une configuration familiale incohérente', () => {
-  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'personnalisé' })), /tauxPAS/)
-  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'barème' })), /règles fiscales communes/)
-  assert.throws(() => calculatePublicodes(scenario({ modeImpot: 'neutre' })), /règles fiscales communes/)
 })

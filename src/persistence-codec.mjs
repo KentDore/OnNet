@@ -1,6 +1,5 @@
 import {
   sanitizeScenario,
-  sanitizeFoyer,
   normalizeScenarioIds
 } from './state-normalizers.mjs';
 
@@ -34,7 +33,6 @@ export function deserializePersistedState(raw){
       displayAmt:data.displayAmt,
       displayPeriod:data.displayPeriod,
       openCardIds:restored.openCardIds,
-      foyer:sanitizeFoyer(data.foyer),
       onboardingCompleted:data.onboardingCompleted === true ||
         (data.onboardingCompleted !== false && !legacyPristine)
     };
@@ -55,7 +53,6 @@ export function serializePersistedState(state){
     metric:state.metric,
     displayAmt:state.displayAmt,
     displayPeriod:state.displayPeriod,
-    foyer:state.foyer,
     onboardingCompleted:state.onboardingCompleted,
     openCardIds:[...state.openCardIds]
   });

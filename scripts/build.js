@@ -9,7 +9,7 @@ async function buildRuntime(root){
   const contents = [
     "import { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions } from './src/urssaf-api-client.mjs';",
     "import { scenarioDefaults, ICON, HEURES_BASE, parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc } from './src/ui-utils.mjs';",
-    "import { METRIC_KEYS, METRIC_DEFAUT, FOYER_DEFAUT, sanitizeScenario, sanitizeFoyer, normalizeScenarioIds } from './src/state-normalizers.mjs';",
+    "import { METRIC_KEYS, METRIC_DEFAUT, sanitizeScenario, normalizeScenarioIds } from './src/state-normalizers.mjs';",
     "import { buildUrssafCalculationKey, unsupportedCalculationReason, buildUrssafInput, mapUrssafResultToOnNet } from './src/urssaf-calculation.mjs';",
     "import { createRateLimitedFetch } from './src/rate-limited-fetch.mjs';",
     "import { buildSmicScenario, getSmicGrossTarget } from './src/smic-reference.mjs';",

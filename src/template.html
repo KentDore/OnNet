@@ -32,18 +32,16 @@
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-      <div class="integrated-offers">
-        <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
-        <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
-      </div>
+    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Comparer vos offres</h3><p>Comparez le net réellement obtenu pour chaque proposition.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
 
-    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
 
-    <div class="declaration-inline">
-      <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+    <div class="declaration-inline" id="salaryEditor" aria-labelledby="salaryEditorTitle">
+      <div class="salary-editor-heading"><button type="button" id="salaryEditorBack" class="salary-editor-back">← Retour au comparatif</button><div class="declaration-inline-title"><strong id="salaryEditorTitle">Modifier cette offre</strong><span>Les changements sont recalculés automatiquement.</span></div></div>
+      
       
       <div class="declaration-fields">
         <span class="declaration-field-label">Période du salaire brut</span>
@@ -80,7 +78,7 @@
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
-    <p class="sub">Du brut au net avant impôt.</p>
+    <p class="sub">Du brut au net.</p>
     
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
@@ -127,90 +125,7 @@
     </div>
   </details>
 
-  <section class="situation-section reveal" aria-label="Votre situation" hidden>
-    <div class="modules-head">
-      <h2 class="modules-title">Situation fiscale</h2>
-      <p class="modules-sub">Pour estimer votre impôt.</p>
-    </div>
 
-      <div class="module-card" id="foyerModule">
-        <button type="button" class="module-toggle-head" id="foyerModuleToggle" aria-expanded="false" aria-controls="foyerModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5V20a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1Z"></path><path d="M9 21v-7h6v7"></path></svg></span>
-          <span class="module-info">
-            <span class="module-name">Foyer fiscal</span>
-            <span class="module-desc" id="foyerModuleDesc">Seul(e), sans personne à charge</span>
-          </span>
-          <svg class="module-chevron" aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-        </button>
-        <div class="module-body" id="foyerModuleBody">
-          <div class="hint">Votre foyer ne dépend pas du salaire comparé : ces réglages s'appliquent à <strong>tous</strong> les salaires du comparatif et servent à estimer l'impôt sur le revenu.</div>
-
-          <div class="field-row">
-            <label>Calcul de l'impôt</label>
-            <div class="pill-toggle" id="foyerMode" role="group" aria-label="Mode de calcul de l'impôt" style="width:100%;">
-              <button type="button" data-mode="bareme" aria-pressed="true" style="flex:1;">Estimer au barème</button>
-              <button type="button" data-mode="taux" aria-pressed="false" style="flex:1;">J'ai mon taux</button>
-            </div>
-          </div>
-
-          <div id="foyerBaremeFields">
-            <div class="field-row">
-              <label>Situation</label>
-              <div class="pill-toggle foyer-situation-toggle" id="foyerSituation" role="group" aria-label="Situation fiscale" style="width:100%;">
-                <button type="button" data-foyer="seul" aria-pressed="true" style="flex:1;">Seul(e)</button>
-                <button type="button" data-foyer="commun" aria-pressed="false" style="flex:1;">Marié / PACS</button>
-                <button type="button" data-foyer="concubinage" aria-pressed="false" style="flex:1;">Concubinage</button>
-              </div>
-            </div>
-
-            <div class="two-col">
-              <div class="field-row">
-                <label for="foyerCharges">Personnes à charge</label>
-                <select id="foyerCharges">
-                  <option value="0">0</option>
-                  <option value="1">1</option>
-                  <option value="2">2</option>
-                  <option value="3">3</option>
-                  <option value="4">4</option>
-                </select>
-              </div>
-              <div class="field-row" id="foyerConjointRow" style="display:none;">
-                <label for="foyerConjoint">Revenus du conjoint (€/an)</label>
-                <input type="text" inputmode="decimal" id="foyerConjoint" value="0">
-                <div class="sub-hint" style="margin-bottom:0;">Net imposable annuel.</div>
-              </div>
-            </div>
-            <div class="field-row" id="foyerParentIsoleRow" style="display:none;">
-              <label for="foyerParentIsole" style="display:flex;align-items:center;gap:9px;">
-                <input type="checkbox" id="foyerParentIsole" style="width:auto;margin:0;">
-                Parent isolé (case T)
-              </label>
-              <div class="sub-hint">À cocher uniquement si vous vivez seul(e), sans concubin, et assumez la charge principale ou exclusive d'au moins un enfant. La résidence alternée n'est pas modélisée ici.</div>
-            </div>
-
-            <div class="alert alert-warn" id="foyerWarn" style="display:none;">
-              <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Foyer en couple sans revenus du conjoint : le barème s'applique à 2 parts pour un seul salaire, l'impôt est donc très sous-estimé. Renseignez son net imposable annuel, ou repassez sur « Seul(e) ».</span>
-            </div>
-            <div class="alert alert-info" id="foyerConcubinageInfo" style="display:none;">
-              <span>ⓘ</span><span>En concubinage, chacun fait sa propre déclaration. Les revenus de votre partenaire ne sont pas ajoutés à votre foyer fiscal. Indiquez uniquement les personnes à charge rattachées à votre déclaration.</span>
-            </div>
-          </div>
-
-          <div id="foyerTauxFields" style="display:none;">
-            <div class="field-row">
-              <label for="foyerPasRate">Taux de prélèvement à la source (%)</label>
-              <input type="text" inputmode="decimal" id="foyerPasRate" value="0">
-              <div class="sub-hint" style="margin-bottom:0;">Indiqué sur votre avis d'imposition ou votre bulletin de paie.</div>
-            </div>
-
-            <div class="alert alert-warn" id="foyerPasWarn" style="display:none;">
-              <span><svg aria-hidden="true" class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg></span><span>Ce taux correspond à votre situation actuelle. Appliqué tel quel à un salaire plus élevé, il sous-estime l'impôt réel — car le taux véritable augmente avec le revenu — et donc surestime l'écart entre les salaires comparés.</span>
-            </div>
-          </div>
-
-        </div>
-      </div>
-  </section>
 
   <section class="modules-section reveal" aria-label="Modules complémentaires">
     <div class="modules-head">
@@ -252,12 +167,12 @@
   </details>
 
   <div class="disclaimer reveal">
-    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération et de fiscalité sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue ni un bulletin de paie garanti conforme ni un avis d’imposition.</p>
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue pas un bulletin de paie garanti conforme.</p>
     <details class="more">
       <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
         <div class="section-tag">Source des calculs</div>
-        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations ni l’impôt. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
+        <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
         <div class="section-tag">Hypothèses transmises au moteur</div>
         <p>La version actuelle du raccordement utilise un CDI du secteur privé, non-cadre, en droit commun, sans avantages en nature, primes libres, remboursements de transport spécifiques ni régime particulier (DFS, taux réduits ou impatrié). La commune et le département de l’établissement sont sélectionnés séparément. Le scénario 39 h suppose 4 heures supplémentaires hebdomadaires majorées de 25 %. La mutuelle et les titres-restaurant sont renseignés séparément. Vérifiez ces hypothèses avant d’utiliser le résultat pour une situation réelle.</p>
@@ -266,7 +181,7 @@
         <p>Les primes libres et les 13ᵉ/14ᵉ mois ne sont pas encore modélisés dans le calculateur principal par l’API. Ces scénarios sont signalés comme non calculables : OnNet n’affiche pas d’estimation issue de l’ancien moteur local.</p>
 
         <div class="section-tag">Limites du modèle</div>
-        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Certaines règles fiscales du modèle sont expérimentales ou simplifiées. Le net après impôt reste une estimation, pas un avis d’imposition. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
+        <p>Le moteur Urssaf peut utiliser des valeurs par défaut lorsqu’une variable n’est pas renseignée et peut émettre des avertissements, qui doivent être vérifiés. Les résultats ne remplacent pas un bulletin de paie contrôlé par l’employeur ou un professionnel.</p>
       </div>
     </details>
   </div>

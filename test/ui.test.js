@@ -40,13 +40,11 @@ function makeApiResponse(request, options = {}) {
 
   const employeeContributions = gross * 0.22 + employeeHealth;
   const netBeforeTax = gross - employeeContributions - mealTicketEmployee;
-  const taxableNet = gross * 0.82 + employerHealth;
   const overtimePay = (baseGross / 151.67) * overtimeHours * 1.25;
 
   const values = {
     'salarié . rémunération . brut': gross,
     'salarié . rémunération . net . à payer avant impôt': netBeforeTax,
-    'salarié . rémunération . net . imposable': taxableNet,
     'salarié . cotisations . salarié': employeeContributions,
     'salarié . rémunération . heures supplémentaires': overtimePay,
     'salarié . cotisations . prévoyances . santé . salarié': employeeHealth,
@@ -54,9 +52,6 @@ function makeApiResponse(request, options = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . montant': ticketCount * ticketValue,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': mealTicketEmployer,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . net . payé après impôt': netBeforeTax - 100,
-    'impôt . montant': 1200,
-    "impôt . taux d'imposition": 5,
     'SMIC': options.smicValue ?? 1867.02
   };
 
@@ -158,18 +153,14 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
-  const simplifiedWorkspace = await page.evaluate(() => ({
-    salaryDetailsHidden: document.getElementById('legacySalaryCards')?.hidden === true,
-    taxSettingsHidden: document.querySelector('.advanced-workspace .situation-section')?.hidden === true
-  }));
-  if (!simplifiedWorkspace.salaryDetailsHidden || !simplifiedWorkspace.taxSettingsHidden) {
+  const salaryDetailsHidden = await page.locator('#legacySalaryCards').evaluate(el => el.hidden);
+  if (!salaryDetailsHidden) {
     await context.close();
-    throw new Error('Les fiches détaillées et les réglages fiscaux doivent être masqués dans le parcours normal.');
+    throw new Error('Les fiches détaillées doivent rester masquées dans le parcours normal.');
   }
-  // Les tests fonctionnels continuent d'exercer ces composants internes, qui
-  // restent présents pour préserver les liaisons et la compatibilité runtime.
+  // Les tests fonctionnels ouvrent les anciennes fiches uniquement lorsqu'ils
+  // vérifient leur compatibilité ; aucun réglage fiscal n'existe désormais.
   await page.locator('#legacySalaryCards').evaluate(el => { el.hidden = false; });
-  await page.locator('.advanced-workspace .situation-section').evaluate(el => { el.hidden = false; });
   if (options.advancedOpen !== false && !options.emptyStorage) {
     await page.locator('#advancedWorkspace').evaluate(el => { el.open = true; });
     if (options.legacyCardsOpen !== false) {
@@ -182,6 +173,8 @@ async function openApp(options = {}) {
   }
 
   if (options.consent !== false && !options.emptyStorage) {
+    // Le salaire principal se modifie désormais dans l'éditeur dédié.
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
@@ -190,9 +183,18 @@ async function openApp(options = {}) {
         cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('.benchmark-item').length === 2;
     }, null, { timeout: 20000 });
+    await page.locator('#salaryEditorBack').click();
   }
 
   return { context, page, calls };
+}
+
+async function openSalaryEditor(page, index = 0) {
+  const field = page.locator('#mainSalaryGross');
+  if (!(await field.isVisible())) {
+    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(index).click();
+  }
+  await field.waitFor({ state: 'visible' });
 }
 
 async function addSecondScenario(page, gross = '3200') {
@@ -227,6 +229,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     assert.equal(await page.locator('.urssaf-status-main').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
@@ -347,7 +350,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'la base mensuelle doit rester égale au SMIC officiel 35 h');
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
-    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer votre salaire/);
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer vos offres/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
       const position = selector => [...panel.children].findIndex(node => node.matches(selector));
@@ -362,16 +365,16 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.match(medianMethod, /2\s?238/);
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
-    assert.match(await page.locator('.benchmark-your-salary').innerText(), /VOUS/);
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
-    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .benchmark-your-salary > strong').innerText();
+    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .offer-comparison-net').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net avant impôt mensuel');
+    assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
-      'les fiches ne doivent plus afficher une seconde ligne fiscale estimée');
-    assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net avant impôt calculé par l’API');
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNet) + 30) / 169) < 0.02,
-      'le taux horaire doit exclure la mutuelle salarié du net avant impôt, puis diviser par les 169 h du contrat 39 h');
+      'les fiches ne doivent pas afficher de ligne fiscale');
+    assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet) / 169) < 0.02,
+      'le taux horaire doit refléter le net bancaire réellement versé, divisé par les 169 h du contrat 39 h');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
@@ -413,6 +416,7 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
 test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
@@ -476,6 +480,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
+    await openSalaryEditor(page);
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
@@ -491,6 +496,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', { tim
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
@@ -575,6 +581,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
+    await openSalaryEditor(page);
     const gross = page.locator('#mainSalaryGross');
     await gross.fill('3100');
     await page.waitForFunction(() => {
@@ -607,6 +614,7 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
     await page.reload();
     assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3200');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
@@ -623,7 +631,6 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     await addSecondScenario(page, '3450');
     await page.locator('#shareBtn').click();
     assert.equal(await page.locator('#shareIncludeDetails').isChecked(), false);
-    assert.equal(await page.locator('#shareIncludeFoyer').isChecked(), false);
     await page.locator('#shareCreateBtn').click();
     const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
     assert.match(shareUrl, /#share=/);
@@ -635,7 +642,7 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     assert.equal(payload.scenarios.length, 2);
     assert.equal(payload.scenarios[0].mutuelle, 0);
     assert.equal(payload.scenarios[0].mutuellePat, 0);
-    assert.equal(payload.foyer.situation, 'seul');
+    assert.equal(Object.hasOwn(payload, 'foyer'), false);
 
     const sharedPage = await context.newPage();
     await sharedPage.goto(shareUrl);
@@ -643,62 +650,6 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     const sharedState = await sharedPage.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(sharedState.scenarios[1].brut, 3450);
     assert.equal(await sharedPage.locator('#updateDeclaredSalary').count(), 0);
-  } finally {
-    await context.close();
-  }
-});
-
-test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
-  try {
-    const before = calls.count;
-    await page.locator('#foyerModuleToggle').click();
-    await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    await page.locator('#foyerConjoint').fill('24000');
-    await waitForCalls(calls, before + 2, 15000);
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
-      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
-    ));
-  } finally {
-    await context.close();
-  }
-});
-
-test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
-  try {
-    await page.locator('#foyerModuleToggle').click();
-    await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    await page.locator('#foyerConjoint').fill('24000');
-    await page.waitForFunction(() => {
-      const status = document.getElementById('urssafStatusText')?.textContent || '';
-      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
-      return status.includes('Calculs à jour') &&
-        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
-    }, null, { timeout: 20000 });
-
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
-      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
-    ), 'les revenus du conjoint doivent être transmis pour un foyer marié/PACSé');
-
-    const callsBeforeConcubinage = calls.count;
-    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
-    await page.waitForFunction(() =>
-      document.getElementById('foyerConcubinageInfo')?.style.display !== 'none' &&
-      document.getElementById('foyerConjointRow')?.style.display === 'none'
-    );
-    await page.waitForTimeout(500);
-
-    assert.equal(calls.count, callsBeforeConcubinage,
-      'le concubinage doit réutiliser le résultat individuel déjà calculé, sans nouvelle requête avec les revenus du partenaire');
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'célibataire'" &&
-      !Object.hasOwn(body.situation, 'impôt . foyer fiscal . revenu imposable . autres revenus imposables')
-    ), 'le calcul individuel ne doit pas inclure les revenus du partenaire');
-    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
-    assert.equal(await page.locator('#foyerConjointRow').isVisible(), false);
   } finally {
     await context.close();
   }
@@ -801,14 +752,23 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     const part = card.locator('[data-key="partResto"]');
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
-    const breakdown = await page.locator('.wf-note').innerText();
-    assert.match(breakdown, /21 jours × 8 €/);
-    assert.match(breakdown, /part salarié/);
-    assert.match(breakdown, /part employeur/);
+    const waterfallRows = await page.locator('.waterfall .salary-net-summary-row').allTextContents();
+
+    assert.equal(waterfallRows.length, 3, 'le récapitulatif affiche trois valeurs lorsque les TR sont activés');
+    assert.match(waterfallRows[0], /Net sans TR/);
+    assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
+    assert.match(waterfallRows[2], /Net avec TR/);
+    assert.equal(await page.locator('.waterfall .salary-net-summary-row').nth(1).locator('strong').innerText(), '168 €',
+      'le total des TR doit rester juste même si l’API omet l’une des parts');
     await addSecondScenario(page);
-    const stackTicketDetails = await page.locator('#stackChart .stack-col .stack-net-notr').allTextContents();
-    assert.ok(stackTicketDetails.some(text => text.includes('TR salarié : 84 € · employeur : 84 €')),
-      'le graphique comparatif doit afficher les deux contributions aux titres-restaurant');
+    const stackSummary = page.locator('#stackChart .stack-col .salary-net-summary')
+      .filter({ hasText:'TR — total des deux parts' }).first();
+    assert.equal(await stackSummary.count(), 1, 'le scénario conservant les TR doit avoir son récapitulatif');
+    const stackRows = await stackSummary.locator('.salary-net-summary-row').allTextContents();
+    assert.equal(stackRows.length, 3);
+    assert.match(stackRows[0], /Net sans TR/);
+    assert.match(stackRows[1], /TR — total des deux parts[\s\S]*168 €/);
+    assert.match(stackRows[2], /Net avec TR/);
   } finally {
     await context.close();
   }
@@ -884,17 +844,14 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
-test('un poste peut être renommé directement dans le sélecteur principal', { timeout: 60000 }, async () => {
+test('une offre ouvre un écran de modification dédié', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
-    const tab = page.locator('#maquetteOfferTabs .offer-tab').first();
-    const original = await tab.locator('.offer-tab-name').innerText();
-    await page.getByRole('button', { name:'Renommer '+original }).click();
-    const input = page.locator('#maquetteOfferTabs .offer-tab-rename-input');
-    assert.equal(await input.isVisible(), true);
-    await input.fill('Poste renommé');
-    await input.press('Enter');
-    assert.equal(await page.locator('#maquetteOfferTabs .offer-tab-name').first().innerText(), 'Poste renommé');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true);
+    assert.equal(await page.locator('#salaryEditorTitle').innerText(), 'Modifier — Poste actuel');
+    await page.locator('#salaryEditorBack').click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false);
   } finally {
     await context.close();
   }
@@ -903,15 +860,7 @@ test('un poste peut être renommé directement dans le sélecteur principal', { 
 test('les actions et les barres restent cohérentes avec plusieurs postes sur mobile', { timeout: 90000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.locator('#addScenario').click();
-    await page.locator('#modalAddInput').fill('3400');
-    await page.locator('#modalAddSubmit').click();
-    await page.waitForFunction(() =>
-      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2 &&
-      document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 2 &&
-      document.querySelectorAll('#stackChart .stack-col').length === 2,
-      null, { timeout: 20000 }
-    );
+    await addSecondScenario(page, '3400');
 
     for (const width of [320, 375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
@@ -931,13 +880,18 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
       assert.ok(Math.abs(layout.stages[0].bottom - layout.stages[1].bottom) <= 1,
         `les barres doivent partager la même ligne de base à ${width}px : ${JSON.stringify(layout.stages)}`);
       assert.ok(layout.stages.every(stage => stage.width > 0));
-      assert.ok(layout.actions.every(action => action.visible && action.label === 'Modifier'));
+      assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
 
-    const secondName = await page.locator('#maquetteOfferTabs .offer-tab-name').nth(1).innerText();
-    await page.getByRole('button', { name: 'Supprimer ' + secondName }).click();
+    const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
+    // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
+    // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
+    if (await page.locator('#salaryEditorBack').isVisible()) {
+      await page.locator('#salaryEditorBack').click();
+    }
+    await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 1 &&
@@ -1095,6 +1049,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
@@ -1119,6 +1074,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
@@ -1165,12 +1121,12 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
 });
 
 
-test('le graphique explique explicitement qu’il montre le net avant impôt', { timeout: 60000 }, async () => {
+test('le graphique présente le net sans module fiscal', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel #stackChart');
     assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
-    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
+    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net.');
     assert.equal(await page.locator('#comparePanel .chart-scope-hint').count(), 0, 'la mention redondante sur la source des montants doit être absente');
   } finally {
     await context.close();
@@ -1189,9 +1145,9 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
     assert.equal(await card.locator('.hero-label').innerText(), 'Brut annuel');
     assert.equal(await page.locator('#periodToggle [data-period="an"]').getAttribute('aria-pressed'), 'true');
     await page.locator('#amtToggle [data-amt="net"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt annuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net annuel');
     await page.locator('#periodToggle [data-period="mois"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt mensuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net mensuel');
     assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#periodToggle [data-period="mois"]').getAttribute('aria-pressed'), 'true');
   } finally {
@@ -1214,7 +1170,7 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   }
 });
 
-test('les valeurs principales se modifient dans le formulaire unique en haut de page', { timeout: 60000 }, async () => {
+test('les valeurs principales se modifient dans un écran dédié à l’offre sélectionnée', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
@@ -1222,14 +1178,17 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
     assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
     assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué dans le comparatif');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît après sélection d’une offre');
     const period = page.locator('#mainSalaryPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
     assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
     await period.locator('[data-period="year"]').click();
     assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
-    const situationGap = await page.locator('.declaration-inline').evaluate(el => parseFloat(getComputedStyle(el).marginTop));
-    assert.ok(situationGap >= 16, 'un espacement doit séparer la situation des repères salariaux');
+    await page.locator('#salaryEditorBack').click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire se replie au retour au comparatif');
   } finally {
     await context.close();
   }
@@ -1329,6 +1288,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
 
     // Aligner la capture sur les données d'exemple de la maquette V33.
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     
     await page.waitForFunction(() =>
@@ -1379,8 +1339,16 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
       'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
     assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
       'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
-    assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
-    assert.match(await page.locator('#stackChart').innerText(), /Net avant impôt[\s\S]*Retenues sur le brut/);
+    const summaryRows = await page.locator('#stackChart .waterfall .salary-net-summary-row').allTextContents();
+    assert.equal(summaryRows.length, 3);
+    assert.match(summaryRows[0], /Net sans TR/);
+    assert.match(summaryRows[1], /TR — total des deux parts/);
+    assert.match(summaryRows[2], /Net avec TR/);
+    const parseEuro = value => Number(value.replace(/[^0-9]/g, ''));
+    const summaryAmounts = await page.locator('#stackChart .waterfall .salary-net-summary-row strong').allTextContents();
+    assert.equal(summaryAmounts.length, 3);
+    assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');
+    assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
     assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
 
   } finally {
@@ -1418,6 +1386,7 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     );
     assert.equal(columns, 2, 'les cartes SMIC et médiane restent côte à côte sur mobile');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3000');
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
@@ -1475,7 +1444,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    await page.locator('#maquetteOfferTabs button.offer-tab').nth(1).click();
+    await openSalaryEditor(page, 1);
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&

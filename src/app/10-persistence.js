@@ -13,7 +13,7 @@ function saveState(){
   if(suppressAutosave) return;
   try{
     localStorage.setItem(STORAGE_KEY, serializePersistedState({
-      scenarios, refId, metric, displayAmt, displayPeriod, foyer,
+      scenarios, refId, metric, displayAmt, displayPeriod,
       onboardingCompleted, openCardIds
     }));
   } catch(e){
