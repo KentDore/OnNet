@@ -530,3 +530,25 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   border-color:var(--accent);
   color:var(--accent);
 }
+
+
+/* Fenêtre flottante de modification complète d'une offre. */
+.modal.modal-edit-offer{width:min(720px,calc(100vw - 28px));max-height:min(88vh,900px);overflow:auto;padding:22px 24px;}
+.modal-edit-offer .edit-offer-modal{display:grid;gap:12px;}
+.modal-edit-offer .edit-offer-section{margin:8px 0 0;padding-top:12px;border-top:1px solid var(--line);font-size:12px;font-weight:800;letter-spacing:.04em;color:var(--accent);text-transform:uppercase;}
+.modal-edit-offer .field-row{min-width:0;margin:0;}
+.modal-edit-offer .field-row label{display:block;margin:0 0 6px;font-size:12px;font-weight:650;color:var(--ink-soft);}
+.modal-edit-offer input,.modal-edit-offer select{box-sizing:border-box;width:100%;min-height:42px;padding:9px 11px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink);font:500 14px 'Inter',sans-serif;}
+.modal-edit-offer input:focus,.modal-edit-offer select:focus{outline:2px solid var(--accent);outline-offset:1px;}
+.modal-edit-offer .two-col,.modal-edit-offer .three-col{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;}
+.modal-edit-offer .three-col{grid-template-columns:repeat(3,minmax(0,1fr));}
+.modal-edit-offer .pill-toggle{width:100%;}
+.modal-edit-offer .pill-toggle button{flex:1;min-width:0;padding:8px 10px;font-size:12px;}
+.modal-edit-offer .edit-offer-note{margin:0;padding:10px 12px;border-radius:9px;background:var(--surface-secondary,var(--bg));color:var(--ink-soft);font-size:11px;line-height:1.5;}
+.modal-edit-offer .modal-actions{position:sticky;bottom:-22px;margin:8px -24px -22px;padding:14px 24px;background:var(--surface);border-top:1px solid var(--line);}
+@media(max-width:560px){
+  .modal.modal-edit-offer{width:calc(100vw - 16px);max-height:92vh;padding:16px 14px;}
+  .modal-edit-offer .two-col,.modal-edit-offer .three-col{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .modal-edit-offer .modal-actions{bottom:-16px;margin:8px -14px -16px;padding:12px 14px;}
+}
+@media(max-width:360px){.modal-edit-offer .three-col{grid-template-columns:1fr;}}
