@@ -37,6 +37,8 @@ function addRaiseScenario(type, value){
   const label = type === 'pct' ? `+${value} %` : `+${fmt(value)}`;
   const clone = Object.assign({}, base);
   delete clone.id;
+  delete clone.salaireSaisi;
+  delete clone.salaireSaisiPeriode;
   disableCardSnap();
   const created = mkScenario(Object.assign(clone, {
     name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
