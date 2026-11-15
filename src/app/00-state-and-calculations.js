@@ -21,7 +21,6 @@ function currentCalculationDate(){
 }
 
 
-
 function scenarioCalculationDate(s){
   return currentCalculationDate();
 }
@@ -44,11 +43,6 @@ function calculationKey(s, f){
     fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
   });
 }
-
-
-
-
-
 
 
 function getSmicGross(){
