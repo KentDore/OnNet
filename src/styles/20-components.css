@@ -563,3 +563,46 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none;}
 .modal-edit-offer .edit-offer-mutuelle-editor label{margin:0;font-size:11px;font-weight:600;color:var(--ink-soft);}
 @media(max-width:420px){.modal-edit-offer .edit-offer-mutuelle{flex-wrap:wrap}.modal-edit-offer .edit-offer-mutuelle-editor{grid-template-columns:1fr;}}
+
+
+/* Formulaire d'édition : même structure que l'ajout, sans défilement sur mobile. */
+.modal.modal-edit-offer{
+  width:min(620px,calc(100vw - 28px));
+  max-height:calc(100dvh - 24px);
+  overflow:visible;
+  padding:16px 18px;
+}
+.modal-edit-offer .edit-offer-modal{display:grid;gap:8px;}
+.modal-edit-offer .field-row{min-width:0;margin:0;}
+.modal-edit-offer .field-row label{display:block;margin:0 0 4px;font-size:11px;line-height:1.2;}
+.modal-edit-offer input{min-height:38px;padding:7px 10px;font-size:14px;}
+.modal-edit-offer .pill-toggle button{min-height:38px;padding:7px 12px;}
+.modal-edit-offer .onboarding-benefits{gap:7px;margin-top:2px;}
+.modal-edit-offer .onboarding-mutuelle-note{min-height:38px;padding:6px 10px;}
+.modal-edit-offer .onboarding-tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 10px;}
+.modal-edit-offer .onboarding-tr-heading{margin:0;}
+.modal-edit-offer .onboarding-tr-fields{grid-column:1/-1;padding-top:7px;}
+.modal-edit-offer .onboarding-tr-fields .three-col{gap:7px;}
+.modal-edit-offer .onboarding-tr-fields .field-row label{font-size:10px;}
+.modal-edit-offer .onboarding-consent{padding:8px 10px;}
+.modal-edit-offer .onboarding-consent-details{margin-top:4px;}
+.modal-edit-offer .edit-offer-mutuelle-editor{display:grid;grid-template-columns:auto minmax(90px,140px);align-items:center;gap:8px;padding:0 10px 7px;}
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none;}
+.modal-edit-offer .edit-offer-mutuelle-editor label{font-size:11px;}
+.modal-edit-offer .edit-offer-mutuelle-editor input{min-height:34px;}
+.modal-edit-offer .edit-offer-mutuelle-value{border:0;background:transparent;color:var(--ink);font:650 12px 'Inter',sans-serif;padding:4px 0;}
+.modal-edit-offer .modal-actions{display:flex;justify-content:flex-end;gap:9px;margin:4px 0 0;padding:8px 0 0;background:var(--surface);border-top:1px solid var(--line);}
+.modal-edit-offer .modal-actions .btn{min-height:40px;padding:8px 16px;}
+@media(max-width:560px){
+  .modal.modal-edit-offer{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:12px 12px;}
+  .modal-edit-offer .edit-offer-modal{gap:7px;}
+  .modal-edit-offer .onboarding-consent-copy small{font-size:10px;}
+  .modal-edit-offer .onboarding-tr{padding:7px 8px;}
+  .modal-edit-offer .modal-actions{margin-top:2px;padding-top:7px;}
+}
+@media(max-height:760px){
+  .modal.modal-edit-offer{padding-top:9px;padding-bottom:9px;}
+  .modal-edit-offer .edit-offer-modal{gap:5px;}
+  .modal-edit-offer .onboarding-mutuelle-note{min-height:34px;}
+  .modal-edit-offer .field-row label{margin-bottom:3px;}
+}
