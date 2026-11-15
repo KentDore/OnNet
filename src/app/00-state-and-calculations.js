@@ -26,8 +26,6 @@ function scenarioCalculationDate(s){
 }
 
 
-
-
 function getSmicGross(){
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
