@@ -374,6 +374,10 @@ let maquetteComparisonPeriod='hour';
 
 
 function renderMaquetteControls(computedOverride){
+  // Synchronise l'état accessible et visuel des périodes après chaque rendu.
+  document.querySelectorAll('[data-maquette-period]').forEach(button=>{
+    button.setAttribute('aria-pressed',String(button.dataset.maquettePeriod===maquetteComparisonPeriod));
+  });
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
   if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
