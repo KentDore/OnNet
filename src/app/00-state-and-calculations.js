@@ -43,7 +43,7 @@ function getCachedSmicResult(){
   if(!base) return null;
   const scenario = buildSmicScenario(base,getSmicGross());
   if(!scenario) return null;
-  return urssafCalculationCache.getResult(buildUrssafCalculationKey(scenario,foyer,scenarioCalculationDate(scenario))) || null;
+  return urssafCalculationCache.getResult(buildUrssafCalculationKey(scenario,scenarioCalculationDate(scenario))) || null;
 }
 
 const queuedUrssafFetch = createRateLimitedFetch(
