@@ -40,7 +40,7 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="scenario-edit-hint">
-      Salaire brut et durée du travail modifiables dans « Votre situation », en haut de page.
+      Les paramètres du contrat se modifient depuis le bouton « Modifier cette offre ».
       ${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}
     </div>
 
@@ -370,46 +370,17 @@ function renderBenchmarks(computed){
   return '<div class="benchmark-grid">'+smicCard+medianCard+'</div>';
 }
 // ---------- Rendu ----------
-let maquetteComparisonPeriod='hour';
-let mainSalaryInputPeriod='month';
-let salaryEditorOpen=false;
-function setSalaryEditor(open){
-  salaryEditorOpen=!!open;
-  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
-  if(salaryEditorOpen){
-    const title=document.getElementById('salaryEditorTitle');
-    const selected=findScenario(refId)||scenarios[0];
-    if(title) title.textContent='Modifier — '+(selected?.name||'cette offre');
-  }
-}
-function applyDeclaredSalaryFromForm(){
-  const scenario=findScenario(refId)||scenarios[0];
-  const gross=document.getElementById('mainSalaryGross');
-  const period=document.getElementById('mainSalaryPeriod');
-  const hours=document.getElementById('mainSalaryHours');
-  const raw=Number(gross?.value);
-  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
-  scenario.brut=mainSalaryInputPeriod==='year'?Math.round(raw/12*100)/100:raw;
-  scenario.dureeType=hours?.value==='39'?'39':'35';
-  scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
-  scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
-  scenario.partResto=Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share)||50;
-  // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
-  urssafSessionState.grantConsent();
-  saveState();
-  render();
-  scheduleUrssafCalculations(false,false);
-}
+let maquetteComparisonPeriod='month';
+
 
 function renderMaquetteControls(computedOverride){
+  // Synchronise l'état accessible et visuel des périodes après chaque rendu.
+  document.querySelectorAll('[data-maquette-period]').forEach(button=>{
+    button.setAttribute('aria-pressed',String(button.dataset.maquettePeriod===maquetteComparisonPeriod));
+  });
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
   if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
-  const back=document.getElementById('salaryEditorBack');
-  if(back && back.dataset.bound!=='true'){
-    back.addEventListener('click',()=>{setSalaryEditor(false);render();document.getElementById('maquetteYourSalary')?.scrollIntoView({behavior:'smooth',block:'start'});});
-    back.dataset.bound='true';
-  }
   const tabs=document.getElementById('maquetteOfferTabs');
   if(tabs) tabs.replaceChildren();
   if(tabs) scenarios.forEach((scenario,index)=>{
@@ -420,7 +391,7 @@ function renderMaquetteControls(computedOverride){
     button.setAttribute('aria-pressed',String(scenario.id===refId));
     const name=document.createElement('span');name.className='offer-tab-name';name.textContent=scenario.name;button.append(name);
     const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
-    button.addEventListener('click',()=>{refId=scenario.id;setSalaryEditor(true);render();document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    button.addEventListener('click',()=>{refId=scenario.id;saveState();render();});
     item.append(button);
     const actions=document.createElement('div');actions.className='offer-tab-actions';
     if(scenarios.length>1){
@@ -430,68 +401,6 @@ function renderMaquetteControls(computedOverride){
     }
     item.append(actions);tabs?.append(item);
   });
-  const selected=findScenario(refId)||scenarios[0];
-  document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
-  const period=document.getElementById('mainSalaryPeriod');
-  const gross=document.getElementById('mainSalaryGross');
-  const hours=document.getElementById('mainSalaryHours');
-  const mealDays=document.getElementById('mainMealDays');
-  const mealValue=document.getElementById('mainMealValue');
-  const mealShare=document.getElementById('mainMealShare');
-  const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
-  if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
-    period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===mainSalaryInputPeriod)));gross.value=String(Math.round(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)*100)/100);hours.value=selected.dureeType;
-    if(mealDays) mealDays.value=String(selected.joursResto||0);
-    if(mealValue) mealValue.value=String(selected.valeurResto||0);
-    if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
-  }
-  const selectedId=(findScenario(refId)||scenarios[0])?.id;
-  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
-  const mutuelleText=document.getElementById('mainSalaryMutuelleText');
-  if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
-  // Un seul raccordement durable : les rerendus ne doivent ni remplacer ni perdre
-  // les événements de saisie du formulaire.
-  if(gross){
-    gross.oninput=null;
-    gross.onchange=null;
-    if(gross.dataset.onnetSalaryBound!=='true'){
-      gross.addEventListener('input',applyDeclaredSalaryFromForm);
-      gross.addEventListener('change',applyDeclaredSalaryFromForm);
-      gross.dataset.onnetSalaryBound='true';
-    }
-  }
-  if(period && period.dataset.onnetSalaryBound!=='true'){
-    period.addEventListener('click',event=>{
-      const button=event.target.closest('button[data-period]');
-      if(!button) return;
-      mainSalaryInputPeriod=button.dataset.period;
-      period.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-      const selected=findScenario(refId)||scenarios[0];
-      if(selected && gross) gross.value=String(Math.round(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)*100)/100);
-      applyDeclaredSalaryFromForm();
-    });
-    period.dataset.onnetSalaryBound='true';
-  }
-  if(hours && hours.dataset.onnetSalaryBound!=='true'){
-    hours.addEventListener('change',applyDeclaredSalaryFromForm);
-    hours.dataset.onnetSalaryBound='true';
-  }
-  [mealDays,mealValue].forEach(field=>{
-    if(field && field.dataset.onnetSalaryBound!=='true'){
-      field.addEventListener('change',applyDeclaredSalaryFromForm);
-      field.addEventListener('input',applyDeclaredSalaryFromForm);
-      field.dataset.onnetSalaryBound='true';
-    }
-  });
-  if(mealShare && mealShare.dataset.onnetSalaryBound!=='true'){
-    mealShare.addEventListener('click',event=>{
-      const button=event.target.closest('button[data-share]');
-      if(!button) return;
-      mealShare.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-      applyDeclaredSalaryFromForm();
-    });
-    mealShare.dataset.onnetSalaryBound='true';
-  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     const allComputed=computedOverride||getCurrentComputed();
@@ -501,8 +410,8 @@ function renderMaquetteControls(computedOverride){
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly===null?null:hourly*factor;
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
-        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4><button type="button" class="offer-rename-button" data-rename-offer="'+s.id+'">Renommer</button></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'">Définir comme référence</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
-        '<div class="offer-comparison-meta">Contrat : '+fmt(s.brut)+' brut / mois · '+weekly+' h / semaine</div>'+
+        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir réf.</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
+        '<div class="offer-comparison-meta">Contrat : '+(s.salaireSaisiPeriode==='an'&&Number.isFinite(Number(s.salaireSaisi))?fmt(s.salaireSaisi)+' brut / an':fmt(s.brut)+' brut / mois')+' · '+weekly+' h / semaine</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
     }).join('');
@@ -510,8 +419,6 @@ function renderMaquetteControls(computedOverride){
       summary.addEventListener('click',event=>{
         const remove=event.target.closest('[data-delete-offer]');
         if(remove){removeScenario(Number(remove.dataset.deleteOffer));return;}
-        const rename=event.target.closest('[data-rename-offer]');
-        if(rename){renameScenario(Number(rename.dataset.renameOffer));return;}
         const reference=event.target.closest('[data-set-offer-reference]');
         if(reference){
           refId=Number(reference.dataset.setOfferReference);
@@ -521,15 +428,20 @@ function renderMaquetteControls(computedOverride){
         }
         const button=event.target.closest('[data-edit-offer]');
         if(!button)return;
-        refId=Number(button.dataset.editOffer);
-        setSalaryEditor(true);
-        render();
-        document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+        const scenario=findScenario(Number(button.dataset.editOffer));
+        if(!scenario) return;
+        showEditScenarioModal(scenario).then(answers=>{
+          if(!answers) return;
+          Object.assign(scenario,answers);
+          urssafSessionState.grantConsent();
+          saveState();
+          render();
+          scheduleUrssafCalculations(false,false);
+        });
       });
       summary.dataset.editBound='true';
     }
   }
-  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
   if(status && mount && status.parentElement!==mount) mount.appendChild(status);
 }

@@ -31,42 +31,15 @@
 
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
-    <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Vos offres</h3><p>Gérez vos propositions et leurs paramètres de contrat.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
+    <div class="comparison-subhead comparison-subhead-actions"><h2 id="maquetteCompareTitle">Vos offres</h2><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
 
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
 
-    <div class="declaration-inline" id="salaryEditor" aria-labelledby="salaryEditorTitle">
-      <div class="salary-editor-heading"><button type="button" id="salaryEditorBack" class="salary-editor-back">← Retour au comparatif</button><div class="declaration-inline-title"><strong id="salaryEditorTitle">Modifier cette offre</strong><span>Les changements sont recalculés automatiquement.</span></div></div>
-      
-      
-      <div class="declaration-fields">
-        <span class="declaration-field-label">Période du salaire brut</span>
-        <div class="pill-toggle period-choice-toggle declaration-period-toggle" id="mainSalaryPeriod" role="group" aria-label="Période du salaire brut">
-          <button type="button" data-period="month" aria-pressed="true">Mensuel</button>
-          <button type="button" data-period="year" aria-pressed="false">Annuel</button>
-        </div>
-        <label for="mainSalaryGross">Salaire brut (€)</label>
-        <input id="mainSalaryGross" type="number" min="1" max="1200000" value="2500" inputmode="decimal">
-        <label for="mainSalaryHours">Base horaire</label>
-        <select id="mainSalaryHours"><option value="35">35 h / semaine</option><option value="39">39 h / semaine</option></select>
-        <div class="declaration-benefits" aria-label="Titres-restaurant">
-          <strong class="declaration-benefits-title">Titres-restaurant</strong>
-          <div class="declaration-benefits-grid">
-            <div><label for="mainMealDays">Jours par mois</label><input id="mainMealDays" type="number" min="0" max="31" step="1" value="0" inputmode="numeric"></div>
-            <div><label for="mainMealValue">Valeur du titre (€)</label><input id="mainMealValue" type="number" min="0" max="500" step="0.01" value="0" inputmode="decimal"></div>
-            <div class="meal-share-field"><span class="meal-share-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="mainMealShare" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
-          </div>
-          <p>Sans titres-restaurant, laissez les valeurs à zéro. La part employeur est calculée automatiquement.</p>
-        </div>
-        <div class="benefit-note declaration-mutuelle"><strong>Mutuelle</strong><span id="mainSalaryMutuelleText">30 € / mois déduits de votre net (part salarié).</span></div>
-      </div>
-      <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
-    </div>
-  </section>
+    <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
+ </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>

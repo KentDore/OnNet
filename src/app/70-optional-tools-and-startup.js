@@ -37,6 +37,8 @@ function addRaiseScenario(type, value){
   const label = type === 'pct' ? `+${value} %` : `+${fmt(value)}`;
   const clone = Object.assign({}, base);
   delete clone.id;
+  delete clone.salaireSaisi;
+  delete clone.salaireSaisiPeriode;
   disableCardSnap();
   const created = mkScenario(Object.assign(clone, {
     name: `${base.name} ${label}`, brut: Math.round(newBrut * 100) / 100
@@ -143,14 +145,14 @@ if(!loadedFromShare && location.hash &&
 }
 // Les interactions V33 doivent fonctionner aussi pour les visiteurs qui ont déjà
 // terminé l'onboarding : elles ne dépendent pas de l'affichage de la modale initiale.
-document.querySelectorAll('[data-maquette-period]').forEach(button=>{
-  button.addEventListener('click',()=>{
-    maquetteComparisonPeriod=button.dataset.maquettePeriod;
-    metric='netHoraire';
-    render();
-  });
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-maquette-period]');
+  if(!button) return;
+  maquetteComparisonPeriod=button.dataset.maquettePeriod;
+  metric='netHoraire';
+  render();
 });
-document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario(true));
+document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
 
 if(showOnboarding){
   showOnboardingModal().then(result => {

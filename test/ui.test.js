@@ -173,9 +173,9 @@ async function openApp(options = {}) {
   }
 
   if (options.consent !== false && !options.emptyStorage) {
-    // Le salaire principal se modifie désormais dans l'éditeur dédié.
+    // Une validation explicite dans la fenêtre d'édition accorde le consentement Urssaf.
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -183,14 +183,13 @@ async function openApp(options = {}) {
         cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('.benchmark-item').length === 2;
     }, null, { timeout: 20000 });
-    await page.locator('#salaryEditorBack').click();
   }
 
   return { context, page, calls };
 }
 
 async function openSalaryEditor(page, index = 0) {
-  const field = page.locator('#mainSalaryGross');
+  const field = page.locator('#editOfferGross');
   if (!(await field.isVisible())) {
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(index).click();
   }
@@ -229,7 +228,8 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -329,8 +329,8 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '39',
-      'le formulaire de référence doit conserver la durée 39 h');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '39',
+      'le contrat de référence doit conserver la durée 39 h');
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
@@ -350,21 +350,15 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Vos offres/);
-    assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
-    const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
-      const position = selector => [...panel.children].findIndex(node => node.matches(selector));
-      return {
-        comparison: position('.comparison-subhead'),
-        salarySituation: position('.declaration-inline')
-      };
-    });
-    assert.ok(sectionOrder.comparison >= 0 && sectionOrder.comparison < sectionOrder.salarySituation,
-      'le comparatif complet doit précéder le formulaire Votre situation');
+    assert.match(await page.locator('.comparison-period').innerText(), /Mois/i,
+      'la comparaison doit être mensuelle par défaut');
+    assert.equal(await page.locator('.declaration-inline').count(), 0,
+      'l’éditeur flottant remplace le formulaire intégré à la page');
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
     assert.match(medianMethod, /2\s?238/);
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
+    assert.equal(await page.locator('.declaration-inline').count(), 0, 'aucun formulaire intégré ne doit doubler le comparatif');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
     const benchmarkHourlyNet = await page.locator('#stackChart .comparison-offer-value').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
@@ -372,8 +366,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
       'les fiches ne doivent pas afficher de ligne fiscale');
     assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet) / 169) < 0.02,
-      'le taux horaire doit refléter le net bancaire réellement versé, divisé par les 169 h du contrat 39 h');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet)) < 0.02,
+      'la valeur du comparatif mensuel doit correspondre au net bancaire mensuel de la fiche');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
@@ -416,7 +410,8 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
@@ -479,8 +474,8 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
-    await openSalaryEditor(page);
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
@@ -496,7 +491,8 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', { tim
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
       null, { timeout: 12000 }
@@ -581,8 +577,9 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
   try {
     const before = calls.count;
     await openSalaryEditor(page);
-    const gross = page.locator('#mainSalaryGross');
+    const gross = page.locator('#editOfferGross');
     await gross.fill('3100');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       return state && state.scenarios[0].brut === 3100;
@@ -594,7 +591,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     );
     assert.ok(calls.count > before);
     await page.reload();
-    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3100');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3100);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
@@ -614,7 +611,8 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
     assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('3200');
+    await page.locator('#editOfferGross').fill('3200');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
     , null, { timeout: 20000 });
@@ -845,14 +843,18 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
-test('une offre ouvre un écran de modification dédié', { timeout: 60000 }, async () => {
+test('une offre ouvre une fenêtre flottante de modification complète', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true);
-    assert.equal(await page.locator('#salaryEditorTitle').innerText(), 'Modifier — Poste actuel');
-    await page.locator('#salaryEditorBack').click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false);
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    assert.equal(await page.locator('#editOfferCommune').count(), 1);
+    assert.equal(await page.locator('#editOfferMutuellePat').count(), 1);
+    assert.equal(await page.locator('#editOfferMonths').count(), 1);
+    assert.equal(await page.locator('#editOfferBonus').count(), 1);
+    await page.locator('#editOfferCancel').click();
+    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
   } finally {
     await context.close();
   }
@@ -891,9 +893,6 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     const secondName = await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText();
     // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
     // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
-    if (await page.locator('#salaryEditorBack').isVisible()) {
-      await page.locator('#salaryEditorBack').click();
-    }
     await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
@@ -962,6 +961,14 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
     const year = page.locator('[data-maquette-period="year"]');
     const valueLabel = page.locator('#stackChart .comparison-offer-value-label');
     const valueUnit = page.locator('#stackChart .comparison-offer-value small');
+    assert.equal(await valueLabel.innerText(), 'Net mensuel · avant impôt');
+    assert.equal(await month.getAttribute('aria-pressed'), 'true', 'le mensuel est sélectionné par défaut');
+    assert.equal(await hour.getAttribute('aria-pressed'), 'false');
+    assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueUnit.innerText(), '/ mois');
+    await hour.click();
+    assert.equal(await hour.getAttribute('aria-pressed'), 'true');
+    assert.equal(await month.getAttribute('aria-pressed'), 'false');
     assert.equal(await valueLabel.innerText(), 'Net horaire · avant impôt');
     assert.equal(await valueUnit.count(), 0, 'le taux horaire contient déjà son unité €/h');
     for (const result of await page.locator('#benchmarkMount .benchmark-result').allTextContents()) {
@@ -1073,7 +1080,8 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -1098,7 +1106,8 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
@@ -1199,19 +1208,20 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'pas de second champ de salaire dans la fiche détaillée');
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
-    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
-    assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué dans le comparatif');
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Modifier cette offre/);
+    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'aucune fenêtre ne reste ouverte dans le comparatif');
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît après sélection d’une offre');
-    const period = page.locator('#mainSalaryPeriod');
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true, 'la fenêtre flottante apparaît après sélection d’une offre');
+    const period = page.locator('#editOfferPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
-    assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
-    await period.locator('[data-period="year"]').click();
-    assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await period.locator('[data-period="mois"]').getAttribute('aria-pressed'), 'true');
+    await period.locator('[data-period="an"]').click();
+    assert.equal(await period.locator('[data-period="an"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
-    await page.locator('#salaryEditorBack').click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire se replie au retour au comparatif');
+    
+    await page.locator('#editOfferCancel').click();
+    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
+    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'la fenêtre se ferme à l’annulation');
   } finally {
     await context.close();
   }
@@ -1249,7 +1259,7 @@ test('les anciennes fiches sont repliées mais restent accessibles à la demande
     await card.locator('details.more > summary').click();
     assert.equal(await card.locator('details.more').evaluate(el => el.open), true);
     assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'le salaire se modifie uniquement dans le formulaire principal');
-    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Modifier cette offre/);
   } finally {
     await context.close();
   }
@@ -1310,51 +1320,30 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     });
     console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
 
-    // Aligner la capture sur les données d'exemple de la maquette V33.
+    // Aligner la capture sur un exemple de brut mensuel.
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
-    
+    await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
-      document.getElementById('mainSalaryGross')?.value === '2500',
+      JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 2500,
       null, { timeout:20000 });
-    await page.locator('#mainSalaryGross').blur();
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
-    const formLayout = await page.evaluate(() => {
-      const rect = selector => {
-        const r = document.querySelector(selector).getBoundingClientRect();
-        return { left:r.left, top:r.top, width:r.width, right:r.right };
-      };
-      return {
-        period:rect('#mainSalaryPeriod'),
-        gross:rect('#mainSalaryGross'),
-        hours:rect('#mainSalaryHours'),
-        mutuelle:rect('.declaration-mutuelle'),
-        fields:rect('.declaration-fields')
-      };
-    });
-    assert.ok(formLayout.gross.top > formLayout.period.top,
-      'les champs de saisie restent empilés comme dans la V33');
-    assert.ok(formLayout.hours.top > formLayout.gross.top,
-      'la base horaire suit le salaire brut');
-    assert.ok(formLayout.mutuelle.top > formLayout.hours.top,
-      'la note Mutuelle suit les champs de saisie');
-    assert.ok(Math.abs(formLayout.period.width - formLayout.fields.width) < 2,
-      'les champs occupent toute la largeur du formulaire');
-    assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
-      'la note Mutuelle occupe toute la largeur du formulaire');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.ok(await page.locator('.modal-edit-offer').evaluate(el => el.scrollHeight > 0));
+    await page.locator('#editOfferCancel').click();
 
-    // Les captures doivent montrer le produit réellement comparatif, pas rester
-    // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
-    await page.locator('#salaryEditorBack').click();
+    // Les captures doivent montrer le comparatif, sans fenêtre ouverte.
+    
     await addSecondScenario(page, '3200');
-    await page.locator('#salaryEditorBack').click();
+    
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 2,
       'les captures présentent deux offres comparables');
-    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 2,
-      'les deux offres sont visibles et renommables');
+    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 0,
+      'le renommage est réservé à la fenêtre de modification');
 
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
@@ -1389,7 +1378,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.equal(summaryAmounts.length, 3);
     assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');
     assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
-    assert.match(await page.locator('#stackHint').innerText(), /horaire/);
+    assert.match(await page.locator('#stackHint').innerText(), /mensuel/);
     assert.match(await page.locator('#stackHint').innerText(), /avant impôt/);
 
   } finally {
@@ -1411,7 +1400,7 @@ test('les cartes de comparaison affichent la même unité après les calculs API
         chart?.children.length === 2 && chart.parentElement?.hidden === false &&
         legend?.hidden === true && chart.querySelectorAll('.comparison-offer-card').length === 2;
     }, null, { timeout:20000 });
-    assert.match(await page.locator('#stackHint').innerText(), /horaire.*avant impôt/);
+    assert.match(await page.locator('#stackHint').innerText(), /mensuel.*avant impôt/);
   } finally {
     await context.close();
   }
@@ -1440,15 +1429,16 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
       'les deux repères sont alignés sur la même ligne');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('3000');
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferGross').fill('3000');
+    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
     );
     const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
     assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3000');
-    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '35');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3000);
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '35');
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0);
     assert.equal(await card.locator('[data-duree]').count(), 0);
@@ -1463,11 +1453,10 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     await addSecondScenario(page, '3200');
     // L’ajout ouvre l’éditeur de l’offre ; revenir au comparatif avant de tester
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
-    await page.locator('#salaryEditorBack').click();
-    await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).click();
-    const renameInput = page.locator('#renameOfferInput');
-    await renameInput.fill('Proposition Rennes');
-    await page.locator('#renameOfferSave').click();
+    
+    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    await page.locator('#editOfferName').fill('Proposition Rennes');
+    await page.locator('#editOfferSave').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText(), 'Proposition Rennes');
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
@@ -1525,7 +1514,10 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
 
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
+    // Le repère SMIC suit l'offre de référence : sélectionner explicitement l'offre 35 h.
+    await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
@@ -1552,7 +1544,7 @@ test('le runtime applicatif est encapsulé sans exposer ses fonctions internes',
   const { context, page } = await openApp({ consent: false });
   try {
     const runtime = await page.evaluate(() => ({
-      appReady: Boolean(document.getElementById('mainSalaryGross')),
+      appReady: Boolean(document.getElementById('maquetteAddSalary')),
       urssafClientReady: typeof window.OnNetUrssafApi?.calculateWithUrssafApi === 'function',
       rendererExposed: typeof window.renderCard !== 'undefined',
       utilityExposed: typeof window.parseNum !== 'undefined',
@@ -1591,7 +1583,8 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
   try {
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -1601,7 +1594,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
         document.querySelectorAll('#stackChart .comparison-offer-card').length === 2 &&
         (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour');
     }, null, { timeout: 20000 });
-    await page.locator('#salaryEditorBack').click();
+    
 
     const source = await page.evaluate(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -1650,6 +1643,108 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
       assert.ok(Math.abs(parseEuro(item.value) - parseEuro(source.monthlyNet[item.id]) * 12) < 0.10,
         `le net annuel de l’offre ${item.id} doit être cohérent avec ses 12 mensualités`);
     }
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('conserve exactement un brut annuel saisi et propose un nom facultatif', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    assert.equal(await page.locator('#maquetteCompareTitle').innerText(), 'Vos offres');
+    assert.equal(await page.locator('.offer-rename-button').count(), 0,
+      'le renommage ne doit plus être proposé sur les cartes');
+    await page.locator('#maquetteAddSalary').click();
+    assert.equal(await page.locator('#modalAddName').inputValue(), 'Offre 2');
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddName').fill('');
+    await page.locator('#modalAddSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.length === 2 &&
+        state.scenarios[1].salaireSaisi === 29500 &&
+        state.scenarios[1].salaireSaisiPeriode === 'an' &&
+        document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2;
+    }, null, { timeout: 20000 });
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[1]);
+    assert.equal(saved.name, 'Offre 2', 'le nom proposé doit rester utilisable si le champ facultatif est vide');
+    assert.equal(saved.brut, 29500 / 12,
+      'le brut mensuel interne doit conserver la précision issue du brut annuel');
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8,
+      'reconstituer l’annuel ne doit pas produire 29 499,96 €');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('conserve aussi le brut annuel saisi pendant le premier démarrage', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ emptyStorage: true, consent: false });
+  try {
+    await page.locator('#modalOnboardingPeriod [data-period="an"]').click();
+    await page.locator('#modalOnboardingInput').fill('29500');
+    await page.locator('#modalOnboardingSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.salaireSaisi === 29500 &&
+        state.scenarios[0].salaireSaisiPeriode === 'an' &&
+        Number.isFinite(state.scenarios[0].brut);
+    });
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.salaireSaisi, 29500);
+    assert.equal(saved.salaireSaisiPeriode, 'an');
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('la fenêtre de modification conserve tous les paramètres avancés d’une offre', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
+      status:200, contentType:'application/json',
+      body:JSON.stringify([{
+        nom:'Rennes', code:'35238', codesPostaux:['35000'],
+        departement:{nom:'Ille-et-Vilaine'}, codeDepartement:'35'
+      }])
+    }));
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').fill('Poste Rennes');
+    await page.locator('#editOfferPeriod [data-period="an"]').click();
+    await page.locator('#editOfferGross').fill('29500');
+    await page.locator('#editOfferHours').selectOption('39');
+    await page.locator('#editOfferCommune').fill('Rennes');
+    await page.locator('.modal-edit-offer .commune-option').first().click();
+    await page.locator('#editOfferMutuelle').fill('42,50');
+    await page.locator('#editOfferMutuellePat').fill('55');
+    await page.locator('#editOfferMealDays').fill('20');
+    await page.locator('#editOfferMealValue').fill('9,50');
+    await page.locator('#editOfferMealShare').fill('40');
+    await page.locator('#editOfferMonths').fill('13');
+    await page.locator('#editOfferBonus').fill('1200');
+    await page.locator('#editOffer13thBase').selectOption('ensemble');
+    await page.locator('#editOfferSave').click();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.name, 'Poste Rennes');
+    assert.equal(saved.salaireSaisi, 29500);
+    assert.equal(saved.salaireSaisiPeriode, 'an');
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
+    assert.equal(saved.dureeType, '39');
+    assert.equal(saved.commune, 'Rennes');
+    assert.equal(saved.codePostal, '35000');
+    assert.equal(saved.departement, 'Ille-et-Vilaine');
+    assert.equal(saved.mutuelle, 42.5);
+    assert.equal(saved.mutuellePat, 55);
+    assert.equal(saved.joursResto, 20);
+    assert.equal(saved.valeurResto, 9.5);
+    assert.equal(saved.partResto, 40);
+    assert.equal(saved.nbMois, 13);
+    assert.equal(saved.primes, 1200);
+    assert.equal(saved.treiziemeMoisBase, 'ensemble');
   } finally {
     await context.close();
   }

@@ -158,14 +158,14 @@ function onStructural(e){
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
 let addScenarioPending = false;
-async function addScenario(openEditor=false){
+async function addScenario(){
   if(addScenarioPending || modalState) return;
   addScenarioPending = true;
   const trigger = document.getElementById('maquetteAddSalary');
   if(trigger) trigger.disabled = true;
   try{
     const last = scenarios[scenarios.length-1];
-    const answers = await showAddScenarioModal(last.brut, last.dureeType);
+    const answers = await showAddScenarioModal(last.brut, last.dureeType, 'Offre ' + (scenarios.length + 1));
     if(!answers) return;
     urssafSessionState.grantConsent();
     disableCardSnap();
@@ -176,11 +176,9 @@ async function addScenario(openEditor=false){
     }, answers));
     scenarios.push(created);
     justAddedId = created.id;
-    if(openEditor) setSalaryEditor(true);
     render();
     setTimeout(()=>{
-      if(openEditor) document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
-      else scrollToNewCard();
+      scrollToNewCard();
     }, 220);
   } finally {
     addScenarioPending = false;
