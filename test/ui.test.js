@@ -1465,7 +1465,7 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
       assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1,
         'les repères ne débordent pas à '+width+' px');
     }
-    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\\s+France/);
+    assert.match((await page.locator('#benchmarkMount').innerText()).replace(/\s+/g, ' '), /Zone France/);
   } finally {
     await context.close();
   }
