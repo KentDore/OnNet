@@ -373,8 +373,8 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
       'les fiches ne doivent pas afficher de ligne fiscale');
     assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
-    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNet) + 30) / 169) < 0.02,
-      'le taux horaire doit exclure la mutuelle salarié du net calculé, puis diviser par les 169 h du contrat 39 h');
+    assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - parseEuro(cardNet) / 169) < 0.02,
+      'le taux horaire doit refléter le net bancaire réellement versé, divisé par les 169 h du contrat 39 h');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
