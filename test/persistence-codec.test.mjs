@@ -114,3 +114,29 @@ test('serializes the current versioned schema and copies open card identifiers',
   });
   assert.equal(state.openCardIds, openCardIds);
 });
+
+
+test('round-trips a saved snapshot without mutating the source state', () => {
+  const openCardIds = new Set([42]);
+  const state = {
+    scenarios:[scenario()],
+    refId:42,
+    metric:'netHoraire',
+    displayAmt:'net',
+    displayPeriod:'mois',
+    foyer:{ couple:true, personnesCharge:1, autresRevenus:500 },
+    onboardingCompleted:true,
+    openCardIds
+  };
+  const before = [...openCardIds];
+  const restored = deserializePersistedState(serializePersistedState(state));
+
+  assert.equal(restored.scenarios.length, 1);
+  assert.equal(restored.scenarios[0].brut, 3000);
+  assert.equal(restored.refId, 0);
+  assert.deepEqual(restored.openCardIds, [0]);
+  assert.equal(restored.foyer.couple, true);
+  assert.equal(restored.foyer.autresRevenus, 500);
+  assert.equal(restored.onboardingCompleted, true);
+  assert.deepEqual([...openCardIds], before);
+});
