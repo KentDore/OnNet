@@ -875,18 +875,20 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   }
 });
 
-test('un espace visible sépare les offres des repères SMIC et médiane sur mobile', { timeout:60000 }, async () => {
+test('les repères SMIC et médiane appartiennent au bloc Comparaison, pas à Vos offres', { timeout:60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     await page.setViewportSize({ width:390, height:844 });
-    await page.locator('#maquetteYourSalary .offer-comparison-card').first().waitFor({state:'visible'});
-    await page.locator('#benchmarkMount .benchmark-item').first().waitFor({state:'visible'});
-    const gap = await page.evaluate(() => {
-      const offer = document.querySelector('#maquetteYourSalary .offer-comparison-card');
-      const benchmark = document.querySelector('#benchmarkMount .benchmark-panel');
-      return benchmark.getBoundingClientRect().top - offer.getBoundingClientRect().bottom;
-    });
-    assert.ok(gap >= 20, 'Un espace d’au moins 20 px doit séparer les offres des repères (mesuré : '+gap+' px).');
+    const placement = await page.evaluate(() => ({
+      insideComparison: !!document.querySelector('#comparePanel #benchmarkMount'),
+      insideOffers: !!document.querySelector('.unified-salary-panel #benchmarkMount'),
+      offers: document.querySelector('.unified-salary-panel').getBoundingClientRect(),
+      comparison: document.querySelector('#comparePanel').getBoundingClientRect()
+    }));
+    assert.equal(placement.insideComparison, true, 'les repères doivent être dans le bloc Comparaison');
+    assert.equal(placement.insideOffers, false, 'les repères ne doivent pas être dans Vos offres');
+    assert.ok(placement.comparison.top >= placement.offers.bottom,
+      'le bloc Comparaison doit suivre le bloc Vos offres');
   } finally {
     await context.close();
   }
