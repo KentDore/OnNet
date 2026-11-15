@@ -31,7 +31,7 @@ export function unsupportedCalculationReason(s){
   return null;
 }
 
-export function buildUrssafInput(s, f){
+export function buildUrssafInput(s, f, date){
   const reason = unsupportedCalculationReason(s);
   if(reason) throw new Error(reason);
   return Object.assign({
@@ -45,7 +45,7 @@ export function buildUrssafInput(s, f){
     commune:String(s.commune || 'Pacé').trim(),
     codePostal:String(s.codePostal || ''),
     departement:String(s.departement || ''),
-    date:scenarioCalculationDate(s),
+    date,
     benchmarkOnly:Boolean(s.isBenchmark)
   }, s.isBenchmark ? {} : taxInputForFoyer(f));
 }
