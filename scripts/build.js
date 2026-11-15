@@ -15,6 +15,7 @@ async function buildRuntime(root){
     "import { buildSmicScenario, getSmicGrossTarget } from './src/smic-reference.mjs';",
     "import { createUrssafCalculationCache } from './src/urssaf-calculation-cache.mjs';",
     "import { createUrssafSessionState } from './src/urssaf-session-state.mjs';",
+    "import { deserializePersistedState, serializePersistedState } from './src/persistence-codec.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
     app
   ].join('\n\n');
