@@ -1376,7 +1376,7 @@ test('le graphique comparatif et sa légende apparaissent après les calculs API
   }
 });
 
-test('la maquette V33 conserve deux repères côte à côte sur mobile et relie le formulaire au scénario', { timeout: 60000 }, async () => {
+test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le formulaire reste relié au scénario', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -1384,7 +1384,17 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
       getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
     );
-    assert.equal(columns, 2, 'les cartes SMIC et médiane restent côte à côte sur mobile');
+    assert.equal(columns, 1, 'les cartes SMIC et médiane sont empilées sur mobile pour conserver une largeur lisible');
+    const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
+      const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
+        const rect = card.getBoundingClientRect();
+        return { top:rect.top, bottom:rect.bottom, left:rect.left, right:rect.right };
+      });
+      return { gap:getComputedStyle(el).rowGap, cards };
+    });
+    assert.equal(geometry.cards.length, 2);
+    assert.ok(geometry.cards[1].top >= geometry.cards[0].bottom + 12,
+      'un espace réel sépare les deux repères sur mobile');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3000');
@@ -1399,6 +1409,29 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0);
     assert.equal(await card.locator('[data-duree]').count(), 0);
+  } finally {
+    await context.close();
+  }
+});
+
+test('les offres peuvent être renommées et la référence est choisie explicitement', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await addSecondScenario(page, '3200');
+    const secondName = page.locator('#maquetteYourSalary [data-rename-offer]').nth(1);
+    await secondName.fill('Proposition Rennes');
+    await secondName.dispatchEvent('change');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText(), 'Proposition Rennes');
+    let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
+
+    await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference').count(), 1);
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').innerText(), 'Référence');
+    saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.refId, saved.scenarios[1].id, 'le choix de référence est conservé localement');
+    assert.equal(await page.locator('#maquetteYourSalary [data-set-offer-reference]').count(), 1,
+      'seule l’offre non sélectionnée propose de devenir référence');
   } finally {
     await context.close();
   }
