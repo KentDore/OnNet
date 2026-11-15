@@ -28,23 +28,7 @@ function getSmicGross(){
   return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
 }
 
-function getSmicGrossTarget(baseGross, weeklyHours){
-  const overtimeHours=Number(weeklyHours)===39?4*52/12:0;
-  if(!overtimeHours) return baseGross;
-  // En 39 h : SMIC de base 35 h + 4 h supplémentaires hebdomadaires à +25 %.
-  return Math.round(baseGross*(1+overtimeHours*1.25/HEURES_BASE)*100)/100;
-}
 
-function buildSmicScenario(base){
-  const amount = getSmicGross();
-  if(!Number.isFinite(amount) || amount <= 0) return null;
-  const weeklyHours=Number(base.dureeType)===39?39:35;
-  return Object.assign({}, base, {
-    id:-1, name:'Référence SMIC', brut:getSmicGrossTarget(amount,weeklyHours), dureeType:String(weeklyHours),
-    mutuelle:0, mutuellePat:0, joursResto:0, valeurResto:0, partResto:0,
-    nbMois:12, primes:0, isBenchmark:true
-  });
-}
 
 function getCurrentComputed(){
   return scenarios.map(s => ({s, r:urssafResultCache.get(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))) || null}));
@@ -58,7 +42,7 @@ function getCalculationError(s, f){
 function getCachedSmicResult(){
   const base = findScenario(refId) || scenarios[0];
   if(!base) return null;
-  const scenario = buildSmicScenario(base);
+  const scenario = buildSmicScenario(base,getSmicGross());
   if(!scenario) return null;
   return urssafResultCache.get(buildUrssafCalculationKey(scenario,foyer,scenarioCalculationDate(scenario))) || null;
 }
@@ -84,7 +68,7 @@ function updateUrssafStatus(computed){
   const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))));
   const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
-  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicScenario = base ? buildSmicScenario(base,getSmicGross()) : null;
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario,foyer,scenarioCalculationDate(smicScenario)) : null;
   const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
@@ -162,7 +146,7 @@ async function executeUrssafCalculations(generation, forceRetry){
 
   const jobs = scenarios.map(s => Object.assign({},s));
   const base = findScenario(refId) || scenarios[0];
-  const smicScenario = base ? buildSmicScenario(base) : null;
+  const smicScenario = base ? buildSmicScenario(base,getSmicGross()) : null;
   if(smicScenario) jobs.push(smicScenario);
   const seen = new Set();
   for(const s of jobs){
