@@ -1418,10 +1418,13 @@ test('les offres peuvent être renommées et la référence est choisie explicit
   const { context, page } = await openApp();
   try {
     await addSecondScenario(page, '3200');
+    // L’ajout ouvre l’éditeur de l’offre ; revenir au comparatif avant de tester
+    // les contrôles de renommage et de référence qui y sont volontairement masqués.
+    await page.locator('#salaryEditorBack').click();
     const secondName = page.locator('#maquetteYourSalary [data-rename-offer]').nth(1);
     await secondName.fill('Proposition Rennes');
     await secondName.dispatchEvent('change');
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText(), 'Proposition Rennes');
+    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).inputValue(), 'Proposition Rennes');
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
 
