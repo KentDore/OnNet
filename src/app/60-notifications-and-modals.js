@@ -434,7 +434,7 @@ function showEditScenarioModal(scenario){
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
     ? Number(scenario.salaireSaisi)
     : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
-  const initialMutuelle = Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
+  const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
   const html = `
     <div class="edit-offer-modal">
       <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
