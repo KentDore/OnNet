@@ -434,6 +434,7 @@ function showEditScenarioModal(scenario){
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
     ? Number(scenario.salaireSaisi)
     : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
+  const initialMutuelle = Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
   const html = `
     <div class="edit-offer-modal">
       <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
@@ -457,17 +458,14 @@ function showEditScenarioModal(scenario){
         <label for="editOfferHours">Base horaire</label>
         <select id="editOfferHours"><option value="35" ${scenario.dureeType==='35'?'selected':''}>35 h / semaine</option><option value="39" ${scenario.dureeType==='39'?'selected':''}>39 h / semaine</option></select>
       </div>
-      <div class="edit-offer-section">Lieu de travail</div>
-      <div class="field-row">
-        <label for="editOfferCommune">Commune de l’établissement</label>
-        <input type="text" id="editOfferCommune" value="${esc(scenario.codePostal && scenario.departement ? scenario.commune+' — '+scenario.codePostal+' ('+scenario.departement+')' : scenario.commune+' — sélection requise')}" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="editOfferCommuneSuggestions">
-        <div class="commune-suggestions" id="editOfferCommuneSuggestions" role="listbox" hidden></div>
-        <div class="sub-hint" id="editOfferCommuneHint">${scenario.codePostal && scenario.departement ? 'Lieu vérifié : '+esc(scenario.codePostal)+' — '+esc(scenario.departement)+'.' : 'Sélectionnez une commune vérifiée dans les suggestions.'}</div>
-      </div>
       <div class="edit-offer-section">Mutuelle</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMutuelle">Part salarié (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(scenario.mutuelle ?? 0).replace('.', ',')}"></div>
-        <div class="field-row"><label for="editOfferMutuellePat">Part employeur (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuellePat" value="${String(scenario.mutuellePat ?? 0).replace('.', ',')}"></div>
+      <div class="edit-offer-mutuelle">
+        <span>Part salarié</span>
+        <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false" aria-controls="editOfferMutuelleEditor">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois <span aria-hidden="true">✎</span></button>
+        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
+          <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
+          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
+        </div>
       </div>
       <div class="edit-offer-section">Titres-restaurant</div>
       <div class="three-col">
@@ -475,16 +473,6 @@ function showEditScenarioModal(scenario){
         <div class="field-row"><label for="editOfferMealValue">Valeur (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
         <div class="field-row"><label for="editOfferMealShare">Part salarié (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto??50)}"></div>
       </div>
-      <div class="edit-offer-section">Mensualités et primes</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMonths">Mensualités / an</label><input type="number" id="editOfferMonths" min="1" max="24" step="1" value="${Number(scenario.nbMois)||12}"></div>
-        <div class="field-row"><label for="editOfferBonus">Primes annuelles (€)</label><input type="text" inputmode="decimal" id="editOfferBonus" value="${String(scenario.primes||0).replace('.', ',')}"></div>
-      </div>
-      <div class="field-row">
-        <label for="editOffer13thBase">Base du 13ᵉ / 14ᵉ mois</label>
-        <select id="editOffer13thBase"><option value="base" ${scenario.treiziemeMoisBase!=='ensemble'?'selected':''}>Salaire de base</option><option value="ensemble" ${scenario.treiziemeMoisBase==='ensemble'?'selected':''}>Salaire et éléments variables</option></select>
-      </div>
-      <p class="edit-offer-note">Les primes et mensualités au-delà de 12 sont conservées dans l’offre, mais ne sont pas encore intégrées au calcul Urssaf. Le résultat affiché ne les inclut donc pas.</p>
       <div class="modal-actions">
         <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
@@ -494,14 +482,6 @@ function showEditScenarioModal(scenario){
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
-  let location = {
-    commune:scenario.commune || 'Pacé', codePostal:scenario.codePostal || '',
-    departement:scenario.departement || '', codeCommune:scenario.codeCommune || '',
-    codeDepartement:scenario.codeDepartement || ''
-  };
-  let locationVerified = !!(location.codePostal && location.departement);
-  let communeSequence = 0;
-  let communeTimer = null;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
@@ -514,69 +494,25 @@ function showEditScenarioModal(scenario){
     periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
   }));
-  const communeInput=input('editOfferCommune');
-  const suggestionList=input('editOfferCommuneSuggestions');
-  communeInput.addEventListener('input',()=>{
-    const query=communeInput.value.trim();
-    locationVerified=false;
-    location.codePostal='';location.departement='';location.codeCommune='';location.codeDepartement='';
-    input('editOfferCommuneHint').textContent='Sélectionnez une commune vérifiée dans les suggestions.';
-    if(communeTimer) clearTimeout(communeTimer);
-    const sequence=++communeSequence;
-    if(query.length<2){suggestionList.hidden=true;suggestionList.innerHTML='';return;}
-    suggestionList.hidden=false;
-    suggestionList.innerHTML='<div class="commune-search-status">Recherche des communes…</div>';
-    communeTimer=setTimeout(async()=>{
-      try{
-        const params=new URLSearchParams({fields:'nom,code,codesPostaux,departement,codeDepartement',limit:'8'});
-        if(/^\d{2,5}$/.test(query)) params.set('codePostal',query);
-        else {params.set('nom',query);params.set('boost','population');}
-        const response=await fetch('https://geo.api.gouv.fr/communes?'+params.toString(),{headers:{Accept:'application/json'}});
-        if(!response.ok) throw new Error('Recherche indisponible');
-        const rows=await response.json();
-        if(sequence!==communeSequence || !modalState) return;
-        const options=[];
-        for(const item of Array.isArray(rows)?rows:[]){
-          const department=item.departement?.nom;
-          for(const postcode of Array.isArray(item.codesPostaux)?item.codesPostaux:[]){
-            if(item.nom&&department) options.push({commune:item.nom,codePostal:postcode,departement:department,codeCommune:item.code,codeDepartement:item.codeDepartement});
-            if(options.length>=8) break;
-          }
-          if(options.length>=8) break;
-        }
-        suggestionList.innerHTML=options.length?options.map((option,index)=>'<button type="button" class="commune-option" data-option="'+index+'">'+esc(option.commune)+' — '+esc(option.codePostal)+' ('+esc(option.departement)+')</button>').join(''):'<div class="commune-search-status">Aucune commune trouvée.</div>';
-        suggestionList._options=options;
-        suggestionList.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{
-          const selected=options[Number(button.dataset.option)];
-          if(!selected) return;
-          location=selected;locationVerified=true;
-          communeInput.value=selected.commune+' — '+selected.codePostal+' ('+selected.departement+')';
-          input('editOfferCommuneHint').textContent='Lieu vérifié : '+selected.codePostal+' — '+selected.departement+'.';
-          suggestionList.hidden=true;
-          updateSaveState();
-        }));
-      }catch(error){
-        if(sequence===communeSequence){suggestionList.innerHTML='<div class="commune-search-status">Impossible de vérifier la commune. Réessayez.</div>';}
-      }
-    },250);
-    updateSaveState();
+  const mutuelleToggle=input('editOfferMutuelleToggle');
+  const mutuelleEditor=input('editOfferMutuelleEditor');
+  mutuelleToggle.addEventListener('click',()=>{
+    const expanded=mutuelleToggle.getAttribute('aria-expanded')==='true';
+    mutuelleToggle.setAttribute('aria-expanded',String(!expanded));
+    mutuelleEditor.hidden=expanded;
+    if(!expanded) input('editOfferMutuelle').focus();
   });
-  const requiredNumbers=['editOfferGross','editOfferMutuelle','editOfferMutuellePat','editOfferMealValue','editOfferBonus'];
   const validNumber=id=>input(id).value.trim()!==''&&numericEntryValid(input(id).value)&&Number.isFinite(parseNum(input(id).value));
   const updateSaveState=()=>{
     const gross=parseNum(grossInput.value);
-    const valid=gross>0&&gross<=1200000&&locationVerified&&requiredNumbers.slice(1).every(validNumber)&&
-      Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&
-      Number.isInteger(Number(input('editOfferMealDays').value))&&
-      Number(input('editOfferMonths').value)>=1&&Number(input('editOfferMonths').value)<=24&&
-      Number.isInteger(Number(input('editOfferMonths').value))&&
-      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&parseNum(input('editOfferMutuellePat').value)>=0&&parseNum(input('editOfferMutuellePat').value)<=100000&&
-      parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
-      Number(input('editOfferMealShare').value)>=40&&Number(input('editOfferMealShare').value)<=50&&
-      parseNum(input('editOfferBonus').value)>=0;
+    const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&
+      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&
+      validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
+      Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&Number.isInteger(Number(input('editOfferMealDays').value))&&
+      Number(input('editOfferMealShare').value)>=40&&Number(input('editOfferMealShare').value)<=50;
     input('editOfferSave').disabled=!valid;
   };
-  [...requiredNumbers,'editOfferMealDays','editOfferMealValue','editOfferMealShare','editOfferMonths'].forEach(id=>input(id).addEventListener('input',updateSaveState));
+  ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue','editOfferMealShare'].forEach(id=>input(id).addEventListener('input',updateSaveState));
   input('editOfferName').addEventListener('input',updateSaveState);
   updateSaveState();
   input('editOfferSave').addEventListener('click',()=>{
@@ -586,22 +522,26 @@ function showEditScenarioModal(scenario){
       brut:period==='an'?gross/12:gross,
       salaireSaisi:gross,salaireSaisiPeriode:period,
       dureeType:input('editOfferHours').value==='39'?'39':'35',
-      ...location,
+      // Les paramètres retirés de l'interface restent inchangés dans l'offre.
+      commune:scenario.commune || 'Pacé',
+      codePostal:scenario.codePostal || '',
+      departement:scenario.departement || '',
+      codeCommune:scenario.codeCommune || '',
+      codeDepartement:scenario.codeDepartement || '',
       mutuelle:parseNum(input('editOfferMutuelle').value),
-      mutuellePat:parseNum(input('editOfferMutuellePat').value),
+      mutuellePat:Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
       joursResto:Number(input('editOfferMealDays').value),
       valeurResto:parseNum(input('editOfferMealValue').value),
       partResto:Number(input('editOfferMealShare').value),
-      nbMois:Number(input('editOfferMonths').value),
-      primes:parseNum(input('editOfferBonus').value),
-      treiziemeMoisBase:input('editOffer13thBase').value==='ensemble'?'ensemble':'base'
+      nbMois:Number(scenario.nbMois)||12,
+      primes:Number(scenario.primes)||0,
+      treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
     };
     closeModal(result);
   });
   input('editOfferCancel').addEventListener('click',()=>closeModal(false));
   return pending;
 }
-
 
 const headerMenu = document.getElementById('headerMenu');
 document.addEventListener('click', event => {
