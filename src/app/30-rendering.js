@@ -507,7 +507,7 @@ function renderMaquetteControls(computedOverride){
       const value=hourly===null?null:hourly*factor;
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
         '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'">Définir comme référence</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
-        '<div class="offer-comparison-meta">Contrat : '+fmt(s.brut)+' brut / mois · '+weekly+' h / semaine</div>'+
+        '<div class="offer-comparison-meta">Contrat : '+(s.salaireSaisiPeriode==='an'&&Number.isFinite(Number(s.salaireSaisi))?fmt(s.salaireSaisi)+' brut / an':fmt(s.brut)+' brut / mois')+' · '+weekly+' h / semaine</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
     }).join('');
