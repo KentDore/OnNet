@@ -205,8 +205,7 @@ async function addSecondScenario(page, gross = '3200') {
     const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
     return cards.length === 2 &&
       cards.every(card => card.dataset.resultState === 'ready') &&
-      document.querySelectorAll('#stackChart .stack-col').length === 2 &&
-      document.querySelectorAll('#stackLegend .legend-item').length === 4;
+      document.querySelectorAll('#stackChart .comparison-offer-card').length === 2;
   }, null, { timeout: 20000 });
 }
 
@@ -350,7 +349,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'la base mensuelle doit rester égale au SMIC officiel 35 h');
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
-    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer vos offres/);
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Vos offres/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
       const position = selector => [...panel.children].findIndex(node => node.matches(selector));
@@ -367,7 +366,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
     assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
-    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .offer-comparison-net').first().innerText();
+    const benchmarkHourlyNet = await page.locator('#stackChart .comparison-offer-value').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
@@ -752,19 +751,21 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     const part = card.locator('[data-key="partResto"]');
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
-    const waterfallRows = await page.locator('.waterfall .salary-net-summary-row').allTextContents();
+    const waterfallDetails = page.locator('#stackChart .offer-net-details').first();
+    await waterfallDetails.locator('summary').click();
+    const waterfallRows = await waterfallDetails.locator('.salary-net-summary-row').allTextContents();
 
     assert.equal(waterfallRows.length, 3, 'le récapitulatif affiche trois valeurs lorsque les TR sont activés');
     assert.match(waterfallRows[0], /Net sans TR/);
     assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
     assert.match(waterfallRows[2], /Net avec TR/);
-    assert.equal(await page.locator('.waterfall .salary-net-summary-row').nth(1).locator('strong').innerText(), '168 €',
+    assert.equal(await waterfallDetails.locator('.salary-net-summary-row').nth(1).locator('strong').innerText(), '168 €',
       'le total des TR doit rester juste même si l’API omet l’une des parts');
     await addSecondScenario(page);
-    const stackSummary = page.locator('#stackChart .stack-col .salary-net-summary')
-      .filter({ hasText:'TR — total des deux parts' }).first();
-    assert.equal(await stackSummary.count(), 1, 'le scénario conservant les TR doit avoir son récapitulatif');
-    const stackRows = await stackSummary.locator('.salary-net-summary-row').allTextContents();
+    const stackDetails = page.locator('#stackChart .comparison-offer-card .offer-net-details').first();
+    await stackDetails.locator('summary').click();
+    assert.equal(await stackDetails.count(), 1, 'le scénario conservant les TR doit avoir son récapitulatif');
+    const stackRows = await stackDetails.locator('.salary-net-summary-row').allTextContents();
     assert.equal(stackRows.length, 3);
     assert.match(stackRows[0], /Net sans TR/);
     assert.match(stackRows[1], /TR — total des deux parts[\s\S]*168 €/);
@@ -865,21 +866,23 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     for (const width of [320, 375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
       const layout = await page.locator('#stackChart').evaluate(el => {
-        const stages = [...el.querySelectorAll('.stack-bar-stage')].map(node => {
+        const cards = [...el.querySelectorAll('.comparison-offer-card')].map(node => {
           const rect = node.getBoundingClientRect();
-          return { left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width };
+          return { left:rect.left, right:rect.right, top:rect.top, bottom:rect.bottom, width:rect.width };
         });
-        const actions = [...document.querySelectorAll('#maquetteOfferTabs .offer-tab-item')].map(item => {
-          const button = item.querySelector('.offer-tab-action');
-          const rect = button.getBoundingClientRect();
-          return { label: button.textContent.trim(), visible: rect.width > 0 && rect.height > 0 };
-        });
-        return { stages, actions, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+        return { cards, scrollWidth:el.scrollWidth, clientWidth:el.clientWidth };
       });
-      assert.equal(layout.stages.length, 2);
-      assert.ok(Math.abs(layout.stages[0].bottom - layout.stages[1].bottom) <= 1,
-        `les barres doivent partager la même ligne de base à ${width}px : ${JSON.stringify(layout.stages)}`);
-      assert.ok(layout.stages.every(stage => stage.width > 0));
+      assert.equal(layout.cards.length, 2);
+      assert.ok(layout.cards.every(card => card.width > 0));
+      if(width<=360){
+        assert.ok(layout.cards[1].top >= layout.cards[0].bottom,
+          `les cartes doivent s’empiler à ${width}px : ${JSON.stringify(layout.cards)}`);
+      }else{
+        assert.ok(Math.abs(layout.cards[0].top-layout.cards[1].top)<=1,
+          `les cartes doivent être côte à côte à ${width}px : ${JSON.stringify(layout.cards)}`);
+        assert.ok(layout.cards[1].left>=layout.cards[0].right,
+          `un espace doit séparer les cartes à ${width}px : ${JSON.stringify(layout.cards)}`);
+      }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
@@ -916,8 +919,14 @@ test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 
       }));
       assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
-      assert.ok(sizes.cards.every(card => card > 0 && Math.abs(card - sizes.panel) <= 1),
-        `les repères doivent occuper la largeur disponible en une colonne à ${width}px : ${JSON.stringify(sizes)}`);
+      if(width<=360){
+        assert.ok(sizes.cards.every(card => card>0 && Math.abs(card-sizes.panel)<=1),
+          `les repères doivent occuper la largeur disponible à ${width}px : ${JSON.stringify(sizes)}`);
+      }else{
+        assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
+          `les deux repères doivent partager la ligne à ${width}px : ${JSON.stringify(sizes)}`);
+        assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
+      }
     }
   } finally {
     await context.close();
@@ -948,14 +957,27 @@ test('la page ne déborde pas horizontalement sur les largeurs mobiles', { timeo
 test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
+    const hour = page.locator('[data-maquette-period="hour"]');
     const month = page.locator('[data-maquette-period="month"]');
     const year = page.locator('[data-maquette-period="year"]');
+    const valueLabel = page.locator('#stackChart .comparison-offer-value-label');
+    const valueUnit = page.locator('#stackChart .comparison-offer-value small');
+    assert.equal(await valueLabel.innerText(), 'Net horaire · avant impôt');
+    assert.equal(await valueUnit.count(), 0, 'le taux horaire contient déjà son unité €/h');
+    for (const result of await page.locator('#benchmarkMount .benchmark-result').allTextContents()) {
+      assert.doesNotMatch(result, /€\/h\s*\/\s*heure/, 'les écarts horaires ne doivent pas répéter l’unité');
+    }
     await month.click();
     assert.equal(await month.getAttribute('aria-pressed'), 'true');
+    assert.equal(await hour.getAttribute('aria-pressed'), 'false');
     assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueLabel.innerText(), 'Net mensuel · avant impôt');
+    assert.equal(await valueUnit.innerText(), '/ mois');
     await year.click();
     assert.equal(await year.getAttribute('aria-pressed'), 'true');
     assert.equal(await month.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueLabel.innerText(), 'Net annuel · avant impôt');
+    assert.equal(await valueUnit.innerText(), '/ an');
 
     await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('#modalAddInput').isVisible(), true,
@@ -1126,8 +1148,8 @@ test('le graphique présente le net sans module fiscal', { timeout: 60000 }, asy
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel #stackChart');
-    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
-    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net.');
+    assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Comparer les offres');
+    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Même période pour toutes les offres · durée réelle de chaque contrat.');
     assert.equal(await page.locator('#comparePanel .chart-scope-hint').count(), 0, 'la mention redondante sur la source des montants doit être absente');
   } finally {
     await context.close();
@@ -1349,13 +1371,15 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     console.log('ONNET_FINAL_VISUAL_STATE=' + JSON.stringify(finalVisualState));
     assert.ok(finalVisualState.chartChildren > 0 && finalVisualState.chartParentHidden === false,
       'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
-    const comparisonColumns = page.locator('#stackChart .stack-col');
-    assert.equal(await comparisonColumns.count(), 2,
-      'deux offres doivent produire deux colonnes comparatives');
-    assert.equal(await page.locator('#stackChart .stack-col .stack-bar').count(), 2,
-      'chaque offre doit avoir sa barre de répartition');
-    const currentOffer = comparisonColumns.filter({ hasText: 'Poste actuel' });
-    const summaryRows = await currentOffer.locator('.salary-net-summary-row').allTextContents();
+    const comparisonCards = page.locator('#stackChart .comparison-offer-card');
+    assert.equal(await comparisonCards.count(), 2,
+      'deux offres doivent produire deux cartes comparatives');
+    assert.equal(await page.locator('#stackChart .stack-bar').count(), 0,
+      'l’ancien graphique empilé ne doit plus être affiché');
+    const currentOffer = comparisonCards.filter({ hasText: 'Poste actuel' });
+    const currentOfferDetails = currentOffer.locator('.offer-net-details');
+    await currentOfferDetails.locator('summary').click();
+    const summaryRows = await currentOfferDetails.locator('.salary-net-summary-row').allTextContents();
     assert.equal(summaryRows.length, 3);
     assert.match(summaryRows[0], /Net sans TR/);
     assert.match(summaryRows[1], /TR — total des deux parts/);
@@ -1365,7 +1389,8 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.equal(summaryAmounts.length, 3);
     assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');
     assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
-    assert.match(await page.locator('#stackHint').innerText(), /définir comme référence/);
+    assert.match(await page.locator('#stackHint').innerText(), /horaire/);
+    assert.match(await page.locator('#stackHint').innerText(), /avant impôt/);
 
   } finally {
     await context.close();
@@ -1373,7 +1398,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
 });
 
 
-test('le graphique comparatif et sa légende apparaissent après les calculs API', { timeout: 60000 }, async () => {
+test('les cartes de comparaison affichent la même unité après les calculs API', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ advancedOpen:false });
   try {
     await addSecondScenario(page, '3200');
@@ -1384,9 +1409,9 @@ test('le graphique comparatif et sa légende apparaissent après les calculs API
       return (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
         cards.length === 2 && cards.every(card => card.dataset.resultState === 'ready') &&
         chart?.children.length === 2 && chart.parentElement?.hidden === false &&
-        legend?.hidden === false && legend.children.length === 4;
+        legend?.hidden === true && chart.querySelectorAll('.comparison-offer-card').length === 2;
     }, null, { timeout:20000 });
-    assert.equal(await page.locator('#stackHint').innerText(), 'Cliquez sur une carte pour la définir comme référence.');
+    assert.match(await page.locator('#stackHint').innerText(), /horaire.*avant impôt/);
   } finally {
     await context.close();
   }
@@ -1400,17 +1425,19 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
     const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
       getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
     );
-    assert.equal(columns, 1, 'les cartes SMIC et médiane sont empilées sur mobile pour conserver une largeur lisible');
+    assert.equal(columns, 2, 'les repères SMIC et médiane restent côte à côte sur mobile');
     const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
       const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
         const rect = card.getBoundingClientRect();
         return { top:rect.top, bottom:rect.bottom, left:rect.left, right:rect.right };
       });
-      return { gap:getComputedStyle(el).rowGap, cards };
+      return { gap:getComputedStyle(el).columnGap, cards };
     });
     assert.equal(geometry.cards.length, 2);
-    assert.ok(geometry.cards[1].top >= geometry.cards[0].bottom + 12,
-      'un espace réel sépare les deux repères sur mobile');
+    assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
+      'un espace horizontal réel sépare les deux repères sur mobile');
+    assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
+      'les deux repères sont alignés sur la même ligne');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3000');
@@ -1539,6 +1566,20 @@ test('le runtime applicatif est encapsulé sans exposer ses fonctions internes',
       'les utilitaires importés doivent rester privés au module runtime');
     assert.equal(runtime.normalizerExposed, false,
       'les normalisateurs importés doivent rester privés au module runtime');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', { timeout:60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.waitForSelector('#maquetteYourSalary .offer-comparison-card');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 1);
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-net').count(), 0,
+      'les montants nets sont réservés au comparatif inférieur');
+    assert.match(await page.locator('#maquetteYourSalary').innerText(), /Contrat/);
   } finally {
     await context.close();
   }

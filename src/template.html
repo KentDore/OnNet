@@ -32,7 +32,7 @@
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Comparer vos offres</h3><p>Comparez le net réellement obtenu pour chaque proposition.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
+    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Vos offres</h3><p>Gérez vos propositions et leurs paramètres de contrat.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
 
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
@@ -77,15 +77,14 @@
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
-    <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
-    <p class="sub">Du brut au net.</p>
+    <h2 class="bars-title">Comparer les offres</h2>
+    <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
     
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
-    <!-- Alertes du graphique : il montre toujours du net mensuel, donc elles
-         doivent rester visibles sans déplier la section ci-dessous. -->
+    <!-- Espace conservé pour les messages contextuels du comparatif. -->
     <div id="barsAlerts"></div>
     <section class="benchmark-panel" aria-label="Comparaison avec les repères salariaux">
       <div id="benchmarkBody" aria-live="polite"></div>

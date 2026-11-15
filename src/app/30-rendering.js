@@ -194,28 +194,85 @@ function renderWaterfall(computed){
   </div>`;
 }
 
-function renderInsight(computed){
-  if(computed.length < 2) return '';
-  const ref = computed.find(x => x.s.id === refId) || computed[0];
-  const others = computed.filter(x => x.s.id !== refId);
-  if(!others.length) return '';
-  const isHourly = HOURLY_METRICS.has(metric);
-  const valueOf = x => Number(x.r[metric]) || 0;
-  const best = others.reduce((a,b) => valueOf(b) > valueOf(a) ? b : a);
-  const delta = valueOf(best) - valueOf(ref);
-  const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
-  const metricLabel = {
-    annuelNet:'net annuel', netHoraire:'net horaire',
-    brutHoraire:'brut horaire'
-  }[metric] || 'valeur sélectionnée';
-  const format = isHourly ? fmtHoraire : fmt;
-  if(Math.abs(delta) < (isHourly ? 0.01 : 1)){
-    return `<div class="insight neutral">Ces salaires donnent à peu près le même ${metricLabel}.</div>`;
-  }
-  return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
+const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
+
+function getComparisonPeriodConfig(){
+  if(maquetteComparisonPeriod==='hour') return {
+    key:'hour', label:'Net horaire', unit:'h',
+    factor:weekly=>1, format:fmtHoraire, formatSigned:fmtHoraireSigned
+  };
+  if(maquetteComparisonPeriod==='year') return {
+    key:'year', label:'Net annuel', unit:'an',
+    factor:weekly=>weekly*52, format:fmt, formatSigned:fmtSigned
+  };
+  return {
+    key:'month', label:'Net mensuel', unit:'mois',
+    factor:weekly=>weekly*52/12, format:fmt, formatSigned:fmtSigned
+  };
 }
 
-const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
+function getComparisonNetValue(item, config){
+  if(!item?.r) return null;
+  const weekly=Number(item.s?.dureeType);
+  const hourly=Number(item.r.netHoraire);
+  if(!Number.isFinite(weekly)||weekly<=0||!Number.isFinite(hourly)) return null;
+  return hourly*config.factor(weekly);
+}
+
+function renderInsight(computed){
+  if(computed.length<2) return '';
+  const config=getComparisonPeriodConfig();
+  const reference=computed.find(x=>x.s.id===refId)||computed[0];
+  const referenceValue=getComparisonNetValue(reference,config);
+  if(referenceValue===null) return '';
+  const candidates=computed
+    .map(item=>({item,value:getComparisonNetValue(item,config)}))
+    .filter(entry=>entry.value!==null);
+  if(candidates.length<2) return '';
+  const best=candidates.reduce((a,b)=>b.value>a.value?b:a);
+  const delta=best.value-referenceValue;
+  if(Math.abs(delta)<(config.key==='hour'?0.01:1)){
+    return '<div class="insight neutral">Les offres affichent un net estimé très proche sur cette période.</div>';
+  }
+  if(best.item.s.id===reference.s.id){
+    return '<div class="insight neutral">L’offre de référence présente le net estimé le plus élevé.</div>';
+  }
+  const deltaText=config.formatSigned(delta)+(config.key==='hour'?'':' / '+config.unit);
+  return '<div class="insight"><span class="insight-caption">ÉCART AVEC LA RÉFÉRENCE</span><strong>'+esc(best.item.s.name)+'</strong><span> apporte </span><strong>'+deltaText+'</strong><span> par rapport à '+esc(reference.s.name)+'.</span></div>';
+}
+
+function renderComparisonCards(computed){
+  const config=getComparisonPeriodConfig();
+  const reference=computed.find(x=>x.s.id===refId)||computed[0];
+  const referenceValue=getComparisonNetValue(reference,config);
+  return computed.map(({s,r},index)=>{
+    const item={s,r};
+    const value=getComparisonNetValue(item,config);
+    const weekly=Number(s.dureeType);
+    const delta=value===null||referenceValue===null?null:value-referenceValue;
+    const deltaClass=delta===null?'':delta>0.01?'is-positive':delta< -0.01?'is-negative':'is-neutral';
+    const deltaHtml=s.id===refId
+      ? '<span class="comparison-reference-note">Offre de référence</span>'
+      : delta===null
+        ? '<span class="comparison-reference-note">Écart indisponible</span>'
+        : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+(config.key==='hour'?'vs ':'/ '+config.unit+' vs ')+esc(reference.s.name)+'</span></div>';
+    const trTotal=getMealTicketTotal(s,r);
+    const details=trTotal>0.5
+      ? '<details class="offer-net-details"><summary>Détail des titres-restaurant</summary>'+renderSalaryNetSummary(r.m.netSocial,trTotal,r.netApres+trTotal)+'</details>'
+      : '';
+    const referenceAction=s.id===refId
+      ? '<span class="comparison-reference-badge">Référence</span>'
+      : '<button type="button" class="comparison-set-reference" data-set-offer-reference="'+s.id+'">Choisir comme référence</button>';
+    return '<article class="comparison-offer-card '+(s.id===refId?'is-reference':'')+'" data-comparison-offer="'+s.id+'">'+
+      '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
+      '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
+      '<div class="comparison-offer-value">'+(value===null?'—':config.format(value))+(value===null||config.key==='hour'?'':'<small>/ '+config.unit+'</small>')+'</div>'+
+      '<div class="comparison-offer-meta"><span>Brut : '+fmt(s.brut)+' / mois</span><span>'+weekly.toLocaleString('fr-FR')+' h / semaine</span></div>'+
+      deltaHtml+
+      details+
+      '</article>';
+  }).join('');
+}
 
 function renderBars(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
@@ -276,7 +333,7 @@ function renderBenchmarks(computed){
   const userNetBeforeTax=r?Math.max(0,r.netApres):null;
   const userNetHourly=userNetBeforeTax===null?null:(userMonthlyHours>0?userNetBeforeTax/userMonthlyHours:0);
   const userValue=userNetHourly===null?null:userNetHourly*factor;
-  const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+' / '+unit;
+  const gapText=value=>(value>=0?'+':'−')+format(Math.abs(value))+(maquetteComparisonPeriod==='hour'?'':' / '+unit);
   const gapClass=value=>value>=0?'benchmark-positive':'benchmark-negative';
   const durationLabel=weeklyHours.toLocaleString('fr-FR')+' h';
   const smicNetHourly=smicResult?Math.max(0,smicResult.netApres)/userMonthlyHours:null;
@@ -443,12 +500,9 @@ function renderMaquetteControls(computedOverride){
       const hourly=r && Number.isFinite(r.netHoraire)?r.netHoraire:null;
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly===null?null:hourly*factor;
-      const amount=value===null?'Calcul en cours':(maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value));
-      const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
         '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4><button type="button" class="offer-rename-button" data-rename-offer="'+s.id+'">Renommer</button></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'">Définir comme référence</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
-        '<strong class="offer-comparison-net">'+amount+(value===null?'':' <small>/ '+unit+'</small>')+'</strong>'+
-        '<div class="offer-comparison-meta">Net · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
+        '<div class="offer-comparison-meta">Contrat : '+fmt(s.brut)+' brut / mois · '+weekly+' h / semaine</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
     }).join('');
@@ -481,40 +535,47 @@ function renderMaquetteControls(computedOverride){
 }
 
 function renderComparisonChart(computed){
-  const isSingle = computed.length === 1;
-  const hasSalaryResults = computed.length > 0 && computed.every(x => !!x.r);
-  const allReady = hasSalaryResults && !!getCachedSmicResult();
-  const comparePanel = document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden = !hasSalaryResults;
+  const hasSalaryResults=computed.length>0&&computed.every(item=>!!item.r);
+  const comparePanel=document.getElementById('comparePanel');
+  if(comparePanel) comparePanel.hidden=!hasSalaryResults;
 
-  if(comparePanel){
-    const chartElements = ['#stackHint','#insightBox','.stack-chart-scroll','#stackLegend','#barsAlerts'];
-    chartElements.forEach(selector => {
-      const element = comparePanel.querySelector(selector);
-      if(element) element.hidden = !allReady;
-    });
+  const hint=document.getElementById('stackHint');
+  const insight=document.getElementById('insightBox');
+  const chart=document.getElementById('stackChart');
+  const scroll=comparePanel?.querySelector('.stack-chart-scroll');
+  const legend=document.getElementById('stackLegend');
+  const alerts=document.getElementById('barsAlerts');
+  const bars=document.getElementById('barsBody');
+
+  [hint,insight,scroll].filter(Boolean).forEach(element=>{element.hidden=!hasSalaryResults;});
+  if(legend){legend.innerHTML='';legend.hidden=true;}
+  if(alerts){alerts.innerHTML='';alerts.hidden=true;}
+  if(bars) bars.innerHTML='';
+  if(!chart) return;
+
+  if(!hasSalaryResults){
+    chart.className='comparison-offer-grid';
+    chart.innerHTML='';
+    if(hint) hint.textContent='La comparaison apparaîtra après validation des calculs par l’API Urssaf.';
+    if(insight) insight.innerHTML='';
+    return;
   }
 
-  const stackChartEl = document.getElementById('stackChart');
-  if(!stackChartEl) return;
-  if(allReady){
-    document.getElementById('stackHint').textContent = isSingle
-      ? `Salaire brut de ${fmt(computed[0].r.m.brutTotal)} par mois.`
-      : 'Cliquez sur une carte pour la définir comme référence.';
-    document.getElementById('insightBox').innerHTML = renderInsight(computed);
-    stackChartEl.className = isSingle ? '' : 'stack-chart';
-    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    document.getElementById('stackLegend').innerHTML = isSingle ? '' : renderStackLegend();
-    document.getElementById('barsBody').innerHTML = renderBars(computed);
-    document.getElementById('barsAlerts').innerHTML = renderAlerts(computed);
-  } else {
-    document.getElementById('stackHint').textContent = 'Les résultats s’affichent après validation par l’API officielle Mon-entreprise (Urssaf).';
-    document.getElementById('insightBox').innerHTML = '';
-    stackChartEl.className = '';
-    stackChartEl.innerHTML = '';
-    document.getElementById('stackLegend').innerHTML = '';
-    document.getElementById('barsBody').innerHTML = '';
-    document.getElementById('barsAlerts').innerHTML = '';
+  const config=getComparisonPeriodConfig();
+  if(hint) hint.textContent=config.label+' · net avant impôt estimé par l’API Urssaf.';
+  if(insight) insight.innerHTML=renderInsight(computed);
+  chart.className='comparison-offer-grid';
+  chart.innerHTML=renderComparisonCards(computed);
+
+  if(chart.dataset.comparisonReferenceBound!=='true'){
+    chart.addEventListener('click',event=>{
+      const button=event.target.closest('[data-set-offer-reference]');
+      if(!button) return;
+      refId=Number(button.dataset.setOfferReference);
+      saveState();
+      render();
+    });
+    chart.dataset.comparisonReferenceBound='true';
   }
 }
 
