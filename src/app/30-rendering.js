@@ -340,7 +340,7 @@ function renderMaquetteControls(computedOverride){
     button.addEventListener('click',()=>{refId=scenario.id;render();});
     item.append(button);
     const actions=document.createElement('div');actions.className='offer-tab-actions';
-    const rename=document.createElement('button');rename.type='button';rename.className='offer-tab-action';rename.textContent='✎';rename.setAttribute('aria-label','Renommer '+scenario.name);rename.title='Renommer ce poste';
+    const rename=document.createElement('button');rename.type='button';rename.className='offer-tab-action';rename.textContent='Modifier';rename.setAttribute('aria-label','Renommer '+scenario.name);rename.title='Renommer ce poste';
     rename.addEventListener('click',event=>{
       event.stopPropagation();
       const input=document.createElement('input');input.type='text';input.className='offer-tab-rename-input';input.value=scenario.name;input.maxLength=60;input.setAttribute('aria-label','Nouveau nom du poste');
