@@ -1713,7 +1713,7 @@ test('la fenêtre de modification conserve tous les paramètres avancés d’une
     await page.locator('#editOfferMutuellePat').fill('55');
     await page.locator('#editOfferMealDays').fill('20');
     await page.locator('#editOfferMealValue').fill('9,50');
-    await page.locator('#editOfferMealShare [data-share="40"]').click();
+    await page.locator('#editOfferMealShare').fill('40');
     await page.locator('#editOfferMonths').fill('13');
     await page.locator('#editOfferBonus').fill('1200');
     await page.locator('#editOffer13thBase').selectOption('ensemble');
