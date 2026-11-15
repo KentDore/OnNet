@@ -150,14 +150,14 @@ function renderStack(computed){
           <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
           <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
           <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net : ${fmt(net)}" role="img" aria-label="Net : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
+          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net bancaire : ${fmt(net)}" role="img" aria-label="Net bancaire : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
         </div>
       </div>`;
     return `
     <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
-      ${renderSalaryNetSummary(netSansTR, trTotal, net)}
+      ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -182,13 +182,13 @@ function renderWaterfall(computed){
   const trTotal = getMealTicketTotal(s, r);
   return `
   <div class="waterfall">
-    ${renderSalaryNetSummary(netSansTR, trTotal, net)}
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avec TR : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+    ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net bancaire : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
       <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
       <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
     </div>
     <div class="wf-bar-legend" aria-hidden="true">
-      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net avec TR</span>
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net bancaire</span>
       <span class="wf-bar-legend-item"><span class="wf-key wf-key-deductions"></span>Retenues sur le brut</span>
     </div>
   </div>`;
