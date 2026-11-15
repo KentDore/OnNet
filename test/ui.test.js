@@ -173,6 +173,8 @@ async function openApp(options = {}) {
   }
 
   if (options.consent !== false && !options.emptyStorage) {
+    // Le salaire principal se modifie désormais dans l'éditeur dédié.
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
@@ -181,6 +183,7 @@ async function openApp(options = {}) {
         cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('.benchmark-item').length === 2;
     }, null, { timeout: 20000 });
+    await page.locator('#salaryEditorBack').click();
   }
 
   return { context, page, calls };
