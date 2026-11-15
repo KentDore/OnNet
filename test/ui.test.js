@@ -884,6 +884,22 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
+test('un poste peut être renommé directement dans le sélecteur principal', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const tab = page.locator('#maquetteOfferTabs .offer-tab').first();
+    const original = await tab.locator('.offer-tab-name').innerText();
+    await page.getByRole('button', { name:'Renommer '+original }).click();
+    const input = page.locator('#maquetteOfferTabs .offer-tab-rename-input');
+    assert.equal(await input.isVisible(), true);
+    await input.fill('Poste renommé');
+    await input.press('Enter');
+    assert.equal(await page.locator('#maquetteOfferTabs .offer-tab-name').first().innerText(), 'Poste renommé');
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
