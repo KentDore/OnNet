@@ -885,7 +885,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
 
-    const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
+    const secondName = await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).inputValue();
     // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
     // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
     if (await page.locator('#salaryEditorBack').isVisible()) {
@@ -916,7 +916,8 @@ test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 
       }));
       assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
-      assert.ok(sizes.cards.every(card => card > 0 && card < sizes.panel));
+      assert.ok(sizes.cards.every(card => card > 0 && Math.abs(card - sizes.panel) <= 1),
+        `les repères doivent occuper la largeur disponible en une colonne à ${width}px : ${JSON.stringify(sizes)}`);
     }
   } finally {
     await context.close();
