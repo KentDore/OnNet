@@ -472,7 +472,7 @@ function showEditScenarioModal(scenario){
       <div class="three-col">
         <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
         <div class="field-row"><label for="editOfferMealValue">Valeur (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
-        <div class="field-row"><label>Part salarié</label><div class="pill-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${Number(scenario.partResto||50)===50}">50 %</button><button type="button" data-share="40" aria-pressed="${Number(scenario.partResto||50)===40}">40 %</button></div></div>
+        <div class="field-row"><label for="editOfferMealShare">Part salarié (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto??50)}"></div>
       </div>
       <div class="edit-offer-section">Mensualités et primes</div>
       <div class="two-col">
@@ -501,7 +501,6 @@ function showEditScenarioModal(scenario){
   let locationVerified = !!(location.codePostal && location.departement);
   let communeSequence = 0;
   let communeTimer = null;
-  let partResto = Number(scenario.partResto)===40 ? 40 : 50;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
@@ -513,10 +512,6 @@ function showEditScenarioModal(scenario){
     grossInput.value=String(converted).replace('.', ',');
     periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
-  }));
-  input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
-    partResto=Number(button.dataset.share);
-    input('editOfferMealShare').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
   }));
   const communeInput=input('editOfferCommune');
   const suggestionList=input('editOfferCommuneSuggestions');
@@ -576,10 +571,11 @@ function showEditScenarioModal(scenario){
       Number.isInteger(Number(input('editOfferMonths').value))&&
       parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&parseNum(input('editOfferMutuellePat').value)>=0&&parseNum(input('editOfferMutuellePat').value)<=100000&&
       parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
+      Number(input('editOfferMealShare').value)>=40&&Number(input('editOfferMealShare').value)<=50&&
       parseNum(input('editOfferBonus').value)>=0;
     input('editOfferSave').disabled=!valid;
   };
-  [...requiredNumbers,'editOfferMealDays','editOfferMonths'].forEach(id=>input(id).addEventListener('input',updateSaveState));
+  [...requiredNumbers,'editOfferMealDays','editOfferMealValue','editOfferMealShare','editOfferMonths'].forEach(id=>input(id).addEventListener('input',updateSaveState));
   input('editOfferName').addEventListener('input',updateSaveState);
   updateSaveState();
   input('editOfferSave').addEventListener('click',()=>{
@@ -594,7 +590,7 @@ function showEditScenarioModal(scenario){
       mutuellePat:parseNum(input('editOfferMutuellePat').value),
       joursResto:Number(input('editOfferMealDays').value),
       valeurResto:parseNum(input('editOfferMealValue').value),
-      partResto,
+      partResto:Number(input('editOfferMealShare').value),
       nbMois:Number(input('editOfferMonths').value),
       primes:parseNum(input('editOfferBonus').value),
       treiziemeMoisBase:input('editOffer13thBase').value==='ensemble'?'ensemble':'base'
