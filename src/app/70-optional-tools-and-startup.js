@@ -145,12 +145,12 @@ if(!loadedFromShare && location.hash &&
 }
 // Les interactions V33 doivent fonctionner aussi pour les visiteurs qui ont déjà
 // terminé l'onboarding : elles ne dépendent pas de l'affichage de la modale initiale.
-document.querySelectorAll('[data-maquette-period]').forEach(button=>{
-  button.addEventListener('click',()=>{
-    maquetteComparisonPeriod=button.dataset.maquettePeriod;
-    metric='netHoraire';
-    render();
-  });
+document.addEventListener('click',event=>{
+  const button=event.target.closest('[data-maquette-period]');
+  if(!button) return;
+  maquetteComparisonPeriod=button.dataset.maquettePeriod;
+  metric='netHoraire';
+  render();
 });
 document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
 
