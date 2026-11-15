@@ -1323,6 +1323,16 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
       'les champs occupent toute la largeur du formulaire');
     assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
       'la note Mutuelle occupe toute la largeur du formulaire');
+
+    // Les captures doivent montrer le produit réellement comparatif, pas rester
+    // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
+    await addSecondScenario(page, '3200');
+    await page.locator('#salaryEditorBack').click();
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 2,
+      'les captures présentent deux offres comparables');
+    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 2,
+      'les deux offres sont visibles et renommables');
+
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
     await page.screenshot({ path:path.join(output, 'onnet-mobile.png'), fullPage:true });
