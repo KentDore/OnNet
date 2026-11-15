@@ -1679,8 +1679,30 @@ test('conserve exactement un brut annuel saisi et propose un nom facultatif', { 
     assert.equal(saved.name, 'Offre 2', 'le nom proposé doit rester utilisable si le champ facultatif est vide');
     assert.equal(saved.brut, 29500 / 12,
       'le brut mensuel interne doit conserver la précision issue du brut annuel');
-    assert.equal(saved.brut * 12, 29500,
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8,
       'reconstituer l’annuel ne doit pas produire 29 499,96 €');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('conserve aussi le brut annuel saisi pendant le premier démarrage', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ emptyStorage: true, consent: false });
+  try {
+    await page.locator('#modalOnboardingPeriod [data-period="an"]').click();
+    await page.locator('#modalOnboardingInput').fill('29500');
+    await page.locator('#modalOnboardingSubmit').click();
+    await page.waitForFunction(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
+      return state?.scenarios?.[0]?.salaireSaisi === 29500 &&
+        state.scenarios[0].salaireSaisiPeriode === 'an' &&
+        Number.isFinite(state.scenarios[0].brut);
+    });
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.salaireSaisi, 29500);
+    assert.equal(saved.salaireSaisiPeriode, 'an');
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
   } finally {
     await context.close();
   }
