@@ -2059,7 +2059,7 @@ function buildUrssafCalculationKey(s, f, date) {
   const calculationDate = date ?? f;
   return JSON.stringify({
     brut: Number(s.brut),
-    dureeType: String(s.dureeType),
+    dureeType: s.dureeType === void 0 ? "35" : String(s.dureeType),
     mutuelle: Number(s.mutuelle) || 0,
     mutuellePat: Number(s.mutuellePat) || 0,
     joursResto: Number(s.joursResto) || 0,
@@ -2076,6 +2076,10 @@ function buildUrssafCalculationKey(s, f, date) {
 function unsupportedCalculationReason(s) {
   if (!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0) {
     return "Le salaire brut doit \xEAtre strictement sup\xE9rieur \xE0 0 \u20AC pour effectuer une simulation.";
+  }
+  const durationType = s.dureeType === void 0 ? "35" : String(s.dureeType);
+  if (!["35", "39"].includes(durationType)) {
+    return "La dur\xE9e de travail doit \xEAtre de 35 h ou 39 h par semaine. Le temps partiel n\u2019est pas encore pris en charge.";
   }
   if (Number(s.nbMois || 12) !== 12) {
     return "Ce sc\xE9nario utilise un nombre de mensualit\xE9s diff\xE9rent de 12. Le traitement du 13\u1D49/14\u1D49 mois n\u2019est pas encore raccord\xE9 \xE0 l\u2019API Urssaf.";
@@ -2094,7 +2098,7 @@ function buildUrssafInput(s, f, date) {
   if (reason) throw new Error(reason);
   return {
     brut: Number(s.brut),
-    dureeType: String(s.dureeType),
+    dureeType: s.dureeType === void 0 ? "35" : String(s.dureeType),
     mutuelle: Number(s.mutuelle) || 0,
     mutuellePat: Number(s.mutuellePat) || 0,
     joursResto: Number(s.joursResto) || 0,
