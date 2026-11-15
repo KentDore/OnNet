@@ -850,7 +850,6 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     // openApp vérifie avant chaque test que les fiches et réglages fiscaux
     // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
     await page.locator('#raiseModuleToggle').scrollIntoViewIfNeeded();
-    await page.locator('#advancedWorkspace > summary').click();
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
   } finally {
     await context.close();
