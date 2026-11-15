@@ -107,7 +107,7 @@ export function mapUrssafResultToOnNet(result){
     netApres:monthly.netApres,
     annuelNet:annual.netApres,
     brutHoraire:result.baseGross / HEURES_BASE,
-    netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
+    netHoraire:monthlyHours > 0 ? monthly.netApres / monthlyHours : 0,
     tauxEffectif:gross > 0 ? result.employeeContributions / gross * 100 : 0
   };
 }
