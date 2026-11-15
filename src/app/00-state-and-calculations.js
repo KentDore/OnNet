@@ -4,13 +4,12 @@
 // ---------- État ----------
 let idCounter = 0;
 
-// L'accord de transmission est donné par la saisie/validation du formulaire.
-// Il reste limité à la session et n'est jamais mémorisé sur l'appareil.
-let urssafConsentGranted = false;
+// Consentement et état du repère SMIC partagés par les fragments applicatifs,
+// sans persistance locale ni stockage dans un global mutable.
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 const urssafCalculationCache = createUrssafCalculationCache({ maxResults:100 });
-let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+const urssafSessionState = createUrssafSessionState();
 
 function currentCalculationDate(){
   const d = new Date();
@@ -24,7 +23,8 @@ function scenarioCalculationDate(s){
 
 
 function getSmicGross(){
-  return officialSmicState.status === 'ready' ? officialSmicState.amount : null;
+  const state = urssafSessionState.getOfficialSmicState();
+  return state.status === 'ready' ? state.amount : null;
 }
 
 
@@ -60,7 +60,8 @@ function updateUrssafStatus(computed){
   const diagnosticsList = document.getElementById('urssafWarningsList');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
-  if(!urssafConsentGranted){
+  const smicState = urssafSessionState.getOfficialSmicState();
+  if(!urssafSessionState.isConsentGranted()){
     statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
     return;
   }
@@ -71,7 +72,7 @@ function updateUrssafStatus(computed){
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario,foyer,scenarioCalculationDate(smicScenario)) : null;
   const smicError = (smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey)) ||
-    (officialSmicState.status === 'error');
+    (smicState.status === 'error');
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({s,r}) => !r && !getCalculationError(s));
   if(smicPending) pending.push({s:smicScenario,r:null});
@@ -91,7 +92,7 @@ function updateUrssafStatus(computed){
     return;
   }
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
-  if(officialSmicState.status === 'ready') ready.push(officialSmicState);
+  if(smicState.status === 'ready') ready.push(smicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
   const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
@@ -110,8 +111,9 @@ function updateUrssafStatus(computed){
 let officialSmicPromise = null;
 async function refreshOfficialSmic(forceRetry){
   if(officialSmicPromise) return officialSmicPromise;
-  if(officialSmicState.status === 'ready' && !forceRetry) return officialSmicState;
-  officialSmicState = { status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
+  const currentSmicState = urssafSessionState.getOfficialSmicState();
+  if(currentSmicState.status === 'ready' && !forceRetry) return currentSmicState;
+  urssafSessionState.setOfficialSmicState({ status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null });
   updateUrssafStatus(getCurrentComputed());
   officialSmicPromise = (async () => {
     try{
@@ -122,23 +124,23 @@ async function refreshOfficialSmic(forceRetry){
         'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
       );
       if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
-      officialSmicState = { status:'ready', amount:result.value, checkedAt:result.checkedAt,
-        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null };
+      urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
+        missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
     }catch(error){
-      officialSmicState = { status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
-        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' };
+      urssafSessionState.setOfficialSmicState({ status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
+        error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' });
     }finally{
       officialSmicPromise = null;
       updateComputed({skipUrssafSchedule:true});
-      if(urssafConsentGranted && officialSmicState.status === 'ready') scheduleUrssafCalculations(true,false);
+      if(urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === 'ready') scheduleUrssafCalculations(true,false);
     }
-    return officialSmicState;
+    return urssafSessionState.getOfficialSmicState();
   })();
   return officialSmicPromise;
 }
 
 async function executeUrssafCalculations(generation, forceRetry){
-  if(officialSmicState.status !== 'ready'){
+  if(urssafSessionState.getOfficialSmicState().status !== 'ready'){
     await refreshOfficialSmic(forceRetry === true);
     if(generation !== urssafGeneration) return;
   }
@@ -185,7 +187,7 @@ function scheduleUrssafCalculations(immediate, forceRetry){
   const generation = ++urssafGeneration;
   const computed = getCurrentComputed();
   updateUrssafStatus(computed);
-  if(!urssafConsentGranted) return;
+  if(!urssafSessionState.isConsentGranted()) return;
   const run = () => executeUrssafCalculations(generation, forceRetry === true);
   if(immediate) run();
   else urssafDebounceTimer = setTimeout(run, 300);
