@@ -435,16 +435,17 @@ function showEditScenarioModal(scenario){
     ? Number(scenario.salaireSaisi)
     : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
   const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
+  const trEnabled = Number(scenario.joursResto)>0 || Number(scenario.valeurResto)>0;
+  const initialShare = Number(scenario.partResto)===40 ? 40 : 50;
   const html = `
     <div class="edit-offer-modal">
-      <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
       <div class="field-row">
-        <label for="editOfferName">Nom de l’offre</label>
+        <label for="editOfferName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
-      <div class="edit-offer-section">Rémunération</div>
+      ${renderUrssafConsentNotice()}
       <div class="field-row">
-        <label>Montant brut indiqué en</label>
+        <label>Votre salaire est indiqué en</label>
         <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="Période du salaire brut">
           <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
           <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
@@ -456,64 +457,88 @@ function showEditScenarioModal(scenario){
       </div>
       <div class="field-row">
         <label for="editOfferHours">Base horaire</label>
-        <select id="editOfferHours"><option value="35" ${scenario.dureeType==='35'?'selected':''}>35 h / semaine</option><option value="39" ${scenario.dureeType==='39'?'selected':''}>39 h / semaine</option></select>
+        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
+          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
+          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
+        </div>
       </div>
-      <div class="edit-offer-section">Mutuelle</div>
-      <div class="edit-offer-mutuelle">
-        <span>Part salarié</span>
-        <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false" aria-controls="editOfferMutuelleEditor">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois <span aria-hidden="true">✎</span></button>
+      <div class="onboarding-benefits edit-offer-benefits">
+        <div class="onboarding-mutuelle-note">
+          <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
+          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € salarié</button>
+        </div>
         <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
           <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
           <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
         </div>
-      </div>
-      <div class="edit-offer-section">Titres-restaurant</div>
-      <div class="three-col">
-        <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
-        <div class="field-row"><label for="editOfferMealValue">Valeur (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
-        <div class="field-row"><label for="editOfferMealShare">Part salarié (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto??50)}"></div>
+        <div class="onboarding-tr edit-offer-tr">
+          <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
+          <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
+            <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
+            <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
+          </div>
+          <div id="editOfferTrFields" class="onboarding-tr-fields" ${trEnabled?'':'hidden'}>
+            <div class="three-col">
+              <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
+              <div class="field-row"><label for="editOfferMealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
+              <div class="field-row"><label>Part salariale</label><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
+            </div>
+          </div>
+        </div>
       </div>
       <div class="modal-actions">
         <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true });
+  const pending = openModal(html, { initialFocusSelector:'#editOfferPeriod button', className:'modal-edit-offer', dismissible:true });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
+  let hours = scenario.dureeType==='39'?'39':'35';
+  let trEnabledNow = trEnabled;
+  let mealShare = initialShare;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.period===period) return;
     const amount=parseNum(grossInput.value);
     if(!(amount>0)) return;
-    const converted=period==='mois'?amount*12:amount/12;
+    grossInput.value=String(period==='mois'?amount*12:amount/12).replace('.', ',');
     period=button.dataset.period;
-    grossInput.value=String(converted).replace('.', ',');
     periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
   }));
-  const mutuelleToggle=input('editOfferMutuelleToggle');
-  const mutuelleEditor=input('editOfferMutuelleEditor');
-  mutuelleToggle.addEventListener('click',()=>{
-    const expanded=mutuelleToggle.getAttribute('aria-expanded')==='true';
-    mutuelleToggle.setAttribute('aria-expanded',String(!expanded));
-    mutuelleEditor.hidden=expanded;
-    if(!expanded) input('editOfferMutuelle').focus();
+  input('editOfferHours').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+    hours=button.dataset.hours;
+    input('editOfferHours').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
+  input('editOfferMutuelleToggle').addEventListener('click',()=>{
+    const editor=input('editOfferMutuelleEditor');
+    const expanded=editor.hidden;
+    editor.hidden=!expanded;
+    input('editOfferMutuelleToggle').setAttribute('aria-expanded',String(expanded));
+    if(expanded) input('editOfferMutuelle').focus();
   });
+  input('editOfferTrToggle').querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',()=>{
+    trEnabledNow=button.dataset.tr==='oui';
+    input('editOfferTrToggle').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    input('editOfferTrFields').hidden=!trEnabledNow;
+  }));
+  input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    mealShare=Number(button.dataset.share);
+    input('editOfferMealShare').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
   const validNumber=id=>input(id).value.trim()!==''&&numericEntryValid(input(id).value)&&Number.isFinite(parseNum(input(id).value));
   const updateSaveState=()=>{
     const gross=parseNum(grossInput.value);
-    const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&
-      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&
-      validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
-      Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&Number.isInteger(Number(input('editOfferMealDays').value))&&
-      Number(input('editOfferMealShare').value)>=40&&Number(input('editOfferMealShare').value)<=50;
+    const mutuelle= input('editOfferMutuelle').value;
+    const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&parseNum(mutuelle)>=0&&parseNum(mutuelle)<=100000&&
+      (!trEnabledNow||(Number.isInteger(Number(input('editOfferMealDays').value))&&Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500));
     input('editOfferSave').disabled=!valid;
   };
-  ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue','editOfferMealShare'].forEach(id=>input(id).addEventListener('input',updateSaveState));
-  input('editOfferName').addEventListener('input',updateSaveState);
+  ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue'].forEach(id=>input(id).addEventListener('input',updateSaveState));
   updateSaveState();
   input('editOfferSave').addEventListener('click',()=>{
     const gross=parseNum(grossInput.value);
@@ -521,20 +546,15 @@ function showEditScenarioModal(scenario){
       name:input('editOfferName').value.trim().slice(0,80)||'Offre',
       brut:period==='an'?gross/12:gross,
       salaireSaisi:gross,salaireSaisiPeriode:period,
-      dureeType:input('editOfferHours').value==='39'?'39':'35',
-      // Les paramètres retirés de l'interface restent inchangés dans l'offre.
-      commune:scenario.commune || 'Pacé',
-      codePostal:scenario.codePostal || '',
-      departement:scenario.departement || '',
-      codeCommune:scenario.codeCommune || '',
-      codeDepartement:scenario.codeDepartement || '',
+      dureeType:hours,
+      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',departement:scenario.departement||'',
+      codeCommune:scenario.codeCommune||'',codeDepartement:scenario.codeDepartement||'',
       mutuelle:parseNum(input('editOfferMutuelle').value),
       mutuellePat:Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
-      joursResto:Number(input('editOfferMealDays').value),
-      valeurResto:parseNum(input('editOfferMealValue').value),
-      partResto:Number(input('editOfferMealShare').value),
-      nbMois:Number(scenario.nbMois)||12,
-      primes:Number(scenario.primes)||0,
+      joursResto:trEnabledNow?Number(input('editOfferMealDays').value):0,
+      valeurResto:trEnabledNow?parseNum(input('editOfferMealValue').value):0,
+      partResto:trEnabledNow?mealShare:50,
+      nbMois:Number(scenario.nbMois)||12,primes:Number(scenario.primes)||0,
       treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
     };
     closeModal(result);
