@@ -173,8 +173,7 @@ function renderUrssafConsentNotice(){
     <div class="onboarding-consent">
       <div class="onboarding-consent-top">
         <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
-        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucune donnée transmise avant validation</small></span>
-        <span class="onboarding-consent-badge">Sécurisé</span>
+        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucun salaire transmis avant validation</small></span>
       </div>
       <details class="onboarding-consent-details">
         <summary>Quelles données sont transmises ?</summary>
