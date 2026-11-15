@@ -152,7 +152,7 @@ document.querySelectorAll('[data-maquette-period]').forEach(button=>{
     render();
   });
 });
-document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario(true));
+document.getElementById('maquetteAddSalary')?.addEventListener('click',()=>addScenario());
 
 if(showOnboarding){
   showOnboardingModal().then(result => {
