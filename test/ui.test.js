@@ -1401,7 +1401,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    await page.locator('#maquetteOfferTabs button').nth(1).click();
+    await page.locator('#maquetteOfferTabs button.offer-tab').nth(1).click();
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
