@@ -1310,7 +1310,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     });
     console.log('ONNET_VISUAL_STATE=' + JSON.stringify(initialVisualState));
 
-    // Aligner la capture sur les données d'exemple de la maquette V33.
+    // Aligner la capture sur un exemple de brut mensuel.
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2500');
     await page.locator('#editOfferSave').click();
@@ -1318,7 +1318,6 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 2500,
       null, { timeout:20000 });
-    await page.locator('#editOfferGross').blur();
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
@@ -1327,8 +1326,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.ok(await page.locator('.modal-edit-offer').evaluate(el => el.scrollHeight > 0));
     await page.locator('#editOfferCancel').click();
 
-    // Les captures doivent montrer le produit réellement comparatif, pas rester
-    // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
+    // Les captures doivent montrer le comparatif, sans fenêtre ouverte.
     
     await addSecondScenario(page, '3200');
     
