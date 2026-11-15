@@ -19,6 +19,8 @@ test('refuse les scénarios hors périmètre ou dont la commune est incomplète'
   assert.match(unsupportedCalculationReason({ ...scenario, nbMois: 13 }), /mensualités différent de 12/);
   assert.match(unsupportedCalculationReason({ ...scenario, primes: 500 }), /primes annuelles libres/);
   assert.match(unsupportedCalculationReason({ ...scenario, codePostal: '' }), /Sélectionnez une commune/);
+  assert.match(unsupportedCalculationReason({ ...scenario, dureeType: '28' }), /35 h ou 39 h.*temps partiel/);
+  assert.equal(unsupportedCalculationReason({ ...scenario, dureeType: '39' }), null);
   assert.equal(unsupportedCalculationReason(scenario), null);
 });
 
@@ -29,6 +31,7 @@ test('ne transmet que les paramètres utiles au calcul de paie', () => {
   assert.equal(input.commune, 'Pacé');
   assert.equal(input.codePostal, '35740');
   assert.equal(input.benchmarkOnly, false);
+  assert.equal(buildUrssafInput({ ...scenario, dureeType: undefined }, null, '2026-11-15').dureeType, '35');
   for (const key of ['modeImpot', 'tauxPAS', 'situationFamille', 'enfantsACharge', 'autresRevenusImposables']) {
     assert.equal(Object.hasOwn(input, key), false);
   }
@@ -48,6 +51,8 @@ test('convertit une réponse Urssaf sans exposer de métrique fiscale', () => {
   assert.equal(mapped.m.cotisNettes, 630);
   assert.equal(mapped.m.mutuelle, 30);
   assert.equal(mapped.m.netSocial, 2410);
+  assert.equal(mapped.netHoraire, 2310 / (35 * 52 / 12),
+    'le net horaire 35 h doit utiliser les heures mensuelles réelles du contrat');
   assert.deepEqual(mapped.tr, {
     totalSalarie: 100, totalEmployeur: 100, reintegre: 5, motif: 'api'
   });
