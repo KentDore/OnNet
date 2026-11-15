@@ -1219,6 +1219,7 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
     assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
     assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire reste affiché pendant l’édition');
     const period = page.locator('#mainSalaryPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
     assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
