@@ -698,3 +698,28 @@ function syncDisplayToggles(){
 }
 syncDisplayToggles();
 
+// ---------- Retour haptique progressif sur les appareils compatibles ----------
+// Safari iOS ne fournit pas l'API Vibration : les animations CSS restent
+// le retour tactile universel, sans simuler une vibration inexistante.
+const ONNET_HAPTIC_TARGETS = [
+  '#shareBtn', '#maquetteAddSalary', '#addRaiseScenario', '#headerMenu summary',
+  '.comparison-period-tabs button', '.pill-toggle button', '.raise-chip',
+  '.module-toggle-head', '#modalOnboardingSubmit', '#modalAddSubmit',
+  '#editOfferSave', '[data-modal-confirm]', '.offer-reference-select',
+  '.comparison-set-reference', '.offer-comparison-edit',
+  '.offer-comparison-remove', '.nav-btn'
+].join(',');
+
+document.addEventListener('pointerup', event => {
+  if(event.pointerType !== 'touch' || typeof navigator.vibrate !== 'function') return;
+  const target = event.target instanceof Element
+    ? event.target.closest(ONNET_HAPTIC_TARGETS)
+    : null;
+  if(!target || target.disabled || target.getAttribute('aria-disabled') === 'true') return;
+  try{
+    navigator.vibrate(8);
+  }catch(error){
+    // Le navigateur ou les réglages système peuvent refuser la vibration.
+  }
+}, true);
+

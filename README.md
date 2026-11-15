@@ -6,7 +6,7 @@ OnNet compare plusieurs scénarios de rémunération pour le secteur privé fran
 
 ## État du projet
 
-Le calculateur publié sur GitHub Pages utilise l’API REST officielle **Mon-entreprise / Urssaf** pour les calculs de paie. Les fichiers `index.html` et `Onnet-2.2.1.html` sont générés depuis les sources de `src/`. Lors d’une PR, la CI les synchronise dans la branche après la réussite des contrôles.
+Le calculateur publié sur GitHub Pages utilise l’API REST officielle **Mon-entreprise / Urssaf** pour les calculs de paie. Les fichiers `index.html` et `Onnet-2.2.2.html` sont générés depuis les sources de `src/`. Lors d’une PR, la CI les synchronise dans la branche après la réussite des contrôles.
 
 ## Calculs et données transmises
 
