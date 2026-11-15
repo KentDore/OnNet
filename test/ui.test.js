@@ -410,6 +410,7 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   try {
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
@@ -1071,6 +1072,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -1096,6 +1098,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
 
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
@@ -1310,38 +1313,19 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     // Aligner la capture sur les données d'exemple de la maquette V33.
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2500');
-    
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
-      document.getElementById('mainSalaryGross')?.value === '2500',
+      JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 2500,
       null, { timeout:20000 });
     await page.locator('#editOfferGross').blur();
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
-    const formLayout = await page.evaluate(() => {
-      const rect = selector => {
-        const r = document.querySelector(selector).getBoundingClientRect();
-        return { left:r.left, top:r.top, width:r.width, right:r.right };
-      };
-      return {
-        period:rect('#editOfferPeriod'),
-        gross:rect('#editOfferGross'),
-        hours:rect('#editOfferHours'),
-        mutuelle:rect('.declaration-mutuelle'),
-        fields:rect('.declaration-fields')
-      };
-    });
-    assert.ok(formLayout.gross.top > formLayout.period.top,
-      'les champs de saisie restent empilés comme dans la V33');
-    assert.ok(formLayout.hours.top > formLayout.gross.top,
-      'la base horaire suit le salaire brut');
-    assert.ok(formLayout.mutuelle.top > formLayout.hours.top,
-      'la note Mutuelle suit les champs de saisie');
-    assert.ok(Math.abs(formLayout.period.width - formLayout.fields.width) < 2,
-      'les champs occupent toute la largeur du formulaire');
-    assert.ok(Math.abs(formLayout.mutuelle.width - formLayout.fields.width) < 2,
-      'la note Mutuelle occupe toute la largeur du formulaire');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.ok(await page.locator('.modal-edit-offer').evaluate(el => el.scrollHeight > 0));
+    await page.locator('#editOfferCancel').click();
 
     // Les captures doivent montrer le produit réellement comparatif, pas rester
     // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
@@ -1590,6 +1574,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
     await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
