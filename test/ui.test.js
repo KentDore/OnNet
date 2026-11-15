@@ -877,6 +877,11 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     }
 
     const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
+    // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
+    // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
+    if (await page.locator('#salaryEditorBack').isVisible()) {
+      await page.locator('#salaryEditorBack').click();
+    }
     await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
