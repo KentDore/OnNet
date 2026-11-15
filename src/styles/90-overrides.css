@@ -538,3 +538,10 @@ body.salary-editor-open .integrated-offers{display:none!important}
   display:flow-root;
   margin-top:24px;
 }
+
+/* Sur les écrans très étroits, chaque repère utilise toute la largeur disponible.
+   Cette règle vient après les variantes mobile pour éviter leur surcharge. */
+@media(max-width:360px){
+  #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr)!important}
+  #benchmarkMount .benchmark-item{width:100%;min-width:0}
+}
