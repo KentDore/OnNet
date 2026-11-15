@@ -317,7 +317,7 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
-    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
+    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € / mois'));
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
@@ -861,6 +861,9 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
     assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.equal(await page.locator('#modalBox').getAttribute('role'), 'dialog');
+    assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
+    assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
     assert.equal(await page.locator('#editOfferCommune').count(), 0);
     assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
