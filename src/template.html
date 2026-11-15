@@ -32,18 +32,15 @@
   <main id="contenu">
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="section-head unified-heading"><div class="compare-heading-copy"><h2 id="maquetteCompareTitle">Votre salaire, en perspective</h2><p class="sub">Déclarez votre salaire et comparez ce qu’il vous reste réellement.</p></div></div>
-      <div class="integrated-offers">
-        <div class="integrated-offers-heading"><div><strong>Offres à comparer</strong><span>Votre salaire et vos propositions</span></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
-        <div class="offer-tabs" id="maquetteOfferTabs" role="group" aria-label="Choisir l’offre à comparer"></div>
-      </div>
-
-    <div class="comparison-subhead"><h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
+    <div class="comparison-subhead comparison-subhead-actions"><div><h3>Comparer vos offres</h3><p>Comparez le net réellement obtenu pour chaque proposition.</p></div><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter une offre</button></div>
+<h3>Comparer votre salaire</h3><p>Face au SMIC, à la médiane et à vos autres propositions.</p></div>
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer en</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteYourSalary"></div>
     <div id="benchmarkMount" aria-live="polite"></div>
 
-    <div class="declaration-inline">
-      <div class="declaration-inline-title"><strong>Votre situation</strong><span>Quelques informations pour calculer votre net</span></div>
+    <div class="declaration-inline" id="salaryEditor" aria-labelledby="salaryEditorTitle">
+      <div class="salary-editor-heading"><button type="button" id="salaryEditorBack" class="salary-editor-back">← Retour au comparatif</button><div class="declaration-inline-title"><strong id="salaryEditorTitle">Modifier cette offre</strong><span>Les changements sont recalculés automatiquement.</span></div></div>
+      
       
       <div class="declaration-fields">
         <span class="declaration-field-label">Période du salaire brut</span>
