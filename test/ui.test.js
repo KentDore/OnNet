@@ -189,6 +189,14 @@ async function openApp(options = {}) {
   return { context, page, calls };
 }
 
+async function openSalaryEditor(page, index = 0) {
+  const field = page.locator('#mainSalaryGross');
+  if (!(await field.isVisible())) {
+    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(index).click();
+  }
+  await field.waitFor({ state: 'visible' });
+}
+
 async function addSecondScenario(page, gross = '3200') {
   await page.locator('#maquetteAddSalary').click();
   await page.locator('#modalAddInput').fill(gross);
@@ -221,6 +229,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     assert.equal(await page.locator('.urssaf-status-main').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
@@ -407,6 +416,7 @@ test('le SMIC est récupéré via l’API et aucun réglage manuel n’est propo
 test('en cas d’échec de récupération du SMIC, ne présente pas le montant de secours comme actuel', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
@@ -470,6 +480,7 @@ test('affiche les avertissements et les variables par défaut renvoyés par Urss
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
+    await openSalaryEditor(page);
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
@@ -485,6 +496,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', { tim
   const { context, page, calls } = await openApp({ consent: false, failApi: true });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
@@ -569,6 +581,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
   const { context, page, calls } = await openApp();
   try {
     const before = calls.count;
+    await openSalaryEditor(page);
     const gross = page.locator('#mainSalaryGross');
     await gross.fill('3100');
     await page.waitForFunction(() => {
@@ -601,6 +614,7 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
     await page.reload();
     assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3200');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
@@ -837,15 +851,7 @@ test('une offre ouvre un écran de modification dédié', { timeout: 60000 }, as
 test('les actions et les barres restent cohérentes avec plusieurs postes sur mobile', { timeout: 90000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.locator('#addScenario').click();
-    await page.locator('#modalAddInput').fill('3400');
-    await page.locator('#modalAddSubmit').click();
-    await page.waitForFunction(() =>
-      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2 &&
-      document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 2 &&
-      document.querySelectorAll('#stackChart .stack-col').length === 2,
-      null, { timeout: 20000 }
-    );
+    await addSecondScenario(page, '3400');
 
     for (const width of [320, 375, 390, 430]) {
       await page.setViewportSize({ width, height: 844 });
@@ -1029,6 +1035,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
   const { context, page, calls } = await openApp({ consent: false, delayMs: 250 });
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
@@ -1053,6 +1060,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.deepEqual(calls.bodies[0].expressions, ['SMIC']);
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
@@ -1355,6 +1363,7 @@ test('la maquette V33 conserve deux repères côte à côte sur mobile et relie 
     );
     assert.equal(columns, 2, 'les cartes SMIC et médiane restent côte à côte sur mobile');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
+    await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3000');
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
