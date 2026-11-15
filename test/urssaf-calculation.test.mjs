@@ -90,3 +90,19 @@ test('convertit une réponse benchmark sans créer de détail de paie', () => {
     missingVariables: [], warnings: [], netApres: 1600
   });
 });
+
+test('conserve le calcul horaire du scénario 39 h avec ses heures supplémentaires', () => {
+  const mapped = mapUrssafResultToOnNet({
+    engine: 'mon-entreprise', checkedAt: '2026-11-15T08:00:00Z',
+    missingVariables: [], warnings: [], grossCalculated: 3400,
+    overtimeHours: 17.33, employeeContributions: 748, employeeHealth: 30,
+    netBeforeTax: 2622, taxableNet: 2800, mealTicketEmployee: 0,
+    mealTicketEmployer: 0, mealTicketNonDeductible: 0,
+    overtimePay: 400, baseGross: 3000, netAfterTax: 2500,
+    incomeTax: 122, calculatedTaxRate: 4.5
+  });
+  assert.equal(mapped.hasHS, true);
+  assert.equal(mapped.heuresSup, 17.33);
+  assert.equal(mapped.brutHS, 400);
+  assert.equal(mapped.netHoraire, (2622 + 30) / (39 * 52 / 12));
+});
