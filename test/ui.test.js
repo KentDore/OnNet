@@ -1343,7 +1343,9 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.equal(summaryRows.length, 3);
     assert.match(summaryRows[0], /Net sans TR/);
     assert.match(summaryRows[1], /TR — total des deux parts/);
-    assert.match(summaryRows[2], /Net avec TR/);\n    const parseEuro = value => Number(value.replace(/[^0-9]/g, ''));\n    const summaryAmounts = await page.locator('#stackChart .waterfall .salary-net-summary-row strong').allTextContents();\n    assert.equal(summaryAmounts.length, 3);\n    assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');\n    assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
+    assert.match(summaryRows[2], /Net avec TR/);
+    const parseEuro = value => Number(value.replace(/[^0-9]/g, ''));
+    const summaryAmounts = await page.locator('#stackChart .waterfall .salary-net-summary-row strong').allTextContents();\n    assert.equal(summaryAmounts.length, 3);\n    assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');\n    assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
     assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
 
   } finally {
