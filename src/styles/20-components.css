@@ -582,7 +582,9 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 .modal-edit-offer .onboarding-tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 10px;}
 .modal-edit-offer .onboarding-tr-heading{margin:0;}
 .modal-edit-offer .onboarding-tr-fields{grid-column:1/-1;padding-top:7px;}
-.modal-edit-offer .onboarding-tr-fields .three-col{gap:7px;}
+.modal-edit-offer .onboarding-tr-fields .three-col{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.modal-edit-offer .onboarding-tr-fields .field-label{min-height:2.2em;font-size:9px;line-height:1.2;}
+.modal-edit-offer .onboarding-tr-fields .field-row input,.modal-edit-offer .onboarding-tr-fields .meal-share-toggle{height:40px;min-height:40px;}
 .modal-edit-offer .onboarding-tr-fields .field-row label{font-size:10px;}
 .modal-edit-offer .onboarding-consent{padding:8px 10px;}
 .modal-edit-offer .onboarding-consent-details{margin-top:4px;}
