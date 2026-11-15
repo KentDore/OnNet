@@ -1,4 +1,4 @@
-name: Publicodes prototype
+name: Urssaf API prototype
 
 on:
   push:
@@ -22,7 +22,6 @@ on:
       - 'scripts/compare-urssaf-api.mjs'
       - 'scripts/diagnose-urssaf-meal-tickets.mjs'
       - 'scripts/diagnose-overtime-50.mjs'
-      - 'scripts/diagnose-publicodes-tax.mjs'
       - 'scripts/smoke-urssaf-api.mjs'
       - 'prototype/**'
       - 'test/publicodes.test.js'
@@ -79,7 +78,7 @@ jobs:
       - name: Upload standalone prototype
         uses: actions/upload-artifact@v4
         with:
-          name: onnet-publicodes-prototype
+          name: onnet-urssaf-api-prototype
           path: dist/Onnet-publicodes-prototype.html
           if-no-files-found: error
           retention-days: 14
@@ -107,7 +106,5 @@ jobs:
         run: npm run diagnose:urssaf-meal-tickets
       - name: Verify 50% overtime premium with the official API
         run: node scripts/diagnose-overtime-50.mjs
-      - name: Diagnose official tax rules
-        run: npm run diagnose:publicodes-tax
       - name: Run production API smoke tests (including meal-ticket ceiling)
         run: node scripts/smoke-urssaf-api.mjs
