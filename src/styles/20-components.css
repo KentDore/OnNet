@@ -162,7 +162,6 @@
   .reveal{ animation:reveal-in .5s cubic-bezier(.25,.8,.3,1) both; }
   #comparePanel{ animation-delay:.04s; }
   .cards-bar{ animation-delay:.10s; }
-  .situation-section{ animation-delay:.13s; }
   .modules-section{ animation-delay:.18s; }
   .disclaimer{ animation-delay:.22s; }
 
@@ -289,7 +288,7 @@
 
   @media print{
     body{background:#fff;}
-    .header-top .print-btn, .header-actions, .situation-section, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
+    .header-top .print-btn, .header-actions, .modules-section, .panel > summary::after, .remove-btn, .drag-handle, .card-add, .metric-toggle, .ref-row select, .cards-bar-nav{display:none !important;}
     .cards-scroll{overflow:visible; margin:0; padding:0;}
     .cards{flex-wrap:wrap;}
     .card{break-inside:avoid; border-color:#bbb; flex-basis:280px;}
@@ -377,8 +376,6 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 }
 .share-scenario-option strong,.share-extra-option strong{font-weight:650}
 #shareCreateBtn:disabled{opacity:.45;cursor:not-allowed}
-.foyer-situation-toggle{display:grid;grid-template-columns:repeat(3,minmax(0,1fr))}
-.foyer-situation-toggle button{padding-left:5px;padding-right:5px;white-space:normal}
 
 
 /* Repères salariaux compacts : priorité à la comparaison immédiate. */
