@@ -198,15 +198,15 @@ const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
 
 function getComparisonPeriodConfig(){
   if(maquetteComparisonPeriod==='hour') return {
-    key:'hour', label:'Net horaire', unit:'heure', plural:'par heure',
+    key:'hour', label:'Net horaire', unit:'h',
     factor:weekly=>1, format:fmtHoraire, formatSigned:fmtHoraireSigned
   };
   if(maquetteComparisonPeriod==='year') return {
-    key:'year', label:'Net annuel', unit:'an', plural:'par an',
+    key:'year', label:'Net annuel', unit:'an',
     factor:weekly=>weekly*52, format:fmt, formatSigned:fmtSigned
   };
   return {
-    key:'month', label:'Net mensuel', unit:'mois', plural:'par mois',
+    key:'month', label:'Net mensuel', unit:'mois',
     factor:weekly=>weekly*52/12, format:fmt, formatSigned:fmtSigned
   };
 }
@@ -237,7 +237,8 @@ function renderInsight(computed){
   if(best.item.s.id===reference.s.id){
     return '<div class="insight neutral">L’offre de référence présente le net estimé le plus élevé.</div>';
   }
-  return '<div class="insight"><span class="insight-caption">ÉCART AVEC LA RÉFÉRENCE</span><strong>'+esc(best.item.s.name)+'</strong><span> apporte </span><strong>'+config.formatSigned(delta)+' '+config.plural+'</strong><span> par rapport à '+esc(reference.s.name)+'.</span></div>';
+  const deltaText=config.formatSigned(delta)+(config.key==='hour'?'':' / '+config.unit);
+  return '<div class="insight"><span class="insight-caption">ÉCART AVEC LA RÉFÉRENCE</span><strong>'+esc(best.item.s.name)+'</strong><span> apporte </span><strong>'+deltaText+'</strong><span> par rapport à '+esc(reference.s.name)+'.</span></div>';
 }
 
 function renderComparisonCards(computed){
@@ -254,7 +255,7 @@ function renderComparisonCards(computed){
       ? '<span class="comparison-reference-note">Offre de référence</span>'
       : delta===null
         ? '<span class="comparison-reference-note">Écart indisponible</span>'
-        : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+config.unit+' vs '+esc(reference.s.name)+'</span></div>';
+        : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+(config.key==='hour'?'vs ':config.unit+' vs ')+esc(reference.s.name)+'</span></div>';
     const trTotal=getMealTicketTotal(s,r);
     const details=trTotal>0.5
       ? '<details class="offer-net-details"><summary>Détail des titres-restaurant</summary>'+renderSalaryNetSummary(r.m.netSocial,trTotal,r.netApres+trTotal)+'</details>'
@@ -265,7 +266,7 @@ function renderComparisonCards(computed){
     return '<article class="comparison-offer-card '+(s.id===refId?'is-reference':'')+'" data-comparison-offer="'+s.id+'">'+
       '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
       '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
-      '<div class="comparison-offer-value">'+(value===null?'—':config.format(value))+'<small>/ '+config.unit+'</small></div>'+
+      '<div class="comparison-offer-value">'+(value===null?'—':config.format(value))+(value===null||config.key==='hour'?'':'<small>/ '+config.unit+'</small>')+'</div>'+
       '<div class="comparison-offer-meta"><span>'+fmt(s.brut)+' brut / mois</span><span>'+weekly.toLocaleString('fr-FR')+' h / semaine</span></div>'+
       deltaHtml+
       details+
