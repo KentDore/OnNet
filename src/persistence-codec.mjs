@@ -38,7 +38,7 @@ export function deserializePersistedState(raw){
       onboardingCompleted:data.onboardingCompleted === true ||
         (data.onboardingCompleted !== false && !legacyPristine)
     };
-  }catch(error){
+  }catch{
     return null;
   }
 }
