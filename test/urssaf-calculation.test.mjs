@@ -1,6 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import {
+  buildUrssafCalculationKey,
   taxInputForFoyer,
   unsupportedCalculationReason,
   buildUrssafInput,
@@ -106,4 +107,41 @@ test('conserve le calcul horaire du scénario 39 h avec ses heures supplémentai
   assert.equal(mapped.heuresSup, 17.33);
   assert.equal(mapped.brutHS, 400);
   assert.equal(mapped.netHoraire, (2622 + 30) / (39 * 52 / 12));
+});
+
+test('la clé de cache varie avec tous les paramètres qui modifient le calcul Urssaf', () => {
+  const base = { ...scenario };
+  const foyer = { mode: 'bareme', couple: false, personnesCharge: 0, parentIsole: false, autresRevenus: 0 };
+  const key = buildUrssafCalculationKey(base, foyer, '2026-11-15');
+  const relevantChanges = [
+    ['brut', 3100], ['dureeType', '39'], ['mutuelle', 35],
+    ['mutuellePat', 35], ['joursResto', 20], ['valeurResto', 9],
+    ['partResto', 45], ['nbMois', 13], ['primes', 100],
+    ['commune', 'Rennes'], ['codePostal', '35000'],
+    ['departement', 'Morbihan']
+  ];
+  for (const [field, value] of relevantChanges) {
+    assert.notEqual(
+      buildUrssafCalculationKey({ ...base, [field]: value }, foyer, '2026-11-15'),
+      key,
+      `la modification de ${field} doit invalider le cache`
+    );
+  }
+  assert.notEqual(buildUrssafCalculationKey(base, foyer, '2026-11-16'), key,
+    'un changement de date doit invalider le cache');
+  assert.notEqual(buildUrssafCalculationKey(base, { ...foyer, personnesCharge: 1 }, '2026-11-15'), key,
+    'un changement de situation fiscale doit invalider le cache');
+});
+
+test('la clé de cache ignore les champs purement visuels et la fiscalité du benchmark', () => {
+  const foyer = { mode: 'bareme', couple: false, personnesCharge: 0, parentIsole: false, autresRevenus: 0 };
+  const key = buildUrssafCalculationKey(scenario, foyer, '2026-11-15');
+  assert.equal(buildUrssafCalculationKey({
+    ...scenario, id: 42, name: 'Autre libellé', open: true
+  }, foyer, '2026-11-15'), key);
+  const benchmark = { ...scenario, isBenchmark: true };
+  assert.equal(
+    buildUrssafCalculationKey(benchmark, foyer, '2026-11-15'),
+    buildUrssafCalculationKey(benchmark, { ...foyer, couple: true, personnesCharge: 3 }, '2026-11-15')
+  );
 });
