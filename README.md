@@ -29,7 +29,7 @@ Le comparatif utilise la médiane nationale des salaires nets du secteur privé 
 - Scénarios 35 h et 39 h. Le scénario 39 h représente 35 h auxquelles s’ajoutent 4 heures supplémentaires rémunérées par semaine, selon le droit commun avec une majoration de 25 %. Les taux propres aux conventions collectives et les RTT ne sont pas pris en compte.
 - Recherche et confirmation de la commune de l’établissement via l’API officielle geo.api.gouv.fr (Pacé par défaut).
 - Mutuelle saisie séparément pour le salarié et l’employeur. Valeur initiale : 30 € par part, soit 30 € déduits du salaire chaque mois et 30 € financés par l’employeur. Le modèle impose une participation employeur d’au moins 50 % pour une complémentaire santé non nulle ; les exemptions et régimes particuliers ne sont pas gérés.
-- Titres-restaurant paramétrables en nombre, valeur et part salariale. Le modèle accepte une participation salariale de 40 à 50 % (participation employeur de 50 à 60 %).
+- Titres-restaurant paramétrables en nombre, valeur et part salariale. Le récapitulatif affiche dans cet ordre le net sans TR, le total des deux parts de titres-restaurant, puis le net avec TR. Le modèle accepte une participation salariale de 40 à 50 % (participation employeur de 50 à 60 %).
 - Repère SMIC brut récupéré via la règle officielle `SMIC` ; son net est calculé par la même API après consentement. Pour une offre de 39 h, le repère tient compte des 4 heures supplémentaires hebdomadaires majorées à 25 % selon l’hypothèse de droit commun retenue par le simulateur.
 - Sauvegarde locale, partage par URL, impression et export PDF via le navigateur.
 

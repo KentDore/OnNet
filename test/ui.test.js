@@ -752,14 +752,17 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     const part = card.locator('[data-key="partResto"]');
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
-    const breakdown = await page.locator('.wf-note').innerText();
-    assert.match(breakdown, /21 jours × 8 €/);
-    assert.match(breakdown, /part salarié/);
-    assert.match(breakdown, /part employeur/);
+    const waterfallRows = await page.locator('.waterfall .salary-net-summary-row').allTextContents();
+    assert.equal(waterfallRows.length, 3, 'le récapitulatif affiche trois valeurs lorsque les TR sont activés');
+    assert.match(waterfallRows[0], /Net sans TR/);
+    assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
+    assert.match(waterfallRows[2], /Net avec TR/);
     await addSecondScenario(page);
-    const stackTicketDetails = await page.locator('#stackChart .stack-col .stack-net-notr').allTextContents();
-    assert.ok(stackTicketDetails.some(text => text.includes('TR salarié : 84 € · employeur : 84 €')),
-      'le graphique comparatif doit afficher les deux contributions aux titres-restaurant');
+    const stackRows = await page.locator('#stackChart .stack-col').first().locator('.salary-net-summary-row').allTextContents();
+    assert.equal(stackRows.length, 3);
+    assert.match(stackRows[0], /Net sans TR/);
+    assert.match(stackRows[1], /TR — total des deux parts[\s\S]*168 €/);
+    assert.match(stackRows[2], /Net avec TR/);
   } finally {
     await context.close();
   }
@@ -1330,8 +1333,11 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
       'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
     assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
       'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
-    assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
-    assert.match(await page.locator('#stackChart').innerText(), /Net[\s\S]*Retenues sur le brut/);
+    const summaryRows = await page.locator('#stackChart .waterfall .salary-net-summary-row').allTextContents();
+    assert.equal(summaryRows.length, 3);
+    assert.match(summaryRows[0], /Net sans TR/);
+    assert.match(summaryRows[1], /TR — total des deux parts/);
+    assert.match(summaryRows[2], /Net avec TR/);
     assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
 
   } finally {

@@ -104,6 +104,19 @@ function renderAddCard(){
 // ---------- Graphique empilé de répartition ----------
 const STACK_COLORS = { cotis:'var(--stack-cotis)', mutuelle:'var(--gold)', tr:'var(--stack-tr)', net:'var(--accent)' };
 
+function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR){
+  const rows = trTotal > 0.5
+    ? [
+      { label:'Net sans TR', value:netSansTR },
+      { label:'TR — total des deux parts', value:trTotal },
+      { label:'Net avec TR', value:netAvecTR, final:true }
+    ]
+    : [{ label:'Net', value:netAvecTR, final:true }];
+  return `<div class="salary-net-summary" aria-label="Récapitulatif du net et des titres-restaurant">${rows.map(row =>
+    `<div class="salary-net-summary-row${row.final ? ' is-final' : ''}"><span>${row.label}</span><strong>${fmt(row.value)}</strong></div>`
+  ).join('')}</div>`;
+}
+
 function renderStack(computed){
   const sorted = [...computed].sort((a,b) => b.r.m.netApres - a.r.m.netApres);
   const maxBrut = Math.max(...computed.map(x => x.r.m.brutTotal), 1);
@@ -112,6 +125,7 @@ function renderStack(computed){
   return sorted.map(({s, r}) => {
     const m = r.m;
     const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
+    const trTotal = Math.max(0, tr) + Math.max(0, r.tr.totalEmployeur);
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
@@ -130,8 +144,7 @@ function renderStack(computed){
     <div class="stack-col ${s.id === refId ? 'is-ref' : ''} ${s.id === justAddedId ? 'card-enter' : ''}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="Définir ${esc(s.name)} comme salaire de référence"` : 'aria-current="true"'}>
       <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
       <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? 'is-ref' : ''}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
-      <div class="stack-net">${fmt(net)}</div>
-      ${tr > 0.5 ? `<div class="stack-net-notr">TR salarié : ${fmt(tr)} · employeur : ${fmt(r.tr.totalEmployeur)}</div><div class="stack-net-notr">sans TR : ${fmt(netSansTR)}</div>` : ''}
+      ${renderSalaryNetSummary(netSansTR, trTotal, net)}
       <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
     </div>`;
   }).join('');
@@ -146,38 +159,25 @@ function renderStackLegend(){
 }
 
 function renderWaterfall(computed){
-  const { s, r } = computed[0];
+  const { r } = computed[0];
   const m = r.m;
   const brut = Math.max(0, m.brutTotal);
   const net = Math.max(0, m.netApres);
   const deductions = Math.max(0, brut - net);
   const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
-  const cotis = Math.max(0, m.cotisNettes);
-  const mutuelle = Math.max(0, m.mutuelle);
-  const tr = Math.max(0, r.tr.totalSalarie);
-  const netSansTR = m.netSocial;
-  const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
-  const trNote = tr > 0.5
-    ? `Net hors retenue des TR : <strong>${fmt(netSansTR)}</strong> · ${s.joursResto} jours × ${fmt(s.valeurResto)} · part salarié : <strong>${fmt(tr)}</strong> · part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> · valeur créditée : <strong>${fmt(trValeurFaciale)}</strong>`
-    : '';
+  const netSansTR = Math.max(0, m.netSocial);
+  const trTotal = Math.max(0, r.tr.totalSalarie) + Math.max(0, r.tr.totalEmployeur);
   return `
   <div class="waterfall">
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
+    ${renderSalaryNetSummary(netSansTR, trTotal, net)}
+    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net avec TR : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
       <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
       <span class="wf-stack-deductions" style="width:${(100-ratio).toFixed(3)}%"></span>
     </div>
-    <div class="wf-breakdown">
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-net" aria-hidden="true"></span>
-        <div><strong>${fmt(net)}</strong><span>Net</span></div>
-      </div>
-      <div class="wf-breakdown-item">
-        <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
-        <div><strong>${fmt(deductions)}</strong><span>Retenues sur le brut</span></div>
-      </div>
+    <div class="wf-bar-legend" aria-hidden="true">
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net avec TR</span>
+      <span class="wf-bar-legend-item"><span class="wf-key wf-key-deductions"></span>Retenues sur le brut</span>
     </div>
-    <p class="wf-components">Dont : cotisations sociales ${fmt(cotis)} · mutuelle ${fmt(mutuelle)} · titres-restaurant (part salarié) ${fmt(tr)}</p>
-    ${trNote ? `<p class="wf-note">${trNote}</p>` : ''}
   </div>`;
 }
 
