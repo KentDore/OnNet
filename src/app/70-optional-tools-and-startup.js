@@ -158,7 +158,7 @@ if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
     onboardingCompleted = true;
-    urssafConsentGranted = true;
+    urssafSessionState.grantConsent();
     render();
     saveState();
     scheduleUrssafCalculations(true,true);
