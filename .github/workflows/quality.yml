@@ -38,6 +38,7 @@ jobs:
           node --check src/rate-limited-fetch.mjs
           node --check src/smic-reference.mjs
           node --check src/urssaf-calculation-cache.mjs
+          node --check src/urssaf-session-state.mjs
           node --check src/app/00-state-and-calculations.js
           node --check src/app/10-persistence.js
           node --check src/app/20-sharing.js
@@ -52,6 +53,8 @@ jobs:
       # Le build synthétique reste hors du dépôt : les tests de calcul doivent lire l'artefact livré.
       - name: Construire le HTML autonome
         run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
+      - name: Tester l'état de session Urssaf
+        run: node --test test/urssaf-session-state.test.mjs
       - name: Tester le cache de calcul Urssaf
         run: node --test test/urssaf-calculation-cache.test.mjs
       - name: Tester le repère SMIC 35 h / 39 h
