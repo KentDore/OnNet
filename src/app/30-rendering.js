@@ -245,6 +245,7 @@ function benchmarkDelta(value, reference){
   return { amount: sign + fmt(Math.abs(delta)), pct: (delta > 0 ? '+' : '') + pct.toLocaleString('fr-FR',{maximumFractionDigits:1,minimumFractionDigits:1}) + ' %', positive: delta >= 0 };
 }
 function renderBenchmarks(computed){
+  const smicState = urssafSessionState.getOfficialSmicState();
   const item=computed.find(x=>x.s.id===refId);
   if(!item) return '';
   const {s,r}=item;
@@ -268,7 +269,7 @@ function renderBenchmarks(computed){
   const smicValue=smicNetHourly===null?null:smicNetHourly*factor;
   const smicGap=userValue===null||smicValue===null?null:userValue-smicValue;
   const medianGap=userValue===null?null:userValue-medianValue;
-  const smicStatus=officialSmicState.status==='error'
+  const smicStatus=smicState.status==='error'
     ? 'Repère SMIC indisponible via l’API officielle. Réessayez le calcul.'
     : 'Le repère net sera récupéré auprès de l’Urssaf après votre autorisation.';
   const smicCard=`
@@ -279,7 +280,7 @@ function renderBenchmarks(computed){
         ${smicGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(smicGap)+'">'+gapText(smicGap)+'</div>'}
         ${smicResult?`<details class="benchmark-details"><summary>Comment est calculé l’écart ?</summary>
           <p>Le SMIC net est estimé par l’API officielle Mon-entreprise / Urssaf sur une base de ${durationLabel}${weeklyHours===39?' : 35 h au SMIC + 4 h supplémentaires hebdomadaires majorées à 25 %':''}. Pour les périodes mensuelle et annuelle, le repère est calculé sur cette même durée. Il est calculé sans mutuelle ni titres-restaurant.</p>
-          <p>${weeklyHours===39?`Brut mensuel de référence à 35 h : ${fmt(smicGross)}. Brut total estimé à 39 h : ${fmt(smicGrossTarget)}, avec 4 h supplémentaires hebdomadaires majorées à 25 %.`:`Brut mensuel de référence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${officialSmicState.checkedAt?new Date(officialSmicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
+          <p>${weeklyHours===39?`Brut mensuel de référence à 35 h : ${fmt(smicGross)}. Brut total estimé à 39 h : ${fmt(smicGrossTarget)}, avec 4 h supplémentaires hebdomadaires majorées à 25 %.`:`Brut mensuel de référence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. Règle consultée le ${smicState.checkedAt?new Date(smicState.checkedAt).toLocaleDateString('fr-FR'):'—'}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf — montant du SMIC</a></p>
         </details>`:''}
       </article>`;
@@ -313,7 +314,7 @@ function applyDeclaredSalaryFromForm(){
   scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
   scenario.partResto=Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share)||50;
   // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
-  urssafConsentGranted=true;
+  urssafSessionState.grantConsent();
   saveState();
   render();
   scheduleUrssafCalculations(false,false);
