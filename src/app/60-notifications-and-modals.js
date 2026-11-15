@@ -332,6 +332,39 @@ function showOnboardingModal(){
 // Redemandé à chaque nouveau salaire — le brut et les avantages (mutuelle,
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
+
+function renameScenario(id){
+  const scenario=findScenario(id);
+  if(!scenario || modalState) return;
+  const html=`
+    <p id="modalMsg" class="modal-msg">Choisissez un nom pour retrouver cette offre dans le comparatif.</p>
+    <div class="field-row">
+      <label for="renameOfferInput">Nom de l’offre</label>
+      <input type="text" id="renameOfferInput" maxlength="60" value="${esc(scenario.name)}" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
+      <button type="button" class="btn btn-primary" id="renameOfferSave">Enregistrer</button>
+    </div>`;
+  openModal(html,{initialFocusSelector:'#renameOfferInput'});
+  const overlay=document.getElementById('modalOverlay');
+  const input=overlay.querySelector('#renameOfferInput');
+  const save=()=>{
+    const name=input.value.trim().slice(0,60);
+    if(!name){input.setCustomValidity('Saisissez un nom pour cette offre.');input.reportValidity();return;}
+    const current=findScenario(id);
+    if(!current){closeModal(false);return;}
+    current.name=name;
+    saveState();
+    closeModal(true);
+    render();
+  };
+  input.addEventListener('input',()=>input.setCustomValidity(''));
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();save();}});
+  overlay.querySelector('#renameOfferSave').addEventListener('click',save);
+  overlay.querySelector('[data-modal-cancel]').addEventListener('click',()=>closeModal(false));
+}
+
 function showAddScenarioModal(brutPrefill, dureePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
