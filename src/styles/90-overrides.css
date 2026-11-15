@@ -285,3 +285,6 @@
 .offer-tab-action.is-danger{color:var(--warn);}
 .offer-tab-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
 @media(max-width:640px){.offer-tab-action{width:28px;min-width:28px;height:32px;min-height:32px}}
+
+.offer-tab-rename-input{width:100%;min-width:0;height:32px;padding:4px 7px;border:1px solid var(--accent);border-radius:7px;background:var(--surface);color:var(--ink);font:600 13px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.offer-tab-rename-input:focus{outline:2px solid color-mix(in srgb,var(--accent) 25%,transparent);outline-offset:1px;}
