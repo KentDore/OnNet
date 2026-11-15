@@ -446,7 +446,7 @@ function renderMaquetteControls(computedOverride){
       const amount=value===null?'Calcul en cours':(maquetteComparisonPeriod==='hour'?fmtHoraire(value):fmt(value));
       const unit=maquetteComparisonPeriod==='hour'?'heure':maquetteComparisonPeriod==='year'?'an':'mois';
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
-        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4>'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Actuelle</span>':'')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
+        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><input class="offer-comparison-name" type="text" maxlength="60" value="'+esc(s.name)+'" data-rename-offer="'+s.id+'" aria-label="Nom de l’offre '+(index+1)+'" autocomplete="off"></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'">Définir comme référence</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
         '<strong class="offer-comparison-net">'+amount+(value===null?'':' <small>/ '+unit+'</small>')+'</strong>'+
         '<div class="offer-comparison-meta">Net · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
@@ -456,12 +456,38 @@ function renderMaquetteControls(computedOverride){
       summary.addEventListener('click',event=>{
         const remove=event.target.closest('[data-delete-offer]');
         if(remove){removeScenario(Number(remove.dataset.deleteOffer));return;}
+        const reference=event.target.closest('[data-set-offer-reference]');
+        if(reference){
+          refId=Number(reference.dataset.setOfferReference);
+          saveState();
+          render();
+          return;
+        }
+        const rename=event.target.closest('[data-rename-offer]');
+        if(rename && event.type==='change'){
+          const scenario=findScenario(Number(rename.dataset.renameOffer));
+          if(!scenario) return;
+          const nextName=rename.value.trim().slice(0,60);
+          scenario.name=nextName || 'Offre sans nom';
+          saveState();
+          render();
+          return;
+        }
         const button=event.target.closest('[data-edit-offer]');
         if(!button)return;
         refId=Number(button.dataset.editOffer);
         setSalaryEditor(true);
         render();
         document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+      });
+      summary.addEventListener('change',event=>{
+        const rename=event.target.closest('[data-rename-offer]');
+        if(!rename) return;
+        const scenario=findScenario(Number(rename.dataset.renameOffer));
+        if(!scenario) return;
+        scenario.name=rename.value.trim().slice(0,60) || 'Offre sans nom';
+        saveState();
+        render();
       });
       summary.dataset.editBound='true';
     }
