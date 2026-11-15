@@ -2279,14 +2279,50 @@ function buildSmicScenario(base, amount) {
   });
 }
 
+// src/urssaf-calculation-cache.mjs
+function createUrssafCalculationCache(options = {}) {
+  const maxResults = options.maxResults ?? 100;
+  if (!Number.isInteger(maxResults) || maxResults < 1) {
+    throw new RangeError("maxResults doit \xEAtre un entier strictement positif.");
+  }
+  const results = /* @__PURE__ */ new Map();
+  const errors = /* @__PURE__ */ new Map();
+  return Object.freeze({
+    getResult(key) {
+      return results.get(key) ?? null;
+    },
+    hasResult(key) {
+      return results.has(key);
+    },
+    setResult(key, value) {
+      if (!results.has(key) && results.size >= maxResults) {
+        const oldestKey = results.keys().next().value;
+        results.delete(oldestKey);
+      }
+      results.set(key, value);
+    },
+    getError(key) {
+      return errors.get(key) ?? null;
+    },
+    hasError(key) {
+      return errors.has(key);
+    },
+    setError(key, message) {
+      errors.set(key, message);
+    },
+    deleteError(key) {
+      return errors.delete(key);
+    }
+  });
+}
+
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 var idCounter = 0;
 var urssafConsentGranted = false;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
-var urssafResultCache = /* @__PURE__ */ new Map();
-var urssafErrorCache = /* @__PURE__ */ new Map();
+var urssafCalculationCache = createUrssafCalculationCache({ maxResults: 100 });
 var officialSmicState = { status: "idle", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null };
 function currentCalculationDate() {
   const d = /* @__PURE__ */ new Date();
@@ -2299,18 +2335,18 @@ function getSmicGross() {
   return officialSmicState.status === "ready" ? officialSmicState.amount : null;
 }
 function getCurrentComputed() {
-  return scenarios.map((s) => ({ s, r: urssafResultCache.get(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))) || null }));
+  return scenarios.map((s) => ({ s, r: urssafCalculationCache.getResult(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))) || null }));
 }
 function getCalculationError(s, f) {
   const key = buildUrssafCalculationKey(s, f || foyer, scenarioCalculationDate(s));
-  return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
+  return urssafCalculationCache.getError(key) || unsupportedCalculationReason(s);
 }
 function getCachedSmicResult() {
   const base = findScenario(refId) || scenarios[0];
   if (!base) return null;
   const scenario = buildSmicScenario(base, getSmicGross());
   if (!scenario) return null;
-  return urssafResultCache.get(buildUrssafCalculationKey(scenario, foyer, scenarioCalculationDate(scenario))) || null;
+  return urssafCalculationCache.getResult(buildUrssafCalculationKey(scenario, foyer, scenarioCalculationDate(scenario))) || null;
 }
 var queuedUrssafFetch = createRateLimitedFetch(
   (url, options) => window.fetch(url, options),
@@ -2329,13 +2365,13 @@ function updateUrssafStatus(computed) {
     statusText.textContent = "Renseignez votre salaire pour autoriser sa transmission \xE0 l\u2019API Urssaf. Aucune donn\xE9e salariale n\u2019est transmise avant cette saisie.";
     return;
   }
-  const failed = computed.filter(({ s, r }) => !r && urssafErrorCache.has(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))));
+  const failed = computed.filter(({ s, r }) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))));
   const unsupported = computed.filter(({ s, r }) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base, getSmicGross()) : null;
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario, foyer, scenarioCalculationDate(smicScenario)) : null;
-  const smicError = smicScenario && !smicResult && urssafErrorCache.has(smicKey) || officialSmicState.status === "error";
+  const smicError = smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey) || officialSmicState.status === "error";
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({ s, r }) => !r && !getCalculationError(s));
   if (smicPending) pending.push({ s: smicScenario, r: null });
@@ -2425,10 +2461,10 @@ async function executeUrssafCalculations(generation, forceRetry) {
   for (const s of jobs) {
     if (generation !== urssafGeneration) return;
     const key = buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s));
-    if (seen.has(key) || urssafResultCache.has(key)) continue;
+    if (seen.has(key) || urssafCalculationCache.hasResult(key)) continue;
     seen.add(key);
-    if (forceRetry) urssafErrorCache.delete(key);
-    if (urssafErrorCache.has(key)) continue;
+    if (forceRetry) urssafCalculationCache.deleteError(key);
+    if (urssafCalculationCache.hasError(key)) continue;
     const unsupported = unsupportedCalculationReason(s);
     if (unsupported) continue;
     try {
@@ -2439,12 +2475,11 @@ async function executeUrssafCalculations(generation, forceRetry) {
         buildUrssafInput(s, foyer, scenarioCalculationDate(s)),
         { fetchImpl: queuedUrssafFetch }
       );
-      urssafResultCache.set(key, mapUrssafResultToOnNet(result));
-      urssafErrorCache.delete(key);
-      if (urssafResultCache.size > 100) urssafResultCache.delete(urssafResultCache.keys().next().value);
+      urssafCalculationCache.setResult(key, mapUrssafResultToOnNet(result));
+      urssafCalculationCache.deleteError(key);
     } catch (error) {
       if (generation === urssafGeneration) {
-        urssafErrorCache.set(key, error instanceof Error ? error.message : "Erreur de calcul Urssaf inconnue.");
+        urssafCalculationCache.setError(key, error instanceof Error ? error.message : "Erreur de calcul Urssaf inconnue.");
       }
     }
     if (generation !== urssafGeneration) return;
