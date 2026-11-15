@@ -15,9 +15,8 @@ header.hero .trust{display:inline-flex;align-items:center;gap:10px;margin-top:13
 header.hero .trust strong{display:block;color:#176b45;font-size:12px}
 header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54px;pointer-events:none}
 .unified-salary-panel{padding:clamp(18px,3vw,26px);border-radius:23px}
-.unified-heading{margin-bottom:18px}
-.unified-heading h2,.comparison-subhead h3{color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
-.unified-heading .sub{font-size:13px;color:#68716b}
+.comparison-subhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0;border:0}
+.comparison-subhead h2{margin:0;color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
 .declaration-inline{margin-top:16px;padding:17px 17px 15px;border:1px solid #dce9df;border-radius:17px;background:linear-gradient(180deg,#f7fbf8 0%,#f4faf5 100%)}
 .declaration-inline-title{display:block;margin-bottom:13px}
 .declaration-inline-title strong{display:block;color:#315640;font-size:14px;font-weight:800}
@@ -41,9 +40,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 .offer-tab{min-width:0;min-height:52px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:#45614e;font-size:13px;font-weight:800}
 .offer-tab.active{border-color:#cfe3d4;background:#fff;color:#176b49;box-shadow:0 1px 3px rgba(24,80,48,.07)}
 .offer-tab small{display:block;margin-top:3px;color:#7b8a7f;font-size:10px;font-weight:600}
-.comparison-subhead{margin:20px 0 11px;padding-top:16px;border-top:1px solid #e7ede8}
-.comparison-subhead h3{margin:0;font-size:19px}
-.comparison-subhead p{margin:4px 0 0;color:#78837c;font-size:12px}
+
 .comparison-period{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 15px;padding:10px 12px;border:1px solid #e0ebe2;border-radius:13px;background:#f7faf7}
 .comparison-period>span{color:#3f5d49;font-size:12px;font-weight:750}
 .comparison-period-tabs{display:flex;gap:3px;padding:3px;border-radius:10px;background:#eaf1eb}
@@ -89,7 +86,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
  .declaration-update{min-height:45px}
  .integrated-offers{margin-top:14px;padding-top:12px}
  .offer-tab{min-height:49px}
- .comparison-subhead{margin-top:16px;padding-top:14px}
+ .comparison-subhead{margin:0 0 10px;padding:0}
  .comparison-period{margin-bottom:12px;padding:9px 10px}
  .comparison-period-tabs button{min-width:48px;padding:8px 7px}
  #maquetteYourSalary .benchmark-your-salary{padding:13px;border-radius:15px;gap:7px}
