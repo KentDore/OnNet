@@ -1349,19 +1349,23 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     console.log('ONNET_FINAL_VISUAL_STATE=' + JSON.stringify(finalVisualState));
     assert.ok(finalVisualState.chartChildren > 0 && finalVisualState.chartParentHidden === false,
       'le graphique de répartition doit être rendu après consentement : ' + JSON.stringify(finalVisualState));
-    assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
-      'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
-    const summaryRows = await page.locator('#stackChart .waterfall .salary-net-summary-row').allTextContents();
+    const comparisonColumns = page.locator('#stackChart .stack-col');
+    assert.equal(await comparisonColumns.count(), 2,
+      'deux offres doivent produire deux colonnes comparatives');
+    assert.equal(await page.locator('#stackChart .stack-col .stack-bar').count(), 2,
+      'chaque offre doit avoir sa barre de répartition');
+    const currentOffer = comparisonColumns.filter({ hasText: 'Poste actuel' });
+    const summaryRows = await currentOffer.locator('.salary-net-summary-row').allTextContents();
     assert.equal(summaryRows.length, 3);
     assert.match(summaryRows[0], /Net sans TR/);
     assert.match(summaryRows[1], /TR — total des deux parts/);
     assert.match(summaryRows[2], /Net avec TR/);
     const parseEuro = value => Number(value.replace(/[^0-9]/g, ''));
-    const summaryAmounts = await page.locator('#stackChart .waterfall .salary-net-summary-row strong').allTextContents();
+    const summaryAmounts = await currentOffer.locator('.salary-net-summary-row strong').allTextContents();
     assert.equal(summaryAmounts.length, 3);
     assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');
     assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
-    assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
+    assert.match(await page.locator('#stackHint').innerText(), /définir comme référence/);
 
   } finally {
     await context.close();
