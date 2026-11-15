@@ -2316,14 +2316,61 @@ function createUrssafCalculationCache(options = {}) {
   });
 }
 
+// src/urssaf-session-state.mjs
+var SMIC_STATUSES = /* @__PURE__ */ new Set(["idle", "loading", "ready", "error"]);
+function createInitialSmicState() {
+  return {
+    status: "idle",
+    amount: null,
+    checkedAt: null,
+    missingVariables: [],
+    warnings: [],
+    error: null
+  };
+}
+function copySmicState(state) {
+  return {
+    status: state.status,
+    amount: state.amount ?? null,
+    checkedAt: state.checkedAt ?? null,
+    missingVariables: Array.isArray(state.missingVariables) ? [...state.missingVariables] : [],
+    warnings: Array.isArray(state.warnings) ? [...state.warnings] : [],
+    error: state.error ?? null
+  };
+}
+function createUrssafSessionState() {
+  let consentGranted = false;
+  let officialSmicState = createInitialSmicState();
+  return Object.freeze({
+    isConsentGranted() {
+      return consentGranted;
+    },
+    grantConsent() {
+      consentGranted = true;
+    },
+    getOfficialSmicState() {
+      return copySmicState(officialSmicState);
+    },
+    setOfficialSmicState(nextState) {
+      if (!nextState || typeof nextState !== "object" || Array.isArray(nextState)) {
+        throw new TypeError("L\u2019\xE9tat du SMIC doit \xEAtre un objet.");
+      }
+      if (!SMIC_STATUSES.has(nextState.status)) {
+        throw new RangeError("Statut du SMIC invalide.");
+      }
+      officialSmicState = copySmicState(nextState);
+      return copySmicState(officialSmicState);
+    }
+  });
+}
+
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 var idCounter = 0;
-var urssafConsentGranted = false;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
 var urssafCalculationCache = createUrssafCalculationCache({ maxResults: 100 });
-var officialSmicState = { status: "idle", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null };
+var urssafSessionState = createUrssafSessionState();
 function currentCalculationDate() {
   const d = /* @__PURE__ */ new Date();
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -2332,7 +2379,8 @@ function scenarioCalculationDate(s) {
   return currentCalculationDate();
 }
 function getSmicGross() {
-  return officialSmicState.status === "ready" ? officialSmicState.amount : null;
+  const state = urssafSessionState.getOfficialSmicState();
+  return state.status === "ready" ? state.amount : null;
 }
 function getCurrentComputed() {
   return scenarios.map((s) => ({ s, r: urssafCalculationCache.getResult(buildUrssafCalculationKey(s, foyer, scenarioCalculationDate(s))) || null }));
@@ -2361,7 +2409,8 @@ function updateUrssafStatus(computed) {
   const diagnosticsList = document.getElementById("urssafWarningsList");
   if (diagnostics) diagnostics.hidden = true;
   if (diagnosticsList) diagnosticsList.innerHTML = "";
-  if (!urssafConsentGranted) {
+  const smicState = urssafSessionState.getOfficialSmicState();
+  if (!urssafSessionState.isConsentGranted()) {
     statusText.textContent = "Renseignez votre salaire pour autoriser sa transmission \xE0 l\u2019API Urssaf. Aucune donn\xE9e salariale n\u2019est transmise avant cette saisie.";
     return;
   }
@@ -2371,7 +2420,7 @@ function updateUrssafStatus(computed) {
   const smicScenario = base ? buildSmicScenario(base, getSmicGross()) : null;
   const smicResult = getCachedSmicResult();
   const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario, foyer, scenarioCalculationDate(smicScenario)) : null;
-  const smicError = smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey) || officialSmicState.status === "error";
+  const smicError = smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey) || smicState.status === "error";
   const smicPending = !smicResult && !smicError;
   const pending = computed.filter(({ s, r }) => !r && !getCalculationError(s));
   if (smicPending) pending.push({ s: smicScenario, r: null });
@@ -2391,7 +2440,7 @@ function updateUrssafStatus(computed) {
     return;
   }
   const ready = computed.map((x) => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
-  if (officialSmicState.status === "ready") ready.push(officialSmicState);
+  if (smicState.status === "ready") ready.push(smicState);
   const warnings = [...new Set(ready.flatMap((r) => r.warnings || []))];
   const missing = [...new Set(ready.flatMap((r) => r.missingVariables || []))];
   const checkedAt = ready.map((r) => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
@@ -2408,8 +2457,9 @@ function updateUrssafStatus(computed) {
 var officialSmicPromise = null;
 async function refreshOfficialSmic(forceRetry) {
   if (officialSmicPromise) return officialSmicPromise;
-  if (officialSmicState.status === "ready" && !forceRetry) return officialSmicState;
-  officialSmicState = { status: "loading", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null };
+  const currentSmicState = urssafSessionState.getOfficialSmicState();
+  if (currentSmicState.status === "ready" && !forceRetry) return currentSmicState;
+  urssafSessionState.setOfficialSmicState({ status: "loading", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null });
   updateUrssafStatus(getCurrentComputed());
   officialSmicPromise = (async () => {
     try {
@@ -2422,34 +2472,34 @@ async function refreshOfficialSmic(forceRetry) {
         { fetchImpl: queuedUrssafFetch }
       );
       if (!Number.isFinite(result.value) || result.value <= 0) throw new Error("L\u2019API Urssaf n\u2019a pas renvoy\xE9 de montant SMIC valide.");
-      officialSmicState = {
+      urssafSessionState.setOfficialSmicState({
         status: "ready",
         amount: result.value,
         checkedAt: result.checkedAt,
         missingVariables: result.missingVariables || [],
         warnings: result.warnings || [],
         error: null
-      };
+      });
     } catch (error) {
-      officialSmicState = {
+      urssafSessionState.setOfficialSmicState({
         status: "error",
         amount: null,
         checkedAt: null,
         missingVariables: [],
         warnings: [],
         error: error instanceof Error ? error.message : "Erreur de r\xE9cup\xE9ration du SMIC officiel."
-      };
+      });
     } finally {
       officialSmicPromise = null;
       updateComputed({ skipUrssafSchedule: true });
-      if (urssafConsentGranted && officialSmicState.status === "ready") scheduleUrssafCalculations(true, false);
+      if (urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === "ready") scheduleUrssafCalculations(true, false);
     }
-    return officialSmicState;
+    return urssafSessionState.getOfficialSmicState();
   })();
   return officialSmicPromise;
 }
 async function executeUrssafCalculations(generation, forceRetry) {
-  if (officialSmicState.status !== "ready") {
+  if (urssafSessionState.getOfficialSmicState().status !== "ready") {
     await refreshOfficialSmic(forceRetry === true);
     if (generation !== urssafGeneration) return;
   }
@@ -2492,7 +2542,7 @@ function scheduleUrssafCalculations(immediate, forceRetry) {
   const generation = ++urssafGeneration;
   const computed = getCurrentComputed();
   updateUrssafStatus(computed);
-  if (!urssafConsentGranted) return;
+  if (!urssafSessionState.isConsentGranted()) return;
   const run = () => executeUrssafCalculations(generation, forceRetry === true);
   if (immediate) run();
   else urssafDebounceTimer = setTimeout(run, 300);
@@ -3036,6 +3086,7 @@ function renderAlerts(computed) {
   return out.join("");
 }
 function renderBenchmarks(computed) {
+  const smicState = urssafSessionState.getOfficialSmicState();
   const item = computed.find((x) => x.s.id === refId);
   if (!item) return "";
   const { s, r } = item;
@@ -3059,7 +3110,7 @@ function renderBenchmarks(computed) {
   const smicValue = smicNetHourly === null ? null : smicNetHourly * factor;
   const smicGap = userValue === null || smicValue === null ? null : userValue - smicValue;
   const medianGap = userValue === null ? null : userValue - medianValue;
-  const smicStatus = officialSmicState.status === "error" ? "Rep\xE8re SMIC indisponible via l\u2019API officielle. R\xE9essayez le calcul." : "Le rep\xE8re net sera r\xE9cup\xE9r\xE9 aupr\xE8s de l\u2019Urssaf apr\xE8s votre autorisation.";
+  const smicStatus = smicState.status === "error" ? "Rep\xE8re SMIC indisponible via l\u2019API officielle. R\xE9essayez le calcul." : "Le rep\xE8re net sera r\xE9cup\xE9r\xE9 aupr\xE8s de l\u2019Urssaf apr\xE8s votre autorisation.";
   const smicCard = `
       <article class="benchmark-item">
         <div class="benchmark-label">SMIC net</div>
@@ -3068,7 +3119,7 @@ function renderBenchmarks(computed) {
         ${smicGap === null ? '<div class="benchmark-result">\xC9cart disponible apr\xE8s calcul</div>' : '<div class="benchmark-result ' + gapClass(smicGap) + '">' + gapText(smicGap) + "</div>"}
         ${smicResult ? `<details class="benchmark-details"><summary>Comment est calcul\xE9 l\u2019\xE9cart ?</summary>
           <p>Le SMIC net est estim\xE9 par l\u2019API officielle Mon-entreprise / Urssaf sur une base de ${durationLabel}${weeklyHours === 39 ? " : 35 h au SMIC + 4 h suppl\xE9mentaires hebdomadaires major\xE9es \xE0 25 %" : ""}. Pour les p\xE9riodes mensuelle et annuelle, le rep\xE8re est calcul\xE9 sur cette m\xEAme dur\xE9e. Il est calcul\xE9 sans mutuelle ni titres-restaurant.</p>
-          <p>${weeklyHours === 39 ? `Brut mensuel de r\xE9f\xE9rence \xE0 35 h : ${fmt(smicGross)}. Brut total estim\xE9 \xE0 39 h : ${fmt(smicGrossTarget)}, avec 4 h suppl\xE9mentaires hebdomadaires major\xE9es \xE0 25 %.` : `Brut mensuel de r\xE9f\xE9rence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. R\xE8gle consult\xE9e le ${officialSmicState.checkedAt ? new Date(officialSmicState.checkedAt).toLocaleDateString("fr-FR") : "\u2014"}.</p>
+          <p>${weeklyHours === 39 ? `Brut mensuel de r\xE9f\xE9rence \xE0 35 h : ${fmt(smicGross)}. Brut total estim\xE9 \xE0 39 h : ${fmt(smicGrossTarget)}, avec 4 h suppl\xE9mentaires hebdomadaires major\xE9es \xE0 25 %.` : `Brut mensuel de r\xE9f\xE9rence : ${fmt(smicGross)}.`} Taux horaire brut de base : ${fmtHoraire(smicHourlyGross)}. R\xE8gle consult\xE9e le ${smicState.checkedAt ? new Date(smicState.checkedAt).toLocaleDateString("fr-FR") : "\u2014"}.</p>
           <p><a href="https://www.urssaf.fr/accueil/outils-documentation/taux-baremes/montant-smic.html" target="_blank" rel="noopener noreferrer">Source officielle : Urssaf \u2014 montant du SMIC</a></p>
         </details>` : ""}
       </article>`;
@@ -3100,7 +3151,7 @@ function applyDeclaredSalaryFromForm() {
   scenario.joursResto = Number(document.getElementById("mainMealDays")?.value) || 0;
   scenario.valeurResto = Number(document.getElementById("mainMealValue")?.value) || 0;
   scenario.partResto = Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share) || 50;
-  urssafConsentGranted = true;
+  urssafSessionState.grantConsent();
   saveState();
   render();
   scheduleUrssafCalculations(false, false);
@@ -3782,7 +3833,7 @@ async function addScenario() {
   const last = scenarios[scenarios.length - 1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if (!answers) return;
-  urssafConsentGranted = true;
+  urssafSessionState.grantConsent();
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name: "Salaire " + (scenarios.length + 1),
@@ -4434,7 +4485,7 @@ if (showOnboarding) {
   showOnboardingModal().then((result) => {
     Object.assign(scenarios[0], result);
     onboardingCompleted = true;
-    urssafConsentGranted = true;
+    urssafSessionState.grantConsent();
     render();
     saveState();
     scheduleUrssafCalculations(true, true);
