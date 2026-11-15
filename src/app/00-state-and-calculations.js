@@ -33,7 +33,7 @@ function getCurrentComputed(){
   return scenarios.map(s => ({s, r:urssafCalculationCache.getResult(buildUrssafCalculationKey(s,scenarioCalculationDate(s))) || null}));
 }
 
-function getCalculationError(s, f){
+function getCalculationError(s){
   const key = buildUrssafCalculationKey(s,scenarioCalculationDate(s));
   return urssafCalculationCache.getError(key) || unsupportedCalculationReason(s);
 }
