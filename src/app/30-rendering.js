@@ -373,15 +373,7 @@ function renderBenchmarks(computed){
 let maquetteComparisonPeriod='hour';
 let mainSalaryInputPeriod='month';
 let salaryEditorOpen=false;
-function setSalaryEditor(open){
-  salaryEditorOpen=!!open;
-  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
-  if(salaryEditorOpen){
-    const title=document.getElementById('salaryEditorTitle');
-    const selected=findScenario(refId)||scenarios[0];
-    if(title) title.textContent='Modifier — '+(selected?.name||'cette offre');
-  }
-}
+function setSalaryEditor(open){ salaryEditorOpen=!!open; }
 function applyDeclaredSalaryFromForm(){
   const scenario=findScenario(refId)||scenarios[0];
   const gross=document.getElementById('mainSalaryGross');
@@ -422,7 +414,7 @@ function renderMaquetteControls(computedOverride){
     button.setAttribute('aria-pressed',String(scenario.id===refId));
     const name=document.createElement('span');name.className='offer-tab-name';name.textContent=scenario.name;button.append(name);
     const small=document.createElement('small');small.textContent=index===0?'Actuelle':'Proposition';button.append(small);
-    button.addEventListener('click',()=>{refId=scenario.id;setSalaryEditor(true);render();document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});});
+    button.addEventListener('click',()=>{refId=scenario.id;saveState();render();});
     item.append(button);
     const actions=document.createElement('div');actions.className='offer-tab-actions';
     if(scenarios.length>1){
@@ -524,15 +516,22 @@ function renderMaquetteControls(computedOverride){
         }
         const button=event.target.closest('[data-edit-offer]');
         if(!button)return;
-        refId=Number(button.dataset.editOffer);
-        setSalaryEditor(true);
-        render();
-        document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+        const scenario=findScenario(Number(button.dataset.editOffer));
+        if(!scenario) return;
+        refId=scenario.id;
+        showEditScenarioModal(scenario).then(answers=>{
+          if(!answers) return;
+          Object.assign(scenario,answers);
+          urssafSessionState.grantConsent();
+          saveState();
+          render();
+          scheduleUrssafCalculations(false,false);
+        });
       });
       summary.dataset.editBound='true';
     }
   }
-  document.body.classList.toggle('salary-editor-open',salaryEditorOpen);
+  document.body.classList.remove('salary-editor-open');
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
   if(status && mount && status.parentElement!==mount) mount.appendChild(status);
 }
