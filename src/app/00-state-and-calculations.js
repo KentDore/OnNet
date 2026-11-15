@@ -9,8 +9,6 @@ let idCounter = 0;
 let urssafConsentGranted = false;
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
-let urssafRequestQueue = Promise.resolve();
-let urssafLastRequestAt = 0;
 const urssafResultCache = new Map();
 const urssafErrorCache = new Map();
 let officialSmicState = { status:'idle', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null };
@@ -65,16 +63,10 @@ function getCachedSmicResult(){
   return urssafResultCache.get(buildUrssafCalculationKey(scenario,foyer,scenarioCalculationDate(scenario))) || null;
 }
 
-function queuedUrssafFetch(url, options){
-  const request = urssafRequestQueue.then(async () => {
-    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
-    if(delay) await new Promise(resolve => setTimeout(resolve, delay));
-    urssafLastRequestAt = Date.now();
-    return window.fetch(url, options);
-  });
-  urssafRequestQueue = request.catch(() => {});
-  return request;
-}
+const queuedUrssafFetch = createRateLimitedFetch(
+  (url, options) => window.fetch(url, options),
+  { minimumIntervalMs:350 }
+);
 
 function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
