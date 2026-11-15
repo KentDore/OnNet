@@ -157,7 +157,7 @@ function onStructural(e){
 
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
-async function addScenario(){
+async function addScenario(openEditor=false){
   const last = scenarios[scenarios.length-1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
@@ -170,6 +170,7 @@ async function addScenario(){
   }, answers));
   scenarios.push(created);
   justAddedId = created.id;
+  if(openEditor) setSalaryEditor(true);
   render();
   // Attend la fin de la disparition de la modale (200ms, voir closeModal)
   // pour que le défilement vers la nouvelle carte soit visible et fluide
