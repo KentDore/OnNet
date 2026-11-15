@@ -871,6 +871,15 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € salarié');
     await page.locator('#editOfferMutuelleToggle').click();
     assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
+    await page.setViewportSize({ width:375, height:667 });
+    const modalFit = await page.locator('#modalBox').evaluate(el => {
+      const rect = el.getBoundingClientRect();
+      return { top:rect.top, bottom:rect.bottom, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, viewportHeight:window.innerHeight };
+    });
+    assert.ok(modalFit.top >= 0 && modalFit.bottom <= modalFit.viewportHeight,
+      `l’éditeur doit rester entièrement visible sur mobile : ${JSON.stringify(modalFit)}`);
+    assert.ok(modalFit.scrollHeight <= modalFit.clientHeight + 1,
+      `l’éditeur ne doit pas imposer de défilement interne : ${JSON.stringify(modalFit)}`);
     await page.locator('#editOfferCancel').click();
     await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
   } finally {
