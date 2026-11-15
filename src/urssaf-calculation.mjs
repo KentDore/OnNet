@@ -2,7 +2,7 @@ import { HEURES_BASE } from './ui-utils.mjs';
 
 // Adaptateurs purs entre l'état OnNet et le contrat de l'API Mon-entreprise.
 
-export function buildUrssafCalculationKey(s, date){
+export function buildUrssafCalculationKey(s, f, date){
   return JSON.stringify({
     brut:Number(s.brut),
     dureeType:String(s.dureeType),
@@ -38,7 +38,7 @@ export function unsupportedCalculationReason(s){
   return null;
 }
 
-export function buildUrssafInput(s, date){
+export function buildUrssafInput(s, f, date){
   const reason = unsupportedCalculationReason(s);
   if(reason) throw new Error(reason);
   return {
@@ -103,7 +103,6 @@ export function mapUrssafResultToOnNet(result){
     m:monthly,
     a:annual,
     netApres:monthly.netApres,
-    netImposable:monthly.netImposable,
     annuelNet:annual.netApres,
     brutHoraire:result.baseGross / HEURES_BASE,
     netHoraire:monthlyHours > 0 ? (monthly.netApres + monthly.mutuelle) / monthlyHours : 0,
