@@ -102,7 +102,6 @@ function openModal(bodyHtml, opts){
   // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
   // de confirmation (pas de champ) restent centrées, plus naturel.
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
-  const box = overlay.querySelector('#modalBox');
   if(o.className) box.classList.add(o.className);
 
   lockBodyScroll();
@@ -434,7 +433,6 @@ function showEditScenarioModal(scenario){
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
     ? Number(scenario.salaireSaisi)
     : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
-  const hasMealTickets = Number(scenario.joursResto) > 0 && Number(scenario.valeurResto) > 0;
   const html = `
     <div class="edit-offer-modal">
       <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
@@ -577,7 +575,7 @@ function showEditScenarioModal(scenario){
       Number.isInteger(Number(input('editOfferMealDays').value))&&
       Number(input('editOfferMonths').value)>=1&&Number(input('editOfferMonths').value)<=24&&
       Number.isInteger(Number(input('editOfferMonths').value))&&
-      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuellePat').value)>=0&&
+      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&parseNum(input('editOfferMutuellePat').value)>=0&&parseNum(input('editOfferMutuellePat').value)<=100000&&
       parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
       parseNum(input('editOfferBonus').value)>=0;
     input('editOfferSave').disabled=!valid;
