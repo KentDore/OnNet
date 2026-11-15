@@ -349,7 +349,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'la base mensuelle doit rester égale au SMIC officiel 35 h');
     assert.ok(Math.abs(smicGross39 - expectedSmicGross39) < 0.03,
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
-    assert.match(await page.locator('.comparison-subhead').innerText(), /Comparer vos offres/);
+    assert.match(await page.locator('.comparison-subhead').innerText(), /Vos offres/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
     const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
       const position = selector => [...panel.children].findIndex(node => node.matches(selector));
@@ -366,7 +366,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
     assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
-    const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .offer-comparison-net').first().innerText();
+    const benchmarkHourlyNet = await page.locator('#stackChart .comparison-offer-value').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
