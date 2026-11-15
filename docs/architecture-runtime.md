@@ -33,7 +33,7 @@ Le wrapper démarre la première requête sans attente, puis impose au moins 350
 | `urssaf-calculation.mjs` | Clé d'identification des paramètres de calcul, validation du périmètre, construction des entrées API et conversion des réponses | Fonctions pures testées séparément ; ne gère ni état de cache, ni stockage, ni requête réseau |
 | `rate-limited-fetch.mjs` | File réseau séquentielle et intervalle minimal entre les démarrages de requêtes | Dépendances réseau, horloge et temporisation injectées ; testable sans navigateur |
 | `smic-reference.mjs` | Construction du scénario de référence SMIC, avec ou sans 4 heures supplémentaires | Formules pures testées pour les durées 35 h et 39 h ; aucune lecture de l'état applicatif |
-| `urssaf-calculation-cache.mjs` | Conservation des résultats et erreurs Urssaf, et éviction des résultats anciens | Deux caches séparés ; résultats bornés par ordre d'insertion, erreurs conservées séparément |
+| `urssaf-calculation-cache.mjs` | Conservation des résultats et erreurs Urssaf, et éviction des résultats anciens | Résultats limités à 100 en FIFO strict ; mise à jour d'une clé sans changement de son ancienneté ; cache d'erreurs séparé et non borné |
 | `10-persistence.js` | Lecture/écriture et restauration du stockage local | Utilise les normalisateurs ; la notification de sauvegarde est injectée plus tard |
 | `20-sharing.js` | Encodage/décodage des liens et restauration d'un partage | Réutilise directement les normalisateurs partagés et participe à l'initialisation de l'état |
 | `30-rendering.js` | Rendu des cartes, indicateurs, comparatifs et graphiques | Point de couplage majeur : lit l'état et les résultats, et est rappelé par de nombreux gestionnaires |
