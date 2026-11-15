@@ -42,6 +42,8 @@ Le wrapper démarre la première requête sans attente, puis impose au moins 350
 
 Cette table décrit les responsabilités dominantes, pas une séparation stricte. Plusieurs fonctions et variables sont encore utilisées en dehors du fragment où elles sont définies.
 
+Le montant officiel du SMIC est récupéré par l'orchestrateur puis transmis au module `smic-reference.mjs`. Le module ne lit donc ni le réseau ni l'état global. Le scénario 35 h utilise directement ce montant ; le scénario 39 h applique l'hypothèse existante de quatre heures supplémentaires hebdomadaires majorées à 25 %. La mutuelle et les titres-restaurant sont neutralisés dans le repère.
+
 Les vérifications GitHub Actions reconstruisent `index.html` et `Onnet-2.2.1.html` depuis les sources avant les tests. La synchronisation vers la branche de la PR n'a lieu que si sa tête correspond encore au commit testé ; une exécution plus ancienne ne peut donc pas écraser les artefacts d'un commit plus récent.
 
 ## Constats critiques
