@@ -1354,6 +1354,22 @@ body.salary-editor-open .integrated-offers{display:none!important}
  .offer-reference-select{max-width:100%;white-space:normal}
 }
 
+/* Actions mobiles explicites et repères compacts, sans toucher aux calculs. */
+.offer-comparison-title{min-width:0;flex:1}
+.offer-comparison-name{margin:4px 0 5px;padding:0;border:0;background:transparent;font-size:15px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.offer-rename-button{min-height:32px;padding:5px 9px;border:1px solid #d7e7dc;border-radius:8px;background:#f4faf5;color:#176b49;font-size:11px;font-weight:750}
+.offer-rename-button:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
+@media(max-width:640px){
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-item{padding:12px 10px;border-radius:13px}
+ #benchmarkMount .benchmark-label{font-size:11px;min-height:0}
+ #benchmarkMount .benchmark-value{font-size:clamp(18px,5vw,22px);line-height:1.15}
+ #benchmarkMount .benchmark-meta{font-size:9px}
+ #benchmarkMount .benchmark-result{font-size:10px;white-space:normal}
+ #benchmarkMount .benchmark-details summary{font-size:10px}
+ .offer-comparison-card-head{gap:6px}
+ .offer-reference-select{font-size:9px;padding:5px 6px}
+}
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -3153,13 +3169,18 @@ function renderMaquetteControls(computedOverride) {
       const value = hourly === null ? null : hourly * factor;
       const amount = value === null ? "Calcul en cours" : maquetteComparisonPeriod === "hour" ? fmtHoraire(value) : fmt(value);
       const unit = maquetteComparisonPeriod === "hour" ? "heure" : maquetteComparisonPeriod === "year" ? "an" : "mois";
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><input class="offer-comparison-name" type="text" maxlength="60" value="' + esc(s.name) + '" data-rename-offer="' + s.id + '" aria-label="Nom de l\u2019offre ' + (index + 1) + '" autocomplete="off"></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '">D\xE9finir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><strong class="offer-comparison-net">' + amount + (value === null ? "" : " <small>/ " + unit + "</small>") + '</strong><div class="offer-comparison-meta">Net \xB7 ' + fmt(s.brut) + " \u20AC brut / mois \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4><button type="button" class="offer-rename-button" data-rename-offer="' + s.id + '">Renommer</button></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '">D\xE9finir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><strong class="offer-comparison-net">' + amount + (value === null ? "" : " <small>/ " + unit + "</small>") + '</strong><div class="offer-comparison-meta">Net \xB7 ' + fmt(s.brut) + " \u20AC brut / mois \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
       summary.addEventListener("click", (event) => {
         const remove = event.target.closest("[data-delete-offer]");
         if (remove) {
           removeScenario(Number(remove.dataset.deleteOffer));
+          return;
+        }
+        const rename = event.target.closest("[data-rename-offer]");
+        if (rename) {
+          renameScenario(Number(rename.dataset.renameOffer));
           return;
         }
         const reference = event.target.closest("[data-set-offer-reference]");
@@ -3175,15 +3196,6 @@ function renderMaquetteControls(computedOverride) {
         setSalaryEditor(true);
         render();
         document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-      summary.addEventListener("change", (event) => {
-        const rename = event.target.closest("[data-rename-offer]");
-        if (!rename) return;
-        const scenario = findScenario(Number(rename.dataset.renameOffer));
-        if (!scenario) return;
-        scenario.name = rename.value.trim().slice(0, 60) || "Offre sans nom";
-        saveState();
-        render();
       });
       summary.dataset.editBound = "true";
     }
@@ -3639,25 +3651,35 @@ function onStructural(e) {
 }
 function onCheck(e) {
 }
+var addScenarioPending = false;
 async function addScenario(openEditor = false) {
-  const last = scenarios[scenarios.length - 1];
-  const answers = await showAddScenarioModal(last.brut, last.dureeType);
-  if (!answers) return;
-  urssafSessionState.grantConsent();
-  disableCardSnap();
-  const created = mkScenario(Object.assign({
-    name: "Salaire " + (scenarios.length + 1),
-    dureeType: last.dureeType,
-    commune: last.commune || "Pac\xE9"
-  }, answers));
-  scenarios.push(created);
-  justAddedId = created.id;
-  if (openEditor) setSalaryEditor(true);
-  render();
-  setTimeout(() => {
-    if (openEditor) document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
-    else scrollToNewCard();
-  }, 220);
+  if (addScenarioPending || modalState) return;
+  addScenarioPending = true;
+  const trigger = document.getElementById("maquetteAddSalary");
+  if (trigger) trigger.disabled = true;
+  try {
+    const last = scenarios[scenarios.length - 1];
+    const answers = await showAddScenarioModal(last.brut, last.dureeType);
+    if (!answers) return;
+    urssafSessionState.grantConsent();
+    disableCardSnap();
+    const created = mkScenario(Object.assign({
+      name: "Salaire " + (scenarios.length + 1),
+      dureeType: last.dureeType,
+      commune: last.commune || "Pac\xE9"
+    }, answers));
+    scenarios.push(created);
+    justAddedId = created.id;
+    if (openEditor) setSalaryEditor(true);
+    render();
+    setTimeout(() => {
+      if (openEditor) document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      else scrollToNewCard();
+    }, 220);
+  } finally {
+    addScenarioPending = false;
+    if (trigger) trigger.disabled = false;
+  }
 }
 async function removeScenario(id) {
   if (scenarios.length <= 1) return;
@@ -3994,6 +4016,49 @@ function showOnboardingModal() {
   });
   submitBtn.addEventListener("click", trySubmit);
   return pending;
+}
+function renameScenario(id) {
+  const scenario = findScenario(id);
+  if (!scenario || modalState) return;
+  const html = `
+    <p id="modalMsg" class="modal-msg">Choisissez un nom pour retrouver cette offre dans le comparatif.</p>
+    <div class="field-row">
+      <label for="renameOfferInput">Nom de l\u2019offre</label>
+      <input type="text" id="renameOfferInput" maxlength="60" value="${esc(scenario.name)}" autocomplete="off">
+    </div>
+    <div class="modal-actions">
+      <button type="button" class="btn modal-btn-cancel" data-modal-cancel>Annuler</button>
+      <button type="button" class="btn btn-primary" id="renameOfferSave">Enregistrer</button>
+    </div>`;
+  openModal(html, { initialFocusSelector: "#renameOfferInput" });
+  const overlay = document.getElementById("modalOverlay");
+  const input = overlay.querySelector("#renameOfferInput");
+  const save = () => {
+    const name = input.value.trim().slice(0, 60);
+    if (!name) {
+      input.setCustomValidity("Saisissez un nom pour cette offre.");
+      input.reportValidity();
+      return;
+    }
+    const current = findScenario(id);
+    if (!current) {
+      closeModal(false);
+      return;
+    }
+    current.name = name;
+    saveState();
+    closeModal(true);
+    render();
+  };
+  input.addEventListener("input", () => input.setCustomValidity(""));
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      save();
+    }
+  });
+  overlay.querySelector("#renameOfferSave").addEventListener("click", save);
+  overlay.querySelector("[data-modal-cancel]").addEventListener("click", () => closeModal(false));
 }
 function showAddScenarioModal(brutPrefill, dureePrefill) {
   const html = `

@@ -157,28 +157,35 @@ function onStructural(e){
 
 function onCheck(e){ /* aucune case à cocher dans la carte simplifiée, gardé par précaution */ }
 
+let addScenarioPending = false;
 async function addScenario(openEditor=false){
-  const last = scenarios[scenarios.length-1];
-  const answers = await showAddScenarioModal(last.brut, last.dureeType);
-  if(!answers) return; // annulé
-  urssafSessionState.grantConsent();
-  disableCardSnap();
-  const created = mkScenario(Object.assign({
-    name:'Salaire ' + (scenarios.length+1),
-    dureeType:last.dureeType,
-    commune:last.commune || 'Pacé'
-  }, answers));
-  scenarios.push(created);
-  justAddedId = created.id;
-  if(openEditor) setSalaryEditor(true);
-  render();
-  // Attend la fin de la disparition de la modale (200ms, voir closeModal)
-  // pour que le défilement vers la nouvelle carte soit visible et fluide
-  // au lieu de se produire caché derrière la modale encore à l'écran.
-  setTimeout(()=>{
-    if(openEditor) document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
-    else scrollToNewCard();
-  }, 220);
+  if(addScenarioPending || modalState) return;
+  addScenarioPending = true;
+  const trigger = document.getElementById('maquetteAddSalary');
+  if(trigger) trigger.disabled = true;
+  try{
+    const last = scenarios[scenarios.length-1];
+    const answers = await showAddScenarioModal(last.brut, last.dureeType);
+    if(!answers) return;
+    urssafSessionState.grantConsent();
+    disableCardSnap();
+    const created = mkScenario(Object.assign({
+      name:'Salaire ' + (scenarios.length+1),
+      dureeType:last.dureeType,
+      commune:last.commune || 'Pacé'
+    }, answers));
+    scenarios.push(created);
+    justAddedId = created.id;
+    if(openEditor) setSalaryEditor(true);
+    render();
+    setTimeout(()=>{
+      if(openEditor) document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+      else scrollToNewCard();
+    }, 220);
+  } finally {
+    addScenarioPending = false;
+    if(trigger) trigger.disabled = false;
+  }
 }
 
 async function removeScenario(id){

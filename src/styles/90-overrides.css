@@ -355,3 +355,20 @@ body.salary-editor-open .integrated-offers{display:none!important}
  .offer-comparison-card-actions{max-width:48%;gap:5px}
  .offer-reference-select{max-width:100%;white-space:normal}
 }
+
+/* Actions mobiles explicites et repères compacts, sans toucher aux calculs. */
+.offer-comparison-title{min-width:0;flex:1}
+.offer-comparison-name{margin:4px 0 5px;padding:0;border:0;background:transparent;font-size:15px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.offer-rename-button{min-height:32px;padding:5px 9px;border:1px solid #d7e7dc;border-radius:8px;background:#f4faf5;color:#176b49;font-size:11px;font-weight:750}
+.offer-rename-button:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
+@media(max-width:640px){
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-item{padding:12px 10px;border-radius:13px}
+ #benchmarkMount .benchmark-label{font-size:11px;min-height:0}
+ #benchmarkMount .benchmark-value{font-size:clamp(18px,5vw,22px);line-height:1.15}
+ #benchmarkMount .benchmark-meta{font-size:9px}
+ #benchmarkMount .benchmark-result{font-size:10px;white-space:normal}
+ #benchmarkMount .benchmark-details summary{font-size:10px}
+ .offer-comparison-card-head{gap:6px}
+ .offer-reference-select{font-size:9px;padding:5px 6px}
+}
