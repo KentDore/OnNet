@@ -1326,6 +1326,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
 
     // Les captures doivent montrer le produit réellement comparatif, pas rester
     // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
+    await page.locator('#salaryEditorBack').click();
     await addSecondScenario(page, '3200');
     await page.locator('#salaryEditorBack').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 2,
