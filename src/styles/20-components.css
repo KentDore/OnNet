@@ -552,3 +552,14 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
   .modal-edit-offer .modal-actions{bottom:-16px;margin:8px -14px -16px;padding:12px 14px;}
 }
 @media(max-width:360px){.modal-edit-offer .three-col{grid-template-columns:1fr;}}
+
+
+/* Mutuelle compacte dans l'éditeur : le montant s'ouvre uniquement à la demande. */
+.modal-edit-offer .edit-offer-mutuelle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-secondary,var(--bg));}
+.modal-edit-offer .edit-offer-mutuelle>span{font-size:12px;font-weight:650;color:var(--ink-soft);}
+.modal-edit-offer .edit-offer-mutuelle-value{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--accent);font:700 13px 'Inter',sans-serif;cursor:pointer;}
+.modal-edit-offer .edit-offer-mutuelle-value span{font-size:12px;opacity:.7;}
+.modal-edit-offer .edit-offer-mutuelle-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.7fr);align-items:center;gap:10px;width:100%;padding-top:9px;border-top:1px solid var(--line);}
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none;}
+.modal-edit-offer .edit-offer-mutuelle-editor label{margin:0;font-size:11px;font-weight:600;color:var(--ink-soft);}
+@media(max-width:420px){.modal-edit-offer .edit-offer-mutuelle{flex-wrap:wrap}.modal-edit-offer .edit-offer-mutuelle-editor{grid-template-columns:1fr;}}
