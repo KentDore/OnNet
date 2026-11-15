@@ -352,8 +352,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
  #benchmarkMount .benchmark-item{padding:16px 14px}
  .offer-comparison-card-head{gap:10px;margin-bottom:12px}
  .offer-comparison-name{font-size:15px}
- .offer-comparison-card-actions{max-width:48%;gap:5px}
- .offer-reference-select{max-width:100%;white-space:normal}
+ .offer-comparison-card-actions{max-width:none;flex:none;flex-wrap:nowrap;gap:5px}
+ .offer-reference-select{max-width:none;white-space:nowrap;flex:none;font-size:9px;padding:5px 7px}
 }
 
 /* Actions mobiles explicites et repères compacts, sans toucher aux calculs. */
