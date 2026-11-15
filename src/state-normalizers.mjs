@@ -15,7 +15,7 @@ export function sanitizeScenario(raw){
   const limits = {
     brut:[0,1000000], mutuelle:[0,100000], mutuellePat:[0,100000], joursResto:[0,31],
     valeurResto:[0,500], partResto:[0,100], nbMois:[1,24],
-    primes:[0,100000000]
+    primes:[0,100000000], salaireSaisi:[0,1200000]
   };
   for(const [key, range] of Object.entries(limits)){
     if(clean[key] === undefined) continue;
@@ -24,6 +24,15 @@ export function sanitizeScenario(raw){
     clean[key] = n;
   }
   if(clean.brut === undefined || !Number.isFinite(Number(clean.brut)) || Number(clean.brut) < 0) return null;
+  if(clean.salaireSaisi !== undefined || clean.salaireSaisiPeriode !== undefined){
+    const enteredAmount = Number(clean.salaireSaisi);
+    if(!Number.isFinite(enteredAmount) || enteredAmount <= 0 || !['mois','an'].includes(clean.salaireSaisiPeriode)){
+      delete clean.salaireSaisi;
+      delete clean.salaireSaisiPeriode;
+    } else {
+      clean.salaireSaisi = enteredAmount;
+    }
+  }
   // Compatibilité avec les états antérieurs : l'ancien modèle supposait une
   // part employeur égale à la part salarié.
   if(clean.mutuellePat === undefined){
