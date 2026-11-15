@@ -323,3 +323,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
  .salary-editor-heading{display:block}
  .salary-editor-back{margin-bottom:12px}
 }
+
+.offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
+.offer-comparison-remove{width:28px;height:28px;min-height:28px;padding:0;border:1px solid #eadbd5;border-radius:8px;background:#fff;color:#a94d35;font-size:17px;line-height:1}
+.offer-comparison-remove:focus-visible,.offer-comparison-edit:focus-visible,.salary-editor-back:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
