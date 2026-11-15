@@ -13,6 +13,7 @@ async function buildRuntime(root){
     "import { buildUrssafCalculationKey, unsupportedCalculationReason, buildUrssafInput, mapUrssafResultToOnNet } from './src/urssaf-calculation.mjs';",
     "import { createRateLimitedFetch } from './src/rate-limited-fetch.mjs';",
     "import { buildSmicScenario, getSmicGrossTarget } from './src/smic-reference.mjs';",
+    "import { createUrssafCalculationCache } from './src/urssaf-calculation-cache.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
     app
   ].join('\n\n');
