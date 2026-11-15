@@ -943,8 +943,8 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
  .comparison-period-tabs button{min-width:48px;padding:8px 7px}
  #maquetteYourSalary .benchmark-your-salary{padding:13px;border-radius:15px;gap:7px}
  #maquetteYourSalary .benchmark-your-salary>strong{font-size:clamp(20px,5.7vw,26px)}
- #benchmarkMount .benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
- #benchmarkMount .benchmark-item{padding:12px 10px;border-radius:15px}
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-item{padding:16px 14px;border-radius:15px}
  #benchmarkMount .benchmark-label{font-size:11px;line-height:1.3;min-height:29px}
  #benchmarkMount .benchmark-value{font-size:clamp(19px,5.2vw,24px)}
  #benchmarkMount .benchmark-meta{font-size:10px;line-height:1.35}
@@ -1325,6 +1325,34 @@ body.salary-editor-open .integrated-offers{display:none!important}
 .offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
 .offer-comparison-remove{width:28px;height:28px;min-height:28px;padding:0;border:1px solid #eadbd5;border-radius:8px;background:#fff;color:#a94d35;font-size:17px;line-height:1}
 .offer-comparison-remove:focus-visible,.offer-comparison-edit:focus-visible,.salary-editor-back:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
+
+
+/* Actions explicites sur chaque offre : nom modifiable et référence choisie. */
+.offer-comparison-name{
+ display:block;width:100%;min-width:0;max-width:100%;margin-top:4px;padding:2px 0;
+ border:0;border-bottom:1px solid transparent;border-radius:0;background:transparent;
+ color:#244b36;font:700 15px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+}
+.offer-comparison-name:hover,.offer-comparison-name:focus{border-bottom-color:#a9cdb5;outline:none}
+.offer-comparison-name:focus{background:#f6faf7}
+.offer-reference-select{
+ min-height:28px;padding:5px 8px;border:1px solid #cfe3d4;border-radius:8px;
+ background:#f0f8f2;color:#176b49;font-size:10px;font-weight:750;line-height:1.2;
+}
+.offer-reference-select:focus-visible,.offer-comparison-name:focus-visible{
+ outline:2px solid #1b7652;outline-offset:2px
+}
+.offer-comparison-card-actions{flex-wrap:wrap;justify-content:flex-end}
+.offer-comparison-card.is-reference{border-width:2px}
+.offer-reference-label{display:inline-flex;align-items:center;min-height:28px;padding:5px 9px}
+@media(max-width:640px){
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-item{padding:16px 14px}
+ .offer-comparison-card-head{gap:10px;margin-bottom:12px}
+ .offer-comparison-name{font-size:15px}
+ .offer-comparison-card-actions{max-width:48%;gap:5px}
+ .offer-reference-select{max-width:100%;white-space:normal}
+}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
@@ -3125,7 +3153,7 @@ function renderMaquetteControls(computedOverride) {
       const value = hourly === null ? null : hourly * factor;
       const amount = value === null ? "Calcul en cours" : maquetteComparisonPeriod === "hour" ? fmtHoraire(value) : fmt(value);
       const unit = maquetteComparisonPeriod === "hour" ? "heure" : maquetteComparisonPeriod === "year" ? "an" : "mois";
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + "</span><h4>" + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">Actuelle</span>' : "") + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><strong class="offer-comparison-net">' + amount + (value === null ? "" : " <small>/ " + unit + "</small>") + '</strong><div class="offer-comparison-meta">Net \xB7 ' + fmt(s.brut) + " \u20AC brut / mois \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><input class="offer-comparison-name" type="text" maxlength="60" value="' + esc(s.name) + '" data-rename-offer="' + s.id + '" aria-label="Nom de l\u2019offre ' + (index + 1) + '" autocomplete="off"></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '">D\xE9finir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><strong class="offer-comparison-net">' + amount + (value === null ? "" : " <small>/ " + unit + "</small>") + '</strong><div class="offer-comparison-meta">Net \xB7 ' + fmt(s.brut) + " \u20AC brut / mois \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
       summary.addEventListener("click", (event) => {
@@ -3134,12 +3162,28 @@ function renderMaquetteControls(computedOverride) {
           removeScenario(Number(remove.dataset.deleteOffer));
           return;
         }
+        const reference = event.target.closest("[data-set-offer-reference]");
+        if (reference) {
+          refId = Number(reference.dataset.setOfferReference);
+          saveState();
+          render();
+          return;
+        }
         const button = event.target.closest("[data-edit-offer]");
         if (!button) return;
         refId = Number(button.dataset.editOffer);
         setSalaryEditor(true);
         render();
         document.getElementById("salaryEditor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      });
+      summary.addEventListener("change", (event) => {
+        const rename = event.target.closest("[data-rename-offer]");
+        if (!rename) return;
+        const scenario = findScenario(Number(rename.dataset.renameOffer));
+        if (!scenario) return;
+        scenario.name = rename.value.trim().slice(0, 60) || "Offre sans nom";
+        saveState();
+        render();
       });
       summary.dataset.editBound = "true";
     }
