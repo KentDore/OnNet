@@ -158,6 +158,18 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
+  const simplifiedWorkspace = await page.evaluate(() => ({
+    salaryDetailsHidden: document.getElementById('legacySalaryCards')?.hidden === true,
+    taxSettingsHidden: document.querySelector('.advanced-workspace .situation-section')?.hidden === true
+  }));
+  if (!simplifiedWorkspace.salaryDetailsHidden || !simplifiedWorkspace.taxSettingsHidden) {
+    await context.close();
+    throw new Error('Les fiches détaillées et les réglages fiscaux doivent être masqués dans le parcours normal.');
+  }
+  // Les tests fonctionnels continuent d'exercer ces composants internes, qui
+  // restent présents pour préserver les liaisons et la compatibilité runtime.
+  await page.locator('#legacySalaryCards').evaluate(el => { el.hidden = false; });
+  await page.locator('.advanced-workspace .situation-section').evaluate(el => { el.hidden = false; });
   if (options.advancedOpen !== false && !options.emptyStorage) {
     await page.locator('#advancedWorkspace').evaluate(el => { el.open = true; });
     if (options.legacyCardsOpen !== false) {
