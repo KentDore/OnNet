@@ -158,6 +158,18 @@ async function openApp(options = {}) {
     });
   }
   await page.goto(baseUrl);
+  const simplifiedWorkspace = await page.evaluate(() => ({
+    salaryDetailsHidden: document.getElementById('legacySalaryCards')?.hidden === true,
+    taxSettingsHidden: document.querySelector('.advanced-workspace .situation-section')?.hidden === true
+  }));
+  if (!simplifiedWorkspace.salaryDetailsHidden || !simplifiedWorkspace.taxSettingsHidden) {
+    await context.close();
+    throw new Error('Les fiches détaillées et les réglages fiscaux doivent être masqués dans le parcours normal.');
+  }
+  // Les tests fonctionnels continuent d'exercer ces composants internes, qui
+  // restent présents pour préserver les liaisons et la compatibilité runtime.
+  await page.locator('#legacySalaryCards').evaluate(el => { el.hidden = false; });
+  await page.locator('.advanced-workspace .situation-section').evaluate(el => { el.hidden = false; });
   if (options.advancedOpen !== false && !options.emptyStorage) {
     await page.locator('#advancedWorkspace').evaluate(el => { el.open = true; });
     if (options.legacyCardsOpen !== false) {
@@ -862,12 +874,27 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.getByText('Paramètres avancés et outils', { exact: true }).click();
+    await advanced.locator('summary').first().click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await page.locator('#legacySalaryCards > summary').click();
-    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
-    assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
+    // openApp vérifie avant chaque test que les fiches et réglages fiscaux
+    // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('un poste peut être renommé directement dans le sélecteur principal', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const tab = page.locator('#maquetteOfferTabs .offer-tab').first();
+    const original = await tab.locator('.offer-tab-name').innerText();
+    await page.getByRole('button', { name:'Renommer '+original }).click();
+    const input = page.locator('#maquetteOfferTabs .offer-tab-rename-input');
+    assert.equal(await input.isVisible(), true);
+    await input.fill('Poste renommé');
+    await input.press('Enter');
+    assert.equal(await page.locator('#maquetteOfferTabs .offer-tab-name').first().innerText(), 'Poste renommé');
   } finally {
     await context.close();
   }
@@ -1092,12 +1119,10 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
 test('le graphique explique explicitement qu’il montre le net avant impôt', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.waitForSelector('#comparePanel .chart-scope-hint');
+    await page.waitForSelector('#comparePanel #stackChart');
     assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
     assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
-    const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
-    assert.match(scope, /montants issus de la simulation officielle/i);
-    assert.match(scope, /Mon-entreprise \/ Urssaf/i);
+    assert.equal(await page.locator('#comparePanel .chart-scope-hint').count(), 0, 'la mention redondante sur la source des montants doit être absente');
   } finally {
     await context.close();
   }
@@ -1401,7 +1426,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
       /35 h au SMIC \+ 4 h supplémentaires hebdomadaires majorées à 25 %/);
 
     await addSecondScenario(page, '3200');
-    await page.locator('#maquetteOfferTabs button').nth(1).click();
+    await page.locator('#maquetteOfferTabs button.offer-tab').nth(1).click();
     await page.locator('#mainSalaryHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
