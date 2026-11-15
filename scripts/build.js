@@ -14,6 +14,7 @@ async function buildRuntime(root){
     "import { createRateLimitedFetch } from './src/rate-limited-fetch.mjs';",
     "import { buildSmicScenario, getSmicGrossTarget } from './src/smic-reference.mjs';",
     "import { createUrssafCalculationCache } from './src/urssaf-calculation-cache.mjs';",
+    "import { createUrssafSessionState } from './src/urssaf-session-state.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
     app
   ].join('\n\n');
