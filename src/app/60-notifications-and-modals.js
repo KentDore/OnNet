@@ -176,7 +176,7 @@ function renderUrssafConsentNotice(){
       </div>
       <details class="onboarding-consent-details">
         <summary>Quelles données sont transmises ?</summary>
-        <p>En validant ce formulaire, vous autorisez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle, titres-restaurant et situation fiscale.</p>
+        <p>En validant ce formulaire, vous autorisez la transmission à l’API officielle Mon-entreprise de l’Urssaf des paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle et titres-restaurant.</p>
       </details>
     </div>`;
 }
