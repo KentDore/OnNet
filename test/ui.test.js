@@ -1595,7 +1595,8 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
-      return state?.scenarios?.[1]?.dureeType === '35' &&
+      const durations = (state?.scenarios || []).map(s => String(s.dureeType));
+      return durations.includes('35') && durations.includes('39') &&
         cards.length === 2 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('#stackChart .comparison-offer-card').length === 2 &&
         (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour');
