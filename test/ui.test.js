@@ -1464,7 +1464,7 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('3000');
-    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
@@ -1548,7 +1548,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
 
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSave').click();
     // Le repère SMIC suit l'offre de référence : sélectionner explicitement l'offre 35 h.
     await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
@@ -1617,7 +1617,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
   try {
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -1753,7 +1753,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
-    await page.locator('#editOfferHours').selectOption('39');
+    await page.locator('#editOfferHours [data-hours="39"]').click();
     await page.locator('#editOfferMutuelleToggle').click();
     await page.locator('#editOfferMutuelle').fill('42,50');
     await page.locator('#editOfferMealDays').fill('20');
