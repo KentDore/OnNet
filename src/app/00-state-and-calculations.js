@@ -212,7 +212,7 @@ async function executeUrssafCalculations(generation, forceRetry){
         throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
-        buildUrssafInput(s,foyer), {fetchImpl:queuedUrssafFetch}
+        buildUrssafInput(s,foyer,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch}
       );
       // Une réponse valide reste réutilisable pour ses paramètres exacts,
       // même si une saisie plus récente a rendu son affichage obsolète.
