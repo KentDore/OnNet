@@ -67,10 +67,19 @@ jobs:
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           PR_BRANCH: ${{ github.head_ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
           VERSION=$(node -p "require('./package.json').version")
           git fetch origin "$PR_BRANCH"
-          git checkout --detach FETCH_HEAD
+          FETCHED_SHA=$(git rev-parse FETCH_HEAD)
+          if [ "$FETCHED_SHA" != "$PR_HEAD_SHA" ]; then
+            echo "La branche a avancé depuis le lancement des tests ; une exécution plus récente synchronisera les artefacts."
+            exit 0
+          fi
+          # Les HTML ont déjà été générés dans l'espace de travail pour les tests.
+          # Réinitialiser le checkout sur la tête testée avant de les recopier évite
+          # l'échec de git checkout causé par ces modifications locales.
+          git reset --hard FETCH_HEAD
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
           git config user.name "github-actions[bot]"
