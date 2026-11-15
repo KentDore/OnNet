@@ -877,7 +877,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     }
 
     const secondName = await page.locator('#maquetteYourSalary .offer-comparison-card h4').nth(1).innerText();
-    await page.locator('#maquetteOfferTabs .offer-tab-action.is-danger').last().click();
+    await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 1 &&
