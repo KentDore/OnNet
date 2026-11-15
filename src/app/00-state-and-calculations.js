@@ -25,24 +25,7 @@ function scenarioCalculationDate(s){
   return currentCalculationDate();
 }
 
-function calculationKey(s, f){
-  return JSON.stringify({
-    brut:Number(s.brut),
-    dureeType:String(s.dureeType),
-    mutuelle:Number(s.mutuelle) || 0,
-    mutuellePat:Number(s.mutuellePat) || 0,
-    joursResto:Number(s.joursResto) || 0,
-    valeurResto:Number(s.valeurResto) || 0,
-    partResto:Number(s.partResto) || 0,
-    nbMois:Number(s.nbMois || 12),
-    primes:Number(s.primes || 0),
-    commune:String(s.commune || 'Pacé').trim(),
-    codePostal:String(s.codePostal || ''),
-    departement:String(s.departement || ''),
-    date:scenarioCalculationDate(s),
-    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
-  });
-}
+
 
 
 function getSmicGross(){
@@ -68,11 +51,11 @@ function buildSmicScenario(base){
 }
 
 function getCurrentComputed(){
-  return scenarios.map(s => ({s, r:urssafResultCache.get(calculationKey(s,foyer)) || null}));
+  return scenarios.map(s => ({s, r:urssafResultCache.get(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))) || null}));
 }
 
 function getCalculationError(s, f){
-  const key = calculationKey(s, f || foyer);
+  const key = buildUrssafCalculationKey(s, f || foyer, scenarioCalculationDate(s));
   return urssafErrorCache.get(key) || unsupportedCalculationReason(s);
 }
 
@@ -81,7 +64,7 @@ function getCachedSmicResult(){
   if(!base) return null;
   const scenario = buildSmicScenario(base);
   if(!scenario) return null;
-  return urssafResultCache.get(calculationKey(scenario,foyer)) || null;
+  return urssafResultCache.get(buildUrssafCalculationKey(scenario,foyer,scenarioCalculationDate(scenario))) || null;
 }
 
 function queuedUrssafFetch(url, options){
@@ -108,12 +91,12 @@ function updateUrssafStatus(computed){
     statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
     return;
   }
-  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(calculationKey(s,foyer)));
+  const failed = computed.filter(({s,r}) => !r && urssafErrorCache.has(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))));
   const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base) : null;
   const smicResult = getCachedSmicResult();
-  const smicKey = smicScenario ? calculationKey(smicScenario,foyer) : null;
+  const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario,foyer,scenarioCalculationDate(smicScenario)) : null;
   const smicError = (smicScenario && !smicResult && urssafErrorCache.has(smicKey)) ||
     (officialSmicState.status === 'error');
   const smicPending = !smicResult && !smicError;
@@ -194,7 +177,7 @@ async function executeUrssafCalculations(generation, forceRetry){
   const seen = new Set();
   for(const s of jobs){
     if(generation !== urssafGeneration) return;
-    const key = calculationKey(s,foyer);
+    const key = buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s));
     if(seen.has(key) || urssafResultCache.has(key)) continue;
     seen.add(key);
     if(forceRetry) urssafErrorCache.delete(key);
