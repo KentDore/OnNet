@@ -874,7 +874,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.getByText('Simuler une augmentation', { exact:true }).click();
+    await advanced.locator('summary').first().click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
     assert.equal(await page.locator('#legacySalaryCards').isVisible(), false);
     assert.equal(await page.locator('.advanced-workspace .situation-section').isVisible(), false);
