@@ -865,7 +865,7 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
     assert.equal(await page.locator('#editOfferBonus').count(), 0);
     assert.equal(await page.locator('#editOffer13thBase').count(), 0);
-    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\\s+/g, ' ').trim(), '30 € / mois ✎');
+    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € / mois ✎');
     await page.locator('#editOfferMutuelleToggle').click();
     assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
     await page.locator('#editOfferCancel').click();
