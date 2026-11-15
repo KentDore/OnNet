@@ -1775,6 +1775,35 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
   }
 });
 
+test('les titres-restaurant doivent être renseignés avant activation du calcul', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
+      state.scenarios[0].joursResto = 0;
+      state.scenarios[0].valeurResto = 0;
+      localStorage.setItem('onnet.state.v1', JSON.stringify(state));
+    });
+    await page.reload();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save = page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(), true, 'une offre sans titres-restaurant reste enregistrable');
+    await page.locator('#editOfferTrToggle [data-tr="oui"]').click();
+    assert.equal(await save.isDisabled(), true, 'activer les titres-restaurant exige des paramètres valides');
+    await page.locator('#editOfferMealDays').fill('21');
+    await page.locator('#editOfferMealValue').fill('8');
+    assert.equal(await save.isEnabled(), true, 'des paramètres complets autorisent l’enregistrement');
+    await page.locator('#editOfferTrToggle [data-tr="non"]').click();
+    assert.equal(await save.isEnabled(), true, 'désactiver les titres-restaurant ne bloque pas l’enregistrement');
+    await save.click();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.joursResto, 0);
+    assert.equal(saved.valeurResto, 0);
+  } finally {
+    await context.close();
+  }
+});
+
 test('les actions tactiles utiles vibrent brièvement seulement si l’API est disponible', { timeout:60000 }, async () => {
   const desktop = await openApp({ mockVibrate:true });
   try{
