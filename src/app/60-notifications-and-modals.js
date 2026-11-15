@@ -426,6 +426,189 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
 }
 
 
+// Modification complète d'une offre dans une fenêtre flottante.
+// Les paramètres non pris en charge par l'API sont conservés et signalés,
+// mais ne sont jamais intégrés artificiellement au calcul net.
+function showEditScenarioModal(scenario){
+  const initialPeriod = scenario.salaireSaisiPeriode === 'an' ? 'an' : 'mois';
+  const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
+    ? Number(scenario.salaireSaisi)
+    : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
+  const hasMealTickets = Number(scenario.joursResto) > 0 && Number(scenario.valeurResto) > 0;
+  const html = `
+    <div class="edit-offer-modal">
+      <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
+      <div class="field-row">
+        <label for="editOfferName">Nom de l’offre</label>
+        <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
+      </div>
+      <div class="edit-offer-section">Rémunération</div>
+      <div class="field-row">
+        <label>Montant brut indiqué en</label>
+        <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="Période du salaire brut">
+          <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
+          <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
+        </div>
+      </div>
+      <div class="field-row">
+        <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
+        <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
+      </div>
+      <div class="field-row">
+        <label for="editOfferHours">Base horaire</label>
+        <select id="editOfferHours"><option value="35" ${scenario.dureeType==='35'?'selected':''}>35 h / semaine</option><option value="39" ${scenario.dureeType==='39'?'selected':''}>39 h / semaine</option></select>
+      </div>
+      <div class="edit-offer-section">Lieu de travail</div>
+      <div class="field-row">
+        <label for="editOfferCommune">Commune de l’établissement</label>
+        <input type="text" id="editOfferCommune" value="${esc(scenario.codePostal && scenario.departement ? scenario.commune+' — '+scenario.codePostal+' ('+scenario.departement+')' : scenario.commune+' — sélection requise')}" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="editOfferCommuneSuggestions">
+        <div class="commune-suggestions" id="editOfferCommuneSuggestions" role="listbox" hidden></div>
+        <div class="sub-hint" id="editOfferCommuneHint">${scenario.codePostal && scenario.departement ? 'Lieu vérifié : '+esc(scenario.codePostal)+' — '+esc(scenario.departement)+'.' : 'Sélectionnez une commune vérifiée dans les suggestions.'}</div>
+      </div>
+      <div class="edit-offer-section">Mutuelle</div>
+      <div class="two-col">
+        <div class="field-row"><label for="editOfferMutuelle">Part salarié (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(scenario.mutuelle ?? 0).replace('.', ',')}"></div>
+        <div class="field-row"><label for="editOfferMutuellePat">Part employeur (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuellePat" value="${String(scenario.mutuellePat ?? 0).replace('.', ',')}"></div>
+      </div>
+      <div class="edit-offer-section">Titres-restaurant</div>
+      <div class="three-col">
+        <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
+        <div class="field-row"><label for="editOfferMealValue">Valeur (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
+        <div class="field-row"><label>Part salarié</label><div class="pill-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${Number(scenario.partResto||50)===50}">50 %</button><button type="button" data-share="40" aria-pressed="${Number(scenario.partResto||50)===40}">40 %</button></div></div>
+      </div>
+      <div class="edit-offer-section">Mensualités et primes</div>
+      <div class="two-col">
+        <div class="field-row"><label for="editOfferMonths">Mensualités / an</label><input type="number" id="editOfferMonths" min="1" max="24" step="1" value="${Number(scenario.nbMois)||12}"></div>
+        <div class="field-row"><label for="editOfferBonus">Primes annuelles (€)</label><input type="text" inputmode="decimal" id="editOfferBonus" value="${String(scenario.primes||0).replace('.', ',')}"></div>
+      </div>
+      <div class="field-row">
+        <label for="editOffer13thBase">Base du 13ᵉ / 14ᵉ mois</label>
+        <select id="editOffer13thBase"><option value="base" ${scenario.treiziemeMoisBase!=='ensemble'?'selected':''}>Salaire de base</option><option value="ensemble" ${scenario.treiziemeMoisBase==='ensemble'?'selected':''}>Salaire et éléments variables</option></select>
+      </div>
+      <p class="edit-offer-note">Les primes et mensualités au-delà de 12 sont conservées dans l’offre, mais ne sont pas encore intégrées au calcul Urssaf. Le résultat affiché ne les inclut donc pas.</p>
+      <div class="modal-actions">
+        <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
+        <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
+      </div>
+    </div>`;
+  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true });
+  const overlay = document.getElementById('modalOverlay');
+  const box = overlay.querySelector('#modalBox');
+  const input = id => overlay.querySelector('#'+id);
+  let period = initialPeriod;
+  let location = {
+    commune:scenario.commune || 'Pacé', codePostal:scenario.codePostal || '',
+    departement:scenario.departement || '', codeCommune:scenario.codeCommune || '',
+    codeDepartement:scenario.codeDepartement || ''
+  };
+  let locationVerified = !!(location.codePostal && location.departement);
+  let communeSequence = 0;
+  let communeTimer = null;
+  let partResto = Number(scenario.partResto)===40 ? 40 : 50;
+  const periodToggle = input('editOfferPeriod');
+  const grossInput = input('editOfferGross');
+  periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.period===period) return;
+    const amount=parseNum(grossInput.value);
+    if(!(amount>0)) return;
+    const converted=period==='mois'?amount*12:amount/12;
+    period=button.dataset.period;
+    grossInput.value=String(converted).replace('.', ',');
+    periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
+  }));
+  input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    partResto=Number(button.dataset.share);
+    input('editOfferMealShare').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
+  const communeInput=input('editOfferCommune');
+  const suggestionList=input('editOfferCommuneSuggestions');
+  communeInput.addEventListener('input',()=>{
+    const query=communeInput.value.trim();
+    locationVerified=false;
+    location.codePostal='';location.departement='';location.codeCommune='';location.codeDepartement='';
+    input('editOfferCommuneHint').textContent='Sélectionnez une commune vérifiée dans les suggestions.';
+    if(communeTimer) clearTimeout(communeTimer);
+    const sequence=++communeSequence;
+    if(query.length<2){suggestionList.hidden=true;suggestionList.innerHTML='';return;}
+    suggestionList.hidden=false;
+    suggestionList.innerHTML='<div class="commune-search-status">Recherche des communes…</div>';
+    communeTimer=setTimeout(async()=>{
+      try{
+        const params=new URLSearchParams({fields:'nom,code,codesPostaux,departement,codeDepartement',limit:'8'});
+        if(/^\d{2,5}$/.test(query)) params.set('codePostal',query);
+        else {params.set('nom',query);params.set('boost','population');}
+        const response=await fetch('https://geo.api.gouv.fr/communes?'+params.toString(),{headers:{Accept:'application/json'}});
+        if(!response.ok) throw new Error('Recherche indisponible');
+        const rows=await response.json();
+        if(sequence!==communeSequence || !modalState) return;
+        const options=[];
+        for(const item of Array.isArray(rows)?rows:[]){
+          const department=item.departement?.nom;
+          for(const postcode of Array.isArray(item.codesPostaux)?item.codesPostaux:[]){
+            if(item.nom&&department) options.push({commune:item.nom,codePostal:postcode,departement:department,codeCommune:item.code,codeDepartement:item.codeDepartement});
+            if(options.length>=8) break;
+          }
+          if(options.length>=8) break;
+        }
+        suggestionList.innerHTML=options.length?options.map((option,index)=>'<button type="button" class="commune-option" data-option="'+index+'">'+esc(option.commune)+' — '+esc(option.codePostal)+' ('+esc(option.departement)+')</button>').join(''):'<div class="commune-search-status">Aucune commune trouvée.</div>';
+        suggestionList._options=options;
+        suggestionList.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{
+          const selected=options[Number(button.dataset.option)];
+          if(!selected) return;
+          location=selected;locationVerified=true;
+          communeInput.value=selected.commune+' — '+selected.codePostal+' ('+selected.departement+')';
+          input('editOfferCommuneHint').textContent='Lieu vérifié : '+selected.codePostal+' — '+selected.departement+'.';
+          suggestionList.hidden=true;
+          updateSaveState();
+        }));
+      }catch(error){
+        if(sequence===communeSequence){suggestionList.innerHTML='<div class="commune-search-status">Impossible de vérifier la commune. Réessayez.</div>';}
+      }
+    },250);
+    updateSaveState();
+  });
+  const requiredNumbers=['editOfferGross','editOfferMutuelle','editOfferMutuellePat','editOfferMealValue','editOfferBonus'];
+  const validNumber=id=>input(id).value.trim()!==''&&numericEntryValid(input(id).value)&&Number.isFinite(parseNum(input(id).value));
+  const updateSaveState=()=>{
+    const gross=parseNum(grossInput.value);
+    const valid=gross>0&&gross<=1200000&&locationVerified&&requiredNumbers.slice(1).every(validNumber)&&
+      Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&
+      Number.isInteger(Number(input('editOfferMealDays').value))&&
+      Number(input('editOfferMonths').value)>=1&&Number(input('editOfferMonths').value)<=24&&
+      Number.isInteger(Number(input('editOfferMonths').value))&&
+      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuellePat').value)>=0&&
+      parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
+      parseNum(input('editOfferBonus').value)>=0;
+    input('editOfferSave').disabled=!valid;
+  };
+  [...requiredNumbers,'editOfferMealDays','editOfferMonths'].forEach(id=>input(id).addEventListener('input',updateSaveState));
+  input('editOfferName').addEventListener('input',updateSaveState);
+  updateSaveState();
+  input('editOfferSave').addEventListener('click',()=>{
+    const gross=parseNum(grossInput.value);
+    const result={
+      name:input('editOfferName').value.trim().slice(0,80)||'Offre',
+      brut:period==='an'?gross/12:gross,
+      salaireSaisi:gross,salaireSaisiPeriode:period,
+      dureeType:input('editOfferHours').value==='39'?'39':'35',
+      ...location,
+      mutuelle:parseNum(input('editOfferMutuelle').value),
+      mutuellePat:parseNum(input('editOfferMutuellePat').value),
+      joursResto:Number(input('editOfferMealDays').value),
+      valeurResto:parseNum(input('editOfferMealValue').value),
+      partResto,
+      nbMois:Number(input('editOfferMonths').value),
+      primes:parseNum(input('editOfferBonus').value),
+      treiziemeMoisBase:input('editOffer13thBase').value==='ensemble'?'ensemble':'base'
+    };
+    closeModal(result);
+  });
+  input('editOfferCancel').addEventListener('click',()=>closeModal(false));
+  return pending;
+}
+
+
 const headerMenu = document.getElementById('headerMenu');
 document.addEventListener('click', event => {
   if(headerMenu && headerMenu.open && !headerMenu.contains(event.target)) headerMenu.open = false;
