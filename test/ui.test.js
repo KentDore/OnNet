@@ -328,7 +328,7 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
 });
 
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
+  const { context, page } = await openApp();
   try {
     assert.equal(await page.locator('#mainSalaryHours').inputValue(), '39',
       'le formulaire de référence doit conserver la durée 39 h');
@@ -753,15 +753,7 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.equal(await part.getAttribute('data-min'), '40');
     assert.equal(await part.getAttribute('data-max'), '50');
     const waterfallRows = await page.locator('.waterfall .salary-net-summary-row').allTextContents();
-    console.log('ONNET_TR_SUMMARY_DEBUG=' + JSON.stringify({
-      rows:waterfallRows,
-      requests:calls.bodies.map(body => ({
-        enabled:body.situation['salarié . rémunération . frais professionnels . titres-restaurant'],
-        count:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . nombre'],
-        value:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . montant unitaire'],
-        employerRate:body.situation['salarié . rémunération . frais professionnels . titres-restaurant . taux employeur']
-      }))
-    }));
+
     assert.equal(waterfallRows.length, 3, 'le récapitulatif affiche trois valeurs lorsque les TR sont activés');
     assert.match(waterfallRows[0], /Net sans TR/);
     assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
@@ -769,7 +761,10 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.equal(await page.locator('.waterfall .salary-net-summary-row').nth(1).locator('strong').innerText(), '168 €',
       'le total des TR doit rester juste même si l’API omet l’une des parts');
     await addSecondScenario(page);
-    const stackRows = await page.locator('#stackChart .stack-col').first().locator('.salary-net-summary-row').allTextContents();
+    const stackSummary = page.locator('#stackChart .stack-col .salary-net-summary')
+      .filter({ hasText:'TR — total des deux parts' }).first();
+    assert.equal(await stackSummary.count(), 1, 'le scénario conservant les TR doit avoir son récapitulatif');
+    const stackRows = await stackSummary.locator('.salary-net-summary-row').allTextContents();
     assert.equal(stackRows.length, 3);
     assert.match(stackRows[0], /Net sans TR/);
     assert.match(stackRows[1], /TR — total des deux parts[\s\S]*168 €/);
