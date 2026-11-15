@@ -37,7 +37,7 @@ function buildShareUrl(options){
 
   const sharedData = sharedScenarios.map(s => opts.includeDetails ? { ...s } : ({
     // Données essentielles à la comparaison salariale.
-    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, commune:s.commune || 'Pacé',
+    id:s.id, name:s.name, brut:s.brut, dureeType:s.dureeType, salaireSaisi:s.salaireSaisi, salaireSaisiPeriode:s.salaireSaisiPeriode, commune:s.commune || 'Pacé',
     codePostal:s.codePostal || '', departement:s.departement || '',
     nbMois:s.nbMois, primes:s.primes, treiziemeMoisBase:s.treiziemeMoisBase,
     // Sans option « détails », neutraliser explicitement ces valeurs plutôt
