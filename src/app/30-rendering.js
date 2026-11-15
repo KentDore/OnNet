@@ -158,7 +158,7 @@ function renderWaterfall(computed){
   const netSansTR = m.netSocial;
   const trValeurFaciale = r.tr.totalSalarie + r.tr.totalEmployeur;
   const trNote = tr > 0.5
-    ? `Net avant impôt hors retenue des TR : <strong>${fmt(netSansTR)}</strong> · ${s.joursResto} jours × ${fmt(s.valeurResto)} · part salarié : <strong>${fmt(tr)}</strong> · part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> · valeur créditée : <strong>${fmt(trValeurFaciale)}</strong>`
+    ? `Net hors retenue des TR : <strong>${fmt(netSansTR)}</strong> · ${s.joursResto} jours × ${fmt(s.valeurResto)} · part salarié : <strong>${fmt(tr)}</strong> · part employeur : <strong>${fmt(r.tr.totalEmployeur)}</strong> · valeur créditée : <strong>${fmt(trValeurFaciale)}</strong>`
     : '';
   return `
   <div class="waterfall">
@@ -169,7 +169,7 @@ function renderWaterfall(computed){
     <div class="wf-breakdown">
       <div class="wf-breakdown-item">
         <span class="wf-key wf-key-net" aria-hidden="true"></span>
-        <div><strong>${fmt(net)}</strong><span>Net avant impôt</span></div>
+        <div><strong>${fmt(net)}</strong><span>Net</span></div>
       </div>
       <div class="wf-breakdown-item">
         <span class="wf-key wf-key-deductions" aria-hidden="true"></span>
@@ -193,7 +193,7 @@ function renderInsight(computed){
   const unit = isHourly ? 'par heure' : metric === 'annuelNet' ? 'par an' : 'par mois';
   const metricLabel = {
     netImposable:'net imposable', annuelNet:'net annuel',
-    netApresImpot:'net après impôt', netApresImpotHoraire:'net horaire après impôt', netHoraire:'net horaire',
+    netApresImpot:'net après impôt', 'net horaire après impôt', netHoraire:'net horaire',
     brutHoraire:'brut horaire'
   }[metric] || 'valeur sélectionnée';
   const format = isHourly ? fmtHoraire : fmt;
@@ -203,7 +203,7 @@ function renderInsight(computed){
   return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? 'plus' : 'moins'} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
 }
 
-const HOURLY_METRICS = new Set(['netHoraire', 'netApresImpotHoraire', 'brutHoraire']);
+const HOURLY_METRICS = new Set(['netHoraire', 'brutHoraire']);
 
 function renderBars(computed){
   const ref = computed.find(x => x.s.id === refId) || computed[0];
@@ -436,7 +436,7 @@ function renderMaquetteControls(computedOverride){
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
         '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4>'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Actuelle</span>':'')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
         '<strong class="offer-comparison-net">'+amount+(value===null?'':' <small>/ '+unit+'</small>')+'</strong>'+
-        '<div class="offer-comparison-meta">Net avant impôt · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
+        '<div class="offer-comparison-meta">Net · '+fmt(s.brut)+' € brut / mois · '+weekly+' h</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
     }).join('');
@@ -505,9 +505,7 @@ function render(){
   bindRefPickers();
   document.getElementById('benchmarkBody').innerHTML = renderBenchmarks(computed);
   renderMaquetteControls(computed);
-  updateFoyerImpot(computed);
-  syncFoyerUI();
-  document.getElementById('refSelect').innerHTML = scenarios
+    document.getElementById('refSelect').innerHTML = scenarios
     .map(s => `<option value="${s.id}" ${s.id===refId?'selected':''}>${esc(s.name)}</option>`).join('');
   document.getElementById('cardsBody').innerHTML =
     computed.map(({s,r}) => renderCard(s, r, scenarios.length > 1)).join('') + renderAddCard();
