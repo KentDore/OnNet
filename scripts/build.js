@@ -11,6 +11,7 @@ async function buildRuntime(root){
     "import { scenarioDefaults, ICON, HEURES_BASE, parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc } from './src/ui-utils.mjs';",
     "import { METRIC_KEYS, METRIC_DEFAUT, FOYER_DEFAUT, sanitizeScenario, sanitizeFoyer, normalizeScenarioIds } from './src/state-normalizers.mjs';",
     "import { buildUrssafCalculationKey, unsupportedCalculationReason, buildUrssafInput, mapUrssafResultToOnNet } from './src/urssaf-calculation.mjs';",
+    "import { createRateLimitedFetch } from './src/rate-limited-fetch.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
     app
   ].join('\n\n');
