@@ -50,8 +50,7 @@ function buildShareUrl(options){
     v:2,
     scenarios:sharedData,
     refId:sharedScenarios.some(s => s.id === refId) ? refId : sharedScenarios[0].id,
-    metric, displayAmt, displayPeriod,
-    foyer:opts.includeFoyer ? { ...foyer } : { ...FOYER_DEFAUT }
+    metric, displayAmt, displayPeriod
   };
   const encoded = toBase64Url(JSON.stringify(payload));
   // Pas location.origin : il vaut la chaîne « null » sur file:// (Firefox,
@@ -96,10 +95,7 @@ function showShareOptionsModal(){
         <input type="checkbox" id="shareIncludeDetails">
         <span><strong>Détails de paie</strong><small>Mutuelle salarié/employeur et titres restaurant.</small></span>
       </label>
-      <label class="share-extra-option" for="shareIncludeFoyer">
-        <input type="checkbox" id="shareIncludeFoyer">
-        <span><strong>Situation fiscale</strong><small>Situation du foyer, personnes à charge, revenus du conjoint et taux de prélèvement.</small></span>
-      </label>
+
     </fieldset>
     <div class="alert alert-warn" style="margin-top:12px;">
       <span>${ICON.warn}</span><span>Les salaires sélectionnés sont toujours inclus. Le lien n'est pas chiffré ni protégé par mot de passe : toute personne qui le reçoit peut lire les données qu'il contient.</span>
@@ -123,8 +119,7 @@ function showShareOptionsModal(){
       .map(input => Number(input.value));
     closeModal({
       scenarioIds,
-      includeDetails: overlay.querySelector('#shareIncludeDetails').checked,
-      includeFoyer: overlay.querySelector('#shareIncludeFoyer').checked
+      includeDetails: overlay.querySelector('#shareIncludeDetails').checked
     });
   });
   updateAvailability();
@@ -172,7 +167,7 @@ if(loadedFromShare){
   history.replaceState(null, '', location.pathname + location.search);
 }
 
-let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod, foyer;
+let scenarios, refId, metric, openCardIds, displayAmt, displayPeriod;
 if(initialSource){
   scenarios = initialSource.scenarios.map(sv => mkScenario(sv));
   idCounter = scenarios.length;
@@ -182,7 +177,6 @@ if(initialSource){
   displayPeriod = initialSource.displayPeriod === 'an' ? 'an' : 'mois';
   const validIds = new Set(scenarios.map(s => s.id));
   openCardIds = new Set(Array.isArray(initialSource.openCardIds) ? initialSource.openCardIds.filter(id => validIds.has(id)) : []);
-  foyer = sanitizeFoyer(initialSource.foyer);
 } else {
   scenarios = defaultScenarios();
   refId = scenarios[0].id;
@@ -190,14 +184,11 @@ if(initialSource){
   openCardIds = new Set();
   displayAmt = 'net';
   displayPeriod = 'mois';
-  foyer = sanitizeFoyer(FOYER_DEFAUT);
 }
 
 const metricHints = {
   netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
   annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
-  netApresImpot: 'Le net après prélèvement à la source évalué par le modèle fiscal officiel Mon-entreprise / Urssaf selon les paramètres du foyer transmis.',
-  netApresImpotHoraire: 'Le net après prélèvement à la source, divisé par les heures réellement travaillées dans le mois.',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
@@ -212,6 +203,6 @@ function heroValue(r){
 }
 function heroLabel(){
   if(displayAmt === 'brut') return 'Brut ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
-  return 'Net avant impôt ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
+  return 'Net ' + (displayPeriod === 'mois' ? 'mensuel' : 'annuel');
 }
 
