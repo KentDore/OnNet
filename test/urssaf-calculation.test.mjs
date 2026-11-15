@@ -68,7 +68,7 @@ test('conserve le calcul horaire du scénario 39 h avec ses heures supplémentai
   assert.equal(mapped.hasHS, true);
   assert.equal(mapped.heuresSup, 17.33);
   assert.equal(mapped.brutHS, 400);
-  assert.equal(mapped.netHoraire, (2622 + 30) / (39 * 52 / 12));
+  assert.equal(mapped.netHoraire, 2622 / (39 * 52 / 12), 'le net horaire doit refléter le net bancaire, sans réintégrer la mutuelle');
 });
 
 test('la clé de cache ignore les anciens paramètres fiscaux et suit les paramètres de paie', () => {
