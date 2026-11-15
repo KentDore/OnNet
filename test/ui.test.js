@@ -957,14 +957,24 @@ test('la page ne déborde pas horizontalement sur les largeurs mobiles', { timeo
 test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
+    const hour = page.locator('[data-maquette-period="hour"]');
     const month = page.locator('[data-maquette-period="month"]');
     const year = page.locator('[data-maquette-period="year"]');
+    const valueLabel = page.locator('#stackChart .comparison-offer-value-label');
+    const valueUnit = page.locator('#stackChart .comparison-offer-value small');
+    assert.equal(await valueLabel.innerText(), 'Net horaire · avant impôt');
+    assert.equal(await valueUnit.count(), 0, 'le taux horaire contient déjà son unité €/h');
     await month.click();
     assert.equal(await month.getAttribute('aria-pressed'), 'true');
+    assert.equal(await hour.getAttribute('aria-pressed'), 'false');
     assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueLabel.innerText(), 'Net mensuel · avant impôt');
+    assert.equal(await valueUnit.innerText(), '/ mois');
     await year.click();
     assert.equal(await year.getAttribute('aria-pressed'), 'true');
     assert.equal(await month.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueLabel.innerText(), 'Net annuel · avant impôt');
+    assert.equal(await valueUnit.innerText(), '/ an');
 
     await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('#modalAddInput').isVisible(), true,
