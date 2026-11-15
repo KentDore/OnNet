@@ -40,13 +40,11 @@ function makeApiResponse(request, options = {}) {
 
   const employeeContributions = gross * 0.22 + employeeHealth;
   const netBeforeTax = gross - employeeContributions - mealTicketEmployee;
-  const taxableNet = gross * 0.82 + employerHealth;
   const overtimePay = (baseGross / 151.67) * overtimeHours * 1.25;
 
   const values = {
     'salarié . rémunération . brut': gross,
     'salarié . rémunération . net . à payer avant impôt': netBeforeTax,
-    'salarié . rémunération . net . imposable': taxableNet,
     'salarié . cotisations . salarié': employeeContributions,
     'salarié . rémunération . heures supplémentaires': overtimePay,
     'salarié . cotisations . prévoyances . santé . salarié': employeeHealth,
@@ -54,9 +52,6 @@ function makeApiResponse(request, options = {}) {
     'salarié . rémunération . frais professionnels . titres-restaurant . montant': ticketCount * ticketValue,
     'salarié . rémunération . frais professionnels . titres-restaurant . employeur': mealTicketEmployer,
     'salarié . rémunération . frais professionnels . non déductible': 0,
-    'salarié . rémunération . net . payé après impôt': netBeforeTax - 100,
-    'impôt . montant': 1200,
-    "impôt . taux d'imposition": 5,
     'SMIC': options.smicValue ?? 1867.02
   };
 
