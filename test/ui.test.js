@@ -1567,3 +1567,17 @@ test('le runtime applicatif est encapsulé sans exposer ses fonctions internes',
     await context.close();
   }
 });
+
+
+test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', { timeout:60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.waitForSelector('#maquetteYourSalary .offer-comparison-card');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 1);
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-net').count(), 0,
+      'les montants nets sont réservés au comparatif inférieur');
+    assert.match(await page.locator('#maquetteYourSalary').innerText(), /Contrat/);
+  } finally {
+    await context.close();
+  }
+});
