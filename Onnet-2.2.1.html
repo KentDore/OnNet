@@ -2220,14 +2220,46 @@ function mapUrssafResultToOnNet(result) {
   };
 }
 
+// src/rate-limited-fetch.mjs
+function createRateLimitedFetch(fetchImpl, options = {}) {
+  if (typeof fetchImpl !== "function") {
+    throw new TypeError("fetchImpl doit \xEAtre une fonction.");
+  }
+  const minimumIntervalMs = options.minimumIntervalMs ?? 350;
+  const now = options.now ?? Date.now;
+  const wait = options.wait ?? ((ms) => new Promise((resolve) => setTimeout(resolve, ms)));
+  if (!Number.isFinite(minimumIntervalMs) || minimumIntervalMs < 0) {
+    throw new RangeError("minimumIntervalMs doit \xEAtre un nombre positif ou nul.");
+  }
+  if (typeof now !== "function") {
+    throw new TypeError("now doit \xEAtre une fonction.");
+  }
+  if (typeof wait !== "function") {
+    throw new TypeError("wait doit \xEAtre une fonction.");
+  }
+  let queue = Promise.resolve();
+  let lastRequestAt = null;
+  return function rateLimitedFetch(url, init) {
+    const request = queue.then(async () => {
+      if (lastRequestAt !== null) {
+        const delay = Math.max(0, minimumIntervalMs - (now() - lastRequestAt));
+        if (delay > 0) await wait(delay);
+      }
+      lastRequestAt = now();
+      return fetchImpl(url, init);
+    });
+    queue = request.catch(() => {
+    });
+    return request;
+  };
+}
+
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 var idCounter = 0;
 var urssafConsentGranted = false;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
-var urssafRequestQueue = Promise.resolve();
-var urssafLastRequestAt = 0;
 var urssafResultCache = /* @__PURE__ */ new Map();
 var urssafErrorCache = /* @__PURE__ */ new Map();
 var officialSmicState = { status: "idle", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null };
@@ -2279,17 +2311,10 @@ function getCachedSmicResult() {
   if (!scenario) return null;
   return urssafResultCache.get(buildUrssafCalculationKey(scenario, foyer, scenarioCalculationDate(scenario))) || null;
 }
-function queuedUrssafFetch(url, options) {
-  const request = urssafRequestQueue.then(async () => {
-    const delay = Math.max(0, 350 - (Date.now() - urssafLastRequestAt));
-    if (delay) await new Promise((resolve) => setTimeout(resolve, delay));
-    urssafLastRequestAt = Date.now();
-    return window.fetch(url, options);
-  });
-  urssafRequestQueue = request.catch(() => {
-  });
-  return request;
-}
+var queuedUrssafFetch = createRateLimitedFetch(
+  (url, options) => window.fetch(url, options),
+  { minimumIntervalMs: 350 }
+);
 function updateUrssafStatus(computed) {
   const statusText = document.getElementById("urssafStatusText");
   if (!statusText) return;
