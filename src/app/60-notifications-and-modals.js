@@ -428,9 +428,9 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
 }
 
 
-// Modification complète d'une offre dans une fenêtre flottante.
-// Les paramètres non pris en charge par l'API sont conservés et signalés,
-// mais ne sont jamais intégrés artificiellement au calcul net.
+// Édition compacte d'une offre dans une fenêtre flottante.
+// Les paramètres historiques masqués restent dans l'objet d'origine et ne sont
+// ni écrasés ni ajoutés artificiellement au calcul net.
 function showEditScenarioModal(scenario){
   const initialPeriod = scenario.salaireSaisiPeriode === 'an' ? 'an' : 'mois';
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
