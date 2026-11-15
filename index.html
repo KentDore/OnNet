@@ -1346,7 +1346,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 .offer-comparison-card.is-reference{border-width:2px}
 .offer-reference-label{display:inline-flex;align-items:center;min-height:28px;padding:5px 9px}
 @media(max-width:640px){
- #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;row-gap:0}
  #benchmarkMount .benchmark-item{padding:16px 14px}
  .offer-comparison-card-head{gap:10px;margin-bottom:12px}
  .offer-comparison-name{font-size:15px}
@@ -1360,16 +1360,90 @@ body.salary-editor-open .integrated-offers{display:none!important}
 .offer-rename-button{min-height:32px;padding:5px 9px;border:1px solid #d7e7dc;border-radius:8px;background:#f4faf5;color:#176b49;font-size:11px;font-weight:750}
 .offer-rename-button:focus-visible{outline:2px solid #1b7652;outline-offset:2px}
 @media(max-width:640px){
- #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr);gap:14px}
+ #benchmarkMount .benchmark-grid{grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;row-gap:0}
  #benchmarkMount .benchmark-item{padding:12px 10px;border-radius:13px}
  #benchmarkMount .benchmark-label{font-size:11px;min-height:0}
- #benchmarkMount .benchmark-value{font-size:clamp(18px,5vw,22px);line-height:1.15}
+ #benchmarkMount .benchmark-value{font-size:clamp(16px,4.5vw,21px);line-height:1.15;overflow-wrap:anywhere}
  #benchmarkMount .benchmark-meta{font-size:9px}
  #benchmarkMount .benchmark-result{font-size:10px;white-space:normal}
  #benchmarkMount .benchmark-details summary{font-size:10px}
  .offer-comparison-card-head{gap:6px}
  .offer-reference-select{font-size:9px;padding:5px 6px}
 }
+
+/* Comparaison directe des offres : une unité cohérente, sans colonnes empilées. */
+#comparePanel .stack-chart-scroll{overflow:visible;padding:0}
+#comparePanel #stackChart.comparison-offer-grid{
+ display:grid;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch;
+ gap:14px;width:100%;min-width:0;padding:12px 0 4px;box-sizing:border-box;
+}
+#comparePanel .comparison-offer-card{
+ display:flex;flex-direction:column;gap:10px;min-width:0;box-sizing:border-box;
+ padding:15px;border:1px solid #e1e9e2;border-radius:16px;background:#fff;
+ color:#24382d;box-shadow:0 3px 12px rgba(24,54,37,.045);
+}
+#comparePanel .comparison-offer-card.is-reference{
+ border:2px solid #247653;background:linear-gradient(155deg,#f0f8f2 0%,#fff 72%);padding:14px;
+}
+.comparison-offer-head{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;min-width:0}
+.comparison-offer-index{display:block;margin-bottom:4px;color:#78877d;font-size:9px;font-weight:800;letter-spacing:.09em}
+.comparison-offer-head h3{margin:0;color:#244b36;font-size:15px;font-weight:750;line-height:1.25;overflow-wrap:anywhere}
+.comparison-reference-badge,.comparison-set-reference{
+ flex:none;max-width:48%;padding:6px 8px;border:1px solid #d4e5d8;border-radius:9px;
+ background:#f4faf5;color:#176b49;font-size:10px;font-weight:750;line-height:1.2;text-align:center;
+}
+.comparison-reference-badge{background:#e4f1e7;border-color:transparent}
+.comparison-offer-value-label{margin-top:3px;color:#69776d;font-size:11px;font-weight:650}
+.comparison-offer-value{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px;color:#135f40;font-size:clamp(22px,4vw,31px);font-weight:800;letter-spacing:-.04em;line-height:1.05;overflow-wrap:anywhere}
+.comparison-offer-value small{color:#65756b;font-size:11px;font-weight:650;letter-spacing:0}
+.comparison-offer-meta{display:flex;flex-wrap:wrap;gap:4px 10px;padding-top:8px;border-top:1px solid #e9eee9;color:#6e7a71;font-size:10px;line-height:1.4}
+.comparison-offer-meta span{min-width:0}
+.comparison-offer-delta{display:flex;align-items:baseline;flex-wrap:wrap;gap:4px 7px;padding:9px 10px;border-radius:10px;background:#f1f7f2}
+.comparison-offer-delta strong{font-size:15px;font-weight:800}
+.comparison-offer-delta span{color:#65756b;font-size:10px}
+.comparison-offer-delta.is-positive{color:#176b49;background:#e9f4ec}
+.comparison-offer-delta.is-negative{color:#a34c31;background:#fff1eb}
+.comparison-offer-delta.is-neutral{color:#526157;background:#f1f3f1}
+.comparison-reference-note{margin-top:2px;color:#68766d;font-size:10px;font-weight:650}
+#comparePanel .insight{
+ display:flex;flex-wrap:wrap;align-items:baseline;gap:3px 5px;margin:10px 0 4px;
+ padding:11px 13px;border-radius:12px;background:#e8f3eb;color:#244b36;
+ font-family:Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;font-size:13px;line-height:1.4;
+}
+#comparePanel .insight strong{color:#176b49}
+#comparePanel .insight-caption{flex-basis:100%;color:#607268;font-size:9px;font-weight:800;letter-spacing:.08em}
+#comparePanel .insight.neutral{display:block;background:#f4f6f4;color:#65736a;font-size:12px}
+.offer-net-details{margin-top:auto;padding-top:8px;border-top:1px solid #e8eee9}
+.offer-net-details summary{color:#176b49;font-size:10px;font-weight:700;cursor:pointer}
+.offer-net-details .salary-net-summary{margin-top:8px}
+.offer-net-details .salary-net-summary-row{padding:7px 9px;font-size:10px}
+.offer-net-details .salary-net-summary-row strong{font-size:12px}
+#comparePanel #stackLegend:empty{display:none}
+@media(max-width:640px){
+ #comparePanel{padding:16px 13px}
+ #comparePanel #stackChart.comparison-offer-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+ #comparePanel .comparison-offer-card{padding:11px 9px;gap:8px;border-radius:13px}
+ #comparePanel .comparison-offer-card.is-reference{padding:10px 8px}
+ .comparison-offer-head{display:block}
+ .comparison-offer-head h3{font-size:13px}
+ .comparison-reference-badge,.comparison-set-reference{display:inline-flex;max-width:100%;margin-top:7px;padding:5px 7px;font-size:9px}
+ .comparison-offer-index{font-size:8px}
+ .comparison-offer-value-label{font-size:9px}
+ .comparison-offer-value{font-size:clamp(17px,4.7vw,22px);gap:2px}
+ .comparison-offer-value small{font-size:9px}
+ .comparison-offer-meta{display:grid;gap:3px;font-size:9px}
+ .comparison-offer-delta{display:block;padding:7px}
+ .comparison-offer-delta strong{display:block;font-size:13px}
+ .comparison-offer-delta span{font-size:9px}
+ .comparison-reference-note{font-size:9px}
+}
+@media(max-width:360px){
+ #comparePanel #stackChart.comparison-offer-grid,
+ #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr)}
+ #comparePanel .comparison-offer-card{padding:13px}
+ .comparison-offer-head{display:flex}
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1441,15 +1515,14 @@ body.salary-editor-open .integrated-offers{display:none!important}
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
-    <h2 class="bars-title">Où part votre salaire&nbsp;?</h2>
-    <p class="sub">Du brut au net.</p>
+    <h2 class="bars-title">Comparer les offres</h2>
+    <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
     
     <div class="hint" id="stackHint"></div>
     <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
-    <!-- Alertes du graphique : il montre toujours du net mensuel, donc elles
-         doivent rester visibles sans déplier la section ci-dessous. -->
+    <!-- Espace conservé pour les messages contextuels du comparatif. -->
     <div id="barsAlerts"></div>
     <section class="benchmark-panel" aria-label="Comparaison avec les repères salariaux">
       <div id="benchmarkBody" aria-live="polite"></div>
@@ -2828,7 +2901,6 @@ function renderAddCard() {
     <span class="card-add-label">Ajouter un salaire</span>
   </button>`;
 }
-var STACK_COLORS = { cotis: "var(--stack-cotis)", mutuelle: "var(--gold)", tr: "var(--stack-tr)", net: "var(--accent)" };
 function getMealTicketTotal(scenario, result) {
   const employee = result?.tr?.totalSalarie;
   const employer = result?.tr?.totalEmployeur;
@@ -2849,118 +2921,74 @@ function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR) {
     (row) => `<div class="salary-net-summary-row${row.final ? " is-final" : ""}"><span>${row.label}</span><strong>${fmt(row.value)}</strong></div>`
   ).join("")}</div>`;
 }
-function renderStack(computed) {
-  const sorted = [...computed].sort((a, b) => b.r.m.netApres - a.r.m.netApres);
-  const maxBrut = Math.max(...computed.map((x) => x.r.m.brutTotal), 1);
-  const maxPx = 240;
-  const ref = computed.find((x) => x.s.id === refId) || computed[0];
-  return sorted.map(({ s, r }) => {
-    const m = r.m;
-    const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
-    const trTotal = getMealTicketTotal(s, r);
-    const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
-    const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
-    const cls = delta > 0 ? "pos" : delta < 0 ? "neg" : "";
-    const pxCotis = Math.max(0, Math.round(cotis * scale)), pxMutuelle = Math.max(0, Math.round(mutuelle * scale));
-    const pxTr = Math.max(0, Math.round(tr * scale)), pxNet = Math.max(0, Math.round(net * scale));
-    const barHtml = `
-      <div class="stack-bar-stage">
-        <div class="stack-bar">
-          <div class="stack-seg stack-seg-cotis" style="height:${pxCotis}px" title="Cotisations sociales : ${fmt(cotis)}" role="img" aria-label="Cotisations sociales : ${fmt(cotis)}"></div>
-          <div class="stack-seg stack-seg-mutuelle" style="height:${pxMutuelle}px" title="Mutuelle : ${fmt(mutuelle)}" role="img" aria-label="Mutuelle : ${fmt(mutuelle)}"></div>
-          <div class="stack-seg stack-seg-tr" style="height:${pxTr}px" title="Titres restaurant (part salariale) : ${fmt(tr)}" role="img" aria-label="Titres restaurant, part salariale : ${fmt(tr)}"></div>
-          <div class="stack-seg stack-seg-net" style="height:${pxNet}px" title="Net bancaire : ${fmt(net)}" role="img" aria-label="Net bancaire : ${fmt(net)}"><span class="stack-net-tag">net</span></div>
-        </div>
-      </div>`;
-    return `
-    <div class="stack-col ${s.id === refId ? "is-ref" : ""} ${s.id === justAddedId ? "card-enter" : ""}" ${s.id !== refId ? `data-setref="${s.id}" role="button" tabindex="0" aria-label="D\xE9finir ${esc(s.name)} comme salaire de r\xE9f\xE9rence"` : 'aria-current="true"'}>
-      <div class="stack-brut">brut ${fmt(brut)}</div>${barHtml}
-      <div class="stack-ref-row"><span class="stack-ref-dot ${s.id === refId ? "is-ref" : ""}" aria-hidden="true"></span><span class="stack-name" title="${esc(s.name)}">${esc(s.name)}</span></div>
-      ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
-      <div class="stack-delta ${cls}">${fmtSigned(delta)}</div>
-    </div>`;
-  }).join("");
+function getComparisonPeriodConfig() {
+  if (maquetteComparisonPeriod === "hour") return {
+    key: "hour",
+    label: "Net horaire",
+    unit: "h",
+    factor: (weekly) => 1,
+    format: fmtHoraire,
+    formatSigned: fmtHoraireSigned
+  };
+  if (maquetteComparisonPeriod === "year") return {
+    key: "year",
+    label: "Net annuel",
+    unit: "an",
+    factor: (weekly) => weekly * 52,
+    format: fmt,
+    formatSigned: fmtSigned
+  };
+  return {
+    key: "month",
+    label: "Net mensuel",
+    unit: "mois",
+    factor: (weekly) => weekly * 52 / 12,
+    format: fmt,
+    formatSigned: fmtSigned
+  };
 }
-function renderStackLegend() {
-  return `
-  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.net}"></span>Net</div>
-  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.tr}"></span>Titres restaurant</div>
-  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.mutuelle}"></span>Mutuelle</div>
-  <div class="legend-item"><span class="legend-swatch" style="background:${STACK_COLORS.cotis}"></span>Cotisations sociales</div>`;
-}
-function renderWaterfall(computed) {
-  const { s, r } = computed[0];
-  const m = r.m;
-  const brut = Math.max(0, m.brutTotal);
-  const net = Math.max(0, m.netApres);
-  const deductions = Math.max(0, brut - net);
-  const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
-  const netSansTR = Math.max(0, m.netSocial);
-  const trTotal = getMealTicketTotal(s, r);
-  return `
-  <div class="waterfall">
-    ${renderSalaryNetSummary(netSansTR, trTotal, net + trTotal)}
-    <div class="wf-stack" role="img" aria-label="Salaire brut : ${fmt(brut)} ; net bancaire : ${fmt(net)} ; retenues sur le brut : ${fmt(deductions)}">
-      <span class="wf-stack-net" style="width:${ratio.toFixed(3)}%"></span>
-      <span class="wf-stack-deductions" style="width:${(100 - ratio).toFixed(3)}%"></span>
-    </div>
-    <div class="wf-bar-legend" aria-hidden="true">
-      <span class="wf-bar-legend-item"><span class="wf-key wf-key-net"></span>Net bancaire</span>
-      <span class="wf-bar-legend-item"><span class="wf-key wf-key-deductions"></span>Retenues sur le brut</span>
-    </div>
-  </div>`;
+function getComparisonNetValue(item, config) {
+  if (!item?.r) return null;
+  const weekly = Number(item.s?.dureeType);
+  const hourly = Number(item.r.netHoraire);
+  if (!Number.isFinite(weekly) || weekly <= 0 || !Number.isFinite(hourly)) return null;
+  return hourly * config.factor(weekly);
 }
 function renderInsight(computed) {
   if (computed.length < 2) return "";
-  const ref = computed.find((x) => x.s.id === refId) || computed[0];
-  const others = computed.filter((x) => x.s.id !== refId);
-  if (!others.length) return "";
-  const isHourly = HOURLY_METRICS.has(metric);
-  const valueOf = (x) => Number(x.r[metric]) || 0;
-  const best = others.reduce((a, b) => valueOf(b) > valueOf(a) ? b : a);
-  const delta = valueOf(best) - valueOf(ref);
-  const unit = isHourly ? "par heure" : metric === "annuelNet" ? "par an" : "par mois";
-  const metricLabel = {
-    annuelNet: "net annuel",
-    netHoraire: "net horaire",
-    brutHoraire: "brut horaire"
-  }[metric] || "valeur s\xE9lectionn\xE9e";
-  const format = isHourly ? fmtHoraire : fmt;
-  if (Math.abs(delta) < (isHourly ? 0.01 : 1)) {
-    return `<div class="insight neutral">Ces salaires donnent \xE0 peu pr\xE8s le m\xEAme ${metricLabel}.</div>`;
+  const config = getComparisonPeriodConfig();
+  const reference = computed.find((x) => x.s.id === refId) || computed[0];
+  const referenceValue = getComparisonNetValue(reference, config);
+  if (referenceValue === null) return "";
+  const candidates = computed.map((item) => ({ item, value: getComparisonNetValue(item, config) })).filter((entry) => entry.value !== null);
+  if (candidates.length < 2) return "";
+  const best = candidates.reduce((a, b) => b.value > a.value ? b : a);
+  const delta = best.value - referenceValue;
+  if (Math.abs(delta) < (config.key === "hour" ? 0.01 : 1)) {
+    return '<div class="insight neutral">Les offres affichent un net estim\xE9 tr\xE8s proche sur cette p\xE9riode.</div>';
   }
-  return `<div class="insight"><strong>${esc(best.s.name)}</strong> donne ${format(Math.abs(delta))} de ${delta > 0 ? "plus" : "moins"} en ${metricLabel} ${unit} que <strong>${esc(ref.s.name)}</strong>.</div>`;
+  if (best.item.s.id === reference.s.id) {
+    return '<div class="insight neutral">L\u2019offre de r\xE9f\xE9rence pr\xE9sente le net estim\xE9 le plus \xE9lev\xE9.</div>';
+  }
+  const deltaText = config.formatSigned(delta) + (config.key === "hour" ? "" : " / " + config.unit);
+  return '<div class="insight"><span class="insight-caption">\xC9CART AVEC LA R\xC9F\xC9RENCE</span><strong>' + esc(best.item.s.name) + "</strong><span> apporte </span><strong>" + deltaText + "</strong><span> par rapport \xE0 " + esc(reference.s.name) + ".</span></div>";
 }
-var HOURLY_METRICS = /* @__PURE__ */ new Set(["netHoraire", "brutHoraire"]);
-function renderBars(computed) {
-  const ref = computed.find((x) => x.s.id === refId) || computed[0];
-  const isHourly = HOURLY_METRICS.has(metric);
-  const fmtV = isHourly ? fmtHoraire : fmt;
-  const fmtD = isHourly ? fmtHoraireSigned : fmtSigned;
-  const vals = computed.map((x) => x.r[metric]);
-  const maxVal = Math.max(...vals.map((v) => Math.abs(v)), 1);
-  return computed.map(({ s, r }) => {
-    const v = r[metric];
-    const pct = Math.max(3, Math.round(Math.abs(v) / maxVal * 100));
-    const delta = v - ref.r[metric];
-    const cls = delta > 0 ? "pos" : delta < 0 ? "neg" : "";
-    return `
-    <div class="bar-row">
-      <div class="bar-top">
-        <span class="bar-name" title="${esc(s.name)}">${esc(s.name)}${s.id === refId ? " \xB7 r\xE9f." : ""}</span>
-        <span class="bar-value"><span>${fmtV(v)}</span><span class="bar-delta ${cls}">${fmtD(delta)}</span></span>
-      </div>
-      <div class="bar-track"><div class="bar-fill" style="width:${pct}%"></div></div>
-    </div>`;
+function renderComparisonCards(computed) {
+  const config = getComparisonPeriodConfig();
+  const reference = computed.find((x) => x.s.id === refId) || computed[0];
+  const referenceValue = getComparisonNetValue(reference, config);
+  return computed.map(({ s, r }, index) => {
+    const item = { s, r };
+    const value = getComparisonNetValue(item, config);
+    const weekly = Number(s.dureeType);
+    const delta = value === null || referenceValue === null ? null : value - referenceValue;
+    const deltaClass = delta === null ? "" : delta > 0.01 ? "is-positive" : delta < -0.01 ? "is-negative" : "is-neutral";
+    const deltaHtml = s.id === refId ? '<span class="comparison-reference-note">Offre de r\xE9f\xE9rence</span>' : delta === null ? '<span class="comparison-reference-note">\xC9cart indisponible</span>' : '<div class="comparison-offer-delta ' + deltaClass + '"><strong>' + config.formatSigned(delta) + "</strong><span>" + (config.key === "hour" ? "vs " : "/ " + config.unit + " vs ") + esc(reference.s.name) + "</span></div>";
+    const trTotal = getMealTicketTotal(s, r);
+    const details = trTotal > 0.5 ? '<details class="offer-net-details"><summary>D\xE9tail des titres-restaurant</summary>' + renderSalaryNetSummary(r.m.netSocial, trTotal, r.netApres + trTotal) + "</details>" : "";
+    const referenceAction = s.id === refId ? '<span class="comparison-reference-badge">R\xE9f\xE9rence</span>' : '<button type="button" class="comparison-set-reference" data-set-offer-reference="' + s.id + '">Choisir comme r\xE9f\xE9rence</button>';
+    return '<article class="comparison-offer-card ' + (s.id === refId ? "is-reference" : "") + '" data-comparison-offer="' + s.id + '"><header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE ' + (index + 1) + "</span><h3>" + esc(s.name) + "</h3></div>" + referenceAction + '</header><div class="comparison-offer-value-label">' + config.label + ' \xB7 avant imp\xF4t</div><div class="comparison-offer-value">' + (value === null ? "\u2014" : config.format(value)) + (value === null || config.key === "hour" ? "" : "<small>/ " + config.unit + "</small>") + '</div><div class="comparison-offer-meta"><span>Brut : ' + fmt(s.brut) + " / mois</span><span>" + weekly.toLocaleString("fr-FR") + " h / semaine</span></div>" + deltaHtml + details + "</article>";
   }).join("");
-}
-function renderAlerts(computed) {
-  const out = [];
-  const nbMoisSet = new Set(computed.map((x) => x.s.nbMois));
-  if (nbMoisSet.size > 1) {
-    out.push(`<div class="alert alert-info"><span>${ICON.info}</span><span>Ces salaires n'ont pas le m\xEAme nombre de mois de paie. Comparez le <strong>net annuel</strong> pour un \xE9cart repr\xE9sentatif.</span></div>`);
-  }
-  return out.join("");
 }
 function renderBenchmarks(computed) {
   const smicState = urssafSessionState.getOfficialSmicState();
@@ -3205,36 +3233,50 @@ function renderMaquetteControls(computedOverride) {
   if (status && mount && status.parentElement !== mount) mount.appendChild(status);
 }
 function renderComparisonChart(computed) {
-  const isSingle = computed.length === 1;
-  const hasSalaryResults = computed.length > 0 && computed.every((x) => !!x.r);
-  const allReady = hasSalaryResults && !!getCachedSmicResult();
+  const hasSalaryResults = computed.length > 0 && computed.every((item) => !!item.r);
   const comparePanel = document.getElementById("comparePanel");
   if (comparePanel) comparePanel.hidden = !hasSalaryResults;
-  if (comparePanel) {
-    const chartElements = ["#stackHint", "#insightBox", ".stack-chart-scroll", "#stackLegend", "#barsAlerts"];
-    chartElements.forEach((selector) => {
-      const element = comparePanel.querySelector(selector);
-      if (element) element.hidden = !allReady;
-    });
+  const hint = document.getElementById("stackHint");
+  const insight = document.getElementById("insightBox");
+  const chart = document.getElementById("stackChart");
+  const scroll = comparePanel?.querySelector(".stack-chart-scroll");
+  const legend = document.getElementById("stackLegend");
+  const alerts = document.getElementById("barsAlerts");
+  const bars = document.getElementById("barsBody");
+  [hint, insight, scroll].filter(Boolean).forEach((element) => {
+    element.hidden = !hasSalaryResults;
+  });
+  if (legend) {
+    legend.innerHTML = "";
+    legend.hidden = true;
   }
-  const stackChartEl = document.getElementById("stackChart");
-  if (!stackChartEl) return;
-  if (allReady) {
-    document.getElementById("stackHint").textContent = isSingle ? `Salaire brut de ${fmt(computed[0].r.m.brutTotal)} par mois.` : "Cliquez sur une carte pour la d\xE9finir comme r\xE9f\xE9rence.";
-    document.getElementById("insightBox").innerHTML = renderInsight(computed);
-    stackChartEl.className = isSingle ? "" : "stack-chart";
-    stackChartEl.innerHTML = isSingle ? renderWaterfall(computed) : renderStack(computed);
-    document.getElementById("stackLegend").innerHTML = isSingle ? "" : renderStackLegend();
-    document.getElementById("barsBody").innerHTML = renderBars(computed);
-    document.getElementById("barsAlerts").innerHTML = renderAlerts(computed);
-  } else {
-    document.getElementById("stackHint").textContent = "Les r\xE9sultats s\u2019affichent apr\xE8s validation par l\u2019API officielle Mon-entreprise (Urssaf).";
-    document.getElementById("insightBox").innerHTML = "";
-    stackChartEl.className = "";
-    stackChartEl.innerHTML = "";
-    document.getElementById("stackLegend").innerHTML = "";
-    document.getElementById("barsBody").innerHTML = "";
-    document.getElementById("barsAlerts").innerHTML = "";
+  if (alerts) {
+    alerts.innerHTML = "";
+    alerts.hidden = true;
+  }
+  if (bars) bars.innerHTML = "";
+  if (!chart) return;
+  if (!hasSalaryResults) {
+    chart.className = "comparison-offer-grid";
+    chart.innerHTML = "";
+    if (hint) hint.textContent = "La comparaison appara\xEEtra apr\xE8s validation des calculs par l\u2019API Urssaf.";
+    if (insight) insight.innerHTML = "";
+    return;
+  }
+  const config = getComparisonPeriodConfig();
+  if (hint) hint.textContent = config.label + " \xB7 net avant imp\xF4t estim\xE9 par l\u2019API Urssaf.";
+  if (insight) insight.innerHTML = renderInsight(computed);
+  chart.className = "comparison-offer-grid";
+  chart.innerHTML = renderComparisonCards(computed);
+  if (chart.dataset.comparisonReferenceBound !== "true") {
+    chart.addEventListener("click", (event) => {
+      const button = event.target.closest("[data-set-offer-reference]");
+      if (!button) return;
+      refId = Number(button.dataset.setOfferReference);
+      saveState();
+      render();
+    });
+    chart.dataset.comparisonReferenceBound = "true";
   }
 }
 function render() {
