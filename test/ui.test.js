@@ -960,6 +960,14 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
     const year = page.locator('[data-maquette-period="year"]');
     const valueLabel = page.locator('#stackChart .comparison-offer-value-label');
     const valueUnit = page.locator('#stackChart .comparison-offer-value small');
+    assert.equal(await valueLabel.innerText(), 'Net mensuel · avant impôt');
+    assert.equal(await month.getAttribute('aria-pressed'), 'true', 'le mensuel est sélectionné par défaut');
+    assert.equal(await hour.getAttribute('aria-pressed'), 'false');
+    assert.equal(await year.getAttribute('aria-pressed'), 'false');
+    assert.equal(await valueUnit.innerText(), '/ mois');
+    await hour.click();
+    assert.equal(await hour.getAttribute('aria-pressed'), 'true');
+    assert.equal(await month.getAttribute('aria-pressed'), 'false');
     assert.equal(await valueLabel.innerText(), 'Net horaire · avant impôt');
     assert.equal(await valueUnit.count(), 0, 'le taux horaire contient déjà son unité €/h');
     for (const result of await page.locator('#benchmarkMount .benchmark-result').allTextContents()) {
@@ -1369,7 +1377,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.equal(summaryAmounts.length, 3);
     assert.equal(parseEuro(summaryAmounts[1]), 168, 'le total des deux parts doit correspondre à 21 titres de 8 €');
     assert.equal(parseEuro(summaryAmounts[2]) - parseEuro(summaryAmounts[0]), 84, 'le gain de pouvoir d’achat correspond à la part employeur des titres');
-    assert.match(await page.locator('#stackHint').innerText(), /horaire/);
+    assert.match(await page.locator('#stackHint').innerText(), /mensuel/);
     assert.match(await page.locator('#stackHint').innerText(), /avant impôt/);
 
   } finally {
@@ -1391,7 +1399,7 @@ test('les cartes de comparaison affichent la même unité après les calculs API
         chart?.children.length === 2 && chart.parentElement?.hidden === false &&
         legend?.hidden === true && chart.querySelectorAll('.comparison-offer-card').length === 2;
     }, null, { timeout:20000 });
-    assert.match(await page.locator('#stackHint').innerText(), /horaire.*avant impôt/);
+    assert.match(await page.locator('#stackHint').innerText(), /mensuel.*avant impôt/);
   } finally {
     await context.close();
   }
