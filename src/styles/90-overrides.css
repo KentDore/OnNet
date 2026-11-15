@@ -8,7 +8,7 @@
 .advanced-workspace-intro{margin:0 0 14px;color:var(--ink-soft);font-size:12px;line-height:1.45;}
 .legacy-salary-details .cards-bar{margin-bottom:10px;}
 .legacy-salary-details .cards-scroll{margin-bottom:14px;}
-.advanced-workspace>.situation-section,.advanced-workspace>.modules-section{margin-bottom:16px;}
+ .advanced-workspace>.modules-section{margin-bottom:16px;}
 @media(max-width:640px){.advanced-workspace{margin-top:14px;padding:0 12px;border-radius:14px}.advanced-workspace>summary{padding:13px 1px}.advanced-workspace-intro{font-size:11px}}
 
 /* Respect de la V33 : formulaire vertical sur desktop comme sur mobile. */
