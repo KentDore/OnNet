@@ -874,7 +874,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.locator('summary').click();
+    await advanced.getByText('Simuler une augmentation', { exact:true }).click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
     assert.equal(await page.locator('#legacySalaryCards').isVisible(), false);
     assert.equal(await page.locator('.advanced-workspace .situation-section').isVisible(), false);
@@ -1119,12 +1119,10 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
 test('le graphique explique explicitement qu’il montre le net avant impôt', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.waitForSelector('#comparePanel .chart-scope-hint');
+    await page.waitForSelector('#comparePanel #stackChart');
     assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
     assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
-    const scope = await page.locator('#comparePanel .chart-scope-hint').innerText();
-    assert.match(scope, /montants issus de la simulation officielle/i);
-    assert.match(scope, /Mon-entreprise \/ Urssaf/i);
+    assert.equal(await page.locator('#comparePanel .chart-scope-hint').count(), 0, 'la mention redondante sur la source des montants doit être absente');
   } finally {
     await context.close();
   }
