@@ -378,9 +378,7 @@ function renderMaquetteControls(computedOverride){
   document.querySelectorAll('[data-maquette-period]').forEach(button=>{
     button.setAttribute('aria-pressed',String(button.dataset.maquettePeriod===maquetteComparisonPeriod));
   });
-  const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
-  const benchmarkMount=document.getElementById('benchmarkMount');
-  if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
+  // Les repères SMIC et médiane restent dans le panneau Comparaison.
   const tabs=document.getElementById('maquetteOfferTabs');
   if(tabs) tabs.replaceChildren();
   if(tabs) scenarios.forEach((scenario,index)=>{
