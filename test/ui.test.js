@@ -1690,3 +1690,52 @@ test('conserve aussi le brut annuel saisi pendant le premier démarrage', { time
     await context.close();
   }
 });
+
+
+test('la fenêtre de modification conserve tous les paramètres avancés d’une offre', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
+      status:200, contentType:'application/json',
+      body:JSON.stringify([{
+        nom:'Rennes', code:'35238', codesPostaux:['35000'],
+        departement:{nom:'Ille-et-Vilaine'}, codeDepartement:'35'
+      }])
+    }));
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').fill('Poste Rennes');
+    await page.locator('#editOfferPeriod [data-period="an"]').click();
+    await page.locator('#editOfferGross').fill('29500');
+    await page.locator('#editOfferHours').selectOption('39');
+    await page.locator('#editOfferCommune').fill('Rennes');
+    await page.locator('.modal-edit-offer .commune-option').first().click();
+    await page.locator('#editOfferMutuelle').fill('42,50');
+    await page.locator('#editOfferMutuellePat').fill('55');
+    await page.locator('#editOfferMealDays').fill('20');
+    await page.locator('#editOfferMealValue').fill('9,50');
+    await page.locator('#editOfferMealShare [data-share="40"]').click();
+    await page.locator('#editOfferMonths').fill('13');
+    await page.locator('#editOfferBonus').fill('1200');
+    await page.locator('#editOffer13thBase').selectOption('ensemble');
+    await page.locator('#editOfferSave').click();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.name, 'Poste Rennes');
+    assert.equal(saved.salaireSaisi, 29500);
+    assert.equal(saved.salaireSaisiPeriode, 'an');
+    assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
+    assert.equal(saved.dureeType, '39');
+    assert.equal(saved.commune, 'Rennes');
+    assert.equal(saved.codePostal, '35000');
+    assert.equal(saved.departement, 'Ille-et-Vilaine');
+    assert.equal(saved.mutuelle, 42.5);
+    assert.equal(saved.mutuellePat, 55);
+    assert.equal(saved.joursResto, 20);
+    assert.equal(saved.valeurResto, 9.5);
+    assert.equal(saved.partResto, 40);
+    assert.equal(saved.nbMois, 13);
+    assert.equal(saved.primes, 1200);
+    assert.equal(saved.treiziemeMoisBase, 'ensemble');
+  } finally {
+    await context.close();
+  }
+});
