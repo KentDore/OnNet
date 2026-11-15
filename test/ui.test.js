@@ -874,11 +874,10 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.getByText('Paramètres avancés et outils', { exact: true }).click();
+    await advanced.locator('summary').click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await page.locator('#legacySalaryCards > summary').click();
-    assert.equal(await page.locator('#cardsScroll').isVisible(), true);
-    assert.equal(await page.locator('#foyerModuleToggle').isVisible(), true);
+    assert.equal(await page.locator('#legacySalaryCards').isVisible(), false);
+    assert.equal(await page.locator('.advanced-workspace .situation-section').isVisible(), false);
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
   } finally {
     await context.close();
