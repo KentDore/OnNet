@@ -96,7 +96,7 @@
   <section class="results" id="results" aria-live="polite">
     <h2>Résultat de l’API Urssaf</h2>
     <div class="hero">
-      <span>Net mensuel avant impôt sur le revenu</span>
+      <span>Net mensuel calculé</span>
       <strong id="net">—</strong>
     </div>
     <dl>
@@ -105,7 +105,6 @@
       <dt>Salaire de base 35 h transmis au moteur</dt><dd id="base-gross">—</dd>
       <dt>Heures supplémentaires mensuelles</dt><dd id="overtime-hours">—</dd>
       <dt>Rémunération brute des heures supplémentaires</dt><dd id="overtime-pay">—</dd>
-      <dt>Net imposable</dt><dd id="taxable-net">—</dd>
       <dt>Cotisations salariales calculées</dt><dd id="employee-contributions">—</dd>
       <dt>Mutuelle — part salariale reconnue</dt><dd id="employee-health">—</dd>
       <dt>Mutuelle — part employeur reconnue</dt><dd id="employer-health">—</dd>
@@ -116,7 +115,7 @@
 
   <aside class="note-card">
     <p class="note"><strong>Source et périmètre :</strong> appel en direct à l’API REST officielle Urssaf ; l’API peut être momentanément indisponible ou limiter les requêtes. Certaines données non renseignées peuvent recevoir une valeur par défaut du modèle ; elles seront signalées sous le résultat. Le calcul reste une estimation et ne remplace pas un bulletin de paie.</p>
-    <p class="note"><strong>Scénario simplifié :</strong> CDI privé non-cadre, droit commun, 35 h ou 39 h avec majoration standard de 25 %, sans absence ni activité partielle. Le régime local Alsace-Moselle, les conventions collectives particulières, la situation fiscale détaillée et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés. Les résultats doivent être comparés au simulateur officiel avec des paramètres strictement identiques avant toute mise en production.</p>
+    <p class="note"><strong>Scénario simplifié :</strong> CDI privé non-cadre, droit commun, 35 h ou 39 h avec majoration standard de 25 %, sans absence ni activité partielle. Le régime local Alsace-Moselle, les conventions collectives particulières et les 13ᵉ/14ᵉ mois ne sont pas encore raccordés. Les résultats doivent être comparés au simulateur officiel avec des paramètres strictement identiques avant toute mise en production.</p>
   </aside>
 </main>
 
@@ -160,7 +159,6 @@
       show('base-gross', euro.format(result.baseGross))
       show('overtime-hours', `${number.format(result.overtimeHours)} h`)
       show('overtime-pay', euro.format(result.overtimePay))
-      show('taxable-net', euro.format(result.taxableNet))
       show('employee-contributions', euro.format(result.employeeContributions))
       show('employee-health', euro.format(result.employeeHealth))
       show('employer-health', euro.format(result.employerHealth))
