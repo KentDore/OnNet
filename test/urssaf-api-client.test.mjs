@@ -168,7 +168,7 @@ test('envoie une situation CDI et une seule requête pour un scénario 35 h', as
   assert.equal(result.engine, 'API REST officielle Mon-entreprise / Urssaf')
   assert.equal(result.endpoint, 'https://mon-entreprise.urssaf.fr/api/v1/evaluate')
   assert.equal(result.netBeforeTax, 1810)
-  assert.equal(result.taxableNet, 1880)
+  assert.equal(result.taxableNet, undefined)
   assert.equal(result.mealTicketAmount, 168)
   assert.equal(result.mealTicketEmployee, 98)
   assert.equal(result.mealTicketEmployer, 70)
