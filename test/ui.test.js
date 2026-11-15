@@ -860,10 +860,14 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
     assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
-    assert.equal(await page.locator('#editOfferCommune').count(), 1);
-    assert.equal(await page.locator('#editOfferMutuellePat').count(), 1);
-    assert.equal(await page.locator('#editOfferMonths').count(), 1);
-    assert.equal(await page.locator('#editOfferBonus').count(), 1);
+    assert.equal(await page.locator('#editOfferCommune').count(), 0);
+    assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
+    assert.equal(await page.locator('#editOfferMonths').count(), 0);
+    assert.equal(await page.locator('#editOfferBonus').count(), 0);
+    assert.equal(await page.locator('#editOffer13thBase').count(), 0);
+    assert.equal(await page.locator('#editOfferMutuelleToggle').innerText(), '30 € / mois ✎');
+    await page.locator('#editOfferMutuelleToggle').click();
+    assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
     await page.locator('#editOfferCancel').click();
     await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
   } finally {
@@ -1713,40 +1717,38 @@ test('conserve aussi le brut annuel saisi pendant le premier démarrage', { time
 });
 
 
-test('la fenêtre de modification conserve tous les paramètres avancés d’une offre', { timeout: 60000 }, async () => {
+test('la fenêtre de modification simplifiée conserve les paramètres masqués et permet de modifier la mutuelle', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
-    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
-      status:200, contentType:'application/json',
-      body:JSON.stringify([{
-        nom:'Rennes', code:'35238', codesPostaux:['35000'],
-        departement:{nom:'Ille-et-Vilaine'}, codeDepartement:'35'
-      }])
-    }));
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
+      Object.assign(state.scenarios[0], {
+        commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
+        codeCommune:'35210', codeDepartement:'35', nbMois:13, primes:1200,
+        treiziemeMoisBase:'ensemble', mutuellePat:55
+      });
+      localStorage.setItem('onnet.state.v1', JSON.stringify(state));
+    });
+    await page.reload();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    await page.locator('#editOfferName').fill('Poste Rennes');
+    await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
     await page.locator('#editOfferHours').selectOption('39');
-    await page.locator('#editOfferCommune').fill('Rennes');
-    await page.locator('.modal-edit-offer .commune-option').first().click();
+    await page.locator('#editOfferMutuelleToggle').click();
     await page.locator('#editOfferMutuelle').fill('42,50');
-    await page.locator('#editOfferMutuellePat').fill('55');
     await page.locator('#editOfferMealDays').fill('20');
     await page.locator('#editOfferMealValue').fill('9,50');
     await page.locator('#editOfferMealShare').fill('40');
-    await page.locator('#editOfferMonths').fill('13');
-    await page.locator('#editOfferBonus').fill('1200');
-    await page.locator('#editOffer13thBase').selectOption('ensemble');
     await page.locator('#editOfferSave').click();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
-    assert.equal(saved.name, 'Poste Rennes');
+    assert.equal(saved.name, 'Poste modifié');
     assert.equal(saved.salaireSaisi, 29500);
     assert.equal(saved.salaireSaisiPeriode, 'an');
     assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
     assert.equal(saved.dureeType, '39');
-    assert.equal(saved.commune, 'Rennes');
-    assert.equal(saved.codePostal, '35000');
+    assert.equal(saved.commune, 'Pacé');
+    assert.equal(saved.codePostal, '35740');
     assert.equal(saved.departement, 'Ille-et-Vilaine');
     assert.equal(saved.mutuelle, 42.5);
     assert.equal(saved.mutuellePat, 55);
