@@ -42,8 +42,9 @@ test('construit les paramètres API complets et ajoute les données fiscales hor
   const input = buildUrssafInput(scenario, {
     mode: 'bareme', couple: true, personnesCharge: 2,
     parentIsole: false, autresRevenus: 900
-  });
+  }, '2026-11-15');
   assert.equal(input.brut, 3000);
+  assert.equal(input.date, '2026-11-15');
   assert.equal(input.commune, 'Pacé');
   assert.equal(input.codePostal, '35740');
   assert.equal(input.modeImpot, 'barème');
@@ -53,7 +54,7 @@ test('construit les paramètres API complets et ajoute les données fiscales hor
 });
 
 test('ne transmet pas de paramètres fiscaux pour un scénario benchmark', () => {
-  const input = buildUrssafInput({ ...scenario, isBenchmark: true }, {});
+  const input = buildUrssafInput({ ...scenario, isBenchmark: true }, {}, '2026-11-15');
   assert.equal(input.benchmarkOnly, true);
   assert.equal('modeImpot' in input, false);
   assert.equal('situationFamille' in input, false);
