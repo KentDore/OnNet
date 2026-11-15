@@ -1507,6 +1507,8 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     await openSalaryEditor(page, 1);
     await page.locator('#editOfferHours').selectOption('35');
     await page.locator('#editOfferSave').click();
+    // Le repère SMIC suit l'offre de référence : sélectionner explicitement l'offre 35 h.
+    await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
