@@ -530,3 +530,11 @@ body.salary-editor-open .integrated-offers{display:none!important}
   }
 }
 
+
+
+/* Séparation explicite entre les offres et les repères déplacés dynamiquement.
+   flow-root empêche la marge du panneau enfant de s'effondrer hors du conteneur. */
+#benchmarkMount{
+  display:flow-root;
+  margin-top:24px;
+}
