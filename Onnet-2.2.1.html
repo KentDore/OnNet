@@ -3008,7 +3008,7 @@ function renderBenchmarks(computed) {
   const userNetBeforeTax = r ? Math.max(0, r.netApres) : null;
   const userNetHourly = userNetBeforeTax === null ? null : userMonthlyHours > 0 ? userNetBeforeTax / userMonthlyHours : 0;
   const userValue = userNetHourly === null ? null : userNetHourly * factor;
-  const gapText = (value) => (value >= 0 ? "+" : "\u2212") + format(Math.abs(value)) + " / " + unit;
+  const gapText = (value) => (value >= 0 ? "+" : "\u2212") + format(Math.abs(value)) + (maquetteComparisonPeriod === "hour" ? "" : " / " + unit);
   const gapClass = (value) => value >= 0 ? "benchmark-positive" : "benchmark-negative";
   const durationLabel = weeklyHours.toLocaleString("fr-FR") + " h";
   const smicNetHourly = smicResult ? Math.max(0, smicResult.netApres) / userMonthlyHours : null;
