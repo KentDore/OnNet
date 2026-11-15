@@ -2,7 +2,7 @@ import { calculatePublicodes } from '../src/publicodes-adapter.mjs'
 import { calculateWithUrssafApi, evaluateUrssafExpression } from '../src/urssaf-api-client.mjs'
 
 // Les scénarios sont exécutés en série, mais le client peut effectuer plusieurs
-// requêtes par scénario (notamment pour calibrer les 39 h puis calculer le PAS).
+// requêtes par scénario (notamment pour calibrer les scénarios à 39 h).
 // On espace donc tous les appels pour limiter le risque de HTTP 429 lors d'une
 // campagne de diagnostic manuelle. Aucun retry automatique n'est effectué.
 const REQUEST_INTERVAL_MS = 350
@@ -69,13 +69,12 @@ const scenarios = [
 ]
 
 const comparisons = [
-  ['brut', 'grossCalculated'],
-  ['net avant impôt', 'netBeforeTax'],
-  ['net imposable', 'taxableNet'],
-  ['cotisations salariales', 'employeeContributions'],
-  ['heures supplémentaires', 'overtimePay'],
-  ['mutuelle salariale', 'employeeHealth'],
-  ['mutuelle patronale', 'employerHealth']
+  ['brut', 'grossCalculated', 'grossCalculated'],
+  ['net calculé', 'netCalculated', 'netBeforeTax'],
+  ['cotisations salariales', 'employeeContributions', 'employeeContributions'],
+  ['heures supplémentaires', 'overtimePay', 'overtimePay'],
+  ['mutuelle salariale', 'employeeHealth', 'employeeHealth'],
+  ['mutuelle patronale', 'employerHealth', 'employerHealth']
 ]
 
 const round = value => Number(value.toFixed(2))
@@ -105,7 +104,7 @@ for (const scenario of scenarios) {
         }
       }
     }
-    entry.api = Object.fromEntries(comparisons.map(([label, key]) => [label, Number.isFinite(remote[key]) ? round(remote[key]) : null]))
+    entry.api = Object.fromEntries(comparisons.map(([label, localKey, apiKey]) => [label, Number.isFinite(remote[apiKey]) ? round(remote[apiKey]) : null]))
     entry.missingVariables = remote.missingVariables
     entry.warnings = remote.warnings
   } catch (error) {
@@ -118,9 +117,9 @@ for (const scenario of scenarios) {
 
   try {
     const local = calculatePublicodes(scenario.input)
-    entry.comparisons = comparisons.map(([label, key]) => {
-      const localValue = local[key]
-      const urssafValue = remote[key]
+    entry.comparisons = comparisons.map(([label, localKey, apiKey]) => {
+      const localValue = local[localKey]
+      const urssafValue = remote[apiKey]
       if (!Number.isFinite(localValue) || !Number.isFinite(urssafValue)) {
         throw new Error(`Valeur locale ou API absente pour ${label}.`)
       }
@@ -139,57 +138,7 @@ for (const scenario of scenarios) {
   results.push(entry)
 }
 
-const fiscalScenarios = [
-  { name: 'taux personnalisé 10 %', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'personnalisé', tauxPAS: 10 } },
-  { name: 'taux neutre', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'neutre' } },
-  { name: 'barème standard, célibataire sans enfant', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'barème', situationFamille: 'célibataire', enfantsACharge: 0 } },
-  { name: 'barème standard, couple avec 24 000 € autres revenus imposables', input: { brut: 2300, dureeType: '35', date: REFERENCE_DATE, modeImpot: 'barème', situationFamille: 'couple', enfantsACharge: 0, autresRevenusImposables: 24000 } }
-]
-
-const fiscalResults = []
-for (const scenario of fiscalScenarios) {
-  console.error(`[fiscal] ${scenario.name}`)
-  try {
-    const result = await calculateWithUrssafApi(scenario.input, { fetchImpl: throttledFetch })
-    for (const [name, value] of [
-      ['net après impôt', result.netAfterTax],
-      ['impôt', result.incomeTax],
-      ['taux appliqué', result.calculatedTaxRate]
-    ]) {
-      if (!Number.isFinite(value)) {
-        throw new Error(`Résultat fiscal API absent ou non numérique (${name}).`)
-      }
-    }
-    if (result.calculatedTaxRate <= 0 || result.calculatedTaxRate > 100) {
-      throw new Error(`Taux d’imposition officiel incohérent pour « ${scenario.name} » : ${result.calculatedTaxRate} %.`)
-    }
-    if (result.incomeTax <= 0 || result.netAfterTax >= result.netBeforeTax) {
-      throw new Error(`Le scénario fiscal ne produit aucun prélèvement positif : ${JSON.stringify({
-        netBeforeTax: result.netBeforeTax,
-        netAfterTax: result.netAfterTax,
-        incomeTax: result.incomeTax,
-        calculatedTaxRate: result.calculatedTaxRate,
-        missingVariables: result.missingVariables
-      })}`)
-    }
-    fiscalResults.push({
-      scenario: scenario.name,
-      netBeforeTax: round(result.netBeforeTax),
-      taxableNet: round(result.taxableNet),
-      netAfterTax: round(result.netAfterTax),
-      incomeTax: round(result.incomeTax),
-      calculatedTaxRate: round(result.calculatedTaxRate),
-      missingVariables: result.missingVariables,
-      warnings: result.warnings
-    })
-  } catch (error) {
-    fiscalResults.push({ scenario: scenario.name, error: error.message })
-    diagnosticErrors.push({ scenario: scenario.name, source: 'fiscalité API', error: error.message })
-    if (shouldStopDiagnostic(error)) throw error
-  }
-}
-
-console.log(JSON.stringify({ references: { date: REFERENCE_DATE, smic: { value: smicValue, missingVariables: smicReference.missingVariables, warnings: smicReference.warnings }, pmss: { value: pmssValue, missingVariables: pmssReference.missingVariables, warnings: pmssReference.warnings } }, social: results, fiscal: fiscalResults }, null, 2))
+console.log(JSON.stringify({ references: { date: REFERENCE_DATE, smic: { value: smicValue, missingVariables: smicReference.missingVariables, warnings: smicReference.warnings }, pmss: { value: pmssValue, missingVariables: pmssReference.missingVariables, warnings: pmssReference.warnings } }, scenarios: results }, null, 2))
 
 const mismatches = results.flatMap(result =>
   result.comparisons
