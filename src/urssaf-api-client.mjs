@@ -7,7 +7,6 @@ const MAX_GROSS_CALIBRATION_ATTEMPTS = 3
 const EXPRESSIONS = Object.freeze({
   gross: 'salarié . rémunération . brut',
   netBeforeTax: 'salarié . rémunération . net . à payer avant impôt',
-  taxableNet: 'salarié . rémunération . net . imposable',
   employeeContributions: 'salarié . cotisations . salarié',
   overtimePay: 'salarié . rémunération . heures supplémentaires',
   employeeHealth: 'salarié . cotisations . prévoyances . santé . salarié',
@@ -15,9 +14,6 @@ const EXPRESSIONS = Object.freeze({
   mealTicketAmount: 'salarié . rémunération . frais professionnels . titres-restaurant . montant',
   mealTicketEmployer: 'salarié . rémunération . frais professionnels . titres-restaurant . employeur',
   mealTicketNonDeductible: 'salarié . rémunération . frais professionnels . non déductible',
-  netAfterTax: 'salarié . rémunération . net . payé après impôt',
-  incomeTax: 'impôt . montant',
-  taxRate: "impôt . taux d'imposition",
 })
 
 function numberInRange(value, name, min, max) {
@@ -119,70 +115,7 @@ function buildSituation(input, baseGross, overtimeHours) {
     'date': formatDate(input.date)
   }
 
-  if (input.modeImpot !== undefined && input.modeImpot !== null && input.modeImpot !== '') {
-    const modes = {
-      'personnalisé': 'taux personnalisé',
-      'neutre': 'taux neutre',
-      'barème': 'barème standard'
-    }
-    const mode = String(input.modeImpot)
-    if (!Object.prototype.hasOwnProperty.call(modes, mode)) {
-      throw new TypeError('modeImpot doit être personnalisé, neutre ou barème.')
-    }
 
-    situation['impôt . méthode de calcul'] = `'${modes[mode]}'`
-
-    if (mode === 'personnalisé') {
-      const taxRate = numberInRange(input.tauxPAS, 'tauxPAS', 0, 100)
-      situation['impôt . taux personnalisé'] = percent(taxRate)
-    }
-
-    // Le taux neutre correspond à la grille de référence d'un célibataire sans enfant.
-    // Renseigner explicitement le foyer évite que le calcul du montant d'impôt
-    // reste à zéro alors que la règle officielle du taux neutre renvoie un taux positif.
-    if (mode === 'neutre') {
-      situation['impôt . foyer fiscal . situation de famille'] = "'célibataire'"
-      situation['impôt . foyer fiscal . enfants à charge'] = '0 enfant'
-    }
-
-    if (mode === 'barème') {
-      const familyStatus = input.situationFamille
-      if (!['célibataire', 'couple', 'veuf'].includes(familyStatus)) {
-        throw new TypeError('situationFamille doit être renseignée : célibataire, couple ou veuf.')
-      }
-      if (input.enfantsACharge === undefined || input.enfantsACharge === null) {
-        throw new TypeError('enfantsACharge doit être renseigné pour le calcul au barème.')
-      }
-      const children = integerInRange(input.enfantsACharge, 'enfantsACharge', 0, 20)
-      if (familyStatus === 'célibataire' && children > 0 && typeof input.parentIsole !== 'boolean') {
-        throw new TypeError('parentIsole doit être renseigné pour une personne célibataire avec enfant(s).')
-      }
-      const singleParent = input.parentIsole ?? false
-      if (typeof singleParent !== 'boolean') {
-        throw new TypeError('parentIsole doit être un booléen.')
-      }
-      if (singleParent && (familyStatus !== 'célibataire' || children === 0)) {
-        throw new TypeError('parentIsole exige une personne célibataire avec au moins un enfant à charge.')
-      }
-      situation['impôt . foyer fiscal . situation de famille'] = `'${familyStatus}'`
-      situation['impôt . foyer fiscal . enfants à charge'] = `${children} enfant`
-      if (familyStatus === 'couple') {
-        if (input.autresRevenusImposables === undefined || input.autresRevenusImposables === null) {
-          throw new TypeError('autresRevenusImposables doit être renseigné pour un foyer en couple (indiquer 0 si aucun autre revenu).')
-        }
-        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
-        situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
-      } else if (input.autresRevenusImposables !== undefined && input.autresRevenusImposables !== null) {
-        const otherIncome = numberInRange(input.autresRevenusImposables, 'autresRevenusImposables', 0, 100000000)
-        if (otherIncome > 0) {
-          situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] = `${otherIncome.toFixed(2)} €/an`
-        }
-      }
-      if (singleParent) {
-        situation['impôt . foyer fiscal . parent isolé'] = 'oui'
-      }
-    }
-  }
 
   return situation
 }
@@ -335,11 +268,7 @@ export async function evaluateUrssafExpression(expression, situation = {}, optio
 
 /**
  * Calcule un scénario via l'API REST officielle Mon-entreprise / Urssaf.
- * Aucun calcul de cotisations ou d'impôt n'est effectué localement.
- * Les assiettes fiscales annuelles sont transmises explicitement : revenu
- * imposable pour le PAS/taux neutre et revenu d'activité pour le barème.
- * Le taux d'imposition est demandé directement au modèle officiel : il ne doit
- * pas être reconstruit à partir de l'écart entre deux montants nets.
+ * Aucun calcul de cotisations n'est effectué localement.
  * Il n'y a volontairement aucun repli vers un modèle local en cas d'échec.
  */
 export async function calculateWithUrssafApi(input = {}, options = {}) {
@@ -367,7 +296,6 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     ? grossTarget * MONTHLY_BASE_HOURS / (MONTHLY_BASE_HOURS + overtimeHours)
     : grossTarget
 
-  const taxMode = input.modeImpot === undefined || input.modeImpot === null || input.modeImpot === '' ? null : String(input.modeImpot)
   const benchmarkOnly = input.benchmarkOnly === true
   // Les règles de titres-restaurant ne sont pas applicables lorsqu'aucun titre
   // n'est déclaré : l'API peut omettre leur nodeValue. Ne demander ces règles
@@ -378,7 +306,6 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     : [
         EXPRESSIONS.gross,
         EXPRESSIONS.netBeforeTax,
-        EXPRESSIONS.taxableNet,
         EXPRESSIONS.employeeContributions,
         EXPRESSIONS.overtimePay,
         EXPRESSIONS.employeeHealth,
@@ -410,61 +337,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     baseGross *= grossTarget / grossCalculated
   }
 
-  if (taxMode !== null) {
-    // Les règles fiscales sont annuelles. Le net imposable du salaire retourné
-    // par le modèle salarié est mensuel : il faut le convertir explicitement.
-    const annualTaxableSalary = finalEvaluation.values[2] * 12
-    finalSituation['impôt . revenu imposable'] = `${annualTaxableSalary.toFixed(2)} €/an`
 
-    // Le barème standard calcule l'impôt du foyer à partir du revenu d'activité
-    // annuel puis applique l'abattement fiscal officiel de 10 %.
-    if (taxMode === 'barème') {
-      // Identifiant officiel exact, avec apostrophe ASCII dans le nom de règle.
-      finalSituation["impôt . foyer fiscal . revenu imposable . revenu d'activité"] = `${annualTaxableSalary.toFixed(2)} €/an`
-    }
-
-    // L'API expose le taux neutre comme une règle de barème, mais son mode
-    // "taux neutre" ne produit pas toujours le montant de prélèvement. On récupère
-    // le taux de la grille officielle, puis on laisse l'API calculer le montant
-    // avec ce taux explicite. Aucun calcul fiscal n'est fait localement.
-    let neutralRateEvaluation = null
-    if (taxMode === 'neutre') {
-      neutralRateEvaluation = await evaluateRequest(
-        fetchImpl,
-        endpoint,
-        timeoutMs,
-        finalSituation,
-        ["impôt . taux neutre d'impôt sur le revenu"]
-      )
-      const neutralRate = neutralRateEvaluation.values[0]
-      if (!Number.isFinite(neutralRate) || neutralRate < 0 || neutralRate > 100) {
-        throw new Error('L’API Urssaf n’a pas renvoyé un taux neutre exploitable.')
-      }
-      finalSituation['impôt . méthode de calcul'] = "'taux personnalisé'"
-      finalSituation['impôt . taux personnalisé'] = percent(neutralRate)
-    }
-
-    const taxEvaluation = await evaluateRequest(
-      fetchImpl,
-      endpoint,
-      timeoutMs,
-      finalSituation,
-      [...socialExpressions, EXPRESSIONS.netAfterTax, EXPRESSIONS.incomeTax, EXPRESSIONS.taxRate]
-    )
-    finalEvaluation = {
-      values: taxEvaluation.values,
-      missingVariables: [...new Set([
-        ...finalEvaluation.missingVariables,
-        ...(neutralRateEvaluation?.missingVariables ?? []),
-        ...taxEvaluation.missingVariables
-      ])],
-      warnings: [...new Set([
-        ...finalEvaluation.warnings,
-        ...(neutralRateEvaluation?.warnings ?? []),
-        ...taxEvaluation.warnings
-      ])]
-    }
-  }
 
   const values = finalEvaluation.values
   if (benchmarkOnly) {
@@ -495,7 +368,6 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     baseGross,
     overtimeHours,
     netBeforeTax: values[1],
-    taxableNet: values[2],
     employeeContributions: values[3],
     overtimePay: values[4],
     employeeHealth: values[5],
@@ -505,9 +377,6 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
     mealTicketEmployee: hasMealTickets ? values[7] - values[8] : 0,
     mealTicketEmployer: hasMealTickets ? values[8] : 0,
     mealTicketNonDeductible: hasMealTickets ? values[9] : 0,
-    netAfterTax: taxMode === null ? null : values[socialExpressions.length],
-    incomeTax: taxMode === null ? null : values[socialExpressions.length + 1],
-    calculatedTaxRate: taxMode === null ? null : values[socialExpressions.length + 2],
     missingVariables: finalEvaluation.missingVariables,
     warnings: finalEvaluation.warnings,
     checkedAt: new Date().toISOString()
