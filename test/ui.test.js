@@ -229,6 +229,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
 
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -328,8 +329,8 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.equal(await page.locator('#editOfferHours').inputValue(), '39',
-      'le formulaire de référence doit conserver la durée 39 h');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '39',
+      'le contrat de référence doit conserver la durée 39 h');
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
     assert.ok(calls.bodies.some(body => body.expressions.includes('SMIC')));
@@ -350,20 +351,13 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
       'le brut total 39 h doit ajouter les 4 heures supplémentaires majorées au SMIC 35 h');
     assert.match(await page.locator('.comparison-subhead').innerText(), /Vos offres/);
     assert.match(await page.locator('.comparison-period').innerText(), /Heure/);
-    const sectionOrder = await page.locator('.unified-salary-panel').evaluate(panel => {
-      const position = selector => [...panel.children].findIndex(node => node.matches(selector));
-      return {
-        comparison: position('.comparison-subhead'),
-        salarySituation: position('.declaration-inline')
-      };
-    });
-    assert.ok(sectionOrder.comparison >= 0 && sectionOrder.comparison < sectionOrder.salarySituation,
-      'le comparatif complet doit précéder le formulaire Votre situation');
+    assert.equal(await page.locator('.declaration-inline').count(), 0,
+      'l’éditeur flottant remplace le formulaire intégré à la page');
     const medianMethod = await page.locator('#benchmarkBody .benchmark-details').nth(1).textContent();
     assert.match(medianMethod, /2\s?238/);
     assert.match(medianMethod, /Données INSEE 2025, publiées en 2026/);
     assert.doesNotMatch(medianMethod, /2\s?190|INSEE 2024/);
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire ne doit pas doubler le comparatif sur la page principale');
+    assert.equal(await page.locator('.declaration-inline').count(), 0, 'aucun formulaire intégré ne doit doubler le comparatif');
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
     const benchmarkHourlyNet = await page.locator('#stackChart .comparison-offer-value').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
@@ -496,6 +490,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', { tim
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('2500');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
       null, { timeout: 12000 }
@@ -582,6 +577,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     await openSalaryEditor(page);
     const gross = page.locator('#editOfferGross');
     await gross.fill('3100');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       return state && state.scenarios[0].brut === 3100;
@@ -593,7 +589,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     );
     assert.ok(calls.count > before);
     await page.reload();
-    assert.equal(await page.locator('#editOfferGross').inputValue(), '3100');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3100);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
@@ -614,6 +610,7 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
 
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('3200');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
     , null, { timeout: 20000 });
@@ -894,9 +891,6 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     const secondName = await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText();
     // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
     // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
-    if (await page.locator('#salaryEditorBack').isVisible()) {
-      
-    }
     await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
     await page.waitForFunction(() =>
@@ -1252,7 +1246,7 @@ test('les anciennes fiches sont repliées mais restent accessibles à la demande
     await card.locator('details.more > summary').click();
     assert.equal(await card.locator('details.more').evaluate(el => el.open), true);
     assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'le salaire se modifie uniquement dans le formulaire principal');
-    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Modifier cette offre/);
   } finally {
     await context.close();
   }
@@ -1445,13 +1439,14 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
     await openSalaryEditor(page);
     await page.locator('#editOfferGross').fill('3000');
     await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
     );
     const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
     assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.locator('#editOfferGross').inputValue(), '3000');
-    assert.equal(await page.locator('#editOfferHours').inputValue(), '35');
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3000);
+    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '35');
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0);
     assert.equal(await card.locator('[data-duree]').count(), 0);
@@ -1528,6 +1523,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
     await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
