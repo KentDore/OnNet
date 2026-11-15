@@ -161,7 +161,7 @@ async function addScenario(){
   const last = scenarios[scenarios.length-1];
   const answers = await showAddScenarioModal(last.brut, last.dureeType);
   if(!answers) return; // annulé
-  urssafConsentGranted = true;
+  urssafSessionState.grantConsent();
   disableCardSnap();
   const created = mkScenario(Object.assign({
     name:'Salaire ' + (scenarios.length+1),
