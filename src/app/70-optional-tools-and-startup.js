@@ -10,8 +10,6 @@ function bindModuleToggle(cardId, toggleId, bodyId){
     card.classList.toggle('is-open', willOpen);
   });
 }
-bindModuleToggle('foyerModule', 'foyerModuleToggle', 'foyerModuleBody');
-bindFoyerModule();
 bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
 
 // ---------- Simulateur d'augmentation ----------
