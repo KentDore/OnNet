@@ -101,9 +101,11 @@ function openModal(bodyHtml, opts){
   // Aligné en haut seulement pour les modales avec un vrai champ de saisie
   // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
   // de confirmation (pas de champ) restent centrées, plus naturel.
-  overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
+  overlay.innerHTML = `<div id="modalBox" class="modal" role="${o.role === 'dialog' ? 'dialog' : 'alertdialog'}" aria-modal="true" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
   if(o.className) box.classList.add(o.className);
+  if(o.ariaLabel) box.setAttribute('aria-label',o.ariaLabel);
+  else if(box.querySelector('#modalMsg')) box.setAttribute('aria-describedby','modalMsg');
 
   lockBodyScroll();
   const previousFocus = document.activeElement;
@@ -456,7 +458,7 @@ function showEditScenarioModal(scenario){
         <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
       </div>
       <div class="field-row">
-        <label for="editOfferHours">Base horaire</label>
+        <span class="field-label">Base horaire</span>
         <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
           <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
           <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
@@ -466,7 +468,7 @@ function showEditScenarioModal(scenario){
         <div class="onboarding-mutuelle-note">
           <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
           <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € salarié</button>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois</button>
         </div>
         <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
           <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
@@ -482,7 +484,7 @@ function showEditScenarioModal(scenario){
             <div class="three-col">
               <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
               <div class="field-row"><label for="editOfferMealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
-              <div class="field-row"><label>Part salariale</label><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
+              <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
             </div>
           </div>
         </div>
@@ -492,7 +494,7 @@ function showEditScenarioModal(scenario){
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferPeriod button', className:'modal-edit-offer', dismissible:true });
+  const pending = openModal(html, { initialFocusSelector:'#editOfferPeriod button', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
@@ -525,6 +527,7 @@ function showEditScenarioModal(scenario){
     trEnabledNow=button.dataset.tr==='oui';
     input('editOfferTrToggle').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     input('editOfferTrFields').hidden=!trEnabledNow;
+    updateSaveState();
   }));
   input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
     mealShare=Number(button.dataset.share);
@@ -535,7 +538,7 @@ function showEditScenarioModal(scenario){
     const gross=parseNum(grossInput.value);
     const mutuelle= input('editOfferMutuelle').value;
     const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&parseNum(mutuelle)>=0&&parseNum(mutuelle)<=100000&&
-      (!trEnabledNow||(Number.isInteger(Number(input('editOfferMealDays').value))&&Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500));
+      (!trEnabledNow||(Number.isInteger(Number(input('editOfferMealDays').value))&&Number(input('editOfferMealDays').value)>=1&&Number(input('editOfferMealDays').value)<=31&&validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>0&&parseNum(input('editOfferMealValue').value)<=500));
     input('editOfferSave').disabled=!valid;
   };
   ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue'].forEach(id=>input(id).addEventListener('input',updateSaveState));
