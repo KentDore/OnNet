@@ -873,7 +873,10 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     await page.setViewportSize({ width:375, height:667 });
     const modalFit = await page.locator('#modalBox').evaluate(el => {
       const rect = el.getBoundingClientRect();
-      return { top:rect.top, bottom:rect.bottom, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, viewportHeight:window.innerHeight };
+      const form=el.querySelector('.edit-offer-modal');
+      return { top:rect.top, bottom:rect.bottom, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, viewportHeight:window.innerHeight,
+        children:[...form.children].map(node=>({className:node.className,tag:node.tagName,height:Math.round(node.getBoundingClientRect().height),margin:getComputedStyle(node).margin,gap:getComputedStyle(form).rowGap})),
+        trColumns:getComputedStyle(el.querySelector('#editOfferTrFields .three-col')).gridTemplateColumns } ;
     });
     assert.ok(modalFit.top >= 0 && modalFit.bottom <= modalFit.viewportHeight,
       `l’éditeur doit rester entièrement visible sur mobile : ${JSON.stringify(modalFit)}`);
