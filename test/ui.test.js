@@ -900,6 +900,55 @@ test('un poste peut être renommé directement dans le sélecteur principal', { 
   }
 });
 
+test('les actions et les barres restent cohérentes avec plusieurs postes sur mobile', { timeout: 90000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#addScenario').click();
+    await page.locator('#modalAddInput').fill('3400');
+    await page.locator('#modalAddSubmit').click();
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2 &&
+      document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 2 &&
+      document.querySelectorAll('#stackChart .stack-col').length === 2,
+      null, { timeout: 20000 }
+    );
+
+    for (const width of [320, 375, 390, 430]) {
+      await page.setViewportSize({ width, height: 844 });
+      const layout = await page.locator('#stackChart').evaluate(el => {
+        const stages = [...el.querySelectorAll('.stack-bar-stage')].map(node => {
+          const rect = node.getBoundingClientRect();
+          return { left: rect.left, right: rect.right, bottom: rect.bottom, width: rect.width };
+        });
+        const actions = [...document.querySelectorAll('#maquetteOfferTabs .offer-tab-item')].map(item => {
+          const button = item.querySelector('.offer-tab-action');
+          const rect = button.getBoundingClientRect();
+          return { label: button.textContent.trim(), visible: rect.width > 0 && rect.height > 0 };
+        });
+        return { stages, actions, scrollWidth: el.scrollWidth, clientWidth: el.clientWidth };
+      });
+      assert.equal(layout.stages.length, 2);
+      assert.ok(Math.abs(layout.stages[0].bottom - layout.stages[1].bottom) <= 1,
+        `les barres doivent partager la même ligne de base à ${width}px : ${JSON.stringify(layout.stages)}`);
+      assert.ok(layout.stages.every(stage => stage.width > 0));
+      assert.ok(layout.actions.every(action => action.visible && action.label === 'Modifier'));
+      assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
+        `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
+    }
+
+    const secondName = await page.locator('#maquetteOfferTabs .offer-tab-name').nth(1).innerText();
+    await page.getByRole('button', { name: 'Supprimer ' + secondName }).click();
+    await page.locator('#modalOverlay [data-modal-confirm]').click();
+    await page.waitForFunction(() =>
+      document.querySelectorAll('#maquetteOfferTabs .offer-tab-item').length === 1 &&
+      document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1,
+      null, { timeout: 15000 }
+    );
+  } finally {
+    await context.close();
+  }
+});
+
 test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
