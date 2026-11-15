@@ -3050,7 +3050,7 @@ function renderBenchmarks(computed) {
       </article>`;
   return '<div class="benchmark-grid">' + smicCard + medianCard + "</div>";
 }
-var maquetteComparisonPeriod = "hour";
+var maquetteComparisonPeriod = "month";
 function renderMaquetteControls(computedOverride) {
   document.querySelectorAll("[data-maquette-period]").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.maquettePeriod === maquetteComparisonPeriod));
