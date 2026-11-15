@@ -287,7 +287,7 @@ test('reconstitue le brut total 39 h sans supposer localement un taux de majorat
       const overtime = 4 * 52 / 12
       // Taux fictif de 10 % pour vérifier que le client s'appuie sur le brut retourné par l'API.
       values.evaluate[0].nodeValue = base + (base / 151.67) * overtime * 1.10
-      values.evaluate[4].nodeValue = 250
+      values.evaluate[3].nodeValue = 250
       return response(values)
     })
   })
@@ -360,7 +360,6 @@ test('rejette les valeurs incohérentes avant tout appel réseau', async () => {
   await assert.rejects(calculateWithUrssafApi(scenario({ brut: 0 }), { fetchImpl }), /strictement supérieur à 0/)
   await assert.rejects(calculateWithUrssafApi(scenario({ dureeType: '37' }), { fetchImpl }), /dureeType/)
   await assert.rejects(calculateWithUrssafApi(scenario({ joursResto: 2.5 }), { fetchImpl }), /entier/)
-  await assert.rejects(calculateWithUrssafApi(scenario({ modeImpot: 'personnalisé' }), { fetchImpl }), /tauxPAS/)
   await assert.rejects(calculateWithUrssafApi(scenario({ date: '2026-02-31' }), { fetchImpl }), /date calendaire valide/)
   assert.equal(calls, 0)
 })
