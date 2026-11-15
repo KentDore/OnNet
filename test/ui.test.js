@@ -1400,17 +1400,19 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
     const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
       getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
     );
-    assert.equal(columns, 1, 'les cartes SMIC et médiane sont empilées sur mobile pour conserver une largeur lisible');
+    assert.equal(columns, 2, 'les repères SMIC et médiane restent côte à côte sur mobile');
     const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
       const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
         const rect = card.getBoundingClientRect();
         return { top:rect.top, bottom:rect.bottom, left:rect.left, right:rect.right };
       });
-      return { gap:getComputedStyle(el).rowGap, cards };
+      return { gap:getComputedStyle(el).columnGap, cards };
     });
     assert.equal(geometry.cards.length, 2);
-    assert.ok(geometry.cards[1].top >= geometry.cards[0].bottom + 12,
-      'un espace réel sépare les deux repères sur mobile');
+    assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
+      'un espace horizontal réel sépare les deux repères sur mobile');
+    assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
+      'les deux repères sont alignés sur la même ligne');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
     await page.locator('#mainSalaryGross').fill('3000');
