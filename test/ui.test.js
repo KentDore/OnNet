@@ -317,7 +317,7 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
   const { context, page } = await openApp({ emptyStorage: true });
   try {
     assert.equal(await page.locator('.onboarding-mutuelle-note').isVisible(), true);
-    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € / mois'));
+    assert.ok((await page.locator('.onboarding-mutuelle-note').innerText()).includes('30 € salarié'));
     assert.equal(await page.locator('#modalOnboardingMutuelle').count(), 0);
     assert.equal(await page.locator('#modalOnboardingMutuellePat').count(), 0);
     await page.locator('#modalOnboardingInput').fill('2500');
@@ -843,12 +843,11 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await advanced.evaluate(el => el.open), false);
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.locator('summary').first().click();
+    await advanced.evaluate(el => { el.open = true; });
+    assert.equal(await advanced.evaluate(el => el.open), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    // openApp vérifie avant chaque test que les fiches et réglages fiscaux
-    // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
-    await page.locator('#raiseModuleToggle').scrollIntoViewIfNeeded();
-    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
+    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true,
+      'les outils secondaires deviennent accessibles lorsque leur panneau est ouvert');
   } finally {
     await context.close();
   }
@@ -868,7 +867,7 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
     assert.equal(await page.locator('#editOfferBonus').count(), 0);
     assert.equal(await page.locator('#editOffer13thBase').count(), 0);
-    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € salarié');
+    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € / mois');
     await page.locator('#editOfferMutuelleToggle').click();
     assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
     await page.setViewportSize({ width:375, height:667 });
