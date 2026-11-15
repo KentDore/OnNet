@@ -952,14 +952,12 @@ test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 
       }));
       assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
-      if(width<=360){
-        assert.ok(sizes.cards.every(card => card>0 && Math.abs(card-sizes.panel)<=1),
-          `les repères doivent occuper la largeur disponible à ${width}px : ${JSON.stringify(sizes)}`);
-      }else{
-        assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
-          `les deux repères doivent partager la ligne à ${width}px : ${JSON.stringify(sizes)}`);
-        assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
-      }
+      assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
+        `les deux repères doivent rester côte à côte à ${width}px : ${JSON.stringify(sizes)}`);
+      assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
+      const positions = [...document.querySelectorAll('.benchmark-item')].map(el=>el.getBoundingClientRect());
+      assert.ok(Math.abs(positions[0].top-positions[1].top)<=1,
+        `les deux repères doivent être sur la même ligne à ${width}px : ${JSON.stringify(sizes)}`);
     }
   } finally {
     await context.close();
