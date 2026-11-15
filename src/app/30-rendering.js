@@ -463,16 +463,6 @@ function renderMaquetteControls(computedOverride){
           render();
           return;
         }
-        const rename=event.target.closest('[data-rename-offer]');
-        if(rename && event.type==='change'){
-          const scenario=findScenario(Number(rename.dataset.renameOffer));
-          if(!scenario) return;
-          const nextName=rename.value.trim().slice(0,60);
-          scenario.name=nextName || 'Offre sans nom';
-          saveState();
-          render();
-          return;
-        }
         const button=event.target.closest('[data-edit-offer]');
         if(!button)return;
         refId=Number(button.dataset.editOffer);
