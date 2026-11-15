@@ -228,7 +228,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -328,7 +328,7 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {
-    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '39',
+    assert.equal(await page.locator('#editOfferHours').inputValue(), '39',
       'le formulaire de référence doit conserver la durée 39 h');
     assert.ok(calls.bodies.some(body => body.situation['salarié . temps de travail . heures supplémentaires']));
     assert.ok(calls.bodies.filter(body => body.expressions.includes('salarié . rémunération . brut')).every(body => body.situation['établissement . commune'] === "'Pacé'"));
@@ -415,7 +415,7 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   const { context, page } = await openApp({ consent:false, failApi:true });
   try {
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferGross').fill('2300');
     await page.waitForFunction(() =>
       (document.getElementById('benchmarkBody')?.textContent || '').includes('indisponible via l’API officielle'),
       null, { timeout: 15000 }
@@ -495,7 +495,7 @@ test('gère une indisponibilité Urssaf sans afficher de résultat local', { tim
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
     await page.waitForFunction(() =>
       document.querySelector('#cardsBody [data-result-state="error"]') !== null,
       null, { timeout: 12000 }
@@ -580,7 +580,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
   try {
     const before = calls.count;
     await openSalaryEditor(page);
-    const gross = page.locator('#mainSalaryGross');
+    const gross = page.locator('#editOfferGross');
     await gross.fill('3100');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -593,7 +593,7 @@ test('conserve la saisie du brut après rechargement sans consentement implicite
     );
     assert.ok(calls.count > before);
     await page.reload();
-    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3100');
+    assert.equal(await page.locator('#editOfferGross').inputValue(), '3100');
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
   } finally {
     await context.close();
@@ -613,7 +613,7 @@ test('un retour de session ne retransmet pas le salaire enregistré avant une no
     assert.equal(hasSalary(), false, 'le rechargement ne doit pas réactiver le consentement');
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('3200');
+    await page.locator('#editOfferGross').fill('3200');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour')
     , null, { timeout: 20000 });
@@ -895,7 +895,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
     // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
     // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
     if (await page.locator('#salaryEditorBack').isVisible()) {
-      await page.locator('#salaryEditorBack').click();
+      
     }
     await page.locator('#maquetteYourSalary .offer-comparison-remove').last().click();
     await page.locator('#modalOverlay [data-modal-confirm]').click();
@@ -1076,7 +1076,7 @@ test('une récupération du SMIC lente est mutualisée avec le calcul déclench�
   try {
     assert.equal(calls.bodies.some(body => Object.hasOwn(body.situation, 'salarié . contrat . salaire brut')), false);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour'),
       null, { timeout: 20000 }
@@ -1101,7 +1101,7 @@ test('un échec initial du SMIC peut être retenté et ne bloque pas les calculs
     assert.equal(Object.hasOwn(calls.bodies[0].situation, 'salarié . contrat . salaire brut'), false);
 
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 1 &&
@@ -1212,7 +1212,7 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     await period.locator('[data-period="an"]').click();
     assert.equal(await period.locator('[data-period="an"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
-    await page.locator('#salaryEditorBack').click();
+    
     await page.locator('#editOfferCancel').click();
     assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'la fenêtre se ferme à l’annulation');
   } finally {
@@ -1315,13 +1315,13 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
 
     // Aligner la capture sur les données d'exemple de la maquette V33.
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('2500');
+    await page.locator('#editOfferGross').fill('2500');
     
     await page.waitForFunction(() =>
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour') &&
       document.getElementById('mainSalaryGross')?.value === '2500',
       null, { timeout:20000 });
-    await page.locator('#mainSalaryGross').blur();
+    await page.locator('#editOfferGross').blur();
     await page.evaluate(() => document.getAnimations().forEach(animation => animation.finish()));
 
     await page.setViewportSize({ width:1440, height:1000 });
@@ -1331,9 +1331,9 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
         return { left:r.left, top:r.top, width:r.width, right:r.right };
       };
       return {
-        period:rect('#mainSalaryPeriod'),
-        gross:rect('#mainSalaryGross'),
-        hours:rect('#mainSalaryHours'),
+        period:rect('#editOfferPeriod'),
+        gross:rect('#editOfferGross'),
+        hours:rect('#editOfferHours'),
         mutuelle:rect('.declaration-mutuelle'),
         fields:rect('.declaration-fields')
       };
@@ -1351,9 +1351,9 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
 
     // Les captures doivent montrer le produit réellement comparatif, pas rester
     // dans l’éditeur de salaire utilisé uniquement pour préparer les données.
-    await page.locator('#salaryEditorBack').click();
+    
     await addSecondScenario(page, '3200');
-    await page.locator('#salaryEditorBack').click();
+    
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 2,
       'les captures présentent deux offres comparables');
     assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 0,
@@ -1443,15 +1443,15 @@ test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le 
       'les deux repères sont alignés sur la même ligne');
     assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
     await openSalaryEditor(page);
-    await page.locator('#mainSalaryGross').fill('3000');
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferGross').fill('3000');
+    await page.locator('#editOfferHours').selectOption('35');
     await page.waitForFunction(() =>
       JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
     );
     const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
     assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.locator('#mainSalaryGross').inputValue(), '3000');
-    assert.equal(await page.locator('#mainSalaryHours').inputValue(), '35');
+    assert.equal(await page.locator('#editOfferGross').inputValue(), '3000');
+    assert.equal(await page.locator('#editOfferHours').inputValue(), '35');
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0);
     assert.equal(await card.locator('[data-duree]').count(), 0);
@@ -1466,7 +1466,7 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     await addSecondScenario(page, '3200');
     // L’ajout ouvre l’éditeur de l’offre ; revenir au comparatif avant de tester
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
-    await page.locator('#salaryEditorBack').click();
+    
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     await page.locator('#editOfferName').fill('Proposition Rennes');
     await page.locator('#editOfferSave').click();
@@ -1527,7 +1527,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
 
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferHours').selectOption('35');
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
@@ -1593,7 +1593,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
   try {
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#mainSalaryHours').selectOption('35');
+    await page.locator('#editOfferHours').selectOption('35');
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -1603,7 +1603,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
         document.querySelectorAll('#stackChart .comparison-offer-card').length === 2 &&
         (document.getElementById('urssafStatusText')?.textContent || '').includes('Calculs à jour');
     }, null, { timeout: 20000 });
-    await page.locator('#salaryEditorBack').click();
+    
 
     const source = await page.evaluate(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
