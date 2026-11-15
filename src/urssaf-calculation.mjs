@@ -3,6 +3,7 @@ import { HEURES_BASE } from './ui-utils.mjs';
 // Adaptateurs purs entre l'état OnNet et le contrat de l'API Mon-entreprise.
 
 export function buildUrssafCalculationKey(s, f, date){
+  const calculationDate = date ?? f;
   return JSON.stringify({
     brut:Number(s.brut),
     dureeType:String(s.dureeType),
@@ -16,7 +17,7 @@ export function buildUrssafCalculationKey(s, f, date){
     commune:String(s.commune || 'Pacé').trim(),
     codePostal:String(s.codePostal || ''),
     departement:String(s.departement || ''),
-    date
+    date:calculationDate
   });
 }
 
@@ -39,6 +40,7 @@ export function unsupportedCalculationReason(s){
 }
 
 export function buildUrssafInput(s, f, date){
+  const calculationDate = date ?? f;
   const reason = unsupportedCalculationReason(s);
   if(reason) throw new Error(reason);
   return {
@@ -52,7 +54,7 @@ export function buildUrssafInput(s, f, date){
     commune:String(s.commune || 'Pacé').trim(),
     codePostal:String(s.codePostal || ''),
     departement:String(s.departement || ''),
-    date,
+    date:calculationDate,
     benchmarkOnly:Boolean(s.isBenchmark)
   };
 }
