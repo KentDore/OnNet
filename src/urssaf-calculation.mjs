@@ -2,6 +2,25 @@ import { HEURES_BASE } from './ui-utils.mjs';
 
 // Adaptateurs purs entre l'état OnNet et le contrat de l'API Mon-entreprise.
 
+export function buildUrssafCalculationKey(s, f, date){
+  return JSON.stringify({
+    brut:Number(s.brut),
+    dureeType:String(s.dureeType),
+    mutuelle:Number(s.mutuelle) || 0,
+    mutuellePat:Number(s.mutuellePat) || 0,
+    joursResto:Number(s.joursResto) || 0,
+    valeurResto:Number(s.valeurResto) || 0,
+    partResto:Number(s.partResto) || 0,
+    nbMois:Number(s.nbMois || 12),
+    primes:Number(s.primes || 0),
+    commune:String(s.commune || 'Pacé').trim(),
+    codePostal:String(s.codePostal || ''),
+    departement:String(s.departement || ''),
+    date,
+    fiscal:s.isBenchmark ? null : taxInputForFoyer(f)
+  });
+}
+
 export function taxInputForFoyer(f){
   if(f.mode === 'taux'){
     return { modeImpot:'personnalisé', tauxPAS:Number(f.pasRate) || 0 };
