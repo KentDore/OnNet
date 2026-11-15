@@ -491,7 +491,6 @@ function showEditScenarioModal(scenario){
     </div>`;
   const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true });
   const overlay = document.getElementById('modalOverlay');
-  const box = overlay.querySelector('#modalBox');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
   let location = {
