@@ -104,6 +104,19 @@ function renderAddCard(){
 // ---------- Graphique empilé de répartition ----------
 const STACK_COLORS = { cotis:'var(--stack-cotis)', mutuelle:'var(--gold)', tr:'var(--stack-tr)', net:'var(--accent)' };
 
+function getMealTicketTotal(s, r){
+  const employee = r?.tr?.totalSalarie;
+  const employer = r?.tr?.totalEmployeur;
+  const hasEmployee = employee !== null && employee !== undefined && Number.isFinite(Number(employee));
+  const hasEmployer = employer !== null && employer !== undefined && Number.isFinite(Number(employer));
+  if(hasEmployee && hasEmployer){
+    return Math.max(0, Number(employee)) + Math.max(0, Number(employer));
+  }
+  // Repli d'affichage lorsque l'un des deux montants est absent de la réponse :
+  // nombre de titres déclarés × valeur faciale saisie.
+  return Math.max(0, Number(s?.joursResto) || 0) * Math.max(0, Number(s?.valeurResto) || 0);
+}
+
 function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR){
   const rows = trTotal > 0.5
     ? [
@@ -125,7 +138,7 @@ function renderStack(computed){
   return sorted.map(({s, r}) => {
     const m = r.m;
     const cotis = m.cotisNettes, mutuelle = m.mutuelle, tr = r.tr.totalSalarie;
-    const trTotal = Math.max(0, tr) + Math.max(0, r.tr.totalEmployeur);
+    const trTotal = getMealTicketTotal(s, r);
     const net = m.netApres, netSansTR = m.netSocial, brut = m.brutTotal;
     const scale = maxPx / maxBrut, delta = net - ref.r.m.netApres;
     const cls = delta > 0 ? 'pos' : (delta < 0 ? 'neg' : '');
@@ -166,7 +179,7 @@ function renderWaterfall(computed){
   const deductions = Math.max(0, brut - net);
   const ratio = brut > 0 ? Math.max(0, Math.min(100, net / brut * 100)) : 0;
   const netSansTR = Math.max(0, m.netSocial);
-  const trTotal = Math.max(0, r.tr.totalSalarie) + Math.max(0, r.tr.totalEmployeur);
+  const trTotal = getMealTicketTotal(s, r);
   return `
   <div class="waterfall">
     ${renderSalaryNetSummary(netSansTR, trTotal, net)}

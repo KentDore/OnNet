@@ -757,6 +757,8 @@ test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeo
     assert.match(waterfallRows[0], /Net sans TR/);
     assert.match(waterfallRows[1], /TR — total des deux parts[\s\S]*168 €/);
     assert.match(waterfallRows[2], /Net avec TR/);
+    assert.equal(await page.locator('.waterfall .salary-net-summary-row').nth(1).locator('strong').innerText(), '168 €',
+      'le total des TR doit rester juste même si l’API omet l’une des parts');
     await addSecondScenario(page);
     const stackRows = await page.locator('#stackChart .stack-col').first().locator('.salary-net-summary-row').allTextContents();
     assert.equal(stackRows.length, 3);
