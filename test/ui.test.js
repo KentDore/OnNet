@@ -885,7 +885,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
 
-    const secondName = await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).inputValue();
+    const secondName = await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText();
     // L'ajout d'une offre peut ouvrir son éditeur : revenir au comparatif
     // avant d'utiliser l'action de suppression qui n'existe que sur les cartes.
     if (await page.locator('#salaryEditorBack').isVisible()) {
