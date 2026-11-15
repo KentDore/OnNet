@@ -102,6 +102,7 @@ function openModal(bodyHtml, opts){
   // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
   // de confirmation (pas de champ) restent centrées, plus naturel.
   overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
+  const box = overlay.querySelector('#modalBox');
   if(o.className) box.classList.add(o.className);
 
   lockBodyScroll();
