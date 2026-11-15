@@ -1,102 +1,32 @@
-# Feuille de route — migration complète OnNet vers le moteur Urssaf
+# Feuille de route — calcul salarial OnNet
 
-Statut au 13 novembre 2026 : la migration décrite ici est intégrée à `main` et publiée sur GitHub Pages (version 2.2.0). Ce document conserve le journal de migration et ses cases à cocher historiques ; il ne constitue plus un tableau de bord fiable de l’état courant. Pour le périmètre publié et ses limites, consulter le [README](../README.md). La comparaison indépendante d’un cas synthétique avec le simulateur public a été menée le 12/11/2026 : 2 300 € brut, 35 h, PAS personnalisé 10 %, mutuelle 20 € salarié + 20 € employeur. Les quatre montants comparés concordaient au centime. Cette validation porte sur ce seul cas et ne démontre pas une conformité générale ; les règles fiscales expérimentales et variables manquantes de l’API restent à surveiller.
+Ce document résume les choix structurants de la migration vers l’API Mon-entreprise / Urssaf. Pour le périmètre actuellement livré et les limites connues, le [README](../README.md) fait foi.
 
-## Décision d'architecture
+## Architecture retenue
 
-**Le moteur principal de la branche de migration est l'API REST officielle Mon-entreprise / Urssaf**, plutôt que la reproduction locale de règles sociales et fiscales.
+Le calculateur principal appelle l’API REST officielle `POST /api/v1/evaluate`. OnNet ne substitue pas de calcul local lorsque le service est indisponible : une erreur est affichée plutôt qu’un résultat non confirmé.
 
-Documentation : https://mon-entreprise.urssaf.fr/d%C3%A9veloppeur/api
+La construction des entrées, la validation des réponses et le cache sont séparés dans des modules dédiés. Les tests navigateur utilisent des réponses simulées ; les contrôles réseau réels sont lancés séparément afin de limiter les appels au service.
 
-L'API permet d'évaluer les règles du modèle social et de consulter les règles disponibles. Elle est ouverte et sans authentification. Cela réduit la maintenance des règles copiées dans OnNet, mais ne garantit pas que l'API soit instantanément synchronisée avec le simulateur public : des écarts de version ont déjà été signalés.
+## Périmètre fonctionnel
 
-Principes d'intégration :
-- [x] Créer un client API isolé avec délai maximal, gestion des erreurs réseau/HTTP/JSON et validation stricte des valeurs retournées (`src/urssaf-api-client.mjs`).
-- [x] Construire une situation Publicodes à partir des entrées du prototype et regrouper les expressions nécessaires dans un appel API ; le scénario 39 h peut nécessiter jusqu'à trois appels pour recalibrer le brut.
-- [x] Ne pas afficher de résultat partiel si une expression essentielle manque, si une valeur n'est pas numérique ou si la réponse contient une erreur bloquante.
-- [x] Ne pas basculer vers le moteur local en cas d'indisponibilité : l'erreur est affichée explicitement.
-- [x] Garder le paquet local `modele-social` pour la comparaison et les diagnostics ; le build du prototype utilise désormais uniquement le client API.
-- [x] Remonter les avertissements et les variables auxquelles l'API a appliqué une valeur par défaut.
-- [x] Le calculateur principal affiche la source API et exige une action de l'utilisateur avant d'envoyer les données.
-- [x] La commune de l’établissement est modifiable par scénario ; Pacé est la valeur initiale. Le repère SMIC n’envoie pas de données fiscales inutiles.
-- [x] Tester un appel API réel dans Chromium : CORS, réponse JSON, règle `SMIC` et calcul de net avant impôt avec un salaire représentatif. Le premier smoke-test a réussi dans la CI du 11/11/2026 (run 43023772499) ; la version étendue a réussi dans le workflow CI #168 (11/11/2026, run 43028512580).
-- [ ] Compléter par un essai sur réseau mobile et par des tests d’erreurs transitoires en conditions réelles.
-- [ ] Réévaluer l’intérêt d’un proxy serveur avant publication ; ne jamais journaliser les payloads de paie.
-- [x] Comparer indépendamment un cas synthétique au simulateur web public et à sa fiche de paie (workflow diagnostic `43171408456`, job `131025328461`, 12/11/2026). Cas : 2 300 € brut/mois, 35 h, taux PAS personnalisé 10 %, droit commun, mutuelle 20 € salarié + 20 € employeur (valeurs relevées sur la fiche de paie du simulateur). Les deux résultats concordent : net avant impôt 1 798,73 €, net imposable 1 884,85 €, prélèvement mensuel 188,50 € et net après impôt 1 610,23 €. Le précédent écart de 21,94 € sur le net avant impôt provenait d’une comparaison d’hypothèses de mutuelle différentes (API sans mutuelle contre simulateur avec 20/20), et non d’un écart de calcul démontré. Cette validation porte sur un cas ciblé uniquement ; les avertissements de règles expérimentales et les variables manquantes renvoyées par l’API restent à surveiller. Ne pas généraliser cette concordance à toutes les situations.
-- [x] Mettre à jour le journal de migration avec le résultat de la comparaison indépendante du 12/11/2026.
+- Comparaison de plusieurs offres et scénarios de rémunération.
+- Salaire brut mensuel, durée de travail de 35 h ou 39 h et commune d’établissement.
+- Net calculé, cotisations salariales et employeur, heures supplémentaires.
+- Mutuelle avec parts salariale et employeur.
+- Titres-restaurant avec valeur, nombre et répartition des participations.
+- Repères SMIC et salaire médian.
+- Sauvegarde locale, partage par URL, impression et export PDF.
 
-## Inventaire fonctionnel de référence
+## Contrôles à maintenir
 
-- Comparaison de plusieurs salaires/offres et réorganisation des cartes.
-- Entrée du salaire mensuel ou annuel, durée 35 h/39 h et commune d’établissement par scénario. Les primes libres et les mensualités différentes de 12 sont visibles mais bloquées tant que leur mapping à l’API n’est pas validé.
-- Brut, cotisations, net avant impôt, net imposable, net payé après prélèvement à la source et taux horaire.
-- Mutuelle salariale et patronale.
-- Titres-restaurant, part salariale/patronale et contrôle des plafonds.
-- Impôt : taux de prélèvement personnalisé saisi ou estimation au barème, composition du foyer, enfants à charge, parent isolé.
-- Module d'augmentation ; aucun module d'absence (retiré du périmètre).
-- Repères SMIC et salaire médian, graphique de répartition, impression/export PDF.
-- Sauvegardes locales et partage via URL fragment (non chiffré).
+- Refuser les entrées invalides et les situations qui ne sont pas prises en charge.
+- Bloquer l’affichage lorsque l’API renvoie une valeur essentielle absente, non numérique ou une erreur bloquante.
+- Afficher les avertissements et valeurs par défaut signalés par le moteur.
+- Contrôler les scénarios 35 h et 39 h, les heures supplémentaires, la mutuelle et les titres-restaurant.
+- Vérifier le rendu desktop/mobile et la génération du HTML autonome après chaque évolution de structure.
+- Ne pas assimiler une cohérence de calcul automatisée à une validation indépendante d’un bulletin de paie.
 
-OnNet ne propose plus de module de simulation d’absence. Le périmètre raccordé ne couvre pas encore le temps partiel, la régularisation progressive des plafonds, Alsace-Moselle ou certains régimes particuliers ; une réponse de l’API ne signifie pas que toutes les particularités d’un bulletin sont prises en compte.
+## Limites connues
 
-## Phases et critères de sortie
-
-### Phase A — fiabiliser les entrées OnNet
-- [x] Contrôler la validité des dates et le nombre entier de titres-restaurant.
-- [x] Cartographier les champs actuellement pris en charge (brut, heures supplémentaires, commune, mutuelle, titres-restaurant et données fiscales) vers les règles et unités officielles.
-- [x] Bloquer explicitement les primes libres et les mensualités différentes de 12 tant que leur mapping API n’est pas validé.
-- [x] Vérifier la conversion des 4 heures supplémentaires hebdomadaires en heures mensuelles et retirer le taux de majoration du calcul local d'initialisation du brut.
-- [x] Afficher sous le choix 39 h l’hypothèse de calcul : contrat de 35 h + 4 h supplémentaires rémunérées par semaine, droit commun, sans prise en compte des RTT.
-- [ ] Permettre ou bloquer explicitement les conventions collectives spécifiques : le scénario 39 h force actuellement le droit commun, donc il ne doit pas être présenté comme adapté à toutes les conventions.
-- [x] Refuser explicitement un brut nul : l’API ne fournit pas toutes les expressions nécessaires pour une situation sans salaire ; OnNet bloque cette saisie avant l’appel réseau.
-- [ ] Vérifier les cas limites : très faibles salaires positifs, seuil PMSS, hauts salaires et valeurs extrêmes. Les réponses partielles de l’API doivent rester bloquantes, sans fabriquer les valeurs manquantes.
-
-### Phase B — client API officiel
-- [x] Implémenter le client REST dédié à `https://mon-entreprise.urssaf.fr/api/v1/evaluate`.
-- [x] Confirmer que `/api/v1/evaluate` utilise le modèle `modele-social` et que le catalogue officiel expose les trois méthodes fiscales.
-- [x] Valider la structure de réponse, les valeurs numériques, les avertissements et les variables manquantes.
-- [x] Gérer le délai maximal, les erreurs réseau, les statuts HTTP 400/429/5xx et les réponses JSON invalides.
-- [x] Transmettre les méthodes fiscales personnalisée, neutre et barème ; exiger les informations du foyer pour le barème, y compris les autres revenus imposables annuels en couple ; ne pas supposer le statut de parent isolé.
-- [x] Ajouter des tests simulés du client API et un script de comparaison réel de neuf scénarios sociaux et quatre cas fiscaux, dont un couple avec autres revenus imposables.
-- [x] Exécuter explicitement `test/urssaf-api-client.test.mjs` dans le workflow `quality.yml` : la CI #237 passe les 18 tests du client API et les 12 tests de l'adaptateur local.
-- [x] Exécuter le workflow CI complet : tests de calcul, tests du client API, build autonome, parcours navigateur et smoke-test réel Chromium. La CI n’exécute pas le script de comparaison `scripts/compare-urssaf-api.mjs`, afin d’éviter une multiplication des appels API réels.
-- [x] Tester l’appel depuis Chromium : compatibilité CORS confirmée pour le smoke-test `SMIC` (CI du 11/11/2026, run 43023772499). La version étendue inclut aussi le calcul du net avant impôt et a réussi dans le workflow CI #177.
-- [ ] Compléter par un essai sur réseau mobile et des scénarios d’erreurs transitoires.
-- [ ] Retester le smoke-test réel des trois méthodes fiscales via l'API après l'adaptation du taux neutre : vérifier que le taux de grille officiel est réinjecté comme taux explicite et que l'API renvoie un prélèvement positif cohérent. Cela confirme le fonctionnement technique, pas à lui seul l'exactitude juridique.
-- [ ] Traiter explicitement la limite fiscale dans l'interface et la documentation : Urssaf marque la règle `impôt . méthode de calcul . barème standard` et la règle `impôt . taux d'imposition` comme expérimentales ; elles peuvent évoluer, être renommées ou supprimées sans changement de version majeure. L'estimation après impôt ne doit donc pas être présentée comme une retenue garantie.
-
-### Phase C — parité et qualité
-- [x] Exécuter `npm run compare:urssaf-api` via le workflow diagnostique isolé (run #52, 11/11/2026). Les 17 scénarios sociaux ont 7 métriques chacun avec un écart local/API de 0 € sur tous les cas. Les 4 scénarios fiscaux pour 2 300 € brut / 35 h ont renvoyé : PAS personnalisé 10 % → net avant impôt 1 820,67 €, imposable 1 886,21 €, net après impôt 1 632,09 €, impôt 2 263 €/an ; taux neutre 2,1 % → net après impôt 1 781,09 €, impôt 475 €/an ; barème célibataire → net après impôt 1 778,67 €, impôt 504 €/an ; barème couple avec 24 000 € d'autres revenus imposables → net après impôt 1 743,84 €, impôt 922 €/an. Résultats diagnostiques, pas validation indépendante. Une répétition ultérieure (run #54) a échoué sur une erreur réseau `fetch` avant de terminer la matrice ; le run #52 reste le dernier passage complet réussi, sans écart mesuré. Le SMIC et le PMSS sont lus dynamiquement. Le script espace les appels d'au moins 350 ms et s'arrête sur HTTP 429/5xx ou erreur réseau.
-- [x] Comparer un cas de référence avec le simulateur web public, indépendamment du paquet npm local (cas 2 300 € / 35 h / PAS 10 % / mutuelle 20/20 ; concordance exacte au centime le 12/11/2026).
-- [x] Ajouter 18 tests simulés dédiés au client API, en plus des 12 tests de l'adaptateur local ; la suite comprend le cas d'absence de titres-restaurant, les bornes de 500 € et le taux neutre via la règle officielle dédiée.
-- [x] Ajouter des tests de non-régression pour heures supplémentaires, mutuelle, titres-restaurant, date, erreurs API, limites de débit et entrées fiscales.
-- [ ] Ne pas utiliser les comparaisons API comme seule preuve de conformité.
-
-### Phase D — intégration complète
-- [x] Remplacer l'adaptateur de calcul local par l'adaptateur API dans le calculateur principal de la branche de migration.
-- [x] Garder le stockage, le partage, les graphiques et l'export indépendants du moteur de paie.
-- [x] Ajouter les tests de non-régression des sauvegardes, des anciens champs d’absence et des liens de partage.
-- [ ] Auditer le poids du bundle, les performances et l’accessibilité. Les erreurs API et le comportement hors ligne sont déjà testés ; compléter le test sur réseau mobile.
-- [x] Comportement hors ligne explicite : calcul impossible sans Internet, aucun fallback local.
-
-## Risques à surveiller
-
-- L'API officielle est ouverte et sans authentification ; la documentation décrit une API REST, et le code serveur officiel applique CORS.
-- Le code serveur consulté applique actuellement une limite de 5 requêtes/seconde/IP en production : https://github.com/betagouv/mon-entreprise/blob/master/api/source/middlewares/rate-limiter.ts
-- Le cache API serveur est configuré avec une durée de 24 heures : https://github.com/betagouv/mon-entreprise/blob/master/api/source/middlewares/redis-cache.ts. Une même requête peut donc réutiliser un résultat mis en cache ; l'API ne garantit pas une actualisation instantanée de chaque règle.
-- Un incident public a documenté un écart entre API et simulateur pour un scénario daté de 2026, dû à un déploiement API non aligné : https://github.com/betagouv/mon-entreprise/issues/4581 et https://github.com/betagouv/mon-entreprise/issues/4624
-- Certaines règles sont expérimentales et peuvent changer sans garantie de compatibilité. Contrôler les avertissements retournés.
-- Les variables absentes peuvent recevoir une valeur par défaut : OnNet les signale, mais il reste à décider si certaines doivent bloquer le calcul.
-- Le client API transmet les paramètres du scénario (salaire, durée, mutuelle, titres-restaurant et, si saisi, données fiscales) au service Urssaf. Il n'y a aucun repli local en cas d'échec.
-- Le calcul fiscal dépend de la méthode et des données du foyer. Ne pas présenter une estimation comme un montant réel de bulletin.
-- Le smoke-test CORS sur Chromium a réussi (CI du 11/11/2026, run 43023772499). Le test sur réseau mobile reste à effectuer ; ce smoke-test ne valide pas à lui seul tous les parcours de calcul en production.
-
-## Règle de mise en production
-
-Pas de fusion vers `main`, pas de remplacement du calculateur courant et pas de publication tant que :
-1. le client API et ses erreurs sont testés ;
-2. la matrice de tests est verte ;
-3. les écarts importants sont expliqués ;
-4. les limites visibles dans l'interface correspondent aux limites réelles ;
-5. l'audit des scénarios, du partage, des sauvegardes et de la génération autonome est terminé ;
-6. l'utilisateur a explicitement approuvé la bascule.
+Le périmètre standard ne couvre pas toutes les conventions collectives, les cadres, le temps partiel, la fonction publique ou certains régimes particuliers. Les règles et paramètres pris en compte sont détaillés dans le README et doivent être revus lors des mises à jour de l’API.
