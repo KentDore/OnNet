@@ -442,7 +442,7 @@ function renderMaquetteControls(computedOverride){
   const mealShare=document.getElementById('mainMealShare');
   const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
   if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
-    mainSalaryInputPeriod=selected.salaireSaisiPeriode||'mois';period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===mainSalaryInputPeriod)));gross.value=String(selected.salaireSaisi??(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)));hours.value=selected.dureeType;
+    mainSalaryInputPeriod=selected.salaireSaisiPeriode==='an'?'year':'month';period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===mainSalaryInputPeriod)));gross.value=String(selected.salaireSaisi??(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)));hours.value=selected.dureeType;
     if(mealDays) mealDays.value=String(selected.joursResto||0);
     if(mealValue) mealValue.value=String(selected.valeurResto||0);
     if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
@@ -466,10 +466,13 @@ function renderMaquetteControls(computedOverride){
     period.addEventListener('click',event=>{
       const button=event.target.closest('button[data-period]');
       if(!button) return;
+      const previousPeriod=mainSalaryInputPeriod;
       mainSalaryInputPeriod=button.dataset.period;
       period.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-      const selected=findScenario(refId)||scenarios[0];
-      if(selected && gross) gross.value=String(Number(gross.value)*(mainSalaryInputPeriod==='year'?12:1));
+      if(gross){
+        const factor=previousPeriod===mainSalaryInputPeriod?1:mainSalaryInputPeriod==='year'?12:1/12;
+        gross.value=String(Number(gross.value)*factor);
+      }
       applyDeclaredSalaryFromForm();
     });
     period.dataset.onnetSalaryBound='true';
