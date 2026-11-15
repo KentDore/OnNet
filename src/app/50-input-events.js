@@ -165,7 +165,7 @@ async function addScenario(openEditor=false){
   if(trigger) trigger.disabled = true;
   try{
     const last = scenarios[scenarios.length-1];
-    const answers = await showAddScenarioModal(last.brut, last.dureeType);
+    const answers = await showAddScenarioModal(last.brut, last.dureeType, 'Offre ' + (scenarios.length + 1));
     if(!answers) return;
     urssafSessionState.grantConsent();
     disableCardSnap();
