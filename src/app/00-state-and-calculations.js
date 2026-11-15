@@ -30,11 +30,11 @@ function getSmicGross(){
 
 
 function getCurrentComputed(){
-  return scenarios.map(s => ({s, r:urssafCalculationCache.getResult(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))) || null}));
+  return scenarios.map(s => ({s, r:urssafCalculationCache.getResult(buildUrssafCalculationKey(s,scenarioCalculationDate(s))) || null}));
 }
 
 function getCalculationError(s, f){
-  const key = buildUrssafCalculationKey(s, f || foyer, scenarioCalculationDate(s));
+  const key = buildUrssafCalculationKey(s,scenarioCalculationDate(s));
   return urssafCalculationCache.getError(key) || unsupportedCalculationReason(s);
 }
 
@@ -65,12 +65,12 @@ function updateUrssafStatus(computed){
     statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
     return;
   }
-  const failed = computed.filter(({s,r}) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s))));
+  const failed = computed.filter(({s,r}) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s,scenarioCalculationDate(s))));
   const unsupported = computed.filter(({s,r}) => !r && unsupportedCalculationReason(s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base,getSmicGross()) : null;
   const smicResult = getCachedSmicResult();
-  const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario,foyer,scenarioCalculationDate(smicScenario)) : null;
+  const smicKey = smicScenario ? buildUrssafCalculationKey(smicScenario,scenarioCalculationDate(smicScenario)) : null;
   const smicError = (smicScenario && !smicResult && urssafCalculationCache.hasError(smicKey)) ||
     (smicState.status === 'error');
   const smicPending = !smicResult && !smicError;
@@ -152,7 +152,7 @@ async function executeUrssafCalculations(generation, forceRetry){
   const seen = new Set();
   for(const s of jobs){
     if(generation !== urssafGeneration) return;
-    const key = buildUrssafCalculationKey(s,foyer,scenarioCalculationDate(s));
+    const key = buildUrssafCalculationKey(s,scenarioCalculationDate(s));
     if(seen.has(key) || urssafCalculationCache.hasResult(key)) continue;
     seen.add(key);
     if(forceRetry) urssafCalculationCache.deleteError(key);
@@ -164,7 +164,7 @@ async function executeUrssafCalculations(generation, forceRetry){
         throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
-        buildUrssafInput(s,foyer,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch}
+        buildUrssafInput(s,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch}
       );
       // Une réponse valide reste réutilisable pour ses paramètres exacts,
       // même si une saisie plus récente a rendu son affichage obsolète.
