@@ -40,7 +40,7 @@ function renderCard(s, r, showRemove){
     </div>
 
     <div class="scenario-edit-hint">
-      Salaire brut et durée du travail modifiables dans « Votre situation », en haut de page.
+      Les paramètres du contrat se modifient depuis le bouton « Modifier cette offre ».
       ${r ? `Taux effectif : <strong>${r.tauxEffectif.toFixed(1)} %</strong> du brut` : 'Taux effectif : —'}
     </div>
 
@@ -371,39 +371,12 @@ function renderBenchmarks(computed){
 }
 // ---------- Rendu ----------
 let maquetteComparisonPeriod='hour';
-let mainSalaryInputPeriod='month';
-let salaryEditorOpen=false;
-function setSalaryEditor(open){ salaryEditorOpen=!!open; }
-function applyDeclaredSalaryFromForm(){
-  const scenario=findScenario(refId)||scenarios[0];
-  const gross=document.getElementById('mainSalaryGross');
-  const period=document.getElementById('mainSalaryPeriod');
-  const hours=document.getElementById('mainSalaryHours');
-  const raw=Number(gross?.value);
-  if(!scenario||!Number.isFinite(raw)||raw<=0||raw>1200000) return;
-  scenario.brut=mainSalaryInputPeriod==='year'?raw/12:raw;
-  scenario.salaireSaisi=raw;
-  scenario.salaireSaisiPeriode=mainSalaryInputPeriod==='year'?'an':'mois';
-  scenario.dureeType=hours?.value==='39'?'39':'35';
-  scenario.joursResto=Number(document.getElementById('mainMealDays')?.value)||0;
-  scenario.valeurResto=Number(document.getElementById('mainMealValue')?.value)||0;
-  scenario.partResto=Number(document.querySelector('#mainMealShare [aria-pressed="true"]')?.dataset.share)||50;
-  // La saisie du formulaire matérialise l'accord annoncé à proximité des champs.
-  urssafSessionState.grantConsent();
-  saveState();
-  render();
-  scheduleUrssafCalculations(false,false);
-}
+
 
 function renderMaquetteControls(computedOverride){
   const benchmarkPanel=document.querySelector('#comparePanel .benchmark-panel');
   const benchmarkMount=document.getElementById('benchmarkMount');
   if(benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement!==benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
-  const back=document.getElementById('salaryEditorBack');
-  if(back && back.dataset.bound!=='true'){
-    back.addEventListener('click',()=>{setSalaryEditor(false);render();document.getElementById('maquetteYourSalary')?.scrollIntoView({behavior:'smooth',block:'start'});});
-    back.dataset.bound='true';
-  }
   const tabs=document.getElementById('maquetteOfferTabs');
   if(tabs) tabs.replaceChildren();
   if(tabs) scenarios.forEach((scenario,index)=>{
@@ -424,71 +397,6 @@ function renderMaquetteControls(computedOverride){
     }
     item.append(actions);tabs?.append(item);
   });
-  const selected=findScenario(refId)||scenarios[0];
-  document.querySelectorAll('[data-maquette-period]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.maquettePeriod===maquetteComparisonPeriod)));
-  const period=document.getElementById('mainSalaryPeriod');
-  const gross=document.getElementById('mainSalaryGross');
-  const hours=document.getElementById('mainSalaryHours');
-  const mealDays=document.getElementById('mainMealDays');
-  const mealValue=document.getElementById('mainMealValue');
-  const mealShare=document.getElementById('mainMealShare');
-  const mainFields=[period,gross,hours,mealDays,mealValue,mealShare].filter(Boolean);
-  if(selected && period && gross && hours && !mainFields.includes(document.activeElement)){
-    mainSalaryInputPeriod=selected.salaireSaisiPeriode==='an'?'year':'month';period.querySelectorAll('button[data-period]').forEach(button=>button.setAttribute('aria-pressed',String(button.dataset.period===mainSalaryInputPeriod)));gross.value=String(selected.salaireSaisi??(Number(selected.brut)*(mainSalaryInputPeriod==='year'?12:1)));hours.value=selected.dureeType;
-    if(mealDays) mealDays.value=String(selected.joursResto||0);
-    if(mealValue) mealValue.value=String(selected.valeurResto||0);
-    if(mealShare) mealShare.querySelectorAll('button').forEach(button=>button.setAttribute('aria-pressed',String(Number(button.dataset.share)===(Number(selected.partResto)||50))));
-  }
-  const selectedId=(findScenario(refId)||scenarios[0])?.id;
-  const computed=(computedOverride||getCurrentComputed()).find(x=>x.s.id===selectedId);
-  const mutuelleText=document.getElementById('mainSalaryMutuelleText');
-  if(mutuelleText && selected) mutuelleText.textContent=fmt(selected.mutuelle||0)+' / mois déduits de votre net (part salarié).';
-  // Un seul raccordement durable : les rerendus ne doivent ni remplacer ni perdre
-  // les événements de saisie du formulaire.
-  if(gross){
-    gross.oninput=null;
-    gross.onchange=null;
-    if(gross.dataset.onnetSalaryBound!=='true'){
-      gross.addEventListener('input',applyDeclaredSalaryFromForm);
-      gross.addEventListener('change',applyDeclaredSalaryFromForm);
-      gross.dataset.onnetSalaryBound='true';
-    }
-  }
-  if(period && period.dataset.onnetSalaryBound!=='true'){
-    period.addEventListener('click',event=>{
-      const button=event.target.closest('button[data-period]');
-      if(!button) return;
-      const previousPeriod=mainSalaryInputPeriod;
-      mainSalaryInputPeriod=button.dataset.period;
-      period.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-      if(gross){
-        const factor=previousPeriod===mainSalaryInputPeriod?1:mainSalaryInputPeriod==='year'?12:1/12;
-        gross.value=String(Number(gross.value)*factor);
-      }
-      applyDeclaredSalaryFromForm();
-    });
-    period.dataset.onnetSalaryBound='true';
-  }
-  if(hours && hours.dataset.onnetSalaryBound!=='true'){
-    hours.addEventListener('change',applyDeclaredSalaryFromForm);
-    hours.dataset.onnetSalaryBound='true';
-  }
-  [mealDays,mealValue].forEach(field=>{
-    if(field && field.dataset.onnetSalaryBound!=='true'){
-      field.addEventListener('change',applyDeclaredSalaryFromForm);
-      field.addEventListener('input',applyDeclaredSalaryFromForm);
-      field.dataset.onnetSalaryBound='true';
-    }
-  });
-  if(mealShare && mealShare.dataset.onnetSalaryBound!=='true'){
-    mealShare.addEventListener('click',event=>{
-      const button=event.target.closest('button[data-share]');
-      if(!button) return;
-      mealShare.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-      applyDeclaredSalaryFromForm();
-    });
-    mealShare.dataset.onnetSalaryBound='true';
-  }
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     const allComputed=computedOverride||getCurrentComputed();
@@ -531,7 +439,6 @@ function renderMaquetteControls(computedOverride){
       summary.dataset.editBound='true';
     }
   }
-  document.body.classList.remove('salary-editor-open');
   const status=document.getElementById('urssafStatus'), mount=document.getElementById('maquetteUrssafMount');
   if(status && mount && status.parentElement!==mount) mount.appendChild(status);
 }
