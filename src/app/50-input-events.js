@@ -175,7 +175,10 @@ async function addScenario(openEditor=false){
   // Attend la fin de la disparition de la modale (200ms, voir closeModal)
   // pour que le défilement vers la nouvelle carte soit visible et fluide
   // au lieu de se produire caché derrière la modale encore à l'écran.
-  setTimeout(scrollToNewCard, 220);
+  setTimeout(()=>{
+    if(openEditor) document.getElementById('salaryEditor')?.scrollIntoView({behavior:'smooth',block:'start'});
+    else scrollToNewCard();
+  }, 220);
 }
 
 async function removeScenario(id){
