@@ -6,7 +6,7 @@ export function buildUrssafCalculationKey(s, f, date){
   const calculationDate = date ?? f;
   return JSON.stringify({
     brut:Number(s.brut),
-    dureeType:String(s.dureeType),
+    dureeType:s.dureeType === undefined ? '35' : String(s.dureeType),
     mutuelle:Number(s.mutuelle) || 0,
     mutuellePat:Number(s.mutuellePat) || 0,
     joursResto:Number(s.joursResto) || 0,
@@ -27,6 +27,10 @@ export function unsupportedCalculationReason(s){
   if(!Number.isFinite(Number(s.brut)) || Number(s.brut) <= 0){
     return 'Le salaire brut doit être strictement supérieur à 0 € pour effectuer une simulation.';
   }
+  const durationType = s.dureeType === undefined ? '35' : String(s.dureeType);
+  if(!['35','39'].includes(durationType)){
+    return 'La durée de travail doit être de 35 h ou 39 h par semaine. Le temps partiel n’est pas encore pris en charge.';
+  }
   if(Number(s.nbMois || 12) !== 12){
     return 'Ce scénario utilise un nombre de mensualités différent de 12. Le traitement du 13ᵉ/14ᵉ mois n’est pas encore raccordé à l’API Urssaf.';
   }
@@ -45,7 +49,7 @@ export function buildUrssafInput(s, f, date){
   if(reason) throw new Error(reason);
   return {
     brut:Number(s.brut),
-    dureeType:String(s.dureeType),
+    dureeType:s.dureeType === undefined ? '35' : String(s.dureeType),
     mutuelle:Number(s.mutuelle) || 0,
     mutuellePat:Number(s.mutuellePat) || 0,
     joursResto:Number(s.joursResto) || 0,
