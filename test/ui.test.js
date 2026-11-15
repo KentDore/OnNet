@@ -1211,7 +1211,7 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
   }
 });
 
-test('les valeurs principales se modifient dans le formulaire unique en haut de page', { timeout: 60000 }, async () => {
+test('les valeurs principales se modifient dans un écran dédié à l’offre sélectionnée', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
@@ -1219,16 +1219,17 @@ test('les valeurs principales se modifient dans le formulaire unique en haut de 
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
     assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
     assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire reste affiché pendant l’édition');
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué dans le comparatif');
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît après sélection d’une offre');
     const period = page.locator('#mainSalaryPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
     assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
     await period.locator('[data-period="year"]').click();
     assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué hors du mode édition');
-    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît uniquement après sélection d’une offre');
+    await page.locator('#salaryEditorBack').click();
+    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire se replie au retour au comparatif');
   } finally {
     await context.close();
   }
