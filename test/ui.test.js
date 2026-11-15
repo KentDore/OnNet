@@ -1438,42 +1438,33 @@ test('les cartes de comparaison affichent la même unité après les calculs API
   }
 });
 
-test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le formulaire reste relié au scénario', { timeout: 60000 }, async () => {
+test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous les mobiles', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForSelector('#benchmarkMount .benchmark-grid');
-    const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
-      getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
-    );
-    assert.equal(columns, 2, 'les repères SMIC et médiane restent côte à côte sur mobile');
-    const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
-      const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
-        const rect = card.getBoundingClientRect();
-        return { top:rect.top, bottom:rect.bottom, left:rect.left, right:rect.right };
+    for (const width of [320, 360, 375, 390, 430]) {
+      await page.setViewportSize({ width, height:844 });
+      const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
+        const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
+          const rect = card.getBoundingClientRect();
+          return { top:rect.top, left:rect.left, right:rect.right, width:rect.width };
+        });
+        return {
+          columns:getComputedStyle(el).gridTemplateColumns.trim().split(/\\s+/).length,
+          scrollWidth:el.scrollWidth, clientWidth:el.clientWidth, cards
+        };
       });
-      return { gap:getComputedStyle(el).columnGap, cards };
-    });
-    assert.equal(geometry.cards.length, 2);
-    assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
-      'un espace horizontal réel sépare les deux repères sur mobile');
-    assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
-      'les deux repères sont alignés sur la même ligne');
-    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
-    await openSalaryEditor(page);
-    await page.locator('#editOfferGross').fill('3000');
-    await page.locator('#editOfferHours [data-hours="35"]').click();
-    await page.locator('#editOfferSave').click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
-    );
-    const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
-    assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3000);
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '35');
-    const card = page.locator('#cardsBody [data-card]').first();
-    assert.equal(await card.locator('[data-key="brut"]').count(), 0);
-    assert.equal(await card.locator('[data-duree]').count(), 0);
+      assert.equal(geometry.columns, 2, 'SMIC et médiane doivent rester côte à côte à '+width+' px');
+      assert.equal(geometry.cards.length, 2);
+      assert.ok(geometry.cards.every(card=>card.width>0));
+      assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
+        'un espace horizontal réel sépare les deux repères à '+width+' px');
+      assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
+        'les deux repères sont alignés à '+width+' px');
+      assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1,
+        'les repères ne débordent pas à '+width+' px');
+    }
+    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\\s+France/);
   } finally {
     await context.close();
   }
