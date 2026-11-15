@@ -257,10 +257,6 @@ function formatSalaryInput(input){
 function showOnboardingModal(){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
-    <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
-      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || 'Nouvelle offre')}" autocomplete="off">
-    </div>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
@@ -340,6 +336,10 @@ function showOnboardingModal(){
 function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="modalAddName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
+      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || 'Nouvelle offre')}" autocomplete="off">
+    </div>
         ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqué en</label>
