@@ -1762,6 +1762,8 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     assert.equal(saved.commune, 'Pacé');
     assert.equal(saved.codePostal, '35740');
     assert.equal(saved.departement, 'Ille-et-Vilaine');
+    assert.equal(saved.codeCommune, '35210');
+    assert.equal(saved.codeDepartement, '35');
     assert.equal(saved.mutuelle, 42.5);
     assert.equal(saved.mutuellePat, 55);
     assert.equal(saved.joursResto, 20);
