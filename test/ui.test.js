@@ -366,12 +366,12 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     const cardNet = await page.locator('#cardsBody .hero-value').first().innerText();
     const benchmarkHourlyNet = await page.locator('#maquetteYourSalary .offer-comparison-net').first().innerText();
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
-    assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net avant impôt mensuel');
+    assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
       'les fiches ne doivent plus afficher une seconde ligne fiscale estimée');
-    assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net avant impôt calculé par l’API');
+    assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
     assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNet) + 30) / 169) < 0.02,
-      'le taux horaire doit exclure la mutuelle salarié du net avant impôt, puis diviser par les 169 h du contrat 39 h');
+      'le taux horaire doit exclure la mutuelle salarié du net calculé, puis diviser par les 169 h du contrat 39 h');
     assert.equal(await page.locator('#moreMetrics').count(), 0,
       'les indicateurs secondaires ne doivent plus encombrer les résultats');
     assert.equal(await page.locator('.metric-toggle').count(), 0,
@@ -623,7 +623,6 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     await addSecondScenario(page, '3450');
     await page.locator('#shareBtn').click();
     assert.equal(await page.locator('#shareIncludeDetails').isChecked(), false);
-    assert.equal(await page.locator('#shareIncludeFoyer').isChecked(), false);
     await page.locator('#shareCreateBtn').click();
     const shareUrl = await page.evaluate(() => navigator.clipboard.readText());
     assert.match(shareUrl, /#share=/);
@@ -635,7 +634,7 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     assert.equal(payload.scenarios.length, 2);
     assert.equal(payload.scenarios[0].mutuelle, 0);
     assert.equal(payload.scenarios[0].mutuellePat, 0);
-    assert.equal(payload.foyer.situation, 'seul');
+    assert.equal(Object.hasOwn(payload, 'foyer'), false);
 
     const sharedPage = await context.newPage();
     await sharedPage.goto(shareUrl);
@@ -643,62 +642,6 @@ test('recrée les scénarios à partir du lien de partage', { timeout: 60000 }, 
     const sharedState = await sharedPage.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(sharedState.scenarios[1].brut, 3450);
     assert.equal(await sharedPage.locator('#updateDeclaredSalary').count(), 0);
-  } finally {
-    await context.close();
-  }
-});
-
-test('le foyer fiscal modifie les paramètres transmis au moteur Urssaf', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
-  try {
-    const before = calls.count;
-    await page.locator('#foyerModuleToggle').click();
-    await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    await page.locator('#foyerConjoint').fill('24000');
-    await waitForCalls(calls, before + 2, 15000);
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
-      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
-    ));
-  } finally {
-    await context.close();
-  }
-});
-
-test('le concubinage réutilise le calcul individuel sans transmettre les revenus du partenaire', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
-  try {
-    await page.locator('#foyerModuleToggle').click();
-    await page.locator('#foyerSituation [data-foyer="commun"]').click();
-    await page.locator('#foyerConjoint').fill('24000');
-    await page.waitForFunction(() => {
-      const status = document.getElementById('urssafStatusText')?.textContent || '';
-      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
-      return status.includes('Calculs à jour') &&
-        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
-    }, null, { timeout: 20000 });
-
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'couple'" &&
-      body.situation['impôt . foyer fiscal . revenu imposable . autres revenus imposables'] === '24000.00 €/an'
-    ), 'les revenus du conjoint doivent être transmis pour un foyer marié/PACSé');
-
-    const callsBeforeConcubinage = calls.count;
-    await page.locator('#foyerSituation [data-foyer="concubinage"]').click();
-    await page.waitForFunction(() =>
-      document.getElementById('foyerConcubinageInfo')?.style.display !== 'none' &&
-      document.getElementById('foyerConjointRow')?.style.display === 'none'
-    );
-    await page.waitForTimeout(500);
-
-    assert.equal(calls.count, callsBeforeConcubinage,
-      'le concubinage doit réutiliser le résultat individuel déjà calculé, sans nouvelle requête avec les revenus du partenaire');
-    assert.ok(calls.bodies.some(body =>
-      body.situation['impôt . foyer fiscal . situation de famille'] === "'célibataire'" &&
-      !Object.hasOwn(body.situation, 'impôt . foyer fiscal . revenu imposable . autres revenus imposables')
-    ), 'le calcul individuel ne doit pas inclure les revenus du partenaire');
-    assert.equal(await page.locator('#foyerConcubinageInfo').isVisible(), true);
-    assert.equal(await page.locator('#foyerConjointRow').isVisible(), false);
   } finally {
     await context.close();
   }
@@ -1162,12 +1105,12 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
 });
 
 
-test('le graphique explique explicitement qu’il montre le net avant impôt', { timeout: 60000 }, async () => {
+test('le graphique présente le net sans module fiscal', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
     await page.waitForSelector('#comparePanel #stackChart');
     assert.equal((await page.locator('#comparePanel > h2').innerText()).trim().replace(/\s+/g, ' '), 'Où part votre salaire ?');
-    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net avant impôt.');
+    assert.equal((await page.locator('#comparePanel > .sub').innerText()).trim(), 'Du brut au net.');
     assert.equal(await page.locator('#comparePanel .chart-scope-hint').count(), 0, 'la mention redondante sur la source des montants doit être absente');
   } finally {
     await context.close();
@@ -1186,7 +1129,7 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
     assert.equal(await card.locator('.hero-label').innerText(), 'Brut annuel');
     assert.equal(await page.locator('#periodToggle [data-period="an"]').getAttribute('aria-pressed'), 'true');
     await page.locator('#amtToggle [data-amt="net"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt annuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net annuel');
     await page.locator('#periodToggle [data-period="mois"]').click();
     assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt mensuel');
     assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
@@ -1380,7 +1323,7 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     assert.equal(await page.locator('#stackChart .wf-stack').count(), 1,
       'un seul scénario doit afficher la barre horizontale compacte de la maquette V33');
     assert.equal(await page.locator('#stackChart .wf-breakdown-item').count(), 2);
-    assert.match(await page.locator('#stackChart').innerText(), /Net avant impôt[\s\S]*Retenues sur le brut/);
+    assert.match(await page.locator('#stackChart').innerText(), /Net[\s\S]*Retenues sur le brut/);
     assert.match(await page.locator('#stackHint').innerText(), /Salaire brut de .* par mois/);
 
   } finally {
