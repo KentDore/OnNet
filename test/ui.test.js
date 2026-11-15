@@ -173,9 +173,9 @@ async function openApp(options = {}) {
   }
 
   if (options.consent !== false && !options.emptyStorage) {
-    // Le salaire principal se modifie désormais dans l'éditeur dédié.
+    // Une validation explicite dans la fenêtre d'édition accorde le consentement Urssaf.
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    await page.locator('#mainSalaryGross').fill('2300');
+    await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const status = document.getElementById('urssafStatusText')?.textContent || '';
       const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -183,14 +183,13 @@ async function openApp(options = {}) {
         cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready') &&
         document.querySelectorAll('.benchmark-item').length === 2;
     }, null, { timeout: 20000 });
-    await page.locator('#salaryEditorBack').click();
   }
 
   return { context, page, calls };
 }
 
 async function openSalaryEditor(page, index = 0) {
-  const field = page.locator('#mainSalaryGross');
+  const field = page.locator('#editOfferGross');
   if (!(await field.isVisible())) {
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(index).click();
   }
@@ -845,14 +844,18 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
-test('une offre ouvre un écran de modification dédié', { timeout: 60000 }, async () => {
+test('une offre ouvre une fenêtre flottante de modification complète', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true);
-    assert.equal(await page.locator('#salaryEditorTitle').innerText(), 'Modifier — Poste actuel');
-    await page.locator('#salaryEditorBack').click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false);
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    assert.equal(await page.locator('#editOfferCommune').count(), 1);
+    assert.equal(await page.locator('#editOfferMutuellePat').count(), 1);
+    assert.equal(await page.locator('#editOfferMonths').count(), 1);
+    assert.equal(await page.locator('#editOfferBonus').count(), 1);
+    await page.locator('#editOfferCancel').click();
+    assert.equal(await page.locator('.modal-edit-offer').count(), 0);
   } finally {
     await context.close();
   }
@@ -1199,19 +1202,19 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     const card = page.locator('#cardsBody [data-card]').first();
     assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'pas de second champ de salaire dans la fiche détaillée');
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
-    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Votre situation/);
-    assert.equal(await page.locator('#mainSalaryHours').count(), 1, 'un seul réglage horaire principal');
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire est masqué dans le comparatif');
+    assert.match(await card.locator('.scenario-edit-hint').innerText(), /Modifier cette offre/);
+    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'aucune fenêtre ne reste ouverte dans le comparatif');
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), true, 'le formulaire apparaît après sélection d’une offre');
-    const period = page.locator('#mainSalaryPeriod');
+    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true, 'la fenêtre flottante apparaît après sélection d’une offre');
+    const period = page.locator('#editOfferPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
-    assert.equal(await period.locator('[data-period="month"]').getAttribute('aria-pressed'), 'true');
-    await period.locator('[data-period="year"]').click();
-    assert.equal(await period.locator('[data-period="year"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await period.locator('[data-period="mois"]').getAttribute('aria-pressed'), 'true');
+    await period.locator('[data-period="an"]').click();
+    assert.equal(await period.locator('[data-period="an"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
     await page.locator('#salaryEditorBack').click();
-    assert.equal(await page.locator('.declaration-inline').isVisible(), false, 'le formulaire se replie au retour au comparatif');
+    await page.locator('#editOfferCancel').click();
+    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'la fenêtre se ferme à l’annulation');
   } finally {
     await context.close();
   }
@@ -1353,8 +1356,8 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
     await page.locator('#salaryEditorBack').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card').count(), 2,
       'les captures présentent deux offres comparables');
-    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 2,
-      'les deux offres sont visibles et renommables');
+    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').count(), 0,
+      'le renommage est réservé à la fenêtre de modification');
 
     await page.screenshot({ path:path.join(output, 'onnet-desktop.png'), fullPage:true });
     await page.setViewportSize({ width:390, height:844 });
@@ -1464,10 +1467,9 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // L’ajout ouvre l’éditeur de l’offre ; revenir au comparatif avant de tester
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     await page.locator('#salaryEditorBack').click();
-    await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).click();
-    const renameInput = page.locator('#renameOfferInput');
-    await renameInput.fill('Proposition Rennes');
-    await page.locator('#renameOfferSave').click();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    await page.locator('#editOfferName').fill('Proposition Rennes');
+    await page.locator('#editOfferSave').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText(), 'Proposition Rennes');
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
@@ -1552,7 +1554,7 @@ test('le runtime applicatif est encapsulé sans exposer ses fonctions internes',
   const { context, page } = await openApp({ consent: false });
   try {
     const runtime = await page.evaluate(() => ({
-      appReady: Boolean(document.getElementById('mainSalaryGross')),
+      appReady: Boolean(document.getElementById('maquetteAddSalary')),
       urssafClientReady: typeof window.OnNetUrssafApi?.calculateWithUrssafApi === 'function',
       rendererExposed: typeof window.renderCard !== 'undefined',
       utilityExposed: typeof window.parseNum !== 'undefined',
