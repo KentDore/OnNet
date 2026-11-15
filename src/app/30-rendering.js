@@ -104,9 +104,9 @@ function renderAddCard(){
 // ---------- Graphique empilé de répartition ----------
 const STACK_COLORS = { cotis:'var(--stack-cotis)', mutuelle:'var(--gold)', tr:'var(--stack-tr)', net:'var(--accent)' };
 
-function getMealTicketTotal(s, r){
-  const employee = r?.tr?.totalSalarie;
-  const employer = r?.tr?.totalEmployeur;
+function getMealTicketTotal(scenario, result){
+  const employee = result?.tr?.totalSalarie;
+  const employer = result?.tr?.totalEmployeur;
   const hasEmployee = employee !== null && employee !== undefined && Number.isFinite(Number(employee));
   const hasEmployer = employer !== null && employer !== undefined && Number.isFinite(Number(employer));
   if(hasEmployee && hasEmployer){
@@ -114,7 +114,7 @@ function getMealTicketTotal(s, r){
   }
   // Repli d'affichage lorsque l'un des deux montants est absent de la réponse :
   // nombre de titres déclarés × valeur faciale saisie.
-  return Math.max(0, Number(s?.joursResto) || 0) * Math.max(0, Number(s?.valeurResto) || 0);
+  return Math.max(0, Number(scenario?.joursResto) || 0) * Math.max(0, Number(scenario?.valeurResto) || 0);
 }
 
 function renderSalaryNetSummary(netSansTR, trTotal, netAvecTR){
