@@ -849,6 +849,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     // openApp vérifie avant chaque test que les fiches et réglages fiscaux
     // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
     await page.locator('#raiseModuleToggle').scrollIntoViewIfNeeded();
+    await page.locator('#advancedWorkspace > summary').click();
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
   } finally {
     await context.close();
@@ -866,7 +867,7 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
     assert.equal(await page.locator('#editOfferBonus').count(), 0);
     assert.equal(await page.locator('#editOffer13thBase').count(), 0);
-    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € / mois ✎');
+    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € salarié');
     await page.locator('#editOfferMutuelleToggle').click();
     assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
     await page.locator('#editOfferCancel').click();
