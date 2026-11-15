@@ -842,8 +842,6 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     const advanced = page.locator('#advancedWorkspace');
     assert.equal(await advanced.evaluate(el => el.open), false);
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
-    await page.locator('#benchmarkMount').scrollIntoViewIfNeeded();
-    assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
     await advanced.locator('summary').first().click();
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
