@@ -49,7 +49,7 @@ export function buildUrssafInput(s, f, date){
   if(reason) throw new Error(reason);
   return {
     brut:Number(s.brut),
-    dureeType:String(s.dureeType),
+    dureeType:s.dureeType === undefined ? '35' : String(s.dureeType),
     mutuelle:Number(s.mutuelle) || 0,
     mutuellePat:Number(s.mutuellePat) || 0,
     joursResto:Number(s.joursResto) || 0,
