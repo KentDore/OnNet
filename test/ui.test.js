@@ -1437,10 +1437,11 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // L’ajout ouvre l’éditeur de l’offre ; revenir au comparatif avant de tester
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     await page.locator('#salaryEditorBack').click();
-    const secondName = page.locator('#maquetteYourSalary [data-rename-offer]').nth(1);
-    await secondName.fill('Proposition Rennes');
-    await secondName.dispatchEvent('change');
-    assert.equal(await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).inputValue(), 'Proposition Rennes');
+    await page.locator('#maquetteYourSalary [data-rename-offer]').nth(1).click();
+    const renameInput = page.locator('#renameOfferInput');
+    await renameInput.fill('Proposition Rennes');
+    await page.locator('#renameOfferSave').click();
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText(), 'Proposition Rennes');
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
 
