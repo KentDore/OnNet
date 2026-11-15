@@ -343,11 +343,20 @@ function renderMaquetteControls(computedOverride){
     const rename=document.createElement('button');rename.type='button';rename.className='offer-tab-action';rename.textContent='✎';rename.setAttribute('aria-label','Renommer '+scenario.name);rename.title='Renommer ce poste';
     rename.addEventListener('click',event=>{
       event.stopPropagation();
-      const next=window.prompt('Nouveau nom du poste',scenario.name);
-      if(next===null) return;
-      const value=next.trim().slice(0,60);
-      if(!value) return;
-      scenario.name=value;render();
+      const input=document.createElement('input');input.type='text';input.className='offer-tab-rename-input';input.value=scenario.name;input.maxLength=60;input.setAttribute('aria-label','Nouveau nom du poste');
+      name.replaceWith(input);rename.hidden=true;input.focus();input.select();
+      let finished=false;
+      const finish=save=>{
+        if(finished) return;finished=true;
+        const value=input.value.trim().slice(0,60);
+        if(save && value) scenario.name=value;
+        render();
+      };
+      input.addEventListener('keydown',keyEvent=>{
+        if(keyEvent.key==='Enter'){keyEvent.preventDefault();finish(true);}
+        if(keyEvent.key==='Escape'){keyEvent.preventDefault();finish(false);}
+      });
+      input.addEventListener('blur',()=>finish(true));
     });
     actions.append(rename);
     if(scenarios.length>1){
