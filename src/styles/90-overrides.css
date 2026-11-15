@@ -269,3 +269,19 @@
   #maquetteYourSalary .salary-meal-benefit{font-size:12px;padding-top:9px;gap:7px}
   #maquetteYourSalary .salary-meal-benefit strong{font-size:14px}
 }
+
+/* Comparatif multi-postes : les barres partagent une vraie ligne de base. */
+.stack-chart{align-items:flex-start;}
+.stack-bar-stage{height:240px;width:60px;display:flex;align-items:flex-end;justify-content:center;flex:none;}
+.stack-bar{gap:0;}
+.stack-seg{flex:none;}
+
+/* Actions compactes de renommage et suppression dans les offres principales. */
+.offer-tab-item{display:flex;align-items:stretch;gap:4px;min-width:0;}
+.offer-tab-item>.offer-tab{flex:1;min-width:0;}
+.offer-tab-name{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.offer-tab-actions{display:flex;align-items:center;gap:3px;flex:none;}
+.offer-tab-action{width:30px;min-width:30px;height:34px;min-height:34px;padding:0;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--ink-soft);font:600 17px/1 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;}
+.offer-tab-action.is-danger{color:var(--warn);}
+.offer-tab-action:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
+@media(max-width:640px){.offer-tab-action{width:28px;min-width:28px;height:32px;min-height:32px}}
