@@ -328,7 +328,7 @@ test('la mutuelle affiche la part salarié sans exposer la part employeur', { ti
 });
 
 test('les chiffres principaux et le repère SMIC sont calculés via l’API', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp();
+  const { context, page, calls } = await openApp();
   try {
     assert.equal(await page.locator('#mainSalaryHours').inputValue(), '39',
       'le formulaire de référence doit conserver la durée 39 h');
@@ -745,7 +745,7 @@ test('la part salariale des titres-restaurant alterne entre 50 % par défaut et 
 });
 
 test('la part salariale des titres-restaurant est bornée à 40–50 %', { timeout: 60000 }, async () => {
-  const { context, page, calls } = await openApp();
+  const { context, page } = await openApp();
   try {
     const card = page.locator('#cardsBody [data-card]').first();
     await card.locator('details.more summary').click();
