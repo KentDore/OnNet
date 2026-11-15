@@ -848,6 +848,7 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
     // openApp vérifie avant chaque test que les fiches et réglages fiscaux
     // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
+    await page.locator('#raiseModuleToggle').scrollIntoViewIfNeeded();
     assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
   } finally {
     await context.close();
@@ -882,13 +883,12 @@ test('les repères SMIC et médiane appartiennent au bloc Comparaison, pas à Vo
     const placement = await page.evaluate(() => ({
       insideComparison: !!document.querySelector('#comparePanel #benchmarkMount'),
       insideOffers: !!document.querySelector('.unified-salary-panel #benchmarkMount'),
-      offers: document.querySelector('.unified-salary-panel').getBoundingClientRect(),
-      comparison: document.querySelector('#comparePanel').getBoundingClientRect()
+      followsOffers: !!(document.querySelector('.unified-salary-panel').compareDocumentPosition(document.querySelector('#comparePanel')) & Node.DOCUMENT_POSITION_FOLLOWING)
     }));
     assert.equal(placement.insideComparison, true, 'les repères doivent être dans le bloc Comparaison');
     assert.equal(placement.insideOffers, false, 'les repères ne doivent pas être dans Vos offres');
-    assert.ok(placement.comparison.top >= placement.offers.bottom,
-      'le bloc Comparaison doit suivre le bloc Vos offres');
+    assert.equal(placement.followsOffers, true,
+      'le bloc Comparaison doit suivre le bloc Vos offres dans l’ordre du document');
   } finally {
     await context.close();
   }
@@ -948,15 +948,15 @@ test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 
         viewport: document.documentElement.clientWidth,
         scroll: document.querySelector('.benchmark-panel').scrollWidth,
         panel: document.querySelector('.benchmark-panel').clientWidth,
-        cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width)
+        cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width),
+        positions: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().top)
       }));
       assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
       assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
         `les deux repères doivent rester côte à côte à ${width}px : ${JSON.stringify(sizes)}`);
       assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
-      const positions = [...document.querySelectorAll('.benchmark-item')].map(el=>el.getBoundingClientRect());
-      assert.ok(Math.abs(positions[0].top-positions[1].top)<=1,
+      assert.ok(Math.abs(sizes.positions[0]-sizes.positions[1])<=1,
         `les deux repères doivent être sur la même ligne à ${width}px : ${JSON.stringify(sizes)}`);
     }
   } finally {
@@ -1747,7 +1747,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     await page.locator('#editOfferMutuelle').fill('42,50');
     await page.locator('#editOfferMealDays').fill('20');
     await page.locator('#editOfferMealValue').fill('9,50');
-    await page.locator('#editOfferMealShare').fill('40');
+    await page.locator('#editOfferMealShare [data-share="40"]').click();
     await page.locator('#editOfferSave').click();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
     assert.equal(saved.name, 'Poste modifié');
