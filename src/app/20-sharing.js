@@ -25,8 +25,7 @@ function loadShareState(){
       data.scenarios.map(sanitizeScenario).filter(Boolean), data.refId);
     if(!restored.scenarios.length) return null;
     return { scenarios: restored.scenarios, refId: restored.refId, metric: data.metric,
-             displayAmt: data.displayAmt, displayPeriod: data.displayPeriod,
-             foyer: sanitizeFoyer(data.foyer) };
+             displayAmt: data.displayAmt, displayPeriod: data.displayPeriod };
   } catch(e){ return null; }
 }
 
@@ -187,8 +186,7 @@ if(initialSource){
 }
 
 const metricHints = {
-  netImposable: 'La base retenue pour l\'impôt sur le revenu — utile pour anticiper votre déclaration.',
-  annuelNet: 'Le total net sur l\'année, primes comprises, <em>avant</em> prélèvement à la source — pratique quand les salaires comparés n\'ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
+  annuelNet: 'Le total net sur l’année, primes comprises — pratique quand les salaires comparés n’ont pas le même nombre de mensualités (ex. 13ᵉ mois).',
   netHoraire: 'Le net ramené aux heures réellement travaillées dans le mois — pratique pour comparer un 35h et un 39h sur une base commune.',
   brutHoraire: 'Le taux horaire de base du contrat, hors majoration des heures supplémentaires — le chiffre qu\'on retrouve en général sur une offre d\'emploi.'
 };
