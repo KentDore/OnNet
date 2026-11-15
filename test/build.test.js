@@ -41,6 +41,7 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
   assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
   assert.match(html, /function sanitizeScenario\(raw\)/, 'le module de normalisation doit être intégré');
+  assert.match(html, /function createRateLimitedFetch\(fetchImpl, options\)/, 'la file réseau temporisée doit être intégrée');
   assert.match(html, /function buildUrssafCalculationKey\(s, f, date\)/, 'la clé de cache des calculs doit être intégrée');
   assert.match(html, /function buildUrssafInput\(s, f, date\)/, 'les adaptateurs de calcul Urssaf doivent être intégrés');
   assert.match(html, /function mapUrssafResultToOnNet\(result\)/, 'la conversion des réponses Urssaf doit être intégrée');
