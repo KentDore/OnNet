@@ -368,7 +368,7 @@ test('les chiffres principaux et le repère SMIC sont calculés via l’API', { 
     const parseEuro = value => Number(value.replace(/[^\d,.-]/g, '').replace(',', '.'));
     assert.equal(await page.locator('#cardsBody .hero-label').first().innerText(), 'Net mensuel');
     assert.equal(await page.locator('#cardsBody .hero-pas').count(), 0,
-      'les fiches ne doivent plus afficher une seconde ligne fiscale estimée');
+      'les fiches ne doivent pas afficher de ligne fiscale');
     assert.ok(parseEuro(cardNet) > 0, 'la valeur principale doit afficher le net calculé par l’API');
     assert.ok(Math.abs(parseEuro(benchmarkHourlyNet) - (parseEuro(cardNet) + 30) / 169) < 0.02,
       'le taux horaire doit exclure la mutuelle salarié du net calculé, puis diviser par les 169 h du contrat 39 h');
@@ -1131,7 +1131,7 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
     await page.locator('#amtToggle [data-amt="net"]').click();
     assert.equal(await card.locator('.hero-label').innerText(), 'Net annuel');
     await page.locator('#periodToggle [data-period="mois"]').click();
-    assert.equal(await card.locator('.hero-label').innerText(), 'Net avant impôt mensuel');
+    assert.equal(await card.locator('.hero-label').innerText(), 'Net mensuel');
     assert.equal(await page.locator('#amtToggle [data-amt="net"]').getAttribute('aria-pressed'), 'true');
     assert.equal(await page.locator('#periodToggle [data-period="mois"]').getAttribute('aria-pressed'), 'true');
   } finally {
