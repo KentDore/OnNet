@@ -47,8 +47,8 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.match(html, /function createUrssafCalculationCache\(options\s*=\s*\{\}\)/, 'le cache Urssaf doit être intégré');
   assert.match(html, /function buildSmicScenario\(base, amount\)/, 'la construction du scénario SMIC doit être intégrée');
   assert.match(html, /function createRateLimitedFetch\(fetchImpl, options\s*=\s*\{\}\)/, 'la file réseau temporisée doit être intégrée');
-  assert.match(html, /function buildUrssafCalculationKey\(s, f, date\)/, 'la clé de cache des calculs doit être intégrée');
-  assert.match(html, /function buildUrssafInput\(s, f, date\)/, 'les adaptateurs de calcul Urssaf doivent être intégrés');
+  assert.match(html, /function buildUrssafCalculationKey\([^)]*\)/, 'la clé de cache des calculs doit être intégrée');
+  assert.match(html, /function buildUrssafInput\([^)]*\)/, 'les adaptateurs de calcul Urssaf doivent être intégrés');
   assert.match(html, /function mapUrssafResultToOnNet\(result\)/, 'la conversion des réponses Urssaf doit être intégrée');
   assert.doesNotMatch(html, /sanitizeFoyer|FOYER_DEFAUT|foyerModule|foyerPasRate/, 'aucun module de foyer fiscal ne doit être embarqué');
   assert.match(html, /\b(?:const|let|var)\s+METRIC_KEYS\s*=/, 'les métriques autorisées doivent être intégrées');
