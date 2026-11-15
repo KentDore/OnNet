@@ -875,6 +875,23 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   }
 });
 
+test('un espace visible sépare les offres des repères SMIC et médiane sur mobile', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.setViewportSize({ width:390, height:844 });
+    await page.locator('#maquetteYourSalary .offer-comparison-card').first().waitFor({state:'visible'});
+    await page.locator('#benchmarkMount .benchmark-item').first().waitFor({state:'visible'});
+    const gap = await page.evaluate(() => {
+      const offer = document.querySelector('#maquetteYourSalary .offer-comparison-card');
+      const benchmark = document.querySelector('#benchmarkMount .benchmark-panel');
+      return benchmark.getBoundingClientRect().top - offer.getBoundingClientRect().bottom;
+    });
+    assert.ok(gap >= 20, 'Un espace d’au moins 20 px doit séparer les offres des repères (mesuré : '+gap+' px).');
+  } finally {
+    await context.close();
+  }
+});
+
 test('les actions et les barres restent cohérentes avec plusieurs postes sur mobile', { timeout: 90000 }, async () => {
   const { context, page } = await openApp();
   try {
