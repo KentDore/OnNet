@@ -390,7 +390,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   periodToggle.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => {
       if(button.dataset.period === salaryPeriod) return;
-      const current = parseNum(input.value);
+      const current = exactSalaryValue || parseNum(input.value);
       if(current > 0){
         exactSalaryValue = salaryPeriod === 'mois' ? current * 12 : current / 12;
         input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
