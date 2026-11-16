@@ -1079,6 +1079,10 @@ test('la page ne déborde pas horizontalement sur les largeurs mobiles', { timeo
 test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
+    assert.equal(await page.locator('#comparePanel .comparison-period').count(), 1,
+      'le sélecteur de période appartient au panneau de comparaison');
+    assert.equal(await page.locator('.unified-salary-panel .comparison-period').count(), 0,
+      'la gestion des offres ne doit pas contenir le sélecteur de période');
     const hour = page.locator('[data-maquette-period="hour"]');
     const month = page.locator('[data-maquette-period="month"]');
     const year = page.locator('[data-maquette-period="year"]');
