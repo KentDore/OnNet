@@ -7,6 +7,20 @@
 <meta name="theme-color" content="#176b49">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<script>
+  (() => {
+    try {
+      const preference = localStorage.getItem("onnet.theme.preference") || "auto";
+      const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = preference === "auto" ? (dark ? "dark" : "light") : preference;
+      document.documentElement.dataset.theme = theme;
+      const color = document.querySelector('meta[name="theme-color"]');
+      if (color) color.content = theme === "dark" ? "#14181A" : "#176b49";
+    } catch (_) {
+      document.documentElement.dataset.theme = "light";
+    }
+  })();
+</script>
 <style>
 
 /* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
@@ -128,6 +142,16 @@
     .header-actions .print-btn svg{width:13px;height:13px;}
   }
 
+  .header-theme-setting{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:10px 12px; color:var(--ink-soft); font-size:12.5px; font-weight:600;
+  }
+  .header-theme-setting select{
+    max-width:170px; min-height:36px; padding:7px 28px 7px 10px;
+    border:1px solid var(--line); border-radius:9px;
+    background:var(--surface); color:var(--ink); font:inherit;
+  }
+  .header-theme-setting select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
   .share-banner[hidden]{display:none;}
   .toast{
@@ -1629,7 +1653,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
-        <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
+        <div class="header-menu-panel"><label class="header-theme-setting" for="themePreference">Apparence<select id="themePreference" aria-label="Thème d’affichage"><option value="auto">Selon le téléphone</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
       </details>
     </div>
   </div>
@@ -2501,6 +2525,52 @@ function serializePersistedState(state) {
 
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
+(() => {
+  const STORAGE_KEY2 = "onnet.theme.preference";
+  const root = document.documentElement;
+  const selector = document.getElementById("themePreference");
+  const colorMeta = document.querySelector('meta[name="theme-color"]');
+  const systemPreference = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function readPreference() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY2);
+      return saved === "light" || saved === "dark" ? saved : "auto";
+    } catch (_) {
+      return "auto";
+    }
+  }
+  let preference = readPreference();
+  function applyTheme() {
+    const theme = preference === "auto" ? systemPreference && systemPreference.matches ? "dark" : "light" : preference;
+    root.dataset.theme = theme;
+    if (colorMeta) colorMeta.content = theme === "dark" ? "#14181A" : "#176b49";
+    if (selector && selector.value !== preference) selector.value = preference;
+  }
+  if (selector) {
+    selector.value = preference;
+    selector.addEventListener("change", () => {
+      const next = selector.value;
+      preference = next === "light" || next === "dark" ? next : "auto";
+      try {
+        if (preference === "auto") localStorage.removeItem(STORAGE_KEY2);
+        else localStorage.setItem(STORAGE_KEY2, preference);
+      } catch (_) {
+      }
+      applyTheme();
+    });
+  }
+  if (systemPreference) {
+    const onSystemChange = () => {
+      if (preference === "auto") applyTheme();
+    };
+    if (typeof systemPreference.addEventListener === "function") {
+      systemPreference.addEventListener("change", onSystemChange);
+    } else if (typeof systemPreference.addListener === "function") {
+      systemPreference.addListener(onSystemChange);
+    }
+  }
+  applyTheme();
+})();
 var idCounter = 0;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
