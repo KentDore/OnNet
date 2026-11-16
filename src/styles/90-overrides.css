@@ -534,3 +534,88 @@ body.salary-editor-open .integrated-offers{display:none!important}
   margin-top:24px;
 }
 
+
+
+/* Thème sombre : conserver la palette OnNet tout en inversant les surfaces
+   qui utilisent encore des couleurs fixes dans la maquette. */
+.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:94px}
+.theme-toggle-icon{font-size:16px;line-height:1}
+:root[data-theme="dark"] body{background:linear-gradient(180deg,#171d1a 0%,#111614 100%);color:var(--ink)}
+:root[data-theme="dark"] header.hero{background:linear-gradient(145deg,#202a24 0%,#1b2821 72%,#18251e 100%);border-color:#34443a;box-shadow:0 8px 26px rgba(0,0,0,.22)}
+:root[data-theme="dark"] header.hero h1,
+:root[data-theme="dark"] .comparison-subhead h2,
+:root[data-theme="dark"] #comparePanel .bars-title{color:#e5f1e8}
+:root[data-theme="dark"] header.hero .intro,
+:root[data-theme="dark"] header.hero .trust{color:#b3c5b8}
+:root[data-theme="dark"] header.hero .trust{background:#24372c;border-color:#3b5946}
+:root[data-theme="dark"] header.hero .trust strong{color:#8cdbad}
+:root[data-theme="dark"] header.hero .wave{opacity:.16}
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] #comparePanel,
+:root[data-theme="dark"] .unified-salary-panel{background:#1c2420;border-color:#303c34;box-shadow:0 8px 26px rgba(0,0,0,.18)}
+:root[data-theme="dark"] .comparison-period{background:#222e27;border-color:#35483b}
+:root[data-theme="dark"] .comparison-period>span,
+:root[data-theme="dark"] .comparison-period-tabs button{color:#b9c9bd}
+:root[data-theme="dark"] .comparison-period-tabs{background:#18221c}
+:root[data-theme="dark"] .comparison-period-tabs button[aria-pressed=true]{background:#3d9b6c;color:#fff}
+:root[data-theme="dark"] .offer-tabs{background:#17231c}
+:root[data-theme="dark"] .offer-tab{color:#b8c9bd}
+:root[data-theme="dark"] .offer-tab.active{background:#26372c;border-color:#42664d;color:#a6e2ba}
+:root[data-theme="dark"] .offer-tab small{color:#9eafa3}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary{background:linear-gradient(110deg,#21392a,#1c3024);border-color:#355b40}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>span,
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>strong{color:#a7e0b8}
+:root[data-theme="dark"] #benchmarkMount .benchmark-item{background:#222b26;border-color:#35443a}
+:root[data-theme="dark"] #benchmarkMount .benchmark-label,
+:root[data-theme="dark"] #benchmarkMount .benchmark-value{color:#dcebe0}
+:root[data-theme="dark"] #benchmarkMount .benchmark-meta,
+:root[data-theme="dark"] #benchmarkMount .benchmark-details p{color:#a3b1a7}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result{background:#244331;color:#a5e0b8}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result.benchmark-negative{background:#452c25;color:#f0aa8b}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details{border-color:#39463d}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details summary{color:#8fd4a8}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card{background:#222b26;border-color:#39473e;color:#dce8df;box-shadow:0 3px 12px rgba(0,0,0,.16)}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{background:linear-gradient(155deg,#243b2b,#222b26 72%);border-color:#4d9b68}
+:root[data-theme="dark"] .comparison-offer-head h3,
+:root[data-theme="dark"] .comparison-offer-value{color:#a6dfb7}
+:root[data-theme="dark"] .comparison-offer-value-label,
+:root[data-theme="dark"] .comparison-offer-value small,
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .comparison-offer-delta span{color:#a6b5aa}
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .offer-net-details{border-color:#3b4840}
+:root[data-theme="dark"] .comparison-reference-badge,
+:root[data-theme="dark"] .comparison-set-reference{background:#263d2e;border-color:#3d6549;color:#a5dfb6}
+:root[data-theme="dark"] .comparison-offer-delta{background:#26332a}
+:root[data-theme="dark"] .comparison-offer-delta.is-positive{background:#203b2a;color:#9de0b2}
+:root[data-theme="dark"] .comparison-offer-delta.is-negative{background:#402c25;color:#f0a88a}
+:root[data-theme="dark"] .comparison-offer-delta.is-neutral{background:#303832;color:#c2cdc5}
+:root[data-theme="dark"] #comparePanel .insight{background:#26392c;color:#d6e9db}
+:root[data-theme="dark"] #comparePanel .insight strong,
+:root[data-theme="dark"] .offer-net-details summary{color:#9cddb0}
+:root[data-theme="dark"] #comparePanel .insight-caption{color:#a8b8ad}
+:root[data-theme="dark"] #comparePanel .insight.neutral{background:#29322c;color:#b9c6bd}
+:root[data-theme="dark"] .offer-comparison-name{color:#d9e8dd}
+:root[data-theme="dark"] .offer-comparison-name:focus{background:#26352b}
+:root[data-theme="dark"] .offer-comparison-edit,
+:root[data-theme="dark"] .offer-rename-button{background:#26382d;border-color:#3c5b45;color:#a4dfb5}
+:root[data-theme="dark"] .offer-reference-select{background:#26382d;border-color:#3c5b45;color:#a4dfb5}
+:root[data-theme="dark"] .offer-reference-label{color:#a4dfb5}
+:root[data-theme="dark"] .advanced-workspace,
+:root[data-theme="dark"] .module-card,
+:root[data-theme="dark"] .disclaimer{background:#1d2621;border-color:#354139;color:#d7e2da}
+:root[data-theme="dark"] .advanced-workspace>summary,
+:root[data-theme="dark"] .modules-title{color:#e0ece3}
+:root[data-theme="dark"] .advanced-workspace-intro,
+:root[data-theme="dark"] .modules-sub,
+:root[data-theme="dark"] .disclaimer p{color:#aab8ae}
+:root[data-theme="dark"] .module-toggle-head{color:#dbe8de}
+:root[data-theme="dark"] .module-desc{color:#a8b6ac}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea{background:#202a24;border-color:#3b4940;color:#e2ece5}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:#87968b}
+:root[data-theme="dark"] .urssaf-status{background:#202a24;border-color:#39483e;color:#dce8df}
+:root[data-theme="dark"] .skip-link{background:#263b2d;color:#e5f2e8}
+@media(prefers-reduced-motion:reduce){.theme-toggle{transition:none}}
