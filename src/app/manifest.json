@@ -1,4 +1,5 @@
 [
+  "05-theme-preference.js",
   "00-state-and-calculations.js",
   "10-persistence.js",
   "20-sharing.js",
