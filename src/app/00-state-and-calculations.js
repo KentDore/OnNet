@@ -93,11 +93,18 @@ function updateUrssafStatus(computed){
   if(status) status.classList.remove('is-error','has-diagnostics');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
+  const consentGrant = document.getElementById('urssafConsentGrant');
+  const consentRevoke = document.getElementById('urssafConsentRevoke');
+  const consentDetails = document.getElementById('urssafConsentDetails');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
+  const hasConsent = urssafSessionState.isConsentGranted();
+  if(consentGrant) consentGrant.hidden = hasConsent;
+  if(consentRevoke) consentRevoke.hidden = !hasConsent;
+  if(consentDetails) consentDetails.hidden = hasConsent;
   const smicState = urssafSessionState.getOfficialSmicState();
-  if(!urssafSessionState.isConsentGranted()){
-    statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
+  if(!hasConsent){
+    statusText.textContent = 'Vos offres sont conservées. Autorisez leur transmission à l’API officielle Urssaf pour calculer ou actualiser les résultats. Vous n’avez pas à réinitialiser le comparatif.';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s,scenarioCalculationDate(s))));
