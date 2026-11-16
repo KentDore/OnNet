@@ -62,6 +62,14 @@
         <summary>Détails du calcul</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
+      <div class="urssaf-consent-actions">
+        <button type="button" class="urssaf-consent-grant" id="urssafConsentGrant" hidden>Autoriser les calculs Urssaf</button>
+        <details class="urssaf-consent-details" id="urssafConsentDetails">
+          <summary>Quelles données seront transmises ?</summary>
+          <p>Votre autorisation permet d’envoyer à l’API officielle Mon-entreprise / Urssaf les paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle et titres-restaurant. Elle est conservée séparément de vos offres sur cet appareil et peut être retirée ici.</p>
+        </details>
+        <button type="button" class="urssaf-consent-revoke" id="urssafConsentRevoke" hidden>Retirer l’autorisation</button>
+      </div>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">

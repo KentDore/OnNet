@@ -10,6 +10,41 @@ let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 const urssafCalculationCache = createUrssafCalculationCache({ maxResults:100 });
 const urssafSessionState = createUrssafSessionState();
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssaf.consent.v1';
+
+// L'autorisation explicite est distincte des salaires et survit aux mises à jour
+// de la page. Elle reste révocable sans effacer le comparatif.
+try{
+  if(localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'granted'){
+    urssafSessionState.grantConsent();
+  }
+}catch(error){
+  // Le calcul restera possible dans cette session si le stockage est bloqué.
+}
+
+function grantUrssafConsent(){
+  urssafSessionState.grantConsent();
+  try{
+    localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'granted');
+  }catch(error){
+    // L'autorisation reste valable pour la session en cours.
+  }
+}
+
+function revokeUrssafConsent(){
+  urssafSessionState.revokeConsent();
+  try{
+    localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(error){
+    // L'autorisation est tout de même retirée en mémoire.
+  }
+  if(urssafDebounceTimer){
+    clearTimeout(urssafDebounceTimer);
+    urssafDebounceTimer = null;
+  }
+  urssafGeneration += 1;
+  updateUrssafStatus(getCurrentComputed());
+}
 
 function currentCalculationDate(){
   const d = new Date();
@@ -55,14 +90,25 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   if(!statusText) return;
   const status = document.getElementById('urssafStatus');
-  if(status) status.classList.remove('is-error','has-diagnostics');
+  if(status) status.classList.remove('is-error','has-diagnostics','requires-consent');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
+  const consentGrant = document.getElementById('urssafConsentGrant');
+  const consentRevoke = document.getElementById('urssafConsentRevoke');
+  const consentDetails = document.getElementById('urssafConsentDetails');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
+  const hasConsent = urssafSessionState.isConsentGranted();
+  if(status){
+    status.classList.toggle('requires-consent', !hasConsent);
+    status.classList.toggle('has-consent-actions', hasConsent);
+  }
+  if(consentGrant) consentGrant.hidden = hasConsent;
+  if(consentRevoke) consentRevoke.hidden = !hasConsent;
+  if(consentDetails) consentDetails.hidden = hasConsent;
   const smicState = urssafSessionState.getOfficialSmicState();
-  if(!urssafSessionState.isConsentGranted()){
-    statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
+  if(!hasConsent){
+    statusText.textContent = 'Vos offres sont conservées. Autorisez leur transmission à l’API officielle Urssaf pour calculer ou actualiser les résultats. Vous n’avez pas à réinitialiser le comparatif.';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s,scenarioCalculationDate(s))));

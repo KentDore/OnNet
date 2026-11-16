@@ -230,7 +230,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').count(), 0, 'le panneau de consentement redondant doit rester supprimé');
@@ -308,6 +308,54 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
       'les actions doivent rester alignées dans la même rangée que le logo sur mobile');
     assert.ok(actions.x + actions.width <= header.x + header.width + 1,
       'les actions doivent rester dans la barre supérieure');
+  } finally {
+    await context.close();
+  }
+});
+
+test('conserve l’autorisation Urssaf et les offres après rechargement sans réinitialisation', { timeout:60000 }, async () => {
+  const { context, page, calls } = await openApp({ consent:false });
+  try {
+    const salaryRequests = () => calls.bodies.filter(body =>
+      body.expressions.includes('salarié . rémunération . brut')
+    ).length;
+    const original = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.ok(original?.scenarios?.length, 'les offres existantes doivent être restaurées');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true,
+      'une autorisation absente doit être demandée sans effacer les offres');
+    assert.equal(salaryRequests(), 0,
+      'aucun salaire ne doit être transmis avant l’autorisation explicite');
+
+    await page.locator('#urssafConsentGrant').click();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.ok(salaryRequests() > 0, 'le calcul démarre après autorisation explicite');
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), 'granted');
+
+    await page.reload();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), false,
+      'l’autorisation enregistrée doit être restaurée après actualisation');
+    assert.equal(await page.locator('#urssafConsentRevoke').isVisible(), true);
+    const afterReload = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterReload.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      original.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      'les offres sont conservées à l’identique');
+
+    await page.locator('#urssafConsentRevoke').click();
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), null,
+      'le retrait doit supprimer uniquement l’autorisation');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true);
+    const afterRevoke = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterRevoke.scenarios.map(s => s.name), original.scenarios.map(s => s.name),
+      'retirer l’autorisation ne doit pas effacer les offres');
   } finally {
     await context.close();
   }
@@ -1279,7 +1327,7 @@ test('le bouton principal informe explicitement de la transmission des données 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0, 'aucun bouton de calcul ne doit être affiché');
     assert.equal(await page.locator('#urssafCalculateBtn').count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
   } finally {
     await context.close();
   }

@@ -1232,7 +1232,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
   color:#244B36;
   opacity:1;
 }
-.urssaf-status:not(.is-error):not(.has-diagnostics){
+.urssaf-status:not(.is-error):not(.has-diagnostics):not(.has-consent-actions){
   display:none !important;
 }
 .urssaf-status.is-error{
@@ -1974,6 +1974,51 @@ body.salary-editor-open .integrated-offers{display:none!important}
   color:#a9e5bd;
 }
 
+
+/* Consentement Urssaf : préserver le comparatif et rendre l'autorisation réversible. */
+.urssaf-consent-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px 14px;margin-top:10px;
+}
+.urssaf-consent-grant{
+  min-height:38px;padding:8px 13px;border:1px solid var(--accent);
+  border-radius:10px;background:var(--accent);color:#fff;
+  font:700 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-details{max-width:620px;font-size:11px;line-height:1.45;color:var(--ink-soft)}
+.urssaf-consent-details summary{font-weight:700;color:var(--accent);cursor:pointer}
+.urssaf-consent-details p{margin:7px 0 0}
+.urssaf-consent-revoke{
+  min-height:32px;padding:5px 9px;border:1px solid var(--line);
+  border-radius:8px;background:transparent;color:var(--ink-soft);
+  font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-grant:focus-visible,.urssaf-consent-revoke:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+:root[data-theme="dark"] .urssaf-consent-grant{
+  background:#267b57;border-color:#479c73;color:#fff;
+}
+:root[data-theme="dark"] .urssaf-consent-details{color:#bdc9c0}
+:root[data-theme="dark"] .urssaf-consent-details summary{color:#8cdbac}
+:root[data-theme="dark"] .urssaf-consent-revoke{
+  background:#222c26;border-color:#46564b;color:#bdc9c0;
+}
+
+
+/* La demande d'autorisation doit rester visible même lorsque l'état n'est pas une erreur. */
+.urssaf-status.requires-consent{
+  display:block!important;margin:12px 0 0;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--surface));color:var(--ink-soft);
+}
+
+/* Surclasse la règle historique qui masque les statuts sans erreur. */
+.urssaf-status.requires-consent:not(.is-error):not(.has-diagnostics){
+  display:block!important;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -2013,6 +2058,14 @@ body.salary-editor-open .integrated-offers{display:none!important}
         <summary>Détails du calcul</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
+      <div class="urssaf-consent-actions">
+        <button type="button" class="urssaf-consent-grant" id="urssafConsentGrant" hidden>Autoriser les calculs Urssaf</button>
+        <details class="urssaf-consent-details" id="urssafConsentDetails">
+          <summary>Quelles données seront transmises ?</summary>
+          <p>Votre autorisation permet d’envoyer à l’API officielle Mon-entreprise / Urssaf les paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle et titres-restaurant. Elle est conservée séparément de vos offres sur cet appareil et peut être retirée ici.</p>
+        </details>
+        <button type="button" class="urssaf-consent-revoke" id="urssafConsentRevoke" hidden>Retirer l’autorisation</button>
+      </div>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
@@ -2799,6 +2852,9 @@ function createUrssafSessionState() {
     grantConsent() {
       consentGranted = true;
     },
+    revokeConsent() {
+      consentGranted = false;
+    },
     getOfficialSmicState() {
       return copySmicState(officialSmicState);
     },
@@ -2907,6 +2963,33 @@ var urssafGeneration = 0;
 var urssafDebounceTimer = null;
 var urssafCalculationCache = createUrssafCalculationCache({ maxResults: 100 });
 var urssafSessionState = createUrssafSessionState();
+var URSSAF_CONSENT_STORAGE_KEY = "onnet.urssaf.consent.v1";
+try {
+  if (localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === "granted") {
+    urssafSessionState.grantConsent();
+  }
+} catch (error) {
+}
+function grantUrssafConsent() {
+  urssafSessionState.grantConsent();
+  try {
+    localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, "granted");
+  } catch (error) {
+  }
+}
+function revokeUrssafConsent() {
+  urssafSessionState.revokeConsent();
+  try {
+    localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  } catch (error) {
+  }
+  if (urssafDebounceTimer) {
+    clearTimeout(urssafDebounceTimer);
+    urssafDebounceTimer = null;
+  }
+  urssafGeneration += 1;
+  updateUrssafStatus(getCurrentComputed());
+}
 function currentCalculationDate() {
   const d = /* @__PURE__ */ new Date();
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -2940,14 +3023,25 @@ function updateUrssafStatus(computed) {
   const statusText = document.getElementById("urssafStatusText");
   if (!statusText) return;
   const status = document.getElementById("urssafStatus");
-  if (status) status.classList.remove("is-error", "has-diagnostics");
+  if (status) status.classList.remove("is-error", "has-diagnostics", "requires-consent");
   const diagnostics = document.getElementById("urssafWarnings");
   const diagnosticsList = document.getElementById("urssafWarningsList");
+  const consentGrant = document.getElementById("urssafConsentGrant");
+  const consentRevoke = document.getElementById("urssafConsentRevoke");
+  const consentDetails = document.getElementById("urssafConsentDetails");
   if (diagnostics) diagnostics.hidden = true;
   if (diagnosticsList) diagnosticsList.innerHTML = "";
+  const hasConsent = urssafSessionState.isConsentGranted();
+  if (status) {
+    status.classList.toggle("requires-consent", !hasConsent);
+    status.classList.toggle("has-consent-actions", hasConsent);
+  }
+  if (consentGrant) consentGrant.hidden = hasConsent;
+  if (consentRevoke) consentRevoke.hidden = !hasConsent;
+  if (consentDetails) consentDetails.hidden = hasConsent;
   const smicState = urssafSessionState.getOfficialSmicState();
-  if (!urssafSessionState.isConsentGranted()) {
-    statusText.textContent = "Renseignez votre salaire pour autoriser sa transmission \xE0 l\u2019API Urssaf. Aucune donn\xE9e salariale n\u2019est transmise avant cette saisie.";
+  if (!hasConsent) {
+    statusText.textContent = "Vos offres sont conserv\xE9es. Autorisez leur transmission \xE0 l\u2019API officielle Urssaf pour calculer ou actualiser les r\xE9sultats. Vous n\u2019avez pas \xE0 r\xE9initialiser le comparatif.";
     return;
   }
   const failed = computed.filter(({ s, r }) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s, scenarioCalculationDate(s))));
@@ -3680,7 +3774,7 @@ function renderMaquetteControls(computedOverride) {
         showEditScenarioModal(scenario).then((answers) => {
           if (!answers) return;
           Object.assign(scenario, answers);
-          urssafSessionState.grantConsent();
+          grantUrssafConsent();
           saveState();
           render();
           scheduleUrssafCalculations(false, false);
@@ -4163,7 +4257,7 @@ async function addScenario() {
     const last = scenarios[scenarios.length - 1];
     const answers = await showAddScenarioModal(last.brut, last.dureeType, "Offre " + (scenarios.length + 1));
     if (!answers) return;
-    urssafSessionState.grantConsent();
+    grantUrssafConsent();
     disableCardSnap();
     const created = mkScenario(Object.assign({
       name: "Salaire " + (scenarios.length + 1),
@@ -4202,6 +4296,13 @@ async function removeScenario(id) {
     doRemove();
   }
 }
+document.getElementById("urssafConsentGrant")?.addEventListener("click", () => {
+  grantUrssafConsent();
+  scheduleUrssafCalculations(true, false);
+});
+document.getElementById("urssafConsentRevoke")?.addEventListener("click", () => {
+  revokeUrssafConsent();
+});
 document.getElementById("resetBtn").addEventListener("click", async () => {
   const ok = await showConfirmModal(
     "Effacer tous les salaires enregistr\xE9s et revenir \xE0 l'exemple de d\xE9part ? Cette action est irr\xE9versible.",
@@ -5011,7 +5112,7 @@ if (showOnboarding) {
   showOnboardingModal().then((result) => {
     Object.assign(scenarios[0], result);
     onboardingCompleted = true;
-    urssafSessionState.grantConsent();
+    grantUrssafConsent();
     render();
     saveState();
     scheduleUrssafCalculations(true, true);

@@ -431,7 +431,7 @@ function renderMaquetteControls(computedOverride){
         showEditScenarioModal(scenario).then(answers=>{
           if(!answers) return;
           Object.assign(scenario,answers);
-          urssafSessionState.grantConsent();
+          grantUrssafConsent();
           saveState();
           render();
           scheduleUrssafCalculations(false,false);
