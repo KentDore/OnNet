@@ -145,7 +145,7 @@ function describeApiFailure(status) {
   return `L’API Urssaf a répondu avec une erreur HTTP ${status}.`
 }
 
-async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions) {
+async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions, externalSignal) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
