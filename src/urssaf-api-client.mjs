@@ -163,6 +163,11 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
       })
     } catch (error) {
       if (error?.name === 'AbortError') {
+        if (externalSignal?.aborted) {
+          const aborted = new Error('Requête annulée après retrait du consentement.');
+          aborted.name = 'AbortError';
+          throw aborted;
+        }
         throw new Error(`Délai dépassé : l’API Urssaf n’a pas répondu en ${timeoutMs / 1000} secondes.`)
       }
       throw new Error('Impossible de joindre l’API Urssaf. Vérifier la connexion Internet puis réessayer.')
@@ -226,7 +231,8 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
       warnings
     }
   } finally {
-    clearTimeout(timeoutId)
+    clearTimeout(timeoutId);
+    externalSignal?.removeEventListener('abort', abortFromCaller);
   }
 }
 
@@ -254,7 +260,7 @@ export async function evaluateUrssafExpression(expression, situation = {}, optio
     normalizedSituation.date = formatDate(normalizedSituation.date)
   }
 
-  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression])
+  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression], options.signal)
   return Object.freeze({
     expression,
     value: evaluation.values[0],
@@ -322,7 +328,7 @@ export async function calculateWithUrssafApi(input = {}, options = {}) {
 
   for (let attempt = 0; attempt < (durationType === '39' ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
     finalSituation = buildSituation(input, baseGross, overtimeHours)
-    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions)
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions, options.signal)
     grossCalculated = evaluation.values[0]
     finalEvaluation = evaluation
 
