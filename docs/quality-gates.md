@@ -27,8 +27,9 @@ This is the primary quality pipeline. It already runs:
 - Unit and integration tests covering persistence, session state, API client and calculation adapters.
 - Build verification.
 - Playwright/Chromium browser journeys.
-- Generation and synchronization of the standalone HTML artifacts for eligible same-repository pull requests.
-- Desktop/mobile visual artifacts.
+- Generation of the standalone HTML artifacts in the read-only test job.
+- Browser test and visual artifact publication.
+- Synchronization of tested HTML artifacts in a separate, write-enabled job for eligible same-repository pull requests. The write-enabled job does not execute repository scripts or tests.
 
 Do not duplicate these jobs in the Security Guardian workflow. Keep this pipeline as the required functional gate.
 
@@ -61,6 +62,7 @@ After validation, inspect the actual GitHub Pages deployment for changes that af
 To make the gates mandatory, configure protection for `main` and require these exact checks after they have appeared in GitHub:
 
 - `test` (from the `Vérifications` workflow).
+- `Synchroniser les HTML validés` (required for same-repository PRs; skipped for forks because they have no write permission).
 - `npm dependency audit`.
 - `CodeQL security analysis`.
 

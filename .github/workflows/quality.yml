@@ -6,11 +6,15 @@ on:
     branches: [main, migration/publicodes-urssaf]
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   test:
     runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v7
@@ -18,14 +22,20 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 22
+      - name: Lire et valider la version
+        id: meta
+        run: |
+          VERSION="$(node -e "const p=require('./package.json'); if(typeof p.version !== 'string' || !/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/.test(p.version)) process.exit(1); process.stdout.write(p.version)")"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
       - name: Installer Playwright
         run: |
           npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1 eslint@10.15.0 stylelint@18.0.0 esbuild@0.28.2
           # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
           npx --no-install playwright install chromium
       - name: Générer les fichiers HTML depuis les sources
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
         run: |
-          VERSION=$(node -p "require('./package.json').version")
           node scripts/build.js "$VERSION" "$RUNNER_TEMP/Onnet-$VERSION.html"
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
@@ -78,34 +88,14 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
-      - name: Synchroniser les HTML générés dans la branche de la PR
+      - name: Transmettre le HTML généré au job de synchronisation
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
-        env:
-          PR_BRANCH: ${{ github.head_ref }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: |
-          VERSION=$(node -p "require('./package.json').version")
-          git fetch origin "$PR_BRANCH"
-          FETCHED_SHA=$(git rev-parse FETCH_HEAD)
-          if [ "$FETCHED_SHA" != "$PR_HEAD_SHA" ]; then
-            echo "La branche a avancé depuis le lancement des tests ; une exécution plus récente synchronisera les artefacts."
-            exit 0
-          fi
-          # Les HTML ont déjà été générés dans l'espace de travail pour les tests.
-          # Réinitialiser le checkout sur la tête testée avant de les recopier évite
-          # l'échec de git checkout causé par ces modifications locales.
-          git reset --hard FETCH_HEAD
-          cp "$RUNNER_TEMP/Onnet-$VERSION.html" index.html
-          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "Onnet-$VERSION.html"
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html "Onnet-$VERSION.html"
-          if git diff --cached --quiet; then
-            echo "Les HTML sont déjà synchronisés."
-            exit 0
-          fi
-          git commit -m "build: synchroniser les HTML générés"
-          git push origin "HEAD:$PR_BRANCH"
+        uses: actions/upload-artifact@v7
+        with:
+          name: onnet-html-${{ github.run_id }}
+          path: ${{ runner.temp }}/Onnet-${{ steps.meta.outputs.version }}.html
+          if-no-files-found: error
+          retention-days: 1
       - name: Publier les captures visuelles desktop et mobile
         if: always()
         uses: actions/upload-artifact@v7
@@ -114,3 +104,55 @@ jobs:
           path: artifacts/visual/*.png
           if-no-files-found: warn
           retention-days: 7
+
+  sync-generated-html:
+    name: Synchroniser les HTML validés
+    needs: test
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-24.04
+    concurrency:
+      group: onnet-html-sync-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
+    permissions:
+      contents: write
+    steps:
+      # Ce job n'exécute aucun script du dépôt : il ne fait que récupérer la branche,
+      # télécharger l'artefact produit après succès des tests, puis le copier/committer.
+      - name: Récupérer la branche de la PR
+        uses: actions/checkout@v7
+        with:
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.event.pull_request.head.ref }}
+          fetch-depth: 0
+      - name: Télécharger le HTML testé
+        uses: actions/download-artifact@v8
+        with:
+          name: onnet-html-${{ github.run_id }}
+          path: ${{ runner.temp }}/onnet-html
+      - name: Vérifier la tête de branche et préparer les artefacts
+        env:
+          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          VERSION: ${{ needs.test.outputs.version }}
+        run: |
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          if [ "$CURRENT_SHA" != "$PR_HEAD_SHA" ]; then
+            echo "La branche a avancé depuis le lancement des tests ; une exécution plus récente synchronisera les artefacts."
+            exit 0
+          fi
+
+          GENERATED_HTML="$RUNNER_TEMP/onnet-html/Onnet-$VERSION.html"
+          test -s "$GENERATED_HTML"
+          cp "$GENERATED_HTML" index.html
+          cp "$GENERATED_HTML" "Onnet-$VERSION.html"
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- index.html "Onnet-$VERSION.html"
+          if git diff --cached --quiet; then
+            echo "Les HTML sont déjà synchronisés."
+            exit 0
+          fi
+
+          git commit -m "build: synchroniser les HTML générés"
+          git push origin "HEAD:refs/heads/$PR_BRANCH"
