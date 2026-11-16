@@ -147,6 +147,9 @@ function describeApiFailure(status) {
 
 async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions, externalSignal) {
   const controller = new AbortController()
+  const abortFromCaller = () => controller.abort()
+  if (externalSignal?.aborted) controller.abort()
+  else externalSignal?.addEventListener('abort', abortFromCaller, { once:true })
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs)
 
   try {
