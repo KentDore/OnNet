@@ -507,6 +507,8 @@ function showEditScenarioModal(scenario){
   let hours = scenario.dureeType==='39'?'39':'35';
   let trEnabledNow = trEnabled;
   let mealShare = initialShare;
+  const initialMealDays = Number(scenario.joursResto)||0;
+  const initialMealValue = Number(scenario.valeurResto)||0;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
@@ -543,8 +545,12 @@ function showEditScenarioModal(scenario){
   const updateSaveState=()=>{
     const gross=parseNum(grossInput.value);
     const mutuelle= input('editOfferMutuelle').value;
+    const mealDays=Number(input('editOfferMealDays').value);
+    const mealValue=parseNum(input('editOfferMealValue').value);
+    const mealConfigUnchanged=trEnabledNow===trEnabled&&mealDays===initialMealDays&&mealValue===initialMealValue&&mealShare===initialShare;
+    const mealConfigValid=Number.isInteger(mealDays)&&mealDays>=1&&mealDays<=31&&validNumber('editOfferMealValue')&&mealValue>0&&mealValue<=500;
     const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&parseNum(mutuelle)>=0&&parseNum(mutuelle)<=100000&&
-      (!trEnabledNow||(Number.isInteger(Number(input('editOfferMealDays').value))&&Number(input('editOfferMealDays').value)>=1&&Number(input('editOfferMealDays').value)<=31&&validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>0&&parseNum(input('editOfferMealValue').value)<=500));
+      (!trEnabledNow||mealConfigValid||mealConfigUnchanged);
     input('editOfferSave').disabled=!valid;
   };
   ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue'].forEach(id=>input(id).addEventListener('input',updateSaveState));
