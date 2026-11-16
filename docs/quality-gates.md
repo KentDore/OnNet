@@ -29,6 +29,8 @@ The supported Node.js range is `^22.22.2 || ^24.15.0 || >=26.0.0`, matching the 
 
 The test job resolves `package-lock.json` without running lifecycle scripts, installs the exact dependency tree with `npm ci`, and runs lint/tests with local binaries. After all checks pass, it uploads the generated HTML and lockfile as artifacts. The isolated write-enabled job commits those validated files to same-repository PR branches. The security job independently resolves the complete lockfile without lifecycle scripts before auditing it, so temporary/off-lockfile CI tooling is no longer excluded from the audit.
 
+A CI-generated lockfile or HTML commit creates a new branch head. The new head must receive a fresh complete validation cycle; results attached to the previous SHA are not transferable. Merge only the latest PR head after functional, security and artifact-sync checks have completed successfully.
+
 ## Two complementary workflows
 
 ### 1. Functional quality — `.github/workflows/quality.yml`
