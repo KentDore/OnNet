@@ -1,12 +1,12 @@
-# OnNet — Quality gates
+# OnNet — Quality and release gates
 
-This document defines the minimum evidence required before changes are considered safe.
+This document defines the evidence required before changes are considered safe to merge or release.
 
-## Scope
+## Application scope and business invariants
 
 OnNet is a static web application hosted on GitHub Pages. Salary calculations are delegated to the official Mon-entreprise / Urssaf API. The browser stores comparison scenarios locally; sharing by URL encodes selected data in the URL fragment.
 
-Business invariants that tests must protect:
+The following rules are product invariants:
 
 - Never silently convert a 39-hour salary to a 35-hour equivalent.
 - Keep gross and net amounts distinct.
@@ -14,65 +14,73 @@ Business invariants that tests must protect:
 - Do not send salary data to the Urssaf API before explicit user consent.
 - Revoking consent must not delete saved comparison scenarios.
 - Updates must not reset or overwrite saved scenarios.
-- The SMIC and INSEE median are reference data, not substitutes for an individual Urssaf calculation.
-- A 39-hour scenario currently relies on the documented default assumption of 4 overtime hours paid with a 25% premium; it is not a universal collective-agreement calculation.
+- SMIC and INSEE median are reference data, not substitutes for an individual Urssaf calculation.
+- A 39-hour scenario currently relies on the documented assumption of 4 overtime hours paid with a 25% premium; this is not a universal collective-agreement calculation.
 
-## Automated gates
+## Two complementary workflows
 
-The `OnNet Quality Guardian` workflow runs on pull requests to `main`, pushes to `main`, manual dispatch, and every Tuesday at 03:17 UTC.
+### 1. Functional quality — `.github/workflows/quality.yml`
 
-It performs:
+This is the primary quality pipeline. It already runs:
+- JavaScript syntax checks.
+- ESLint and Stylelint.
+- Unit and integration tests covering persistence, session state, API client and calculation adapters.
+- Build verification.
+- Playwright/Chromium browser journeys.
+- Generation and synchronization of the standalone HTML artifacts for eligible same-repository pull requests.
+- Desktop/mobile visual artifacts.
 
-1. Locked dependency installation with `npm ci`.
-2. JavaScript and CSS linting.
-3. Existing unit and integration suites through `npm run test:all`.
-4. Generated-build checks through `node --test test/build.test.js`.
-5. Dependency vulnerability checks through `npm audit --audit-level=high`.
-6. CodeQL JavaScript/TypeScript analysis with the security-extended query suite.
+Do not duplicate these jobs in the Security Guardian workflow. Keep this pipeline as the required functional gate.
 
-The repository's existing browser workflow remains responsible for Playwright/Chromium UI journeys. Its success must also be checked; the Quality Guardian workflow does not replace those browser tests.
+### 2. Security — `.github/workflows/quality-guardian.yml`
 
-## Release decision
+The Security Guardian runs on pull requests to `main`, pushes to `main`, manual dispatch, and every Tuesday at 03:17 UTC.
 
-A change is not release-ready if:
+It deliberately focuses on checks that the functional pipeline does not provide:
+- `npm audit --package-lock-only --audit-level=high` against the committed lockfile.
+- CodeQL JavaScript/TypeScript analysis using the `security-extended` query suite.
 
-- Any required automated workflow fails, is cancelled, or has not completed.
+It does not rebuild the application or repeat the browser/unit suite. This separation reduces duplicate CI execution while keeping the security checks independently visible.
+
+## Merge and release criteria
+
+Do not merge a change when:
+- The `Vérifications / test` job fails or has not completed.
+- `npm dependency audit` or `CodeQL security analysis` fails or has not completed.
 - A P0/P1 defect remains unresolved.
 - A changed user journey has not been exercised by an appropriate browser test.
 - A calculation change lacks a documented reference case and expected result.
-- A persistence change has not tested reload and migration/legacy-state behavior.
-- A deployment has not been checked on the actual GitHub Pages URL.
+- A persistence change has not tested reload and legacy-state behavior.
 
 A successful build alone is never sufficient evidence.
 
-## Required GitHub repository setting
+After validation, inspect the actual GitHub Pages deployment for changes that affect the published site. A PR check is not a production smoke test.
 
-The workflow can report failures, but it cannot prevent merging by itself. To enforce the gate, configure a branch protection rule or repository ruleset for `main` and require these checks:
+## Branch protection / ruleset
 
-- `Quality gates (lint, tests, build, dependencies)`
-- `CodeQL security analysis`
-- The existing browser/UI verification check (select its exact check name from GitHub after a successful run).
+To make the gates mandatory, configure protection for `main` and require these exact checks after they have appeared in GitHub:
 
-Do not guess the browser check name. Select the check name shown by GitHub Actions.
+- `test` (from the `Vérifications` workflow).
+- `npm dependency audit`.
+- `CodeQL security analysis`.
 
 Also enable:
-- Require branches to be up to date before merging, if the project's merge cadence allows it.
+- Require a pull request before merging.
 - Require conversation resolution.
 - Block force pushes to `main`.
+- Require branches to be up to date before merging only if this does not create excessive merge friction.
 
-These settings must be verified in GitHub repository settings; workflow YAML alone does not enforce them.
+The repository rulesets listing currently returned no rulesets. The branch-protection endpoint could not be read with the active GitHub integration (403), so the presence or absence of classic branch protection has not been verified. Confirm the settings in GitHub's repository settings before claiming that merges are blocked on failed checks.
 
 ## Security boundaries
 
-- `npm audit` checks known advisories in the dependency tree; it is not a complete security audit.
+- `npm audit` checks known advisories in the lockfile; it is not a complete security audit.
 - CodeQL is static analysis; it does not prove the absence of vulnerabilities.
 - GitHub Pages does not provide application-server controls or server-side secret storage.
 - Browser local storage and URL fragments are not encrypted. Do not place credentials or sensitive personal data in them.
-- External API availability and correctness require separate runtime checks; mocked browser tests do not validate real Urssaf amounts.
+- Mocked browser tests do not validate real Urssaf amounts. External API availability and calculation accuracy require separate, controlled checks.
 
-## Audit evidence format
-
-For each finding, record:
+## Required evidence for each finding
 
 | Field | Required content |
 | --- | --- |
@@ -84,4 +92,4 @@ For each finding, record:
 | Fix | Minimal proposed correction |
 | Regression test | Test added or reason it is not automatable |
 
-Never report an unexecuted test as passed. Separate source inspection, mocked tests, real API checks, and production browser checks.
+Never report an unexecuted test as passed. Distinguish source inspection, mocked tests, real API checks, and production browser checks.
