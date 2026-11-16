@@ -1870,6 +1870,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     });
     await page.reload();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').click();
     await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
@@ -2061,6 +2062,7 @@ test('le renommage reste enregistrable avec des titres-restaurant historiques in
     const save=page.locator('#editOfferSave');
     assert.equal(await save.isEnabled(),true,
       'un paramétrage historique inchangé ne doit pas bloquer le simple renommage');
+    await page.locator('#editOfferName').click();
     await page.locator('#editOfferName').fill('Poste renommé');
     await save.click();
     const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('onnet.state.v1')));
