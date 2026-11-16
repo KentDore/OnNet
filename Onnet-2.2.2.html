@@ -1917,6 +1917,64 @@ body.salary-editor-open .integrated-offers{display:none!important}
   outline-color:#83d6a4;
 }
 
+
+/* Le sélecteur #comparePanel des styles de base est plus spécifique que
+   les règles sombres génériques : rétablir explicitement toute la palette. */
+:root[data-theme="dark"] #comparePanel .comparison-offer-card{
+  background:#222c26;color:#e3ece5;border-color:#3b4a40;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{
+  background:linear-gradient(155deg,#293d30 0%,#222d26 72%);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] #comparePanel .comparison-offer-index,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value-label,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value small,
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] #comparePanel .comparison-reference-badge{
+  background:#304c39;border-color:#45664d;color:#a8e5bc;
+}
+:root[data-theme="dark"] #comparePanel .comparison-set-reference{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
+
+
+/* Repère géographique : ne pas partager la ligne avec le titre long. */
+#benchmarkMount .median-card-head{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+  gap:7px;min-height:0;
+}
+#benchmarkMount .median-card-head .benchmark-label{
+  flex:none;width:100%;min-width:0;min-height:0;line-height:1.3;
+}
+#benchmarkMount .median-card-head .geo-inline{
+  align-self:flex-start;margin:0;padding:4px 9px;
+}
+
+
+/* Badge Zone France : palette dédiée au thème sombre. */
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline span{
+  color:#b8c9be;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline strong{
+  color:#a9e5bd;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1963,7 +2021,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
     
     <div class="hint" id="stackHint"></div>
-    <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
     <!-- Espace conservé pour les messages contextuels du comparatif. -->
