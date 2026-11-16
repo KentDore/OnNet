@@ -68,7 +68,6 @@ export function mapUrssafResultToOnNet(result){
     return {
       engine:result.engine,
       checkedAt:result.checkedAt,
-      missingVariables:result.missingVariables,
       warnings:result.warnings,
       netApres:result.netBeforeTax
     };
@@ -100,7 +99,6 @@ export function mapUrssafResultToOnNet(result){
   return {
     engine:result.engine,
     checkedAt:result.checkedAt,
-    missingVariables:result.missingVariables,
     warnings:result.warnings,
     hasHS:overtimeHours > 0,
     heuresSup:overtimeHours,
