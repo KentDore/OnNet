@@ -1864,6 +1864,41 @@ test('le thème automatique suit le système et les choix manuels restent priori
       assert.notEqual(surface.background, 'rgb(255, 255, 255)',
         `la surface ${name} ne doit pas rester blanche en thème sombre`);
     }
+
+    const textContrasts = await page.evaluate(() => {
+      const luminance = color => {
+        const values = color.match(/[\\d.]+/g)?.slice(0, 3).map(Number);
+        if (!values || values.length !== 3) return null;
+        const channels = values.map(value => {
+          const channel = value / 255;
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+      };
+      const ratio = (foreground, background) => {
+        const a = luminance(foreground), b = luminance(background);
+        if (a === null || b === null) return null;
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      const pairs = [
+        ['comparison title', '#comparePanel .bars-title', '#comparePanel'],
+        ['benchmark label', '#benchmarkMount .benchmark-label', '#benchmarkMount .benchmark-item'],
+        ['benchmark value', '#benchmarkMount .benchmark-value', '#benchmarkMount .benchmark-item']
+      ];
+      return pairs.map(([name, foreground, background]) => {
+        const fg = document.querySelector(foreground);
+        const bg = document.querySelector(background);
+        if (!fg || !bg) return { name, contrast: null };
+        return {
+          name,
+          contrast: ratio(getComputedStyle(fg).color, getComputedStyle(bg).backgroundColor)
+        };
+      });
+    });
+    for (const pair of textContrasts) {
+      assert.ok(pair.contrast !== null && pair.contrast >= 4.5,
+        `${pair.name} doit respecter le contraste WCAG AA (4,5:1), obtenu : ${pair.contrast}`);
+    }
     assert.match(darkSurfaces.hero.backgroundImage, /linear-gradient/,
       'le bandeau principal doit conserver son dégradé dédié en thème sombre');
     assert.notEqual(darkSurfaces.comparison.background, darkSurfaces.body.background,
