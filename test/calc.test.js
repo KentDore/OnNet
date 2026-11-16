@@ -38,8 +38,15 @@ test('le formulaire indique la source officielle sans répéter un pavé de cons
   assert.doesNotMatch(template, /En renseignant ou modifiant ces données, vous acceptez leur transmission/);
   assert.doesNotMatch(template, /id="updateDeclaredSalary"|id="urssafCalculateBtn"/);
   assert.match(app, /function showOnboardingModal/);
-  assert.equal((app.match(/urssafSessionState[.]grantConsent[(][)]/g) || []).length, 3,
-    'la saisie du salaire, l’ajout d’une offre et l’onboarding accordent explicitement le consentement');
+  assert.match(app, /function grantUrssafConsent[(][)]/,
+    'l’autorisation explicite doit être centralisée');
+  assert.equal((app.match(/grantUrssafConsent[(][)];/g) || []).length, 4,
+    'l’onboarding, l’ajout, la modification et l’action de consentement accordent explicitement l’autorisation persistante');
+  assert.match(app, /URSSAF_CONSENT_STORAGE_KEY/);
+  assert.match(app, /localStorage[.]setItem[(]URSSAF_CONSENT_STORAGE_KEY, 'granted'[)]/);
+  assert.match(app, /urssafConsentGrant/);
+  assert.match(app, /urssafConsentRevoke/);
+  assert.match(app, /revokeUrssafConsent[(][)]/);
   assert.doesNotMatch(app, /urssafConsentGranted/);
   assert.match(app, /scheduleUrssafCalculations\(false,false\)/);
   assert.doesNotMatch(template, /urssafRememberConsent|Se souvenir de mon choix/);
