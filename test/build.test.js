@@ -69,12 +69,12 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.equal(html.includes('const P = {'), false, 'aucune table locale de taux ne doit être embarquée');
   assert.doesNotMatch(html, /from\s+[\"']\.\/src\/(?:ui-utils|state-normalizers|urssaf-api-client)\.mjs[\"']/,
     'aucun import externe ne doit rendre le HTML autonome dépendant des sources');
-  const scriptTags = [...html.matchAll(/<script\\b([^>]*)>/g)].map(match => match[1].trim());
+  const scriptTags = [...html.matchAll(/<script\b([^>]*)>/g)].map(match => match[1].trim());
   assert.deepEqual(scriptTags, ['', 'type="module"'],
     'le HTML doit contenir uniquement le bootstrap de thème pré-rendu et le runtime ES regroupé');
-  assert.match(html, /<script>\\s*\\(\\(\\) => \\{/,
+  assert.match(html, /<script>\s*\(\(\) => \{/,
     'le bootstrap de thème doit rester un script inline minimal exécuté avant le CSS');
-  assert.match(html, /document\\.documentElement\\.dataset\\.theme = theme/,
+  assert.match(html, /document\.documentElement\.dataset\.theme = theme/,
     'le bootstrap doit appliquer le thème avant le rendu');
 });
 
