@@ -940,8 +940,8 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
-    assert.notDeepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
-      'le nom ne doit pas être sélectionné automatiquement à l’ouverture');
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
+      'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
     await page.locator('#editOfferName').click();
     assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
       'un clic dans le champ sélectionne tout le nom existant');
