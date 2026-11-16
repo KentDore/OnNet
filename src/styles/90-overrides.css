@@ -898,3 +898,11 @@ body.salary-editor-open .integrated-offers{display:none!important}
 :root[data-theme="dark"] .urssaf-consent-revoke{
   background:#222c26;border-color:#46564b;color:#bdc9c0;
 }
+
+
+/* La demande d'autorisation doit rester visible même lorsque l'état n'est pas une erreur. */
+.urssaf-status.requires-consent{
+  display:block!important;margin:12px 0 0;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--surface));color:var(--ink-soft);
+}
