@@ -31,7 +31,10 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Audit locked dependencies
+      - name: Resolve the complete dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+
+      - name: Audit runtime and development dependencies
         run: npm audit --package-lock-only --audit-level=high
 
   codeql:
