@@ -39,8 +39,6 @@
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
-    <div id="benchmarkMount" aria-live="polite"></div>
-
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
  </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
@@ -62,7 +60,7 @@
     <div class="stack-legend" id="stackLegend"></div>
     <!-- Espace conservé pour les messages contextuels du comparatif. -->
     <div id="barsAlerts"></div>
-    <section class="benchmark-panel" aria-label="Comparaison avec les repères salariaux">
+    <section class="benchmark-panel" id="benchmarkMount" aria-label="Comparaison avec les repères salariaux">
       <div id="benchmarkBody" aria-live="polite"></div>
     </section>
 

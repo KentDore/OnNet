@@ -101,9 +101,11 @@ function openModal(bodyHtml, opts){
   // Aligné en haut seulement pour les modales avec un vrai champ de saisie
   // texte, où un clavier virtuel mobile risque de le couvrir. Les modales
   // de confirmation (pas de champ) restent centrées, plus naturel.
-  overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
+  overlay.innerHTML = `<div id="modalBox" class="modal" role="${o.role === 'dialog' ? 'dialog' : 'alertdialog'}" aria-modal="true" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector('#modalBox');
   if(o.className) box.classList.add(o.className);
+  if(o.ariaLabel) box.setAttribute('aria-label',o.ariaLabel);
+  else if(box.querySelector('#modalMsg')) box.setAttribute('aria-describedby','modalMsg');
 
   lockBodyScroll();
   const previousFocus = document.activeElement;
@@ -166,13 +168,19 @@ function showShareModal(url){
 }
 
 // Bloc facultatif partagé par l'onboarding et l'ajout d'un salaire.
-function renderUrssafConsentNotice(){
+function renderUrssafConsentNotice(compact = false){
+  if(compact){
+    return `
+      <div class="onboarding-consent onboarding-consent-compact">
+        <span class="onboarding-consent-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
+        <p>Au clic sur Enregistrer, le salaire et ses paramètres sont transmis à l’API Urssaf.</p>
+      </div>`;
+  }
   return `
     <div class="onboarding-consent">
       <div class="onboarding-consent-top">
         <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
-        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucune donnée transmise avant validation</small></span>
-        <span class="onboarding-consent-badge">Sécurisé</span>
+        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucun salaire transmis avant validation</small></span>
       </div>
       <details class="onboarding-consent-details">
         <summary>Quelles données sont transmises ?</summary>
@@ -426,24 +434,26 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
 }
 
 
-// Modification complète d'une offre dans une fenêtre flottante.
-// Les paramètres non pris en charge par l'API sont conservés et signalés,
-// mais ne sont jamais intégrés artificiellement au calcul net.
+// Édition compacte d'une offre dans une fenêtre flottante.
+// Les paramètres historiques masqués restent dans l'objet d'origine et ne sont
+// ni écrasés ni ajoutés artificiellement au calcul net.
 function showEditScenarioModal(scenario){
   const initialPeriod = scenario.salaireSaisiPeriode === 'an' ? 'an' : 'mois';
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
     ? Number(scenario.salaireSaisi)
     : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
+  const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
+  const trEnabled = Number(scenario.joursResto)>0 || Number(scenario.valeurResto)>0;
+  const initialShare = Number(scenario.partResto)===40 ? 40 : 50;
   const html = `
     <div class="edit-offer-modal">
-      <p id="modalMsg" class="modal-msg">Modifiez les paramètres du contrat. Les changements seront enregistrés à la validation.</p>
       <div class="field-row">
-        <label for="editOfferName">Nom de l’offre</label>
+        <label for="editOfferName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
-      <div class="edit-offer-section">Rémunération</div>
-      <div class="field-row">
-        <label>Montant brut indiqué en</label>
+      ${renderUrssafConsentNotice(true)}
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Votre salaire est indiqué en</span>
         <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="Période du salaire brut">
           <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
           <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
@@ -453,131 +463,91 @@ function showEditScenarioModal(scenario){
         <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
         <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
       </div>
-      <div class="field-row">
-        <label for="editOfferHours">Base horaire</label>
-        <select id="editOfferHours"><option value="35" ${scenario.dureeType==='35'?'selected':''}>35 h / semaine</option><option value="39" ${scenario.dureeType==='39'?'selected':''}>39 h / semaine</option></select>
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Base horaire</span>
+        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
+          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
+          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
+        </div>
       </div>
-      <div class="edit-offer-section">Lieu de travail</div>
-      <div class="field-row">
-        <label for="editOfferCommune">Commune de l’établissement</label>
-        <input type="text" id="editOfferCommune" value="${esc(scenario.codePostal && scenario.departement ? scenario.commune+' — '+scenario.codePostal+' ('+scenario.departement+')' : scenario.commune+' — sélection requise')}" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="editOfferCommuneSuggestions">
-        <div class="commune-suggestions" id="editOfferCommuneSuggestions" role="listbox" hidden></div>
-        <div class="sub-hint" id="editOfferCommuneHint">${scenario.codePostal && scenario.departement ? 'Lieu vérifié : '+esc(scenario.codePostal)+' — '+esc(scenario.departement)+'.' : 'Sélectionnez une commune vérifiée dans les suggestions.'}</div>
+      <div class="onboarding-benefits edit-offer-benefits">
+        <div class="onboarding-mutuelle-note">
+          <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
+          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois</button>
+        </div>
+        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
+          <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
+          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
+        </div>
+        <div class="onboarding-tr edit-offer-tr">
+          <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
+          <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
+            <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
+            <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
+          </div>
+          <div id="editOfferTrFields" class="onboarding-tr-fields" ${trEnabled?'':'hidden'}>
+            <div class="three-col">
+              <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
+              <div class="field-row"><label for="editOfferMealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
+              <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="edit-offer-section">Mutuelle</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMutuelle">Part salarié (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(scenario.mutuelle ?? 0).replace('.', ',')}"></div>
-        <div class="field-row"><label for="editOfferMutuellePat">Part employeur (€ / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuellePat" value="${String(scenario.mutuellePat ?? 0).replace('.', ',')}"></div>
-      </div>
-      <div class="edit-offer-section">Titres-restaurant</div>
-      <div class="three-col">
-        <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
-        <div class="field-row"><label for="editOfferMealValue">Valeur (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
-        <div class="field-row"><label for="editOfferMealShare">Part salarié (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto??50)}"></div>
-      </div>
-      <div class="edit-offer-section">Mensualités et primes</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMonths">Mensualités / an</label><input type="number" id="editOfferMonths" min="1" max="24" step="1" value="${Number(scenario.nbMois)||12}"></div>
-        <div class="field-row"><label for="editOfferBonus">Primes annuelles (€)</label><input type="text" inputmode="decimal" id="editOfferBonus" value="${String(scenario.primes||0).replace('.', ',')}"></div>
-      </div>
-      <div class="field-row">
-        <label for="editOffer13thBase">Base du 13ᵉ / 14ᵉ mois</label>
-        <select id="editOffer13thBase"><option value="base" ${scenario.treiziemeMoisBase!=='ensemble'?'selected':''}>Salaire de base</option><option value="ensemble" ${scenario.treiziemeMoisBase==='ensemble'?'selected':''}>Salaire et éléments variables</option></select>
-      </div>
-      <p class="edit-offer-note">Les primes et mensualités au-delà de 12 sont conservées dans l’offre, mais ne sont pas encore intégrées au calcul Urssaf. Le résultat affiché ne les inclut donc pas.</p>
       <div class="modal-actions">
         <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true });
+  const pending = openModal(html, { initialFocusSelector:'#editOfferPeriod button', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
-  let location = {
-    commune:scenario.commune || 'Pacé', codePostal:scenario.codePostal || '',
-    departement:scenario.departement || '', codeCommune:scenario.codeCommune || '',
-    codeDepartement:scenario.codeDepartement || ''
-  };
-  let locationVerified = !!(location.codePostal && location.departement);
-  let communeSequence = 0;
-  let communeTimer = null;
+  let hours = scenario.dureeType==='39'?'39':'35';
+  let trEnabledNow = trEnabled;
+  let mealShare = initialShare;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.period===period) return;
     const amount=parseNum(grossInput.value);
     if(!(amount>0)) return;
-    const converted=period==='mois'?amount*12:amount/12;
+    grossInput.value=String(period==='mois'?amount*12:amount/12).replace('.', ',');
     period=button.dataset.period;
-    grossInput.value=String(converted).replace('.', ',');
     periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
   }));
-  const communeInput=input('editOfferCommune');
-  const suggestionList=input('editOfferCommuneSuggestions');
-  communeInput.addEventListener('input',()=>{
-    const query=communeInput.value.trim();
-    locationVerified=false;
-    location.codePostal='';location.departement='';location.codeCommune='';location.codeDepartement='';
-    input('editOfferCommuneHint').textContent='Sélectionnez une commune vérifiée dans les suggestions.';
-    if(communeTimer) clearTimeout(communeTimer);
-    const sequence=++communeSequence;
-    if(query.length<2){suggestionList.hidden=true;suggestionList.innerHTML='';return;}
-    suggestionList.hidden=false;
-    suggestionList.innerHTML='<div class="commune-search-status">Recherche des communes…</div>';
-    communeTimer=setTimeout(async()=>{
-      try{
-        const params=new URLSearchParams({fields:'nom,code,codesPostaux,departement,codeDepartement',limit:'8'});
-        if(/^\d{2,5}$/.test(query)) params.set('codePostal',query);
-        else {params.set('nom',query);params.set('boost','population');}
-        const response=await fetch('https://geo.api.gouv.fr/communes?'+params.toString(),{headers:{Accept:'application/json'}});
-        if(!response.ok) throw new Error('Recherche indisponible');
-        const rows=await response.json();
-        if(sequence!==communeSequence || !modalState) return;
-        const options=[];
-        for(const item of Array.isArray(rows)?rows:[]){
-          const department=item.departement?.nom;
-          for(const postcode of Array.isArray(item.codesPostaux)?item.codesPostaux:[]){
-            if(item.nom&&department) options.push({commune:item.nom,codePostal:postcode,departement:department,codeCommune:item.code,codeDepartement:item.codeDepartement});
-            if(options.length>=8) break;
-          }
-          if(options.length>=8) break;
-        }
-        suggestionList.innerHTML=options.length?options.map((option,index)=>'<button type="button" class="commune-option" data-option="'+index+'">'+esc(option.commune)+' — '+esc(option.codePostal)+' ('+esc(option.departement)+')</button>').join(''):'<div class="commune-search-status">Aucune commune trouvée.</div>';
-        suggestionList._options=options;
-        suggestionList.querySelectorAll('[data-option]').forEach(button=>button.addEventListener('click',()=>{
-          const selected=options[Number(button.dataset.option)];
-          if(!selected) return;
-          location=selected;locationVerified=true;
-          communeInput.value=selected.commune+' — '+selected.codePostal+' ('+selected.departement+')';
-          input('editOfferCommuneHint').textContent='Lieu vérifié : '+selected.codePostal+' — '+selected.departement+'.';
-          suggestionList.hidden=true;
-          updateSaveState();
-        }));
-      }catch(error){
-        if(sequence===communeSequence){suggestionList.innerHTML='<div class="commune-search-status">Impossible de vérifier la commune. Réessayez.</div>';}
-      }
-    },250);
-    updateSaveState();
+  input('editOfferHours').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
+    hours=button.dataset.hours;
+    input('editOfferHours').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
+  input('editOfferMutuelleToggle').addEventListener('click',()=>{
+    const editor=input('editOfferMutuelleEditor');
+    const expanded=editor.hidden;
+    editor.hidden=!expanded;
+    input('editOfferMutuelleToggle').setAttribute('aria-expanded',String(expanded));
+    if(expanded) input('editOfferMutuelle').focus();
   });
-  const requiredNumbers=['editOfferGross','editOfferMutuelle','editOfferMutuellePat','editOfferMealValue','editOfferBonus'];
+  input('editOfferTrToggle').querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',()=>{
+    trEnabledNow=button.dataset.tr==='oui';
+    input('editOfferTrToggle').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    input('editOfferTrFields').hidden=!trEnabledNow;
+    updateSaveState();
+  }));
+  input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    mealShare=Number(button.dataset.share);
+    input('editOfferMealShare').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
   const validNumber=id=>input(id).value.trim()!==''&&numericEntryValid(input(id).value)&&Number.isFinite(parseNum(input(id).value));
   const updateSaveState=()=>{
     const gross=parseNum(grossInput.value);
-    const valid=gross>0&&gross<=1200000&&locationVerified&&requiredNumbers.slice(1).every(validNumber)&&
-      Number(input('editOfferMealDays').value)>=0&&Number(input('editOfferMealDays').value)<=31&&
-      Number.isInteger(Number(input('editOfferMealDays').value))&&
-      Number(input('editOfferMonths').value)>=1&&Number(input('editOfferMonths').value)<=24&&
-      Number.isInteger(Number(input('editOfferMonths').value))&&
-      parseNum(input('editOfferMutuelle').value)>=0&&parseNum(input('editOfferMutuelle').value)<=100000&&parseNum(input('editOfferMutuellePat').value)>=0&&parseNum(input('editOfferMutuellePat').value)<=100000&&
-      parseNum(input('editOfferMealValue').value)>=0&&parseNum(input('editOfferMealValue').value)<=500&&
-      Number(input('editOfferMealShare').value)>=40&&Number(input('editOfferMealShare').value)<=50&&
-      parseNum(input('editOfferBonus').value)>=0;
+    const mutuelle= input('editOfferMutuelle').value;
+    const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&parseNum(mutuelle)>=0&&parseNum(mutuelle)<=100000&&
+      (!trEnabledNow||(Number.isInteger(Number(input('editOfferMealDays').value))&&Number(input('editOfferMealDays').value)>=1&&Number(input('editOfferMealDays').value)<=31&&validNumber('editOfferMealValue')&&parseNum(input('editOfferMealValue').value)>0&&parseNum(input('editOfferMealValue').value)<=500));
     input('editOfferSave').disabled=!valid;
   };
-  [...requiredNumbers,'editOfferMealDays','editOfferMealValue','editOfferMealShare','editOfferMonths'].forEach(id=>input(id).addEventListener('input',updateSaveState));
-  input('editOfferName').addEventListener('input',updateSaveState);
+  ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue'].forEach(id=>input(id).addEventListener('input',updateSaveState));
   updateSaveState();
   input('editOfferSave').addEventListener('click',()=>{
     const gross=parseNum(grossInput.value);
@@ -585,23 +555,22 @@ function showEditScenarioModal(scenario){
       name:input('editOfferName').value.trim().slice(0,80)||'Offre',
       brut:period==='an'?gross/12:gross,
       salaireSaisi:gross,salaireSaisiPeriode:period,
-      dureeType:input('editOfferHours').value==='39'?'39':'35',
-      ...location,
+      dureeType:hours,
+      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',departement:scenario.departement||'',
+      codeCommune:scenario.codeCommune||'',codeDepartement:scenario.codeDepartement||'',
       mutuelle:parseNum(input('editOfferMutuelle').value),
-      mutuellePat:parseNum(input('editOfferMutuellePat').value),
-      joursResto:Number(input('editOfferMealDays').value),
-      valeurResto:parseNum(input('editOfferMealValue').value),
-      partResto:Number(input('editOfferMealShare').value),
-      nbMois:Number(input('editOfferMonths').value),
-      primes:parseNum(input('editOfferBonus').value),
-      treiziemeMoisBase:input('editOffer13thBase').value==='ensemble'?'ensemble':'base'
+      mutuellePat:Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
+      joursResto:trEnabledNow?Number(input('editOfferMealDays').value):0,
+      valeurResto:trEnabledNow?parseNum(input('editOfferMealValue').value):0,
+      partResto:trEnabledNow?mealShare:50,
+      nbMois:Number(scenario.nbMois)||12,primes:Number(scenario.primes)||0,
+      treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
     };
     closeModal(result);
   });
   input('editOfferCancel').addEventListener('click',()=>closeModal(false));
   return pending;
 }
-
 
 const headerMenu = document.getElementById('headerMenu');
 document.addEventListener('click', event => {

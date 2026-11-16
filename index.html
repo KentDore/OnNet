@@ -874,6 +874,69 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 @media(max-width:360px){.modal-edit-offer .three-col{grid-template-columns:1fr;}}
 
 
+/* Mutuelle compacte dans l'éditeur : le montant s'ouvre uniquement à la demande. */
+.modal-edit-offer .edit-offer-mutuelle{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;border:1px solid var(--line);border-radius:11px;background:var(--surface-secondary,var(--bg));}
+.modal-edit-offer .edit-offer-mutuelle>span{font-size:12px;font-weight:650;color:var(--ink-soft);}
+.modal-edit-offer .edit-offer-mutuelle-value{display:inline-flex;align-items:center;gap:8px;padding:7px 10px;border:1px solid var(--line);border-radius:9px;background:var(--surface);color:var(--accent);font:700 13px 'Inter',sans-serif;cursor:pointer;}
+.modal-edit-offer .edit-offer-mutuelle-value span{font-size:12px;opacity:.7;}
+.modal-edit-offer .edit-offer-mutuelle-editor{display:grid;grid-template-columns:minmax(0,1fr) minmax(100px,.7fr);align-items:center;gap:10px;width:100%;padding-top:9px;border-top:1px solid var(--line);}
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none;}
+.modal-edit-offer .edit-offer-mutuelle-editor label{margin:0;font-size:11px;font-weight:600;color:var(--ink-soft);}
+@media(max-width:420px){.modal-edit-offer .edit-offer-mutuelle{flex-wrap:wrap}.modal-edit-offer .edit-offer-mutuelle-editor{grid-template-columns:1fr;}}
+
+
+/* Formulaire d'édition : même structure que l'ajout, sans défilement sur mobile. */
+.modal.modal-edit-offer{
+  width:min(620px,calc(100vw - 28px));
+  max-height:calc(100dvh - 24px);
+  overflow-y:auto;
+  overflow-x:hidden;
+  padding:16px 18px;
+}
+.modal-edit-offer .edit-offer-modal{display:grid;gap:8px;}
+.modal-edit-offer .edit-offer-inline-row{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;}
+.modal-edit-offer .edit-offer-inline-row .field-label{margin:0;font-size:11px;line-height:1.2;}
+.modal-edit-offer .edit-offer-inline-row .pill-toggle button{min-height:34px;padding:6px 9px;font-size:11px;}
+.modal-edit-offer .onboarding-consent-compact{display:flex;align-items:center;gap:8px;margin:0;padding:6px 8px;}
+.modal-edit-offer .onboarding-consent-compact .onboarding-consent-icon{width:22px;height:22px;}
+.modal-edit-offer .onboarding-consent-compact p{margin:0;color:var(--ink-soft);font-size:10px;line-height:1.3;}
+.modal-edit-offer .field-row{min-width:0;margin:0;}
+.modal-edit-offer .field-row label{display:block;margin:0 0 4px;font-size:11px;line-height:1.2;}
+.modal-edit-offer input{min-height:38px;padding:7px 10px;font-size:14px;}
+.modal-edit-offer .pill-toggle button{min-height:38px;padding:7px 12px;}
+.modal-edit-offer .onboarding-benefits{gap:7px;margin-top:2px;}
+.modal-edit-offer .onboarding-mutuelle-note{min-height:38px;padding:6px 10px;}
+.modal-edit-offer .onboarding-tr{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:8px;padding:8px 10px;}
+.modal-edit-offer .onboarding-tr-heading{margin:0;}
+.modal-edit-offer .onboarding-tr-fields{grid-column:1/-1;padding-top:7px;}
+.modal-edit-offer .onboarding-tr-fields .three-col{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;}
+.modal-edit-offer .onboarding-tr-fields .field-label{min-height:2.2em;font-size:9px;line-height:1.2;}
+.modal-edit-offer .onboarding-tr-fields .field-row input,.modal-edit-offer .onboarding-tr-fields .meal-share-toggle{height:40px;min-height:40px;}
+.modal-edit-offer .onboarding-tr-fields .field-row label{font-size:10px;}
+.modal-edit-offer .onboarding-consent{padding:8px 10px;}
+.modal-edit-offer .onboarding-consent-details{margin-top:4px;}
+.modal-edit-offer .edit-offer-mutuelle-editor{display:grid;grid-template-columns:auto minmax(90px,140px);align-items:center;gap:8px;padding:0 10px 7px;}
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none;}
+.modal-edit-offer .edit-offer-mutuelle-editor label{font-size:11px;}
+.modal-edit-offer .edit-offer-mutuelle-editor input{min-height:34px;}
+.modal-edit-offer .edit-offer-mutuelle-value{border:0;background:transparent;color:var(--ink);font:650 12px 'Inter',sans-serif;padding:4px 0;}
+.modal-edit-offer .modal-actions{position:static;bottom:auto;display:flex;justify-content:flex-end;gap:9px;margin:4px 0 0;padding:8px 0 0;background:var(--surface);border-top:1px solid var(--line);}
+.modal-edit-offer .modal-actions .btn{min-height:40px;padding:8px 16px;}
+@media(max-width:560px){
+  .modal.modal-edit-offer{width:calc(100vw - 24px);max-height:calc(100dvh - 24px);padding:12px 12px;}
+  .modal-edit-offer .edit-offer-modal{gap:7px;}
+  .modal-edit-offer .onboarding-consent-copy small{font-size:10px;}
+  .modal-edit-offer .onboarding-tr{padding:7px 8px;}
+  .modal-edit-offer .modal-actions{margin-top:2px;padding-top:7px;}
+}
+@media(max-height:760px){
+  .modal.modal-edit-offer{padding-top:9px;padding-bottom:9px;}
+  .modal-edit-offer .edit-offer-modal{gap:5px;}
+  .modal-edit-offer .onboarding-mutuelle-note{min-height:34px;}
+  .modal-edit-offer .field-row label{margin-bottom:3px;}
+}
+
+
 /* Maquette UX V33 — structure et proportions reprises du HTML fourni. */
 :root{--maquette-bg:#f5f3ee;--maquette-green:#1f6d4c;--maquette-dark:#075334}
 body{background:linear-gradient(180deg,#fafbf9 0%,var(--maquette-bg) 100%)}
@@ -1090,10 +1153,6 @@ header.hero .trust-icon svg{width:19px;height:19px}
   .onboarding-consent-copy{display:grid;gap:2px;min-width:0;}
   .onboarding-consent-copy strong{font-size:12px;color:var(--ink);font-weight:650;}
   .onboarding-consent-copy small{font-size:10.5px;color:var(--ink-soft);line-height:1.3;}
-  .onboarding-consent-badge{
-    margin-left:auto;padding:5px 8px;border-radius:999px;background:var(--accent-soft);
-    color:var(--accent);font-size:9px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;white-space:nowrap;
-  }
   .onboarding-consent-details{margin:7px 0 0 34px;font-size:10.5px;color:var(--ink-soft);}
   .onboarding-consent-details summary{cursor:pointer;color:var(--accent);font-weight:600;}
   .onboarding-consent-details p{margin:6px 0 0;line-height:1.45;}
@@ -1324,7 +1383,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
 .offer-comparison-net{display:block;color:#075d3a;font-size:clamp(22px,4vw,30px);line-height:1.1;overflow-wrap:anywhere}
 .offer-comparison-net small{font-size:12px;font-weight:650}
 .offer-comparison-meta{margin-top:9px;color:#718076;font-size:11px;line-height:1.4}
-.offer-comparison-edit{display:flex;align-items:center;justify-content:space-between;width:100%;min-height:42px;margin-top:16px;padding:0 11px;border:1px solid #d8e6db;border-radius:10px;background:#f7faf7;color:#176b49;font-size:12px;font-weight:750;text-align:left}
+.offer-comparison-edit{display:inline-flex;align-items:center;gap:7px;align-self:flex-start;min-height:30px;margin-top:9px;padding:0 9px;border:1px solid #d8e6db;border-radius:8px;background:transparent;color:#176b49;font-size:11px;font-weight:700;text-align:left}
 .salary-editor-heading{display:flex;align-items:flex-start;gap:14px;margin-bottom:16px}
 .salary-editor-back{flex:none;min-height:38px;padding:7px 10px;border:1px solid #dce8df;border-radius:9px;background:#fff;color:#176b49;font-size:11px;font-weight:750}
 .salary-editor-heading .declaration-inline-title{margin:0;min-width:0}
@@ -1460,8 +1519,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
  .comparison-reference-note{font-size:9px}
 }
 @media(max-width:360px){
- #comparePanel #stackChart.comparison-offer-grid,
- #benchmarkMount .benchmark-grid{grid-template-columns:minmax(0,1fr)}
+ #comparePanel #stackChart.comparison-offer-grid{grid-template-columns:minmax(0,1fr)}
  #comparePanel .comparison-offer-card{padding:13px}
  .comparison-offer-head{display:flex}
 }
@@ -1551,6 +1609,15 @@ body.salary-editor-open .integrated-offers{display:none!important}
 }
 
 
+
+/* Séparation explicite entre les offres et les repères déplacés dynamiquement.
+   flow-root empêche la marge du panneau enfant de s'effondrer hors du conteneur. */
+#benchmarkMount{
+  display:flow-root;
+  margin-top:24px;
+}
+
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1581,8 +1648,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
-    <div id="benchmarkMount" aria-live="polite"></div>
-
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
  </section>
   <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
@@ -1604,7 +1669,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="stack-legend" id="stackLegend"></div>
     <!-- Espace conservé pour les messages contextuels du comparatif. -->
     <div id="barsAlerts"></div>
-    <section class="benchmark-panel" aria-label="Comparaison avec les repères salariaux">
+    <section class="benchmark-panel" id="benchmarkMount" aria-label="Comparaison avec les repères salariaux">
       <div id="benchmarkBody" aria-live="polite"></div>
     </section>
 
@@ -3143,9 +3208,6 @@ function renderMaquetteControls(computedOverride) {
   document.querySelectorAll("[data-maquette-period]").forEach((button) => {
     button.setAttribute("aria-pressed", String(button.dataset.maquettePeriod === maquetteComparisonPeriod));
   });
-  const benchmarkPanel = document.querySelector("#comparePanel .benchmark-panel");
-  const benchmarkMount = document.getElementById("benchmarkMount");
-  if (benchmarkPanel && benchmarkMount && benchmarkPanel.parentElement !== benchmarkMount) benchmarkMount.appendChild(benchmarkPanel);
   const tabs = document.getElementById("maquetteOfferTabs");
   if (tabs) tabs.replaceChildren();
   if (tabs) scenarios.forEach((scenario, index) => {
@@ -3834,9 +3896,11 @@ function openModal(bodyHtml, opts) {
     document.body.appendChild(overlay);
   }
   overlay.hidden = false;
-  overlay.innerHTML = `<div id="modalBox" class="modal" role="alertdialog" aria-modal="true" aria-describedby="modalMsg" tabindex="-1">${bodyHtml}</div>`;
+  overlay.innerHTML = `<div id="modalBox" class="modal" role="${o.role === "dialog" ? "dialog" : "alertdialog"}" aria-modal="true" tabindex="-1">${bodyHtml}</div>`;
   const box = overlay.querySelector("#modalBox");
   if (o.className) box.classList.add(o.className);
+  if (o.ariaLabel) box.setAttribute("aria-label", o.ariaLabel);
+  else if (box.querySelector("#modalMsg")) box.setAttribute("aria-describedby", "modalMsg");
   lockBodyScroll();
   const previousFocus = document.activeElement;
   document.addEventListener("keydown", onModalKeydown, true);
@@ -3894,13 +3958,19 @@ function showShareModal(url) {
     }
   });
 }
-function renderUrssafConsentNotice() {
+function renderUrssafConsentNotice(compact = false) {
+  if (compact) {
+    return `
+      <div class="onboarding-consent onboarding-consent-compact">
+        <span class="onboarding-consent-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
+        <p>Au clic sur Enregistrer, le salaire et ses param\xE8tres sont transmis \xE0 l\u2019API Urssaf.</p>
+      </div>`;
+  }
   return `
     <div class="onboarding-consent">
       <div class="onboarding-consent-top">
         <span class="onboarding-mutuelle-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg></span>
-        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucune donn\xE9e transmise avant validation</small></span>
-        <span class="onboarding-consent-badge">S\xE9curis\xE9</span>
+        <span class="onboarding-consent-copy"><strong>Calcul officiel Urssaf</strong><small>Aucun salaire transmis avant validation</small></span>
       </div>
       <details class="onboarding-consent-details">
         <summary>Quelles donn\xE9es sont transmises ?</summary>
@@ -4153,16 +4223,18 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
 function showEditScenarioModal(scenario) {
   const initialPeriod = scenario.salaireSaisiPeriode === "an" ? "an" : "mois";
   const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0 ? Number(scenario.salaireSaisi) : Number(scenario.brut) * (initialPeriod === "an" ? 12 : 1);
+  const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
+  const trEnabled = Number(scenario.joursResto) > 0 || Number(scenario.valeurResto) > 0;
+  const initialShare = Number(scenario.partResto) === 40 ? 40 : 50;
   const html = `
     <div class="edit-offer-modal">
-      <p id="modalMsg" class="modal-msg">Modifiez les param\xE8tres du contrat. Les changements seront enregistr\xE9s \xE0 la validation.</p>
       <div class="field-row">
-        <label for="editOfferName">Nom de l\u2019offre</label>
+        <label for="editOfferName">Nom de l\u2019offre <span class="field-optional">(facultatif)</span></label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
-      <div class="edit-offer-section">R\xE9mun\xE9ration</div>
-      <div class="field-row">
-        <label>Montant brut indiqu\xE9 en</label>
+      ${renderUrssafConsentNotice(true)}
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Votre salaire est indiqu\xE9 en</span>
         <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="P\xE9riode du salaire brut">
           <button type="button" data-period="mois" aria-pressed="${initialPeriod === "mois"}">Mensuel</button>
           <button type="button" data-period="an" aria-pressed="${initialPeriod === "an"}">Annuel</button>
@@ -4172,138 +4244,90 @@ function showEditScenarioModal(scenario) {
         <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod === "an" ? "annuel" : "mensuel"} (\u20AC)</label>
         <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace(".", ",")}" autocomplete="off">
       </div>
-      <div class="field-row">
-        <label for="editOfferHours">Base horaire</label>
-        <select id="editOfferHours"><option value="35" ${scenario.dureeType === "35" ? "selected" : ""}>35 h / semaine</option><option value="39" ${scenario.dureeType === "39" ? "selected" : ""}>39 h / semaine</option></select>
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Base horaire</span>
+        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
+          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType !== "39"}">35 h</button>
+          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType === "39"}">39 h</button>
+        </div>
       </div>
-      <div class="edit-offer-section">Lieu de travail</div>
-      <div class="field-row">
-        <label for="editOfferCommune">Commune de l\u2019\xE9tablissement</label>
-        <input type="text" id="editOfferCommune" value="${esc(scenario.codePostal && scenario.departement ? scenario.commune + " \u2014 " + scenario.codePostal + " (" + scenario.departement + ")" : scenario.commune + " \u2014 s\xE9lection requise")}" maxlength="120" autocomplete="off" aria-autocomplete="list" aria-controls="editOfferCommuneSuggestions">
-        <div class="commune-suggestions" id="editOfferCommuneSuggestions" role="listbox" hidden></div>
-        <div class="sub-hint" id="editOfferCommuneHint">${scenario.codePostal && scenario.departement ? "Lieu v\xE9rifi\xE9 : " + esc(scenario.codePostal) + " \u2014 " + esc(scenario.departement) + "." : "S\xE9lectionnez une commune v\xE9rifi\xE9e dans les suggestions."}</div>
+      <div class="onboarding-benefits edit-offer-benefits">
+        <div class="onboarding-mutuelle-note">
+          <span class="onboarding-mutuelle-icon" aria-hidden="true">\u2713</span>
+          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(initialMutuelle)} \u20AC / mois</button>
+        </div>
+        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
+          <label for="editOfferMutuelle">Votre part mensuelle (\u20AC)</label>
+          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace(".", ",")}" autocomplete="off">
+        </div>
+        <div class="onboarding-tr edit-offer-tr">
+          <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
+          <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
+            <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
+            <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
+          </div>
+          <div id="editOfferTrFields" class="onboarding-tr-fields" ${trEnabled ? "" : "hidden"}>
+            <div class="three-col">
+              <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto) || 0}"></div>
+              <div class="field-row"><label for="editOfferMealValue">Valeur faciale (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto || 0).replace(".", ",")}"></div>
+              <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare === 50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare === 40}">40 %</button></div></div>
+            </div>
+          </div>
+        </div>
       </div>
-      <div class="edit-offer-section">Mutuelle</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMutuelle">Part salari\xE9 (\u20AC / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(scenario.mutuelle ?? 0).replace(".", ",")}"></div>
-        <div class="field-row"><label for="editOfferMutuellePat">Part employeur (\u20AC / mois)</label><input type="text" inputmode="decimal" id="editOfferMutuellePat" value="${String(scenario.mutuellePat ?? 0).replace(".", ",")}"></div>
-      </div>
-      <div class="edit-offer-section">Titres-restaurant</div>
-      <div class="three-col">
-        <div class="field-row"><label for="editOfferMealDays">Jours / mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto) || 0}"></div>
-        <div class="field-row"><label for="editOfferMealValue">Valeur (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto || 0).replace(".", ",")}"></div>
-        <div class="field-row"><label for="editOfferMealShare">Part salari\xE9 (%)</label><input type="number" id="editOfferMealShare" min="40" max="50" step="0.1" value="${Number(scenario.partResto ?? 50)}"></div>
-      </div>
-      <div class="edit-offer-section">Mensualit\xE9s et primes</div>
-      <div class="two-col">
-        <div class="field-row"><label for="editOfferMonths">Mensualit\xE9s / an</label><input type="number" id="editOfferMonths" min="1" max="24" step="1" value="${Number(scenario.nbMois) || 12}"></div>
-        <div class="field-row"><label for="editOfferBonus">Primes annuelles (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferBonus" value="${String(scenario.primes || 0).replace(".", ",")}"></div>
-      </div>
-      <div class="field-row">
-        <label for="editOffer13thBase">Base du 13\u1D49 / 14\u1D49 mois</label>
-        <select id="editOffer13thBase"><option value="base" ${scenario.treiziemeMoisBase !== "ensemble" ? "selected" : ""}>Salaire de base</option><option value="ensemble" ${scenario.treiziemeMoisBase === "ensemble" ? "selected" : ""}>Salaire et \xE9l\xE9ments variables</option></select>
-      </div>
-      <p class="edit-offer-note">Les primes et mensualit\xE9s au-del\xE0 de 12 sont conserv\xE9es dans l\u2019offre, mais ne sont pas encore int\xE9gr\xE9es au calcul Urssaf. Le r\xE9sultat affich\xE9 ne les inclut donc pas.</p>
       <div class="modal-actions">
         <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: "#editOfferName", className: "modal-edit-offer", dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: "#editOfferPeriod button", className: "modal-edit-offer", dismissible: true, role: "dialog", ariaLabel: "Modifier une offre salariale" });
   const overlay = document.getElementById("modalOverlay");
   const input = (id) => overlay.querySelector("#" + id);
   let period = initialPeriod;
-  let location2 = {
-    commune: scenario.commune || "Pac\xE9",
-    codePostal: scenario.codePostal || "",
-    departement: scenario.departement || "",
-    codeCommune: scenario.codeCommune || "",
-    codeDepartement: scenario.codeDepartement || ""
-  };
-  let locationVerified = !!(location2.codePostal && location2.departement);
-  let communeSequence = 0;
-  let communeTimer = null;
+  let hours = scenario.dureeType === "39" ? "39" : "35";
+  let trEnabledNow = trEnabled;
+  let mealShare = initialShare;
   const periodToggle = input("editOfferPeriod");
   const grossInput = input("editOfferGross");
   periodToggle.querySelectorAll("button[data-period]").forEach((button) => button.addEventListener("click", () => {
     if (button.dataset.period === period) return;
     const amount = parseNum(grossInput.value);
     if (!(amount > 0)) return;
-    const converted = period === "mois" ? amount * 12 : amount / 12;
+    grossInput.value = String(period === "mois" ? amount * 12 : amount / 12).replace(".", ",");
     period = button.dataset.period;
-    grossInput.value = String(converted).replace(".", ",");
     periodToggle.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
     input("editOfferGrossLabel").textContent = "Salaire brut " + (period === "an" ? "annuel" : "mensuel") + " (\u20AC)";
   }));
-  const communeInput = input("editOfferCommune");
-  const suggestionList = input("editOfferCommuneSuggestions");
-  communeInput.addEventListener("input", () => {
-    const query = communeInput.value.trim();
-    locationVerified = false;
-    location2.codePostal = "";
-    location2.departement = "";
-    location2.codeCommune = "";
-    location2.codeDepartement = "";
-    input("editOfferCommuneHint").textContent = "S\xE9lectionnez une commune v\xE9rifi\xE9e dans les suggestions.";
-    if (communeTimer) clearTimeout(communeTimer);
-    const sequence = ++communeSequence;
-    if (query.length < 2) {
-      suggestionList.hidden = true;
-      suggestionList.innerHTML = "";
-      return;
-    }
-    suggestionList.hidden = false;
-    suggestionList.innerHTML = '<div class="commune-search-status">Recherche des communes\u2026</div>';
-    communeTimer = setTimeout(async () => {
-      try {
-        const params = new URLSearchParams({ fields: "nom,code,codesPostaux,departement,codeDepartement", limit: "8" });
-        if (/^\d{2,5}$/.test(query)) params.set("codePostal", query);
-        else {
-          params.set("nom", query);
-          params.set("boost", "population");
-        }
-        const response = await fetch("https://geo.api.gouv.fr/communes?" + params.toString(), { headers: { Accept: "application/json" } });
-        if (!response.ok) throw new Error("Recherche indisponible");
-        const rows = await response.json();
-        if (sequence !== communeSequence || !modalState) return;
-        const options = [];
-        for (const item of Array.isArray(rows) ? rows : []) {
-          const department = item.departement?.nom;
-          for (const postcode of Array.isArray(item.codesPostaux) ? item.codesPostaux : []) {
-            if (item.nom && department) options.push({ commune: item.nom, codePostal: postcode, departement: department, codeCommune: item.code, codeDepartement: item.codeDepartement });
-            if (options.length >= 8) break;
-          }
-          if (options.length >= 8) break;
-        }
-        suggestionList.innerHTML = options.length ? options.map((option, index) => '<button type="button" class="commune-option" data-option="' + index + '">' + esc(option.commune) + " \u2014 " + esc(option.codePostal) + " (" + esc(option.departement) + ")</button>").join("") : '<div class="commune-search-status">Aucune commune trouv\xE9e.</div>';
-        suggestionList._options = options;
-        suggestionList.querySelectorAll("[data-option]").forEach((button) => button.addEventListener("click", () => {
-          const selected = options[Number(button.dataset.option)];
-          if (!selected) return;
-          location2 = selected;
-          locationVerified = true;
-          communeInput.value = selected.commune + " \u2014 " + selected.codePostal + " (" + selected.departement + ")";
-          input("editOfferCommuneHint").textContent = "Lieu v\xE9rifi\xE9 : " + selected.codePostal + " \u2014 " + selected.departement + ".";
-          suggestionList.hidden = true;
-          updateSaveState();
-        }));
-      } catch (error) {
-        if (sequence === communeSequence) {
-          suggestionList.innerHTML = '<div class="commune-search-status">Impossible de v\xE9rifier la commune. R\xE9essayez.</div>';
-        }
-      }
-    }, 250);
-    updateSaveState();
+  input("editOfferHours").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
+    hours = button.dataset.hours;
+    input("editOfferHours").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+  }));
+  input("editOfferMutuelleToggle").addEventListener("click", () => {
+    const editor = input("editOfferMutuelleEditor");
+    const expanded = editor.hidden;
+    editor.hidden = !expanded;
+    input("editOfferMutuelleToggle").setAttribute("aria-expanded", String(expanded));
+    if (expanded) input("editOfferMutuelle").focus();
   });
-  const requiredNumbers = ["editOfferGross", "editOfferMutuelle", "editOfferMutuellePat", "editOfferMealValue", "editOfferBonus"];
+  input("editOfferTrToggle").querySelectorAll("button[data-tr]").forEach((button) => button.addEventListener("click", () => {
+    trEnabledNow = button.dataset.tr === "oui";
+    input("editOfferTrToggle").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    input("editOfferTrFields").hidden = !trEnabledNow;
+    updateSaveState();
+  }));
+  input("editOfferMealShare").querySelectorAll("button[data-share]").forEach((button) => button.addEventListener("click", () => {
+    mealShare = Number(button.dataset.share);
+    input("editOfferMealShare").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+  }));
   const validNumber = (id) => input(id).value.trim() !== "" && numericEntryValid(input(id).value) && Number.isFinite(parseNum(input(id).value));
   const updateSaveState = () => {
     const gross = parseNum(grossInput.value);
-    const valid = gross > 0 && gross <= 12e5 && locationVerified && requiredNumbers.slice(1).every(validNumber) && Number(input("editOfferMealDays").value) >= 0 && Number(input("editOfferMealDays").value) <= 31 && Number.isInteger(Number(input("editOfferMealDays").value)) && Number(input("editOfferMonths").value) >= 1 && Number(input("editOfferMonths").value) <= 24 && Number.isInteger(Number(input("editOfferMonths").value)) && parseNum(input("editOfferMutuelle").value) >= 0 && parseNum(input("editOfferMutuelle").value) <= 1e5 && parseNum(input("editOfferMutuellePat").value) >= 0 && parseNum(input("editOfferMutuellePat").value) <= 1e5 && parseNum(input("editOfferMealValue").value) >= 0 && parseNum(input("editOfferMealValue").value) <= 500 && Number(input("editOfferMealShare").value) >= 40 && Number(input("editOfferMealShare").value) <= 50 && parseNum(input("editOfferBonus").value) >= 0;
+    const mutuelle = input("editOfferMutuelle").value;
+    const valid = gross > 0 && gross <= 12e5 && validNumber("editOfferMutuelle") && parseNum(mutuelle) >= 0 && parseNum(mutuelle) <= 1e5 && (!trEnabledNow || Number.isInteger(Number(input("editOfferMealDays").value)) && Number(input("editOfferMealDays").value) >= 1 && Number(input("editOfferMealDays").value) <= 31 && validNumber("editOfferMealValue") && parseNum(input("editOfferMealValue").value) > 0 && parseNum(input("editOfferMealValue").value) <= 500);
     input("editOfferSave").disabled = !valid;
   };
-  [...requiredNumbers, "editOfferMealDays", "editOfferMealValue", "editOfferMealShare", "editOfferMonths"].forEach((id) => input(id).addEventListener("input", updateSaveState));
-  input("editOfferName").addEventListener("input", updateSaveState);
+  ["editOfferGross", "editOfferMutuelle", "editOfferMealDays", "editOfferMealValue"].forEach((id) => input(id).addEventListener("input", updateSaveState));
   updateSaveState();
   input("editOfferSave").addEventListener("click", () => {
     const gross = parseNum(grossInput.value);
@@ -4312,16 +4336,20 @@ function showEditScenarioModal(scenario) {
       brut: period === "an" ? gross / 12 : gross,
       salaireSaisi: gross,
       salaireSaisiPeriode: period,
-      dureeType: input("editOfferHours").value === "39" ? "39" : "35",
-      ...location2,
+      dureeType: hours,
+      commune: scenario.commune || "Pac\xE9",
+      codePostal: scenario.codePostal || "",
+      departement: scenario.departement || "",
+      codeCommune: scenario.codeCommune || "",
+      codeDepartement: scenario.codeDepartement || "",
       mutuelle: parseNum(input("editOfferMutuelle").value),
-      mutuellePat: parseNum(input("editOfferMutuellePat").value),
-      joursResto: Number(input("editOfferMealDays").value),
-      valeurResto: parseNum(input("editOfferMealValue").value),
-      partResto: Number(input("editOfferMealShare").value),
-      nbMois: Number(input("editOfferMonths").value),
-      primes: parseNum(input("editOfferBonus").value),
-      treiziemeMoisBase: input("editOffer13thBase").value === "ensemble" ? "ensemble" : "base"
+      mutuellePat: Number.isFinite(Number(scenario.mutuellePat)) ? Number(scenario.mutuellePat) : 30,
+      joursResto: trEnabledNow ? Number(input("editOfferMealDays").value) : 0,
+      valeurResto: trEnabledNow ? parseNum(input("editOfferMealValue").value) : 0,
+      partResto: trEnabledNow ? mealShare : 50,
+      nbMois: Number(scenario.nbMois) || 12,
+      primes: Number(scenario.primes) || 0,
+      treiziemeMoisBase: scenario.treiziemeMoisBase === "ensemble" ? "ensemble" : "base"
     };
     closeModal(result);
   });

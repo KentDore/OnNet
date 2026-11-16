@@ -842,13 +842,12 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     const advanced = page.locator('#advancedWorkspace');
     assert.equal(await advanced.evaluate(el => el.open), false);
     assert.equal(await page.locator('#maquetteCompareTitle').isVisible(), true);
-    assert.equal(await page.locator('#benchmarkMount').isVisible(), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    await advanced.locator('summary').first().click();
+    await advanced.evaluate(el => { el.open = true; });
+    assert.equal(await advanced.evaluate(el => el.open), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    // openApp vérifie avant chaque test que les fiches et réglages fiscaux
-    // portent bien l'attribut hidden, puis les démasque pour les tests legacy.
-    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true);
+    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true,
+      'les outils secondaires deviennent accessibles lorsque leur panneau est ouvert');
   } finally {
     await context.close();
   }
@@ -859,13 +858,50 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
     assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.equal(await page.locator('#modalBox').getAttribute('role'), 'dialog');
+    assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
+    assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
-    assert.equal(await page.locator('#editOfferCommune').count(), 1);
-    assert.equal(await page.locator('#editOfferMutuellePat').count(), 1);
-    assert.equal(await page.locator('#editOfferMonths').count(), 1);
-    assert.equal(await page.locator('#editOfferBonus').count(), 1);
+    assert.equal(await page.locator('#editOfferCommune').count(), 0);
+    assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
+    assert.equal(await page.locator('#editOfferMonths').count(), 0);
+    assert.equal(await page.locator('#editOfferBonus').count(), 0);
+    assert.equal(await page.locator('#editOffer13thBase').count(), 0);
+    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € / mois');
+    await page.locator('#editOfferMutuelleToggle').click();
+    assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
+    await page.setViewportSize({ width:375, height:667 });
+    const modalFit = await page.locator('#modalBox').evaluate(el => {
+      const rect = el.getBoundingClientRect();
+      const form=el.querySelector('.edit-offer-modal');
+      return { top:rect.top, bottom:rect.bottom, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, viewportHeight:window.innerHeight,
+        children:[...form.children].map(node=>({className:node.className,tag:node.tagName,height:Math.round(node.getBoundingClientRect().height),margin:getComputedStyle(node).margin,gap:getComputedStyle(form).rowGap})),
+        trColumns:getComputedStyle(el.querySelector('#editOfferTrFields .three-col')).gridTemplateColumns } ;
+    });
+    assert.ok(modalFit.top >= 0 && modalFit.bottom <= modalFit.viewportHeight,
+      `l’éditeur doit rester entièrement visible sur mobile : ${JSON.stringify(modalFit)}`);
+    assert.ok(modalFit.scrollHeight <= modalFit.clientHeight + 1,
+      `l’éditeur ne doit pas imposer de défilement interne : ${JSON.stringify(modalFit)}`);
     await page.locator('#editOfferCancel').click();
     await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
+  } finally {
+    await context.close();
+  }
+});
+
+test('les repères SMIC et médiane appartiennent au bloc Comparaison, pas à Vos offres', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.setViewportSize({ width:390, height:844 });
+    const placement = await page.evaluate(() => ({
+      insideComparison: !!document.querySelector('#comparePanel #benchmarkMount'),
+      insideOffers: !!document.querySelector('.unified-salary-panel #benchmarkMount'),
+      followsOffers: !!(document.querySelector('.unified-salary-panel').compareDocumentPosition(document.querySelector('#comparePanel')) & Node.DOCUMENT_POSITION_FOLLOWING)
+    }));
+    assert.equal(placement.insideComparison, true, 'les repères doivent être dans le bloc Comparaison');
+    assert.equal(placement.insideOffers, false, 'les repères ne doivent pas être dans Vos offres');
+    assert.equal(placement.followsOffers, true,
+      'le bloc Comparaison doit suivre le bloc Vos offres dans l’ordre du document');
   } finally {
     await context.close();
   }
@@ -925,18 +961,16 @@ test('le comparatif reste dans la largeur sur petits écrans', { timeout: 60000 
         viewport: document.documentElement.clientWidth,
         scroll: document.querySelector('.benchmark-panel').scrollWidth,
         panel: document.querySelector('.benchmark-panel').clientWidth,
-        cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width)
+        cards: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().width),
+        positions: [...document.querySelectorAll('.benchmark-item')].map(el => el.getBoundingClientRect().top)
       }));
       assert.ok(sizes.scroll <= sizes.panel + 1, `débordement du comparatif à ${width}px : ${JSON.stringify(sizes)}`);
       assert.equal(sizes.cards.length, 2);
-      if(width<=360){
-        assert.ok(sizes.cards.every(card => card>0 && Math.abs(card-sizes.panel)<=1),
-          `les repères doivent occuper la largeur disponible à ${width}px : ${JSON.stringify(sizes)}`);
-      }else{
-        assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
-          `les deux repères doivent partager la ligne à ${width}px : ${JSON.stringify(sizes)}`);
-        assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
-      }
+      assert.ok(sizes.cards.every(card=>card>0&&card<sizes.panel-8),
+        `les deux repères doivent rester côte à côte à ${width}px : ${JSON.stringify(sizes)}`);
+      assert.ok(Math.abs(sizes.cards[0]-sizes.cards[1])<=1);
+      assert.ok(Math.abs(sizes.positions[0]-sizes.positions[1])<=1,
+        `les deux repères doivent être sur la même ligne à ${width}px : ${JSON.stringify(sizes)}`);
     }
   } finally {
     await context.close();
@@ -1417,42 +1451,33 @@ test('les cartes de comparaison affichent la même unité après les calculs API
   }
 });
 
-test('les repères SMIC et médiane sont espacés et lisibles sur mobile, et le formulaire reste relié au scénario', { timeout: 60000 }, async () => {
+test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous les mobiles', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
-    await page.setViewportSize({ width: 390, height: 844 });
     await page.waitForSelector('#benchmarkMount .benchmark-grid');
-    const columns = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el =>
-      getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length
-    );
-    assert.equal(columns, 2, 'les repères SMIC et médiane restent côte à côte sur mobile');
-    const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
-      const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
-        const rect = card.getBoundingClientRect();
-        return { top:rect.top, bottom:rect.bottom, left:rect.left, right:rect.right };
+    for (const width of [320, 360, 375, 390, 430]) {
+      await page.setViewportSize({ width, height:844 });
+      const geometry = await page.locator('#benchmarkMount .benchmark-grid').evaluate(el => {
+        const cards = [...el.querySelectorAll('.benchmark-item')].map(card => {
+          const rect = card.getBoundingClientRect();
+          return { top:rect.top, left:rect.left, right:rect.right, width:rect.width };
+        });
+        return {
+          columns:getComputedStyle(el).gridTemplateColumns.trim().split(/\s+/).length,
+          scrollWidth:el.scrollWidth, clientWidth:el.clientWidth, cards
+        };
       });
-      return { gap:getComputedStyle(el).columnGap, cards };
-    });
-    assert.equal(geometry.cards.length, 2);
-    assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
-      'un espace horizontal réel sépare les deux repères sur mobile');
-    assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
-      'les deux repères sont alignés sur la même ligne');
-    assert.match(await page.locator('#benchmarkMount').innerText(), /Zone\s+France/);
-    await openSalaryEditor(page);
-    await page.locator('#editOfferGross').fill('3000');
-    await page.locator('#editOfferHours').selectOption('35');
-    await page.locator('#editOfferSave').click();
-    await page.waitForFunction(() =>
-      JSON.parse(localStorage.getItem('onnet.state.v1') || 'null')?.scenarios?.[0]?.brut === 3000
-    );
-    const savedGross = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut);
-    assert.equal(savedGross, 3000, 'la saisie doit enregistrer le brut dans le scénario');
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].brut), 3000);
-    assert.equal(await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0].dureeType), '35');
-    const card = page.locator('#cardsBody [data-card]').first();
-    assert.equal(await card.locator('[data-key="brut"]').count(), 0);
-    assert.equal(await card.locator('[data-duree]').count(), 0);
+      assert.equal(geometry.columns, 2, 'SMIC et médiane doivent rester côte à côte à '+width+' px');
+      assert.equal(geometry.cards.length, 2);
+      assert.ok(geometry.cards.every(card=>card.width>0));
+      assert.ok(geometry.cards[1].left >= geometry.cards[0].right + 8,
+        'un espace horizontal réel sépare les deux repères à '+width+' px');
+      assert.ok(Math.abs(geometry.cards[1].top - geometry.cards[0].top) < 2,
+        'les deux repères sont alignés à '+width+' px');
+      assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1,
+        'les repères ne débordent pas à '+width+' px');
+    }
+    assert.match((await page.locator('#benchmarkMount').innerText()).replace(/\s+/g, ' '), /Zone France/);
   } finally {
     await context.close();
   }
@@ -1525,7 +1550,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
 
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSave').click();
     // Le repère SMIC suit l'offre de référence : sélectionner explicitement l'offre 35 h.
     await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
@@ -1594,7 +1619,7 @@ test('compare correctement une offre 35 h et une offre 39 h sur les trois pério
   try {
     await addSecondScenario(page, '3200');
     await openSalaryEditor(page, 1);
-    await page.locator('#editOfferHours').selectOption('35');
+    await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
       const state = JSON.parse(localStorage.getItem('onnet.state.v1') || 'null');
@@ -1713,41 +1738,41 @@ test('conserve aussi le brut annuel saisi pendant le premier démarrage', { time
 });
 
 
-test('la fenêtre de modification conserve tous les paramètres avancés d’une offre', { timeout: 60000 }, async () => {
+test('la fenêtre de modification simplifiée conserve les paramètres masqués et permet de modifier la mutuelle', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
-    await context.route('https://geo.api.gouv.fr/communes**', route => route.fulfill({
-      status:200, contentType:'application/json',
-      body:JSON.stringify([{
-        nom:'Rennes', code:'35238', codesPostaux:['35000'],
-        departement:{nom:'Ille-et-Vilaine'}, codeDepartement:'35'
-      }])
-    }));
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
+      Object.assign(state.scenarios[0], {
+        commune:'Pacé', codePostal:'35740', departement:'Ille-et-Vilaine',
+        codeCommune:'35210', codeDepartement:'35', nbMois:13, primes:1200,
+        treiziemeMoisBase:'ensemble', mutuellePat:55
+      });
+      localStorage.setItem('onnet.state.v1', JSON.stringify(state));
+    });
+    await page.reload();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    await page.locator('#editOfferName').fill('Poste Rennes');
+    await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
-    await page.locator('#editOfferHours').selectOption('39');
-    await page.locator('#editOfferCommune').fill('Rennes');
-    await page.locator('.modal-edit-offer .commune-option').first().click();
+    await page.locator('#editOfferHours [data-hours="39"]').click();
+    await page.locator('#editOfferMutuelleToggle').click();
     await page.locator('#editOfferMutuelle').fill('42,50');
-    await page.locator('#editOfferMutuellePat').fill('55');
     await page.locator('#editOfferMealDays').fill('20');
     await page.locator('#editOfferMealValue').fill('9,50');
-    await page.locator('#editOfferMealShare').fill('40');
-    await page.locator('#editOfferMonths').fill('13');
-    await page.locator('#editOfferBonus').fill('1200');
-    await page.locator('#editOffer13thBase').selectOption('ensemble');
+    await page.locator('#editOfferMealShare [data-share="40"]').click();
     await page.locator('#editOfferSave').click();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
-    assert.equal(saved.name, 'Poste Rennes');
+    assert.equal(saved.name, 'Poste modifié');
     assert.equal(saved.salaireSaisi, 29500);
     assert.equal(saved.salaireSaisiPeriode, 'an');
     assert.ok(Math.abs(saved.brut * 12 - 29500) < 1e-8);
     assert.equal(saved.dureeType, '39');
-    assert.equal(saved.commune, 'Rennes');
-    assert.equal(saved.codePostal, '35000');
+    assert.equal(saved.commune, 'Pacé');
+    assert.equal(saved.codePostal, '35740');
     assert.equal(saved.departement, 'Ille-et-Vilaine');
+    assert.equal(saved.codeCommune, '35210');
+    assert.equal(saved.codeDepartement, '35');
     assert.equal(saved.mutuelle, 42.5);
     assert.equal(saved.mutuellePat, 55);
     assert.equal(saved.joursResto, 20);
@@ -1756,6 +1781,35 @@ test('la fenêtre de modification conserve tous les paramètres avancés d’une
     assert.equal(saved.nbMois, 13);
     assert.equal(saved.primes, 1200);
     assert.equal(saved.treiziemeMoisBase, 'ensemble');
+  } finally {
+    await context.close();
+  }
+});
+
+test('les titres-restaurant doivent être renseignés avant activation du calcul', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.evaluate(() => {
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
+      state.scenarios[0].joursResto = 0;
+      state.scenarios[0].valeurResto = 0;
+      localStorage.setItem('onnet.state.v1', JSON.stringify(state));
+    });
+    await page.reload();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save = page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(), true, 'une offre sans titres-restaurant reste enregistrable');
+    await page.locator('#editOfferTrToggle [data-tr="oui"]').click();
+    assert.equal(await save.isDisabled(), true, 'activer les titres-restaurant exige des paramètres valides');
+    await page.locator('#editOfferMealDays').fill('21');
+    await page.locator('#editOfferMealValue').fill('8');
+    assert.equal(await save.isEnabled(), true, 'des paramètres complets autorisent l’enregistrement');
+    await page.locator('#editOfferTrToggle [data-tr="non"]').click();
+    assert.equal(await save.isEnabled(), true, 'désactiver les titres-restaurant ne bloque pas l’enregistrement');
+    await save.click();
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
+    assert.equal(saved.joursResto, 0);
+    assert.equal(saved.valeurResto, 0);
   } finally {
     await context.close();
   }
