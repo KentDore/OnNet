@@ -1614,6 +1614,24 @@ test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', 
 });
 
 
+test('le changement de période affiche un salaire arrondi sans dérive de conversion', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#maquetteAddSalary').click();
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddPeriod [data-period="mois"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '2458,33',
+      'le mensuel doit être affiché au centime, sans longue décimale flottante');
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '29500',
+      'le retour à l’annuel doit conserver le montant initial');
+    await page.locator('#modalAddCancel').click();
+  } finally {
+    await context.close();
+  }
+});
+
 test('compare correctement une offre 35 h et une offre 39 h sur les trois périodes', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
