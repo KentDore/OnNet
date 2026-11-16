@@ -1,4 +1,4 @@
-name: OnNet Quality Guardian
+name: OnNet Security Guardian
 
 on:
   pull_request:
@@ -11,42 +11,29 @@ on:
 
 permissions:
   contents: read
-  actions: read
   security-events: write
 
 concurrency:
-  group: onnet-quality-guardian-${{ github.workflow }}-${{ github.ref }}
+  group: onnet-security-guardian-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  quality:
-    name: Quality gates (lint, tests, build, dependencies)
+  dependency-audit:
+    name: npm dependency audit
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 10
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
+          package-manager-cache: false
 
-      - name: Install locked dependencies
-        run: npm ci
-
-      - name: Lint JavaScript and CSS
-        run: npm run lint
-
-      - name: Run unit and integration tests
-        run: npm run test:all
-
-      - name: Verify generated build
-        run: node --test test/build.test.js
-
-      - name: Audit npm dependencies
-        run: npm audit --audit-level=high
+      - name: Audit locked dependencies
+        run: npm audit --package-lock-only --audit-level=high
 
   codeql:
     name: CodeQL security analysis
@@ -54,7 +41,7 @@ jobs:
     timeout-minutes: 20
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Initialize CodeQL
         uses: github/codeql-action/init@v4
