@@ -230,7 +230,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').count(), 0, 'le panneau de consentement redondant doit rester supprimé');
@@ -1327,7 +1327,7 @@ test('le bouton principal informe explicitement de la transmission des données 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0, 'aucun bouton de calcul ne doit être affiché');
     assert.equal(await page.locator('#urssafCalculateBtn').count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
   } finally {
     await context.close();
   }
