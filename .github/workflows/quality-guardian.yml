@@ -11,7 +11,6 @@ on:
 
 permissions:
   contents: read
-  security-events: write
 
 concurrency:
   group: onnet-security-guardian-${{ github.workflow }}-${{ github.ref }}
@@ -39,6 +38,9 @@ jobs:
     name: CodeQL security analysis
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      security-events: write
     steps:
       - name: Checkout
         uses: actions/checkout@v7
