@@ -1483,6 +1483,43 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
   }
 });
 
+
+test('la première offre peut être renommée et sauvegardée', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').fill('Mon poste renommé');
+    await page.locator('#editOfferSave').click();
+    await page.waitForFunction(() => {
+      const state=JSON.parse(localStorage.getItem('onnet.state.v1'));
+      return state?.scenarios?.[0]?.name==='Mon poste renommé';
+    });
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(),'Mon poste renommé');
+    await page.reload();
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(),'Mon poste renommé');
+  } finally {
+    await context.close();
+  }
+});
+
+test('le mode sombre est activable et mémorisé après rechargement', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const root=page.locator('html');
+    await page.locator('#themeToggle').click();
+    assert.equal(await root.getAttribute('data-theme'),'dark');
+    assert.equal(await page.locator('#themeToggle').getAttribute('aria-pressed'),'true');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('onnet.theme')),'dark');
+    await page.reload();
+    assert.equal(await root.getAttribute('data-theme'),'dark');
+    await page.locator('#themeToggle').click();
+    assert.equal(await root.getAttribute('data-theme'),'light');
+    assert.equal(await page.evaluate(()=>localStorage.getItem('onnet.theme')),'light');
+  } finally {
+    await context.close();
+  }
+});
+
 test('les offres peuvent être renommées et la référence est choisie explicitement', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
