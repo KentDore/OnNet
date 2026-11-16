@@ -110,6 +110,9 @@ jobs:
     needs: test
     if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
+    concurrency:
+      group: onnet-html-sync-${{ github.event.pull_request.number }}
+      cancel-in-progress: false
     permissions:
       contents: write
     steps:
