@@ -31,10 +31,12 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Resolve the complete dependency lockfile
-        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Verify the committed lockfile is up to date
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          git diff --exit-code -- package-lock.json
 
-      - name: Audit runtime and development dependencies
+      - name: Audit committed runtime and development dependencies
         run: npm audit --package-lock-only --audit-level=high
 
   codeql:
