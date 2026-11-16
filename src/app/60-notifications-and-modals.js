@@ -259,7 +259,7 @@ function bindMutuelleTrFields(overlay, idPrefix){
 function formatSalaryInput(input){
   const value = parseNum(input.value);
   if(!(value > 0)) return;
-  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 15 }).format(value);
+  input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2 }).format(value);
 }
 
 function showOnboardingModal(){
@@ -342,6 +342,9 @@ function showOnboardingModal(){
 // silencieusement.
 
 function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
+  const initialSalary = Number.isFinite(Number(brutPrefill)) && Number(brutPrefill) > 0
+    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, useGrouping: false }).format(Number(brutPrefill))
+    : '';
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
     <div class="field-row" style="margin:0 0 14px;">
@@ -358,7 +361,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
     </div>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ''}" placeholder="Ex. 2 500" autocomplete="off">
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${initialSalary}" placeholder="Ex. 2 500" autocomplete="off">
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -383,13 +386,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   const periodToggle = overlay.querySelector('#modalAddPeriod');
   const periodLabel = overlay.querySelector('#modalAddLabel');
   let salaryPeriod = 'mois';
+  let exactSalaryValue = parseNum(brutPrefill);
   periodToggle.querySelectorAll('button').forEach(button => {
     button.addEventListener('click', () => {
       if(button.dataset.period === salaryPeriod) return;
       const current = parseNum(input.value);
       if(current > 0){
-        const converted = salaryPeriod === 'mois' ? current * 12 : current / 12;
-        input.value = String(converted).replace('.', ',');
+        exactSalaryValue = salaryPeriod === 'mois' ? current * 12 : current / 12;
+        input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
       }
       salaryPeriod = button.dataset.period;
       periodToggle.querySelectorAll('button').forEach(x => {
@@ -425,7 +429,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   };
   const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
   updateSubmitState();
-  input.addEventListener('input', updateSubmitState);
+  input.addEventListener('input', () => {
+    exactSalaryValue = parseNum(input.value);
+    updateSubmitState();
+  });
   input.addEventListener('blur', () => formatSalaryInput(input));
   input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
   submitBtn.addEventListener('click', trySubmit);
