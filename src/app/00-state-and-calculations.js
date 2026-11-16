@@ -99,7 +99,10 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   const hasConsent = urssafSessionState.isConsentGranted();
-  if(status) status.classList.toggle('requires-consent', !hasConsent);
+  if(status){
+    status.classList.toggle('requires-consent', !hasConsent);
+    status.classList.toggle('has-consent-actions', hasConsent);
+  }
   if(consentGrant) consentGrant.hidden = hasConsent;
   if(consentRevoke) consentRevoke.hidden = !hasConsent;
   if(consentDetails) consentDetails.hidden = hasConsent;
