@@ -1573,9 +1573,13 @@ test('les offres peuvent être renommées et la référence est choisie explicit
       const el = document.querySelector('#editOfferName');
       return el && document.activeElement === el && el.selectionStart === 0 && el.selectionEnd === el.value.length;
     }, { timeout: 5000 });
-    assert.equal(await page.locator('#editOfferName').evaluate(el => el.selectionStart), 0,
+    const selectedName = await page.locator('#editOfferName').evaluate(el => ({
+      value: el.value, start: el.selectionStart, end: el.selectionEnd
+    }));
+    assert.equal(selectedName.start, 0,
       'le nom existant est sélectionné automatiquement pour être remplacé sans l’effacer manuellement');
-    assert.equal(await page.locator('#editOfferName').evaluate(el => el.selectionEnd), 'Nouvelle offre'.length);
+    assert.equal(selectedName.end, selectedName.value.length,
+      'la sélection couvre la totalité du nom, quelle que soit sa longueur');
     assert.equal(await page.locator('#editOfferName').locator('xpath=..').innerText().then(text => text.includes('facultatif')), false,
       'le libellé ne présente plus le nom comme facultatif');
     await page.locator('#editOfferName').fill('Proposition Rennes');
