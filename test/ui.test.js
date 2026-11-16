@@ -1578,7 +1578,8 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     const nameInput = page.locator('#editOfferName');
-    assert.notDeepEqual(await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd]), [0, await nameInput.evaluate(el => el.value.length)],
+    const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
+    assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
       'le nom reste non sélectionné à l’ouverture');
     await nameInput.click();
     const selectedName = await nameInput.evaluate(el => ({
