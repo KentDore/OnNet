@@ -1642,6 +1642,236 @@ body.salary-editor-open .integrated-offers{display:none!important}
 }
 
 
+
+/* ---------- Cohérence visuelle du thème sombre ---------- */
+/* Les écrans principaux ont des styles éditoriaux explicites : ils doivent
+   suivre les mêmes surfaces et contrastes que les composants génériques. */
+:root[data-theme="dark"]{
+  --maquette-bg:#141a18;
+  --maquette-green:#65c99a;
+  --maquette-dark:#a8e4c2;
+}
+:root[data-theme="dark"] body{
+  background:linear-gradient(180deg,#171e1b 0%,var(--bg) 100%);
+}
+:root[data-theme="dark"] header.hero{
+  background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
+  border-color:#34463b;
+  box-shadow:0 8px 28px rgba(0,0,0,.22);
+}
+:root[data-theme="dark"] header.hero h1,
+:root[data-theme="dark"] .comparison-subhead h2,
+:root[data-theme="dark"] #comparePanel .bars-title,
+:root[data-theme="dark"] .maquette-top>.brand{
+  color:#edf5ef;
+}
+:root[data-theme="dark"] header.hero .intro,
+:root[data-theme="dark"] header.hero .trust,
+:root[data-theme="dark"] header.hero .trust strong{
+  color:#b7c8bd;
+}
+:root[data-theme="dark"] header.hero .eyebrow,
+:root[data-theme="dark"] .maquette-top>.brand .brand-accent{
+  color:#75d6a5;
+}
+:root[data-theme="dark"] header.hero .trust{
+  background:#24352b;
+  border-color:#3a5142;
+}
+:root[data-theme="dark"] header.hero .trust-icon{
+  background:#294637;
+  color:#8be0b2;
+}
+:root[data-theme="dark"] header.hero .wave path:nth-child(1){fill:#244332}
+:root[data-theme="dark"] header.hero .wave path:nth-child(2){fill:#28563d}
+:root[data-theme="dark"] header.hero .wave path:nth-child(3){fill:#367b54}
+
+:root[data-theme="dark"] #comparePanel,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .unified-salary-panel{
+  background:#1c2420;
+  border-color:#344139;
+  box-shadow:0 8px 26px rgba(0,0,0,.18);
+}
+:root[data-theme="dark"] .panel-advanced,
+:root[data-theme="dark"] .advanced-scenarios{
+  background:#1b2420;
+  border-color:#3b4a41;
+  color:#c3d0c7;
+}
+:root[data-theme="dark"] .advanced-scenarios>summary{color:#c3d0c7}
+:root[data-theme="dark"] .comparison-subhead h2{color:#e5f0e8}
+:root[data-theme="dark"] .comparison-period{
+  background:#222d27;
+  border-color:#3a4b40;
+}
+:root[data-theme="dark"] .comparison-period>span{color:#bdcfc3}
+:root[data-theme="dark"] .comparison-period-tabs{background:#17201b}
+:root[data-theme="dark"] .comparison-period-tabs button{color:#aebdb3}
+:root[data-theme="dark"] .comparison-period-tabs button[aria-pressed=true]{
+  background:#397b58;color:#fff;
+}
+:root[data-theme="dark"] .offer-tabs{background:#17221c}
+:root[data-theme="dark"] .offer-tab{color:#b8c9be}
+:root[data-theme="dark"] .offer-tab.active{
+  background:#293a30;border-color:#496653;color:#a2e3bd;
+}
+:root[data-theme="dark"] .offer-tab small{color:#9cac9f}
+:root[data-theme="dark"] .comparison-subhead-actions .add-salary{
+  background:#263d30;border-color:#42644d;color:#a1e1b9;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary{
+  background:linear-gradient(145deg,#263a2e,#202d25);
+  border-color:#3c6248;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>span{color:#d5e8da}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>strong{color:#91dfb0}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-comparison-base{
+  border-color:rgba(125,207,157,.2);color:#aebfb3;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-item{
+  background:#222c26;border-color:#3b4a40;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-label{color:#d0e0d5}
+:root[data-theme="dark"] #benchmarkMount .benchmark-value{color:#a5e3bb}
+:root[data-theme="dark"] #benchmarkMount .benchmark-meta,
+:root[data-theme="dark"] #benchmarkMount .benchmark-details p{color:#a4b3a9}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result{
+  background:#294735;color:#a8e6bd;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result.benchmark-negative{
+  background:#482d25;color:#f0a98b;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details{border-color:#3b4a40}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details summary{color:#8cdbac}
+
+:root[data-theme="dark"] .offer-comparison-card,
+:root[data-theme="dark"] .comparison-offer-card{
+  background:#222c26;border-color:#3b4a40;color:#e3ece5;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] .offer-comparison-card.is-reference,
+:root[data-theme="dark"] .comparison-offer-card.is-reference{
+  background:linear-gradient(145deg,#293d30,#222d26);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] .offer-comparison-card h4,
+:root[data-theme="dark"] .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] .offer-comparison-index,
+:root[data-theme="dark"] .offer-comparison-meta,
+:root[data-theme="dark"] .comparison-offer-index,
+:root[data-theme="dark"] .comparison-offer-value-label,
+:root[data-theme="dark"] .comparison-offer-value small,
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] .offer-comparison-net,
+:root[data-theme="dark"] .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] .offer-reference-label,
+:root[data-theme="dark"] .comparison-reference-badge{
+  background:#304c39;color:#a8e5bc;border-color:#45664d;
+}
+:root[data-theme="dark"] .offer-comparison-edit,
+:root[data-theme="dark"] .comparison-offer-head .offer-comparison-edit{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .insight{background:#26382d;color:#d5e6d9}
+:root[data-theme="dark"] #comparePanel .insight strong,
+:root[data-theme="dark"] .offer-net-details summary{color:#8cdbac}
+:root[data-theme="dark"] #comparePanel .insight-caption{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .insight.neutral{background:#29332d;color:#b7c5bb}
+
+:root[data-theme="dark"] .module-card,
+:root[data-theme="dark"] .module-card .module-body{
+  background:#202a24;border-color:#39483e;
+}
+:root[data-theme="dark"] .module-name{color:#e0ebe3}
+:root[data-theme="dark"] .module-desc,
+:root[data-theme="dark"] .modules-sub{color:#a9b8ae}
+:root[data-theme="dark"] .module-icon{background:#2a4032;color:#8fdbac}
+:root[data-theme="dark"] .module-card.is-open .module-icon{background:#397b58;color:#fff}
+:root[data-theme="dark"] .module-switch{background:#46534a}
+:root[data-theme="dark"] .panel-nested,
+:root[data-theme="dark"] .onboarding-optional{border-color:#39483f}
+:root[data-theme="dark"] .onboarding-optional .optional-label{
+  background:#27332b;border-color:#405047;color:#b4c3b8;
+}
+:root[data-theme="dark"] .share-banner,
+:root[data-theme="dark"] .modal-share-input{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+}
+:root[data-theme="dark"] .header-menu-panel{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+  box-shadow:0 12px 32px rgba(0,0,0,.38);
+}
+:root[data-theme="dark"] .header-menu-panel button{color:#dce8df}
+:root[data-theme="dark"] .header-menu-panel button:hover{background:#2a4032}
+:root[data-theme="dark"] .header-theme-setting{color:#b9c8be}
+:root[data-theme="dark"] .header-theme-setting select{
+  background:#17201b;border-color:#46564b;color:#e3ece5;
+}
+:root[data-theme="dark"] .maquette-top>.brand .brand-version{
+  background:#29352e;color:#aebdb3;
+}
+:root[data-theme="dark"] .add-salary,
+:root[data-theme="dark"] .offer-comparison-name,
+:root[data-theme="dark"] .offer-rename-button,
+:root[data-theme="dark"] .salary-editor-back{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea{
+  background-color:#18211c;border-color:#46564b;color:#e5eee7;
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:#8e9f93}
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus{
+  border-color:#70c995;box-shadow:0 0 0 2px rgba(112,201,149,.18);
+}
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-actions{
+  background:#202a24;border-color:#3b4a40;color:#e2ebe4;
+}
+:root[data-theme="dark"] .modal-btn-cancel{
+  background:#29352e;border-color:#46564b;color:#e0eae3;
+}
+:root[data-theme="dark"] .toast{background:#e1eee5;color:#18221c}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .disclaimer-summary,
+:root[data-theme="dark"] .more-body{color:#bdc9c0}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .more-body{border-color:#39483f}
+:root[data-theme="dark"] .result-source,
+:root[data-theme="dark"] .urssaf-status{color:#c4d0c7}
+:root[data-theme="dark"] .urssaf-status-dot{background:#70d49a}
+:root[data-theme="dark"] .benchmark-positive{color:#8cdbac}
+:root[data-theme="dark"] .benchmark-negative{color:#f0a98b}
+:root[data-theme="dark"] .commune-suggestions{
+  background:#202a24;border-color:#46564b;
+}
+:root[data-theme="dark"] .commune-option{border-color:#39483f;color:#e0eae3}
+:root[data-theme="dark"] .commune-option:hover,
+:root[data-theme="dark"] .commune-option:focus-visible{background:#2a4032}
+:root[data-theme="dark"] .commune-search-status{color:#aab9ae}
+:root[data-theme="dark"] .onboarding-mutuelle-icon,
+:root[data-theme="dark"] .onboarding-consent-icon,
+:root[data-theme="dark"] .onboarding-tr-icon{
+  background:#294735;color:#8cdbac;
+}
+:root[data-theme="dark"] .stack-seg-net,
+:root[data-theme="dark"] .wf-stack-net{filter:brightness(1.18) saturate(.85)}
+:root[data-theme="dark"] .stack-seg{box-shadow:0 1px 2px rgba(0,0,0,.28)}
+:root[data-theme="dark"] .skip-link{color:#102017}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
