@@ -165,15 +165,16 @@ async function refreshOfficialSmic(forceRetry){
   if(currentSmicState.status === 'ready' && !forceRetry) return currentSmicState;
   urssafSessionState.setOfficialSmicState({ status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null });
   updateUrssafStatus(getCurrentComputed());
+  const requestSignal = urssafConsentController.signal;
   officialSmicPromise = (async () => {
     try{
       if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
         throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
-        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch, signal:urssafConsentController.signal }
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch, signal:requestSignal }
       );
-      if(urssafConsentController.signal.aborted) return urssafSessionState.getOfficialSmicState();
+      if(requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
@@ -184,7 +185,7 @@ async function refreshOfficialSmic(forceRetry){
     }finally{
       officialSmicPromise = null;
       updateComputed({skipUrssafSchedule:true});
-      if(urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === 'ready') scheduleUrssafCalculations(true,false);
+      if(!requestSignal.aborted && urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === 'ready') scheduleUrssafCalculations(true,false);
     }
     return urssafSessionState.getOfficialSmicState();
   })();
