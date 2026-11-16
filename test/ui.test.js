@@ -1850,7 +1850,7 @@ test('le thème automatique suit le système et les choix manuels restent priori
     const darkSurfaces = await page.evaluate(() => {
       const read = selector => {
         const style = getComputedStyle(document.querySelector(selector));
-        return { background: style.backgroundColor, color: style.color };
+        return { background: style.backgroundColor, backgroundImage: style.backgroundImage, color: style.color };
       };
       return {
         body: read('body'),
@@ -1864,8 +1864,8 @@ test('le thème automatique suit le système et les choix manuels restent priori
       assert.notEqual(surface.background, 'rgb(255, 255, 255)',
         `la surface ${name} ne doit pas rester blanche en thème sombre`);
     }
-    assert.notEqual(darkSurfaces.hero.background, darkSurfaces.body.background,
-      'le bandeau principal doit être visuellement distinct du fond de page');
+    assert.match(darkSurfaces.hero.backgroundImage, /linear-gradient/,
+      'le bandeau principal doit conserver son dégradé dédié en thème sombre');
     assert.notEqual(darkSurfaces.comparison.background, darkSurfaces.body.background,
       'le comparatif doit avoir une surface dédiée en thème sombre');
     await page.locator('#headerMenu summary').click();
