@@ -906,3 +906,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
   border:1px solid var(--line);border-radius:12px;
   background:var(--surface-secondary,var(--surface));color:var(--ink-soft);
 }
+
+/* Surclasse la règle historique qui masque les statuts sans erreur. */
+.urssaf-status.requires-consent:not(.is-error):not(.has-diagnostics){
+  display:block!important;
+}
