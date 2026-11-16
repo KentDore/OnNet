@@ -104,6 +104,8 @@ jobs:
         run: node --test test/calc.test.js
       - name: Tester les utilitaires de présentation
         run: node --test test/ui-utils.test.js
+      - name: Tester le versioning SemVer
+        run: node --test test/semver-version.test.js
       - name: Tester le build
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
