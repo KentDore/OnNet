@@ -33,7 +33,7 @@ function updateComputed(options = {}){
     if(warnings){
       warnings.hidden = !(r && r.warnings && r.warnings.length);
       warnings.innerHTML = r && r.warnings && r.warnings.length
-        ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>`
+        ? `<details><summary>Voir les messages (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>`
         : '';
     }
     const trWarn = !!(r && r.tr && r.tr.reintegre > 0.005);

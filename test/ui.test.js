@@ -534,14 +534,26 @@ test('affiche les avertissements Urssaf sans exposer les diagnostics internes de
   });
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
-    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Avertissements du calcul');
+    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Informations Urssaf');
     await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
+    assert.match(await page.locator('#urssafWarnings').innerText(), /Messages issus du calcul officiel Mon-entreprise\./);
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
     assert.doesNotMatch(diagnostics, /catégorie professionnelle|Valeur par défaut utilisée/);
-    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1,
-      'les avertissements utiles restent accessibles au niveau de chaque offre');
+    assert.equal(await page.locator('#cardsBody .result-source details summary').first().innerText(), 'Voir les messages (1)',
+      'la source Urssaf doit être explicite sur chaque offre');
+    // Vérifie que le libellé reste cohérent après un second calcul, pas seulement
+    // lors du rendu initial de la carte.
+    await openSalaryEditor(page);
+    await page.locator('#editOfferGross').fill('2400');
+    await page.locator('#editOfferSave').click();
+    await page.waitForFunction(() => {
+      const card = document.querySelector('#cardsBody [data-card]');
+      return card?.dataset.resultState === 'ready' &&
+        card.querySelector('.result-source details summary')?.textContent === 'Voir les messages (1)';
+    });
+    assert.equal(await page.locator('#cardsBody .result-source details summary').first().innerText(), 'Voir les messages (1)');
   } finally {
     await context.close();
   }
