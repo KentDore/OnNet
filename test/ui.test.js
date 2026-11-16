@@ -1917,6 +1917,7 @@ test('le thème automatique suit le système et les choix manuels restent priori
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
       'le retour au mode automatique doit reprendre la préférence système');
     await page.emulateMedia({ colorScheme: 'light' });
+    await page.waitForFunction(() => document.documentElement.dataset.theme === 'light', null, { timeout: 3000 });
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
       'un changement système doit être suivi sans recharger la page');
     assert.equal(await theme.inputValue(), 'auto');
