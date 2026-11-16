@@ -809,3 +809,36 @@ body.salary-editor-open .integrated-offers{display:none!important}
 :root[data-theme="dark"] .offer-comparison-remove:focus-visible{
   outline-color:#83d6a4;
 }
+
+
+/* Le sélecteur #comparePanel des styles de base est plus spécifique que
+   les règles sombres génériques : rétablir explicitement toute la palette. */
+:root[data-theme="dark"] #comparePanel .comparison-offer-card{
+  background:#222c26;color:#e3ece5;border-color:#3b4a40;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{
+  background:linear-gradient(155deg,#293d30 0%,#222d26 72%);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] #comparePanel .comparison-offer-index,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value-label,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value small,
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] #comparePanel .comparison-reference-badge{
+  background:#304c39;border-color:#45664d;color:#a8e5bc;
+}
+:root[data-theme="dark"] #comparePanel .comparison-set-reference{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
