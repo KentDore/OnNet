@@ -1838,3 +1838,33 @@ test('les actions tactiles utiles vibrent brièvement seulement si l’API est d
   }
 });
 
+
+
+test('le thème automatique suit le système et les choix manuels restent prioritaires', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent: false });
+  try {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.reload();
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
+      'le thème sombre du système doit être appliqué dès le chargement');
+    await page.locator('#headerMenu summary').click();
+    const theme = page.locator('#themePreference');
+    assert.equal(await theme.inputValue(), 'auto');
+
+    await theme.selectOption('light');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
+      'un choix manuel clair doit primer sur le système');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
+
+    await theme.selectOption('auto');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
+      'le retour au mode automatique doit reprendre la préférence système');
+    await page.emulateMedia({ colorScheme: 'light' });
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
+      'un changement système doit être suivi sans recharger la page');
+    assert.equal(await theme.inputValue(), 'auto');
+  } finally {
+    await context.close();
+  }
+});
