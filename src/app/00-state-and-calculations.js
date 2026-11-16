@@ -144,14 +144,13 @@ function updateUrssafStatus(computed){
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
   if(smicState.status === 'ready') ready.push(smicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
-  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
   const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
   statusText.textContent = 'Calculs à jour.';
-  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
-    diagnosticsList.innerHTML = [
-      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
-      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
-    ].join('');
+  // Les missingVariables Publicodes sont des diagnostics internes du modèle :
+  // ils recensent aussi des branches et valeurs par défaut non actionnables.
+  // Seuls les avertissements explicites de l'API sont présentés à l'utilisateur.
+  if(diagnostics && diagnosticsList && warnings.length){
+    diagnosticsList.innerHTML = warnings.map(warning => `<li>${esc(warning)}</li>`).join('');
     diagnostics.hidden = false;
     if(status) status.classList.add('has-diagnostics');
   }
