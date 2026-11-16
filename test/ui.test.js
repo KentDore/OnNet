@@ -1614,6 +1614,24 @@ test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', 
 });
 
 
+test('le changement de période affiche un salaire arrondi sans dérive de conversion', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#maquetteAddSalary').click();
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddPeriod [data-period="mois"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '2458,33',
+      'le mensuel doit être affiché au centime, sans longue décimale flottante');
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '29500',
+      'le retour à l’annuel doit conserver le montant initial');
+    await page.locator('#modalAddCancel').click();
+  } finally {
+    await context.close();
+  }
+});
+
 test('compare correctement une offre 35 h et une offre 39 h sur les trois périodes', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
@@ -1921,6 +1939,42 @@ test('le thème automatique suit le système et les choix manuels restent priori
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
       'un changement système doit être suivi sans recharger la page');
     assert.equal(await theme.inputValue(), 'auto');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('le renommage reste enregistrable avec des titres-restaurant historiques incomplets et le nom reste sans fond en thème sombre', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.evaluate(() => {
+      const state=JSON.parse(localStorage.getItem('onnet.state.v1'));
+      state.scenarios[0].joursResto=0;
+      state.scenarios[0].valeurResto=8;
+      state.scenarios[0].partResto=50;
+      localStorage.setItem('onnet.state.v1',JSON.stringify(state));
+      localStorage.setItem('onnet.theme.preference','dark');
+    });
+    await page.reload();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save=page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(),true,
+      'un paramétrage historique inchangé ne doit pas bloquer le simple renommage');
+    await page.locator('#editOfferName').fill('Poste renommé');
+    await save.click();
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.scenarios[0].name,'Poste renommé');
+    assert.equal(saved.scenarios[0].joursResto,0,'les paramètres historiques restent inchangés');
+    assert.equal(saved.scenarios[0].valeurResto,8,'les paramètres historiques restent inchangés');
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+    const nameStyle=await page.locator('#maquetteYourSalary .offer-comparison-name').first().evaluate(el=>{
+      const style=getComputedStyle(el);
+      return {background:style.backgroundColor,backgroundImage:style.backgroundImage};
+    });
+    assert.equal(nameStyle.background,'rgba(0, 0, 0, 0)',
+      'le nom de l’offre ne doit pas avoir de fond en thème sombre');
+    assert.equal(nameStyle.backgroundImage,'none');
   } finally {
     await context.close();
   }
