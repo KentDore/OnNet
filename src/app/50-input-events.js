@@ -212,6 +212,15 @@ async function removeScenario(id){
   }
 }
 
+document.getElementById('urssafConsentGrant')?.addEventListener('click', () => {
+  grantUrssafConsent();
+  scheduleUrssafCalculations(true, false);
+});
+
+document.getElementById('urssafConsentRevoke')?.addEventListener('click', () => {
+  revokeUrssafConsent();
+});
+
 document.getElementById('resetBtn').addEventListener('click', async () => {
   const ok = await showConfirmModal(
     'Effacer tous les salaires enregistrés et revenir à l\'exemple de départ ? Cette action est irréversible.',
