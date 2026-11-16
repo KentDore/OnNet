@@ -713,7 +713,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
   background:#29352e;color:#aebdb3;
 }
 :root[data-theme="dark"] .add-salary,
-:root[data-theme="dark"] .offer-comparison-name,
 :root[data-theme="dark"] .offer-rename-button,
 :root[data-theme="dark"] .salary-editor-back{
   background:#263a2e;border-color:#405c49;color:#a3dfb8;
