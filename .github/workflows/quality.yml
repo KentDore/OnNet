@@ -27,11 +27,12 @@ jobs:
         run: |
           VERSION="$(node -e "const p=require('./package.json'); if(typeof p.version !== 'string' || !/^\\d+\\.\\d+\\.\\d+(?:-[0-9A-Za-z.-]+)?$/.test(p.version)) process.exit(1); process.stdout.write(p.version)")"
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-      - name: Installer Playwright
-        run: |
-          npm install --no-save --no-package-lock --fetch-retries=5 --fetch-retry-mintimeout=10000 --fetch-retry-maxtimeout=120000 playwright@1.55.1 eslint@10.15.0 stylelint@18.0.0 esbuild@0.28.2
-          # Les dépendances runtime sont fournies par l'image Ubuntu du runner ; éviter apt-get et ses miroirs réseau.
-          npx --no-install playwright install chromium
+      - name: Générer le lockfile complet
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+      - name: Installer les dépendances verrouillées
+        run: npm ci --no-audit --no-fund
+      - name: Installer Chromium pour Playwright
+        run: ./node_modules/.bin/playwright install chromium
       - name: Générer les fichiers HTML depuis les sources
         env:
           VERSION: ${{ steps.meta.outputs.version }}
@@ -88,12 +89,20 @@ jobs:
         run: node --test test/build.test.js
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
-      - name: Transmettre le HTML généré au job de synchronisation
+      - name: Préparer le HTML et le lockfile validés
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          VERSION: ${{ steps.meta.outputs.version }}
+        run: |
+          mkdir -p "$RUNNER_TEMP/onnet-output"
+          cp "$RUNNER_TEMP/Onnet-$VERSION.html" "$RUNNER_TEMP/onnet-output/Onnet-$VERSION.html"
+          cp package-lock.json "$RUNNER_TEMP/onnet-output/package-lock.json"
+      - name: Transmettre le HTML et le lockfile au job de synchronisation
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         uses: actions/upload-artifact@v7
         with:
           name: onnet-html-${{ github.run_id }}
-          path: ${{ runner.temp }}/Onnet-${{ steps.meta.outputs.version }}.html
+          path: ${{ runner.temp }}/onnet-output/*
           if-no-files-found: error
           retention-days: 1
       - name: Publier les captures visuelles desktop et mobile
@@ -142,17 +151,20 @@ jobs:
           fi
 
           GENERATED_HTML="$RUNNER_TEMP/onnet-html/Onnet-$VERSION.html"
+          GENERATED_LOCK="$RUNNER_TEMP/onnet-html/package-lock.json"
           test -s "$GENERATED_HTML"
+          test -s "$GENERATED_LOCK"
           cp "$GENERATED_HTML" index.html
           cp "$GENERATED_HTML" "Onnet-$VERSION.html"
+          cp "$GENERATED_LOCK" package-lock.json
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- index.html "Onnet-$VERSION.html"
+          git add -- index.html "Onnet-$VERSION.html" package-lock.json
           if git diff --cached --quiet; then
             echo "Les HTML sont déjà synchronisés."
             exit 0
           fi
 
-          git commit -m "build: synchroniser les HTML générés"
+          git commit -m "build: synchroniser HTML générés et lockfile"
           git push origin "HEAD:refs/heads/$PR_BRANCH"

@@ -4,7 +4,7 @@
   "private": true,
   "description": "Comparateur de salaires utilisant l’API officielle Mon-entreprise / Urssaf.",
   "engines": {
-    "node": ">=20"
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
   },
   "scripts": {
     "build:publicodes": "node scripts/build-publicodes.js",
@@ -16,8 +16,8 @@
     "diagnose:overtime-50": "node scripts/diagnose-overtime-50.mjs",
     "test:urssaf-api": "node --test test/urssaf-api-client.test.mjs",
     "test:all": "npm run test:publicodes && npm run test:urssaf-api && node --test test/ui-utils.test.js test/urssaf-calculation.test.mjs test/rate-limited-fetch.test.mjs test/smic-reference.test.mjs test/urssaf-calculation-cache.test.mjs test/urssaf-session-state.test.mjs test/persistence-codec.test.mjs",
-    "lint:js": "npx --yes eslint@10.15.0 --config eslint.config.mjs \"src/**/*.js\" \"src/**/*.mjs\" \"scripts/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.js\" \"test/**/*.mjs\"",
-    "lint:css": "npx --yes stylelint@18.0.0 --config .stylelintrc.json \"src/styles/**/*.css\"",
+    "lint:js": "eslint --config eslint.config.mjs \"src/**/*.js\" \"src/**/*.mjs\" \"scripts/**/*.js\" \"scripts/**/*.mjs\" \"test/**/*.js\" \"test/**/*.mjs\"",
+    "lint:css": "stylelint --config .stylelintrc.json \"src/styles/**/*.css\"",
     "lint": "npm run lint:js && npm run lint:css"
   },
   "dependencies": {
@@ -25,6 +25,9 @@
     "publicodes": "1.10.4"
   },
   "devDependencies": {
-    "esbuild": "0.28.2"
+    "esbuild": "0.28.2",
+    "eslint": "10.15.0",
+    "playwright": "1.65.1",
+    "stylelint": "18.0.0"
   }
 }

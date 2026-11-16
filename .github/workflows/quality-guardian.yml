@@ -31,7 +31,16 @@ jobs:
           node-version: 22
           package-manager-cache: false
 
-      - name: Audit locked dependencies
+      - name: Verify the committed lockfile is up to date
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          if [ -n "$(git status --porcelain -- package-lock.json)" ]; then
+            echo "package-lock.json n'est pas synchronisé avec package.json ; le lockfile doit être mis à jour dans la branche."
+            git status --short -- package-lock.json
+            exit 1
+          fi
+
+      - name: Audit committed runtime and development dependencies
         run: npm audit --package-lock-only --audit-level=high
 
   codeql:

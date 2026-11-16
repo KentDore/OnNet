@@ -52,15 +52,16 @@ permissions:
 jobs:
   validate:
     name: Validation locale (sans dépendance à l'API distante)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
+      - name: Resolve dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Test adapters and API client
@@ -76,7 +77,7 @@ jobs:
           grep -q 'OnNetUrssafApi' dist/Onnet-publicodes-prototype.html
           grep -q 'mon-entreprise.urssaf.fr/api/v1/evaluate' dist/Onnet-publicodes-prototype.html
       - name: Upload standalone prototype
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: onnet-urssaf-api-prototype
           path: dist/Onnet-publicodes-prototype.html
@@ -89,15 +90,16 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event_name == 'push' && github.ref == 'refs/heads/migration/publicodes-urssaf-final') ||
       (github.event_name == 'pull_request' && github.event.pull_request.head.ref == 'migration/publicodes-urssaf-final')
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
-          cache: npm
+      - name: Resolve dependency lockfile
+        run: npm install --package-lock-only --ignore-scripts --no-audit --no-fund
       - name: Install dependencies
         run: npm ci --no-audit --no-fund
       - name: Compare with the official Urssaf API
