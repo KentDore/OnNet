@@ -51,8 +51,8 @@ Do not duplicate these jobs in the Security Guardian workflow. Keep this pipelin
 The Security Guardian runs on pull requests to `main`, pushes to `main`, manual dispatch, and every Tuesday at 03:17 UTC.
 
 It deliberately focuses on checks that the functional pipeline does not provide:
-- Resolve the declared runtime and development dependencies into a lockfile without executing install scripts.
-- Run `npm audit --package-lock-only --audit-level=high` against that complete dependency tree, including Playwright, ESLint and Stylelint.
+- Regenerate the lockfile without executing lifecycle scripts and fail if that would change the committed `package-lock.json`; this enforces that the committed lock matches `package.json`.
+- Run `npm audit --package-lock-only --audit-level=high` against the committed dependency tree, including Playwright, ESLint and Stylelint.
 - CodeQL JavaScript/TypeScript analysis using the `security-extended` query suite.
 
 It does not rebuild the application or repeat the browser/unit suite. This separation reduces duplicate CI execution while keeping the security checks independently visible.
