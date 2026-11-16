@@ -29,7 +29,8 @@ This is the primary quality pipeline. It already runs:
 - Playwright/Chromium browser journeys.
 - Generation of the standalone HTML artifacts in the read-only test job.
 - Browser test and visual artifact publication.
-- Synchronization of tested HTML artifacts in a separate, write-enabled job for eligible same-repository pull requests. The write-enabled job does not execute repository scripts or tests.
+- Reproducible installation from the full `package-lock.json`, including runtime and development tools.
+- Synchronization of the tested HTML and generated lockfile in a separate, write-enabled job for eligible same-repository pull requests. The write-enabled job does not execute repository scripts or tests.
 
 Do not duplicate these jobs in the Security Guardian workflow. Keep this pipeline as the required functional gate.
 
@@ -38,7 +39,8 @@ Do not duplicate these jobs in the Security Guardian workflow. Keep this pipelin
 The Security Guardian runs on pull requests to `main`, pushes to `main`, manual dispatch, and every Tuesday at 03:17 UTC.
 
 It deliberately focuses on checks that the functional pipeline does not provide:
-- `npm audit --package-lock-only --audit-level=high` against the committed lockfile.
+- Resolve the declared runtime and development dependencies into a lockfile without executing install scripts.
+- Run `npm audit --package-lock-only --audit-level=high` against that complete dependency tree, including Playwright, ESLint and Stylelint.
 - CodeQL JavaScript/TypeScript analysis using the `security-extended` query suite.
 
 It does not rebuild the application or repeat the browser/unit suite. This separation reduces duplicate CI execution while keeping the security checks independently visible.
@@ -76,7 +78,9 @@ The repository rulesets listing currently returned no rulesets. The branch-prote
 
 ## Security boundaries
 
-- `npm audit` checks known advisories in the lockfile; it is not a complete security audit.
+- `npm audit` checks known advisories in the runtime and development dependency lockfile; it is not a complete security audit.
+- Playwright, ESLint, Stylelint and esbuild are pinned in `devDependencies`; lint scripts use the local locked binaries instead of downloading tools through `npx --yes`.
+- The CI regenerates the lockfile without lifecycle scripts before `npm ci`, then publishes that exact lockfile alongside the tested HTML artifact. This keeps first-time dependency changes auditable while preserving the read-only/write-separated job boundary.
 - CodeQL is static analysis; it does not prove the absence of vulnerabilities.
 - GitHub Pages does not provide application-server controls or server-side secret storage.
 - Browser local storage and URL fragments are not encrypted. Do not place credentials or sensitive personal data in them.
