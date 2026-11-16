@@ -90,7 +90,7 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   if(!statusText) return;
   const status = document.getElementById('urssafStatus');
-  if(status) status.classList.remove('is-error','has-diagnostics');
+  if(status) status.classList.remove('is-error','has-diagnostics','requires-consent');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
   const consentGrant = document.getElementById('urssafConsentGrant');
@@ -99,6 +99,7 @@ function updateUrssafStatus(computed){
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
   const hasConsent = urssafSessionState.isConsentGranted();
+  if(status) status.classList.toggle('requires-consent', !hasConsent);
   if(consentGrant) consentGrant.hidden = hasConsent;
   if(consentRevoke) consentRevoke.hidden = !hasConsent;
   if(consentDetails) consentDetails.hidden = hasConsent;
