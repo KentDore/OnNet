@@ -1867,7 +1867,7 @@ test('le thème automatique suit le système et les choix manuels restent priori
 
     const textContrasts = await page.evaluate(() => {
       const luminance = color => {
-        const values = color.match(/[\\d.]+/g)?.slice(0, 3).map(Number);
+        const values = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
         if (!values || values.length !== 3) return null;
         const channels = values.map(value => {
           const channel = value / 255;
