@@ -940,6 +940,11 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
+      'le nom existant doit être entièrement sélectionné à l’ouverture pour être remplacé immédiatement');
+    await page.locator('#editOfferName').pressSequentially('Nouvelle offre');
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Nouvelle offre',
+      'la saisie doit remplacer le nom existant sans suppression manuelle');
     assert.equal(await page.locator('#editOfferCommune').count(), 0);
     assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
