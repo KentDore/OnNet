@@ -8,6 +8,7 @@ let idCounter = 0;
 // sans persistance locale ni stockage dans un global mutable.
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
+let urssafConsentController = new AbortController();
 const urssafCalculationCache = createUrssafCalculationCache({ maxResults:100 });
 const urssafSessionState = createUrssafSessionState();
 const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssaf.consent.v1';
@@ -23,6 +24,7 @@ try{
 }
 
 function grantUrssafConsent(){
+  if(urssafConsentController.signal.aborted) urssafConsentController = new AbortController();
   urssafSessionState.grantConsent();
   try{
     localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'granted');
@@ -33,6 +35,8 @@ function grantUrssafConsent(){
 
 function revokeUrssafConsent(){
   urssafSessionState.revokeConsent();
+  // Interrompt les requêtes actives et marque celles en file comme annulées.
+  urssafConsentController.abort();
   try{
     localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
   }catch(error){
@@ -167,12 +171,14 @@ async function refreshOfficialSmic(forceRetry){
         throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
-        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch, signal:urssafConsentController.signal }
       );
+      if(urssafConsentController.signal.aborted) return urssafSessionState.getOfficialSmicState();
       if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
     }catch(error){
+      if(urssafConsentController.signal.aborted) return urssafSessionState.getOfficialSmicState();
       urssafSessionState.setOfficialSmicState({ status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
         error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' });
     }finally{
@@ -191,6 +197,8 @@ async function executeUrssafCalculations(generation, forceRetry){
     if(generation !== urssafGeneration) return;
   }
 
+  const requestSignal = urssafConsentController.signal;
+  if(requestSignal.aborted || !urssafSessionState.isConsentGranted()) return;
   const jobs = scenarios.map(s => Object.assign({},s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base,getSmicGross()) : null;
@@ -210,8 +218,9 @@ async function executeUrssafCalculations(generation, forceRetry){
         throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
-        buildUrssafInput(s,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch}
+        buildUrssafInput(s,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch, signal:requestSignal}
       );
+      if(requestSignal.aborted || generation !== urssafGeneration) return;
       // Une réponse valide reste réutilisable pour ses paramètres exacts,
       // même si une saisie plus récente a rendu son affichage obsolète.
       urssafCalculationCache.setResult(key,mapUrssafResultToOnNet(result));
