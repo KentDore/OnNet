@@ -125,7 +125,7 @@
   color:#244B36;
   opacity:1;
 }
-.urssaf-status:not(.is-error):not(.has-diagnostics){
+.urssaf-status:not(.is-error):not(.has-diagnostics):not(.has-consent-actions){
   display:none !important;
 }
 .urssaf-status.is-error{
