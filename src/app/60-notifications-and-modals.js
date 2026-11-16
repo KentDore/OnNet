@@ -117,7 +117,7 @@ function openModal(bodyHtml, opts){
       overlay.classList.add('show');
       const target = initialFocusSelector ? box.querySelector(initialFocusSelector) : box.querySelector('button, input');
       if(target) target.focus();
-      if(target && target.tagName === 'INPUT') target.select();
+      if(target && target.tagName === 'INPUT' && o.selectInitialText === true) target.select();
     });
   });
 }
@@ -507,7 +507,7 @@ function showEditScenarioModal(scenario){
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
+  const pending = openModal(html, { initialFocusSelector:'#editOfferName', selectInitialText:true, className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
