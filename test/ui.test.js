@@ -313,6 +313,54 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
   }
 });
 
+test('conserve l’autorisation Urssaf et les offres après rechargement sans réinitialisation', { timeout:60000 }, async () => {
+  const { context, page, calls } = await openApp({ consent:false });
+  try {
+    const salaryRequests = () => calls.bodies.filter(body =>
+      body.expressions.includes('salarié . rémunération . brut')
+    ).length;
+    const original = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.ok(original?.scenarios?.length, 'les offres existantes doivent être restaurées');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true,
+      'une autorisation absente doit être demandée sans effacer les offres');
+    assert.equal(salaryRequests(), 0,
+      'aucun salaire ne doit être transmis avant l’autorisation explicite');
+
+    await page.locator('#urssafConsentGrant').click();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.ok(salaryRequests() > 0, 'le calcul démarre après autorisation explicite');
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), 'granted');
+
+    await page.reload();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), false,
+      'l’autorisation enregistrée doit être restaurée après actualisation');
+    assert.equal(await page.locator('#urssafConsentRevoke').isVisible(), true);
+    const afterReload = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterReload.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      original.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      'les offres sont conservées à l’identique');
+
+    await page.locator('#urssafConsentRevoke').click();
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), null,
+      'le retrait doit supprimer uniquement l’autorisation');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true);
+    const afterRevoke = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterRevoke.scenarios.map(s => s.name), original.scenarios.map(s => s.name),
+      'retirer l’autorisation ne doit pas effacer les offres');
+  } finally {
+    await context.close();
+  }
+});
+
 test('la mutuelle affiche la part salarié sans exposer la part employeur', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true });
   try {
