@@ -428,9 +428,14 @@ function renderMaquetteControls(computedOverride){
         if(!button)return;
         const scenario=findScenario(Number(button.dataset.editOffer));
         if(!scenario) return;
+        const scenarioId = scenario.id;
         showEditScenarioModal(scenario).then(answers=>{
           if(!answers) return;
-          Object.assign(scenario,answers);
+          // Réacquérir l'objet par son identifiant après la fermeture asynchrone :
+          // une mise à jour intermédiaire peut avoir remplacé le tableau scenarios.
+          const currentScenario = findScenario(scenarioId);
+          if(!currentScenario) return;
+          Object.assign(currentScenario,answers);
           urssafSessionState.grantConsent();
           saveState();
           render();
