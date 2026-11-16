@@ -2055,7 +2055,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Détails du calcul</summary>
+        <summary>Avertissements du calcul</summary>
         <ul id="urssafWarningsList"></ul>
       </details>
       <div class="urssaf-consent-actions">
@@ -2688,7 +2688,6 @@ function mapUrssafResultToOnNet(result) {
     return {
       engine: result.engine,
       checkedAt: result.checkedAt,
-      missingVariables: result.missingVariables,
       warnings: result.warnings,
       netApres: result.netBeforeTax
     };
@@ -2717,7 +2716,6 @@ function mapUrssafResultToOnNet(result) {
   return {
     engine: result.engine,
     checkedAt: result.checkedAt,
-    missingVariables: result.missingVariables,
     warnings: result.warnings,
     hasHS: overtimeHours > 0,
     heuresSup: overtimeHours,
@@ -3094,14 +3092,9 @@ function updateUrssafStatus(computed) {
   const ready = computed.map((x) => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
   if (smicState.status === "ready") ready.push(smicState);
   const warnings = [...new Set(ready.flatMap((r) => r.warnings || []))];
-  const missing = [...new Set(ready.flatMap((r) => r.missingVariables || []))];
-  const checkedAt = ready.map((r) => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
   statusText.textContent = "Calculs \xE0 jour.";
-  if (diagnostics && diagnosticsList && (missing.length || warnings.length)) {
-    diagnosticsList.innerHTML = [
-      ...missing.map((name) => `<li>Valeur par d\xE9faut utilis\xE9e pour : ${esc(name)}</li>`),
-      ...warnings.map((warning) => `<li>${esc(warning)}</li>`)
-    ].join("");
+  if (diagnostics && diagnosticsList && warnings.length) {
+    diagnosticsList.innerHTML = warnings.map((warning) => `<li>${esc(warning)}</li>`).join("");
     diagnostics.hidden = false;
     if (status) status.classList.add("has-diagnostics");
   }
