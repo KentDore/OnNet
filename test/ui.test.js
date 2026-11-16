@@ -1569,6 +1569,19 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#editOfferName');
+      return el && document.activeElement === el && el.selectionStart === 0 && el.selectionEnd === el.value.length;
+    }, { timeout: 5000 });
+    const selectedName = await page.locator('#editOfferName').evaluate(el => ({
+      value: el.value, start: el.selectionStart, end: el.selectionEnd
+    }));
+    assert.equal(selectedName.start, 0,
+      'le nom existant est sélectionné automatiquement pour être remplacé sans l’effacer manuellement');
+    assert.equal(selectedName.end, selectedName.value.length,
+      'la sélection couvre la totalité du nom, quelle que soit sa longueur');
+    assert.equal(await page.locator('#editOfferName').locator('xpath=..').innerText().then(text => text.includes('facultatif')), false,
+      'le libellé ne présente plus le nom comme facultatif');
     await page.locator('#editOfferName').fill('Proposition Rennes');
     await page.locator('#editOfferSave').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText(), 'Proposition Rennes');

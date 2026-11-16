@@ -348,7 +348,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
     <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
+      <label for="modalAddName">Nom de l’offre</label>
       <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || 'Nouvelle offre')}" autocomplete="off">
     </div>
         ${renderUrssafConsentNotice()}
@@ -455,7 +455,7 @@ function showEditScenarioModal(scenario){
   const html = `
     <div class="edit-offer-modal">
       <div class="field-row">
-        <label for="editOfferName">Nom de l’offre <span class="field-optional">(facultatif)</span></label>
+        <label for="editOfferName">Nom de l’offre</label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
       ${renderUrssafConsentNotice(true)}
@@ -507,7 +507,7 @@ function showEditScenarioModal(scenario){
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferPeriod button', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
+  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
   let period = initialPeriod;
