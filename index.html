@@ -2305,8 +2305,11 @@ function describeApiFailure(status) {
   if (status >= 500) return `Le service de calcul Urssaf est temporairement indisponible (HTTP ${status}).`;
   return `L\u2019API Urssaf a r\xE9pondu avec une erreur HTTP ${status}.`;
 }
-async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions) {
+async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions, externalSignal) {
   const controller = new AbortController();
+  const abortFromCaller = () => controller.abort();
+  if (externalSignal?.aborted) controller.abort();
+  else externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
     let response;
@@ -2322,6 +2325,11 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
       });
     } catch (error) {
       if (error?.name === "AbortError") {
+        if (externalSignal?.aborted) {
+          const aborted = new Error("Requ\xEAte annul\xE9e apr\xE8s retrait du consentement.");
+          aborted.name = "AbortError";
+          throw aborted;
+        }
         throw new Error(`D\xE9lai d\xE9pass\xE9 : l\u2019API Urssaf n\u2019a pas r\xE9pondu en ${timeoutMs / 1e3} secondes.`);
       }
       throw new Error("Impossible de joindre l\u2019API Urssaf. V\xE9rifier la connexion Internet puis r\xE9essayer.");
@@ -2376,6 +2384,7 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
     };
   } finally {
     clearTimeout(timeoutId);
+    externalSignal?.removeEventListener("abort", abortFromCaller);
   }
 }
 async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
@@ -2395,7 +2404,7 @@ async function evaluateUrssafExpression(expression, situation = {}, options = {}
   if (typeof normalizedSituation.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(normalizedSituation.date)) {
     normalizedSituation.date = formatDate(normalizedSituation.date);
   }
-  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression]);
+  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression], options.signal);
   return Object.freeze({
     expression,
     value: evaluation.values[0],
@@ -2443,7 +2452,7 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
   let grossCalculated = NaN;
   for (let attempt = 0; attempt < (durationType === "39" ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
     finalSituation = buildSituation(input, baseGross, overtimeHours);
-    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions);
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions, options.signal);
     grossCalculated = evaluation.values[0];
     finalEvaluation = evaluation;
     if (Math.abs(grossCalculated - grossTarget) <= 5e-3) break;
@@ -2745,9 +2754,19 @@ function createRateLimitedFetch(fetchImpl, options = {}) {
   let lastRequestAt = null;
   return function rateLimitedFetch(url, init) {
     const request = queue.then(async () => {
+      if (init?.signal?.aborted) {
+        const error = new Error("La requ\xEAte a \xE9t\xE9 annul\xE9e.");
+        error.name = "AbortError";
+        throw error;
+      }
       if (lastRequestAt !== null) {
         const delay = Math.max(0, minimumIntervalMs - (now() - lastRequestAt));
         if (delay > 0) await wait(delay);
+      }
+      if (init?.signal?.aborted) {
+        const error = new Error("La requ\xEAte a \xE9t\xE9 annul\xE9e.");
+        error.name = "AbortError";
+        throw error;
       }
       lastRequestAt = now();
       return fetchImpl(url, init);
@@ -2961,6 +2980,7 @@ window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urss
 var idCounter = 0;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
+var urssafConsentController = new AbortController();
 var urssafCalculationCache = createUrssafCalculationCache({ maxResults: 100 });
 var urssafSessionState = createUrssafSessionState();
 var URSSAF_CONSENT_STORAGE_KEY = "onnet.urssaf.consent.v1";
@@ -2971,6 +2991,7 @@ try {
 } catch (error) {
 }
 function grantUrssafConsent() {
+  if (urssafConsentController.signal.aborted) urssafConsentController = new AbortController();
   urssafSessionState.grantConsent();
   try {
     localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, "granted");
@@ -2979,6 +3000,7 @@ function grantUrssafConsent() {
 }
 function revokeUrssafConsent() {
   urssafSessionState.revokeConsent();
+  urssafConsentController.abort();
   try {
     localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
   } catch (error) {
@@ -3091,6 +3113,7 @@ async function refreshOfficialSmic(forceRetry) {
   if (currentSmicState.status === "ready" && !forceRetry) return currentSmicState;
   urssafSessionState.setOfficialSmicState({ status: "loading", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null });
   updateUrssafStatus(getCurrentComputed());
+  const requestSignal = urssafConsentController.signal;
   officialSmicPromise = (async () => {
     try {
       if (!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== "function") {
@@ -3099,8 +3122,9 @@ async function refreshOfficialSmic(forceRetry) {
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
         "SMIC",
         { date: currentCalculationDate() },
-        { fetchImpl: queuedUrssafFetch }
+        { fetchImpl: queuedUrssafFetch, signal: requestSignal }
       );
+      if (requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       if (!Number.isFinite(result.value) || result.value <= 0) throw new Error("L\u2019API Urssaf n\u2019a pas renvoy\xE9 de montant SMIC valide.");
       urssafSessionState.setOfficialSmicState({
         status: "ready",
@@ -3111,6 +3135,7 @@ async function refreshOfficialSmic(forceRetry) {
         error: null
       });
     } catch (error) {
+      if (requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       urssafSessionState.setOfficialSmicState({
         status: "error",
         amount: null,
@@ -3122,7 +3147,7 @@ async function refreshOfficialSmic(forceRetry) {
     } finally {
       officialSmicPromise = null;
       updateComputed({ skipUrssafSchedule: true });
-      if (urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === "ready") scheduleUrssafCalculations(true, false);
+      if (!requestSignal.aborted && urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === "ready") scheduleUrssafCalculations(true, false);
     }
     return urssafSessionState.getOfficialSmicState();
   })();
@@ -3133,6 +3158,8 @@ async function executeUrssafCalculations(generation, forceRetry) {
     await refreshOfficialSmic(forceRetry === true);
     if (generation !== urssafGeneration) return;
   }
+  const requestSignal = urssafConsentController.signal;
+  if (requestSignal.aborted || !urssafSessionState.isConsentGranted()) return;
   const jobs = scenarios.map((s) => Object.assign({}, s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base, getSmicGross()) : null;
@@ -3153,8 +3180,9 @@ async function executeUrssafCalculations(generation, forceRetry) {
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
         buildUrssafInput(s, scenarioCalculationDate(s)),
-        { fetchImpl: queuedUrssafFetch }
+        { fetchImpl: queuedUrssafFetch, signal: requestSignal }
       );
+      if (requestSignal.aborted || generation !== urssafGeneration) return;
       urssafCalculationCache.setResult(key, mapUrssafResultToOnNet(result));
       urssafCalculationCache.deleteError(key);
     } catch (error) {
