@@ -1847,6 +1847,27 @@ test('le thème automatique suit le système et les choix manuels restent priori
     await page.reload();
     assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
       'le thème sombre du système doit être appliqué dès le chargement');
+    const darkSurfaces = await page.evaluate(() => {
+      const read = selector => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return { background: style.backgroundColor, color: style.color };
+      };
+      return {
+        body: read('body'),
+        hero: read('header.hero'),
+        offerPanel: read('.unified-salary-panel'),
+        comparison: read('#comparePanel'),
+        benchmark: read('#benchmarkMount .benchmark-item')
+      };
+    });
+    for (const [name, surface] of Object.entries(darkSurfaces)) {
+      assert.notEqual(surface.background, 'rgb(255, 255, 255)',
+        `la surface ${name} ne doit pas rester blanche en thème sombre`);
+    }
+    assert.notEqual(darkSurfaces.hero.background, darkSurfaces.body.background,
+      'le bandeau principal doit être visuellement distinct du fond de page');
+    assert.notEqual(darkSurfaces.comparison.background, darkSurfaces.body.background,
+      'le comparatif doit avoir une surface dédiée en thème sombre');
     await page.locator('#headerMenu summary').click();
     const theme = page.locator('#themePreference');
     assert.equal(await theme.inputValue(), 'auto');
