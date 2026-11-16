@@ -51,6 +51,8 @@ test('convertit une réponse Urssaf sans exposer de métrique fiscale', () => {
   assert.equal(mapped.m.cotisNettes, 630);
   assert.equal(mapped.m.mutuelle, 30);
   assert.equal(mapped.m.netSocial, 2410);
+  assert.equal(Object.hasOwn(mapped, 'missingVariables'), false,
+    'les diagnostics internes de valeurs par défaut ne doivent pas entrer dans l’état UI');
   assert.equal(mapped.netHoraire, 2310 / (35 * 52 / 12),
     'le net horaire 35 h doit utiliser les heures mensuelles réelles du contrat');
   assert.deepEqual(mapped.tr, {

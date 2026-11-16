@@ -527,19 +527,37 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
   }
 });
 
-test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', { timeout: 60000 }, async () => {
+test('affiche les avertissements Urssaf sans exposer les diagnostics internes de valeurs par défaut', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({
     warnings: [{ message: 'Une règle expérimentale a été utilisée.' }],
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Avertissements du calcul');
     await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
-    assert.match(diagnostics, /catégorie professionnelle/);
-    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1);
+    assert.doesNotMatch(diagnostics, /catégorie professionnelle|Valeur par défaut utilisée/);
+    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1,
+      'les avertissements utiles restent accessibles au niveau de chaque offre');
+  } finally {
+    await context.close();
+  }
+});
+
+test('masque les diagnostics internes de valeurs par défaut quand aucun avertissement Urssaf ne remonte', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({
+    missingVariables: {
+      'entreprise . catégorie juridique': 1,
+      'entreprise . catégorie juridique . EI': 1,
+      'entreprise . catégorie juridique . SELAS': 1
+    }
+  });
+  try {
+    assert.equal(await page.locator('#urssafWarnings').isVisible(), false);
+    assert.equal(await page.locator('#cardsBody .result-source details').count(), 0);
   } finally {
     await context.close();
   }
