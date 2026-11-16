@@ -535,9 +535,9 @@ test('affiche les avertissements Urssaf sans exposer les diagnostics internes de
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
     assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Avertissements transmis par l’Urssaf');
-    assert.match(await page.locator('#urssafWarnings').innerText(), /moteur officiel de calcul Mon-entreprise de l’Urssaf/);
     await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
+    assert.match(await page.locator('#urssafWarnings').innerText(), /moteur officiel de calcul Mon-entreprise de l’Urssaf/);
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
     assert.doesNotMatch(diagnostics, /catégorie professionnelle|Valeur par défaut utilisée/);
