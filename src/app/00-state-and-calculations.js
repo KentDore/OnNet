@@ -179,7 +179,7 @@ async function refreshOfficialSmic(forceRetry){
       urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
     }catch(error){
-      if(urssafConsentController.signal.aborted) return urssafSessionState.getOfficialSmicState();
+      if(requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       urssafSessionState.setOfficialSmicState({ status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
         error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' });
     }finally{
