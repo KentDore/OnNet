@@ -1925,3 +1925,39 @@ test('le thème automatique suit le système et les choix manuels restent priori
     await context.close();
   }
 });
+
+
+test('le renommage reste enregistrable avec des titres-restaurant historiques incomplets et le nom reste sans fond en thème sombre', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.evaluate(() => {
+      const state=JSON.parse(localStorage.getItem('onnet.state.v1'));
+      state.scenarios[0].joursResto=0;
+      state.scenarios[0].valeurResto=8;
+      state.scenarios[0].partResto=50;
+      localStorage.setItem('onnet.state.v1',JSON.stringify(state));
+      localStorage.setItem('onnet.theme.preference','dark');
+    });
+    await page.reload();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save=page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(),true,
+      'un paramétrage historique inchangé ne doit pas bloquer le simple renommage');
+    await page.locator('#editOfferName').fill('Poste renommé');
+    await save.click();
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.scenarios[0].name,'Poste renommé');
+    assert.equal(saved.scenarios[0].joursResto,0,'les paramètres historiques restent inchangés');
+    assert.equal(saved.scenarios[0].valeurResto,8,'les paramètres historiques restent inchangés');
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+    const nameStyle=await page.locator('#maquetteYourSalary .offer-comparison-name').first().evaluate(el=>{
+      const style=getComputedStyle(el);
+      return {background:style.backgroundColor,backgroundImage:style.backgroundImage};
+    });
+    assert.equal(nameStyle.background,'rgba(0, 0, 0, 0)',
+      'le nom de l’offre ne doit pas avoir de fond en thème sombre');
+    assert.equal(nameStyle.backgroundImage,'none');
+  } finally {
+    await context.close();
+  }
+});
