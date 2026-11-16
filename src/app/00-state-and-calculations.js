@@ -10,6 +10,41 @@ let urssafGeneration = 0;
 let urssafDebounceTimer = null;
 const urssafCalculationCache = createUrssafCalculationCache({ maxResults:100 });
 const urssafSessionState = createUrssafSessionState();
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssaf.consent.v1';
+
+// L'autorisation explicite est distincte des salaires et survit aux mises à jour
+// de la page. Elle reste révocable sans effacer le comparatif.
+try{
+  if(localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'granted'){
+    urssafSessionState.grantConsent();
+  }
+}catch(error){
+  // Le calcul restera possible dans cette session si le stockage est bloqué.
+}
+
+function grantUrssafConsent(){
+  urssafSessionState.grantConsent();
+  try{
+    localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'granted');
+  }catch(error){
+    // L'autorisation reste valable pour la session en cours.
+  }
+}
+
+function revokeUrssafConsent(){
+  urssafSessionState.revokeConsent();
+  try{
+    localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(error){
+    // L'autorisation est tout de même retirée en mémoire.
+  }
+  if(urssafDebounceTimer){
+    clearTimeout(urssafDebounceTimer);
+    urssafDebounceTimer = null;
+  }
+  urssafGeneration += 1;
+  updateUrssafStatus(getCurrentComputed());
+}
 
 function currentCalculationDate(){
   const d = new Date();
