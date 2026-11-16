@@ -534,14 +534,15 @@ test('affiche les avertissements Urssaf sans exposer les diagnostics internes de
   });
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
-    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Avertissements du calcul');
+    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Avertissements transmis par l’Urssaf');
+    assert.match(await page.locator('#urssafWarnings').innerText(), /moteur officiel de calcul Mon-entreprise de l’Urssaf/);
     await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
     assert.doesNotMatch(diagnostics, /catégorie professionnelle|Valeur par défaut utilisée/);
-    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1,
-      'les avertissements utiles restent accessibles au niveau de chaque offre');
+    assert.equal(await page.locator('#cardsBody .result-source details summary').first().innerText(), 'Avertissements Urssaf (1)',
+      'la source Urssaf doit être explicite sur chaque offre');
   } finally {
     await context.close();
   }
