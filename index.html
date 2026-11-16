@@ -2046,7 +2046,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="comparison-subhead comparison-subhead-actions"><h2 id="maquetteCompareTitle">Vos offres</h2><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
 
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
@@ -2072,6 +2071,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Comparer les offres</h2>
     <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     
     <div class="hint" id="stackHint"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
@@ -4434,7 +4434,7 @@ function openModal(bodyHtml, opts) {
       overlay.classList.add("show");
       const target = initialFocusSelector ? box.querySelector(initialFocusSelector) : box.querySelector("button, input");
       if (target) target.focus();
-      if (target && target.tagName === "INPUT") target.select();
+      if (target && target.tagName === "INPUT" && o.selectInitialText === true) target.select();
     });
   });
 }
@@ -4813,6 +4813,7 @@ function showEditScenarioModal(scenario) {
   const pending = openModal(html, { initialFocusSelector: "#editOfferName", className: "modal-edit-offer", dismissible: true, role: "dialog", ariaLabel: "Modifier une offre salariale" });
   const overlay = document.getElementById("modalOverlay");
   const input = (id) => overlay.querySelector("#" + id);
+  input("editOfferName").addEventListener("click", (event) => event.currentTarget.select());
   let period = initialPeriod;
   let hours = scenario.dureeType === "39" ? "39" : "35";
   let trEnabledNow = trEnabled;
