@@ -24,8 +24,8 @@ function copySmicState(state){
 
 /**
  * Owns the small part of Urssaf state intentionally shared by app fragments.
- * Consent is memory-only; SMIC reads/writes use defensive snapshots so callers
- * cannot mutate the module's internal arrays or state object by reference.
+ * The app persists explicit consent separately; this module only exposes the
+ * current runtime decision. SMIC snapshots prevent mutation through references.
  */
 export function createUrssafSessionState(){
   let consentGranted = false;
