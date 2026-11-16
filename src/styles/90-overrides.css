@@ -842,3 +842,16 @@ body.salary-editor-open .integrated-offers{display:none!important}
 :root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
 :root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
 :root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
+
+
+/* Repère géographique : ne pas partager la ligne avec le titre long. */
+#benchmarkMount .median-card-head{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+  gap:7px;min-height:0;
+}
+#benchmarkMount .median-card-head .benchmark-label{
+  flex:none;width:100%;min-width:0;min-height:0;line-height:1.3;
+}
+#benchmarkMount .median-card-head .geo-inline{
+  align-self:flex-start;margin:0;padding:4px 9px;
+}
