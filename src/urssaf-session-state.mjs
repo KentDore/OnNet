@@ -38,6 +38,9 @@ export function createUrssafSessionState(){
     grantConsent(){
       consentGranted = true;
     },
+    revokeConsent(){
+      consentGranted = false;
+    },
     getOfficialSmicState(){
       return copySmicState(officialSmicState);
     },
