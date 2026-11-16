@@ -62,6 +62,7 @@ After validation, inspect the actual GitHub Pages deployment for changes that af
 To make the gates mandatory, configure protection for `main` and require these exact checks after they have appeared in GitHub:
 
 - `test` (from the `Vérifications` workflow).
+- `Synchroniser les HTML validés` (required for same-repository PRs; skipped for forks because they have no write permission).
 - `npm dependency audit`.
 - `CodeQL security analysis`.
 
