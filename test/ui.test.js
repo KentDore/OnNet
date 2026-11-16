@@ -1569,6 +1569,10 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    await page.waitForFunction(() => {
+      const el = document.querySelector('#editOfferName');
+      return el && document.activeElement === el && el.selectionStart === 0 && el.selectionEnd === el.value.length;
+    }, { timeout: 5000 });
     assert.equal(await page.locator('#editOfferName').evaluate(el => el.selectionStart), 0,
       'le nom existant est sélectionné automatiquement pour être remplacé sans l’effacer manuellement');
     assert.equal(await page.locator('#editOfferName').evaluate(el => el.selectionEnd), 'Nouvelle offre'.length);
