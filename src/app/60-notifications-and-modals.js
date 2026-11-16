@@ -510,7 +510,12 @@ function showEditScenarioModal(scenario){
   const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
-  input('editOfferName').addEventListener('click', event => event.currentTarget.select());
+  const offerNameInput = input('editOfferName');
+  offerNameInput.addEventListener('focus', event => {
+    const field = event.currentTarget;
+    field.setSelectionRange(field.value.length, field.value.length);
+  }, { once:true });
+  offerNameInput.addEventListener('click', event => event.currentTarget.select());
   let period = initialPeriod;
   let hours = scenario.dureeType==='39'?'39':'35';
   let trEnabledNow = trEnabled;
