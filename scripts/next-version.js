@@ -1,7 +1,7 @@
 'use strict'
 
 function parseVersion(value) {
-  if (!/^\\d+\\.\\d+\\.\\d+$/.test(value || '')) {
+  if (!/^\d+\.\d+\.\d+$/.test(value || '')) {
     throw new Error('Version attendue au format MAJOR.MINOR.PATCH : ' + value)
   }
   return value.split('.').map(Number)
@@ -25,12 +25,12 @@ function nextVersion(branchVersion, baseVersion, title, body = '') {
     : branchVersion
   const [major, minor, patch] = parseVersion(baseline)
   const text = String(title || '').trim()
-  const breaking = /(?:^[a-z][a-z0-9-]*(?:\\([^)]*\\))?!:)|BREAKING CHANGE|BREAKING-CHANGE/i.test(text + '\\n' + body)
-  const feature = /^(?:feat|feature)(?:\\([^)]*\\))?:/i.test(text)
+  const breaking = /(?:^[a-z][a-z0-9-]*(?:\([^)]*\))?!:)|BREAKING CHANGE|BREAKING-CHANGE/i.test(text + '\n' + body)
+  const feature = /^(?:feat|feature)(?:\([^)]*\))?:/i.test(text)
 
-  if (breaking) return `${major + 1}.0.0`
-  if (feature) return `${major}.${minor + 1}.0`
-  return `${major}.${minor}.${patch + 1}`
+  if (breaking) return (major + 1) + '.0.0'
+  if (feature) return major + '.' + (minor + 1) + '.0'
+  return major + '.' + minor + '.' + (patch + 1)
 }
 
 if (require.main === module) {
