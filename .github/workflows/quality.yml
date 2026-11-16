@@ -18,10 +18,29 @@ jobs:
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - name: Installer Node.js
         uses: actions/setup-node@v7
         with:
           node-version: 22
+      - name: Calculer la prochaine version SemVer
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_TITLE: ${{ github.event.pull_request.title }}
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          git fetch origin "$BASE_REF"
+          BASE_VERSION="$(git show "origin/$BASE_REF:package.json" | node -p "JSON.parse(require('fs').readFileSync(0, 'utf8')).version")"
+          CURRENT_VERSION="$(node -p "require('./package.json').version")"
+          NEXT_VERSION="$(node scripts/next-version.js "$CURRENT_VERSION" "$BASE_VERSION" "$PR_TITLE" "$PR_BODY")"
+          if [ "$NEXT_VERSION" != "$CURRENT_VERSION" ]; then
+            echo "Version automatique : $CURRENT_VERSION -> $NEXT_VERSION"
+            npm version "$NEXT_VERSION" --no-git-tag-version --ignore-scripts
+          else
+            echo "La version de la branche est déjà supérieure à celle de la base ; aucune incrémentation supplémentaire."
+          fi
       - name: Lire et valider la version
         id: meta
         run: |
@@ -96,6 +115,7 @@ jobs:
         run: |
           mkdir -p "$RUNNER_TEMP/onnet-output"
           cp "$RUNNER_TEMP/Onnet-$VERSION.html" "$RUNNER_TEMP/onnet-output/Onnet-$VERSION.html"
+          cp package.json "$RUNNER_TEMP/onnet-output/package.json"
           cp package-lock.json "$RUNNER_TEMP/onnet-output/package-lock.json"
       - name: Transmettre le HTML et le lockfile au job de synchronisation
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
@@ -151,16 +171,19 @@ jobs:
           fi
 
           GENERATED_HTML="$RUNNER_TEMP/onnet-html/Onnet-$VERSION.html"
+          GENERATED_PACKAGE="$RUNNER_TEMP/onnet-html/package.json"
           GENERATED_LOCK="$RUNNER_TEMP/onnet-html/package-lock.json"
           test -s "$GENERATED_HTML"
+          test -s "$GENERATED_PACKAGE"
           test -s "$GENERATED_LOCK"
           cp "$GENERATED_HTML" index.html
           cp "$GENERATED_HTML" "Onnet-$VERSION.html"
+          cp "$GENERATED_PACKAGE" package.json
           cp "$GENERATED_LOCK" package-lock.json
 
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -- index.html "Onnet-$VERSION.html" package-lock.json
+          git add -- index.html "Onnet-$VERSION.html" package.json package-lock.json
           if git diff --cached --quiet; then
             echo "Les HTML sont déjà synchronisés."
             exit 0
