@@ -432,7 +432,6 @@ function renderMaquetteControls(computedOverride){
         showEditScenarioModal(scenario).then(answers=>{
           if(!answers) return;
           const currentScenario = findScenario(scenarioId);
-          window.__onnetRenameDebug = { scenarioId, scenarioIds: scenarios.map(item => item.id), currentFound: !!currentScenario, answerName: answers.name };
           if(!currentScenario) return;
           Object.assign(currentScenario,answers);
           grantUrssafConsent();

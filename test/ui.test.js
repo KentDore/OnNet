@@ -1610,13 +1610,10 @@ test('la première offre peut être renommée et sauvegardée', { timeout: 60000
     await page.locator('#editOfferName').fill('Mon poste renommé');
     await save.click();
     await page.waitForFunction(() => document.querySelector('#modalOverlay')?.hidden === true, null, { timeout: 5000 });
-    const diagnostic = await page.evaluate(() => ({
-      callback: window.__onnetRenameDebug || null,
-      names: [...document.querySelectorAll('#maquetteYourSalary .offer-comparison-name')].map(el => el.textContent.trim()),
-      stored: JSON.parse(localStorage.getItem('onnet.state.v1'))?.scenarios?.map(item => ({ id: item.id, name: item.name })) || null
-    }));
-    console.log('ONNET_FIRST_RENAME_DIAGNOSTIC=' + JSON.stringify(diagnostic));
-    assert.equal(diagnostic.names[0], 'Mon poste renommé', JSON.stringify(diagnostic));
+    await page.waitForFunction(() =>
+      document.querySelector('#maquetteYourSalary .offer-comparison-name')?.textContent.trim() === 'Mon poste renommé',
+      null, { timeout: 10000 }
+    );
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[0].name, 'Mon poste renommé', 'le nouveau nom doit être persisté');
     await page.reload();
