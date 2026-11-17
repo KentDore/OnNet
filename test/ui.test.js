@@ -1012,8 +1012,15 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
       }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
       const offerMeta = await page.locator('#maquetteYourSalary .offer-comparison-meta').nth(1).innerText();
-      assert.match(offerMeta.replace(/\\s+/g, ' '), /3\\s?400 € brut\\/mois · 40\\s?800 € brut\\/an · 35 h/,
-        'chaque offre affiche les deux montants bruts et la durée hebdomadaire dans le même ordre');
+      const normalizedOfferMeta = offerMeta.replace(/\s/g, '');
+      assert.ok(normalizedOfferMeta.includes('3400€brut/mois'));
+      assert.ok(normalizedOfferMeta.includes('40800€brut/an'));
+      assert.ok(normalizedOfferMeta.includes('35h'));
+      assert.ok(
+        normalizedOfferMeta.indexOf('3400€brut/mois') < normalizedOfferMeta.indexOf('40800€brut/an') &&
+        normalizedOfferMeta.indexOf('40800€brut/an') < normalizedOfferMeta.indexOf('35h'),
+        'les deux montants bruts et la durée hebdomadaire doivent être affichés dans le même ordre'
+      );
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
