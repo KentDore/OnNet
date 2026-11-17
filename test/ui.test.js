@@ -953,6 +953,14 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
+      'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
+    await page.locator('#editOfferName').click();
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
+      'un clic dans le champ sélectionne tout le nom existant');
+    await page.locator('#editOfferName').pressSequentially('Nouvelle offre');
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Nouvelle offre',
+      'la saisie doit remplacer le nom existant sans suppression manuelle');
     assert.equal(await page.locator('#editOfferCommune').count(), 0);
     assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
@@ -1586,15 +1594,16 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
-    await page.waitForFunction(() => {
-      const el = document.querySelector('#editOfferName');
-      return el && document.activeElement === el && el.selectionStart === 0 && el.selectionEnd === el.value.length;
-    }, { timeout: 5000 });
-    const selectedName = await page.locator('#editOfferName').evaluate(el => ({
+    const nameInput = page.locator('#editOfferName');
+    const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
+    assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
+      'le nom reste non sélectionné à l’ouverture');
+    await nameInput.click();
+    const selectedName = await nameInput.evaluate(el => ({
       value: el.value, start: el.selectionStart, end: el.selectionEnd
     }));
     assert.equal(selectedName.start, 0,
-      'le nom existant est sélectionné automatiquement pour être remplacé sans l’effacer manuellement');
+      'un clic sélectionne le nom depuis son premier caractère');
     assert.equal(selectedName.end, selectedName.value.length,
       'la sélection couvre la totalité du nom, quelle que soit sa longueur');
     assert.equal(await page.locator('#editOfferName').locator('xpath=..').innerText().then(text => text.includes('facultatif')), false,
@@ -1878,6 +1887,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     });
     await page.reload();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').click();
     await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
@@ -2069,6 +2079,7 @@ test('le renommage reste enregistrable avec des titres-restaurant historiques in
     const save=page.locator('#editOfferSave');
     assert.equal(await save.isEnabled(),true,
       'un paramétrage historique inchangé ne doit pas bloquer le simple renommage');
+    await page.locator('#editOfferName').click();
     await page.locator('#editOfferName').fill('Poste renommé');
     await save.click();
     const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('onnet.state.v1')));
