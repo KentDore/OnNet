@@ -1602,17 +1602,24 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
 });
 
 test('la première offre peut être renommée et sauvegardée', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp({ consent:false });
+  const { context, page } = await openApp();
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save = page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(), true, 'le formulaire doit autoriser le simple renommage');
     await page.locator('#editOfferName').fill('Mon poste renommé');
-    await page.locator('#editOfferSave').click();
-    await page.waitForFunction(() => {
-      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
-      return state?.scenarios?.[0]?.name === 'Mon poste renommé';
-    });
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(), 'Mon poste renommé');
+    await save.click();
+    await page.waitForFunction(() =>
+      document.querySelector('#maquetteYourSalary .offer-comparison-name')?.textContent.trim() === 'Mon poste renommé',
+      null, { timeout: 10000 }
+    );
+    const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.scenarios[0].name, 'Mon poste renommé', 'le nouveau nom doit être persisté');
     await page.reload();
+    await page.waitForFunction(() =>
+      document.querySelector('#maquetteYourSalary .offer-comparison-name')?.textContent.trim() === 'Mon poste renommé',
+      null, { timeout: 10000 }
+    );
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(), 'Mon poste renommé');
   } finally {
     await context.close();
