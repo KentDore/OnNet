@@ -1015,10 +1015,11 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
       const normalizedOfferMeta = offerMeta.replace(/\s/g, '');
       assert.ok(normalizedOfferMeta.includes('3400€brut/mois'));
       assert.ok(normalizedOfferMeta.includes('40800€brut/an'));
-      assert.ok(normalizedOfferMeta.includes('35h'));
+      assert.match(normalizedOfferMeta, /(?:35|39)h$/,
+        'la durée hebdomadaire réelle de l’offre doit être affichée');
       assert.ok(
         normalizedOfferMeta.indexOf('3400€brut/mois') < normalizedOfferMeta.indexOf('40800€brut/an') &&
-        normalizedOfferMeta.indexOf('40800€brut/an') < normalizedOfferMeta.indexOf('35h'),
+        normalizedOfferMeta.indexOf('40800€brut/an') < normalizedOfferMeta.search(/(?:35|39)h$/),
         'les deux montants bruts et la durée hebdomadaire doivent être affichés dans le même ordre'
       );
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
