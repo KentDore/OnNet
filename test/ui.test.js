@@ -1619,7 +1619,9 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
       assert.ok(geometry.scrollWidth <= geometry.clientWidth + 1,
         'les repères ne débordent pas à '+width+' px');
     }
-    assert.match((await page.locator('#benchmarkMount').innerText()).replace(/\s+/g, ' '), /Zone France/);
+    const benchmarkText = (await page.locator('#benchmarkMount').innerText()).replace(/\s+/g, ' ');
+    assert.match(benchmarkText, /Référence statistique.*INSEE 2025.*France/);
+    assert.doesNotMatch(benchmarkText, /Zone France/);
   } finally {
     await context.close();
   }

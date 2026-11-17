@@ -17,6 +17,7 @@ async function buildRuntime(root){
     "import { createUrssafCalculationCache } from './src/urssaf-calculation-cache.mjs';",
     "import { createUrssafSessionState } from './src/urssaf-session-state.mjs';",
     "import { deserializePersistedState, serializePersistedState } from './src/persistence-codec.mjs';",
+    "import { toBase64Url, fromBase64Url } from './src/share-encoding.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
     'initializeThemePreference({ windowRef: window, documentRef: document });',
     app

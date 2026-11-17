@@ -1950,28 +1950,33 @@ body.salary-editor-open .integrated-offers{display:none!important}
 :root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
 
 
-/* Repère géographique : ne pas partager la ligne avec le titre long. */
+/* Carte de médiane : source et zone sur une seule ligne, hiérarchie compacte. */
 #benchmarkMount .median-card-head{
-  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
-  gap:7px;min-height:0;
+  display:block;min-height:0;margin:0 0 5px;
 }
 #benchmarkMount .median-card-head .benchmark-label{
-  flex:none;width:100%;min-width:0;min-height:0;line-height:1.3;
+  width:100%;min-width:0;min-height:0;line-height:1.25;
 }
-#benchmarkMount .median-card-head .geo-inline{
-  align-self:flex-start;margin:0;padding:4px 9px;
+#benchmarkMount .benchmark-meta{
+  margin:0 0 9px;font-size:11px;line-height:1.35;
 }
-
-
-/* Badge Zone France : palette dédiée au thème sombre. */
-:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline{
-  background:#293f32;border-color:#496b53;color:#a9e5bd;
+#benchmarkMount .benchmark-period{
+  margin-top:3px;color:var(--ink-soft);font-size:12px;line-height:1.3;
 }
-:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline span{
-  color:#b8c9be;
+#benchmarkMount .benchmark-gap-label{
+  margin-top:15px;color:var(--ink-soft);font-size:10px;font-weight:750;
+  letter-spacing:.045em;text-transform:uppercase;
 }
-:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline strong{
-  color:#a9e5bd;
+#benchmarkMount .benchmark-result{margin-top:6px}
+#benchmarkMount .benchmark-details{margin-top:13px}
+#benchmarkMount .benchmark-details summary{
+  font-size:12px;line-height:1.35;
+}
+@media(max-width:640px){
+  #benchmarkMount .benchmark-item{padding:15px 13px}
+  #benchmarkMount .benchmark-value{font-size:clamp(25px,7vw,34px);line-height:1.08}
+  #benchmarkMount .benchmark-meta{font-size:10px}
+  #benchmarkMount .benchmark-gap-label{margin-top:12px}
 }
 
 
@@ -2037,7 +2042,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.9</span></div>
+    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.11</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2998,6 +3003,54 @@ function serializePersistedState(state) {
   });
 }
 
+// src/share-encoding.mjs
+var BASE64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+function encodeBase64(bytes) {
+  let output = "";
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i];
+    const hasB = i + 1 < bytes.length;
+    const hasC = i + 2 < bytes.length;
+    const b = hasB ? bytes[i + 1] : 0;
+    const c = hasC ? bytes[i + 2] : 0;
+    output += BASE64[a >> 2];
+    output += BASE64[(a & 3) << 4 | b >> 4];
+    output += hasB ? BASE64[(b & 15) << 2 | c >> 6] : "=";
+    output += hasC ? BASE64[c & 63] : "=";
+  }
+  return output;
+}
+function decodeBase64(value) {
+  if (typeof value !== "string" || value.length % 4 !== 0 || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(value)) {
+    throw new TypeError("Cha\xEEne Base64 invalide.");
+  }
+  const padding = value.endsWith("==") ? 2 : value.endsWith("=") ? 1 : 0;
+  const output = new Uint8Array(value.length / 4 * 3 - padding);
+  let offset = 0;
+  for (let i = 0; i < value.length; i += 4) {
+    const a = BASE64.indexOf(value[i]);
+    const b = BASE64.indexOf(value[i + 1]);
+    const c = value[i + 2] === "=" ? 0 : BASE64.indexOf(value[i + 2]);
+    const d = value[i + 3] === "=" ? 0 : BASE64.indexOf(value[i + 3]);
+    if (offset < output.length) output[offset++] = a << 2 | b >> 4;
+    if (offset < output.length) output[offset++] = (b & 15) << 4 | c >> 2;
+    if (offset < output.length) output[offset++] = (c & 3) << 6 | d;
+  }
+  return output;
+}
+function toBase64Url(value) {
+  if (typeof value !== "string") throw new TypeError("La valeur \xE0 encoder doit \xEAtre une cha\xEEne.");
+  return encodeBase64(new TextEncoder().encode(value)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+function fromBase64Url(value) {
+  if (typeof value !== "string" || !/^[A-Za-z0-9_-]*$/.test(value) || value.length % 4 === 1) {
+    throw new TypeError("Cha\xEEne Base64 URL invalide.");
+  }
+  const base64 = value.replace(/-/g, "+").replace(/_/g, "/");
+  const padded = base64 + "=".repeat((4 - base64.length % 4) % 4);
+  return new TextDecoder("utf-8", { fatal: true }).decode(decodeBase64(padded));
+}
+
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
 initializeThemePreference({ windowRef: window, documentRef: document });
@@ -3300,22 +3353,6 @@ function clearPersistedState() {
     localStorage.removeItem(STORAGE_KEY);
   } catch (e) {
   }
-}
-function toBase64Url(str) {
-  const bytes = new TextEncoder().encode(str);
-  let bin = "";
-  bytes.forEach((b) => {
-    bin += String.fromCharCode(b);
-  });
-  return btoa(bin).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-}
-function fromBase64Url(str) {
-  let b64 = str.replace(/-/g, "+").replace(/_/g, "/");
-  while (b64.length % 4) b64 += "=";
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
 }
 function loadShareState() {
   try {
@@ -3739,9 +3776,11 @@ function renderBenchmarks(computed) {
       </article>`;
   const medianCard = `
       <article class="benchmark-item">
-        <div class="median-card-head"><div class="benchmark-label">M\xE9diane des salaires priv\xE9s</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div>
+        <div class="median-card-head"><div class="benchmark-label">M\xE9diane des salaires priv\xE9s</div></div>
+        <div class="benchmark-meta">R\xE9f\xE9rence statistique \xB7 INSEE 2025 \xB7 France</div>
         <div class="benchmark-value">${format(medianValue)}</div>
-        <div class="benchmark-meta">Par ${unit} \xB7 INSEE 2025 \xB7 France</div>
+        <div class="benchmark-period">Net estim\xE9 \xB7 par ${unit}</div>
+        <div class="benchmark-gap-label">\xC9cart avec la m\xE9diane</div>
         ${medianGap === null ? '<div class="benchmark-result">\xC9cart disponible apr\xE8s calcul</div>' : '<div class="benchmark-result ' + gapClass(medianGap) + '">' + gapText(medianGap) + "</div>"}
         <details class="benchmark-details"><summary>Que signifie la m\xE9diane ?</summary>
           <p>Donn\xE9es INSEE 2025, publi\xE9es en 2026, pour la France. La m\xE9diane publi\xE9e est de 2 238 \u20AC nets mensuels en EQTP. Le taux horaire est ramen\xE9 \xE0 151,67 h/mois ; les p\xE9riodes mensuelle et annuelle sont ajust\xE9es \xE0 la dur\xE9e du contrat compar\xE9 (${durationLabel}).</p>

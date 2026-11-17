@@ -19,9 +19,10 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 9. `src/smic-reference.mjs` contient les fonctions pures qui construisent le repère SMIC en 35 h ou en 39 h, avec quatre heures supplémentaires majorées à 25 %.
 10. `src/rate-limited-fetch.mjs` encapsule la file d'appels réseau et l'intervalle minimal entre deux démarrages ; le fetch, l'horloge et l'attente sont injectables.
 11. `src/theme-preference.mjs` initialise le thème avec les dépendances navigateur injectées ; il est regroupé séparément des fragments applicatifs.
-12. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs restants.
-13. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
-14. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs, les adaptateurs de calcul, le cache, le codec de persistance, l'état de session, le repère SMIC, l'ordonnanceur réseau le contrôleur de thème et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-X.Y.Z.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
+12. `src/share-encoding.mjs` fournit l'encodage et le décodage Base64 URL des liens de partage, sans dépendance à l'état applicatif ni au DOM.
+13. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs restants.
+14. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
+15. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs, les adaptateurs de calcul, le cache, le codec de persistance et de partage, l'état de session, le repère SMIC, l'ordonnanceur réseau le contrôleur de thème et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-X.Y.Z.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
 Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) a extrait les utilitaires purs et le client Urssaf en véritables modules ES. La [PR #95](https://github.com/KentDore/OnNet/pull/95) extrait les règles de normalisation des scénarios. La PR #96 isole les adaptateurs purs entre l'état de l'application et le contrat de l'API Urssaf. La PR #97 ajoute à ce module la construction pure de la clé qui identifie les paramètres d'un calcul et gouverne la réutilisation du cache. La PR #98 sépare l'ordonnanceur de requêtes réseau, avec des dépendances de temps injectées pour tester la sérialisation et la reprise après erreur. La PR #99 isole le calcul du scénario SMIC, notamment le cas 39 h avec quatre heures supplémentaires majorées. La PR #100 sort les caches Urssaf du fichier d'orchestration et verrouille leur éviction FIFO ainsi que l'indépendance des instances. La PR #101 isole le consentement et l'état du SMIC réellement partagés entre les fragments, sans déplacer l'orchestration. La PR #102 extrait le codec JSON des sauvegardes locales tout en laissant l'accès à `localStorage` dans le fragment adaptateur.
 
@@ -43,7 +44,8 @@ Le wrapper démarre la première requête sans attente, puis impose au moins 350
 | `urssaf-session-state.mjs` | Consentement Urssaf limité à la session et état du repère SMIC | Instance unique dans le runtime ; snapshots copiés ; aucune persistance ni dépendance réseau |
 | `persistence-codec.mjs` | Sérialisation JSON et restauration des sauvegardes locales, y compris les règles de compatibilité historiques | Fonctions pures testées ; aucun accès à `localStorage` ni état global |
 | `10-persistence.js` | Adaptateur de lecture/écriture du stockage local, autosauvegarde et notifications d'échec | Utilise le codec pur ; conserve les accès navigateur et l'injection de la notification |
-| `20-sharing.js` | Encodage/décodage des liens et restauration d'un partage | Réutilise directement les normalisateurs partagés et participe à l'initialisation de l'état |
+| `share-encoding.mjs` | Encodage et décodage Base64 URL des liens de partage | Fonctions pures ; aucun état, accès réseau ou DOM ; validation UTF-8 stricte |
+| `20-sharing.js` | Construction des liens, restauration d'un partage et copie | Réutilise les normalisateurs partagés et le codec Base64 URL ; participe à l'initialisation de l'état |
 | `30-rendering.js` | Rendu des cartes, indicateurs, comparatifs et graphiques | Point de couplage majeur : lit l'état et les résultats, et est rappelé par de nombreux gestionnaires |
 | `40-household-and-navigation.js` | Navigation et interactions de structure | Modifie l'état puis déclenche rendu, sauvegarde ou recalcul |
 | `50-input-events.js` | Événements des formulaires et modifications de scénarios | Dépend des fonctions de validation, du rendu, de la persistance et du calcul |
@@ -78,6 +80,10 @@ Les vérifications GitHub Actions reconstruisent `index.html` et `Onnet-X.Y.Z.ht
 **Réalisée pour les utilitaires de présentation** : formatage, échappement HTML, parsing numérique, constantes d'interface et valeurs par défaut sont exportés par `src/ui-utils.mjs`. Le build les regroupe avec le client Urssaf et les fragments applicatifs au moyen d'esbuild. Le HTML final reste autonome et n'effectue aucune requête supplémentaire vers les modules source.
 
 Cette extraction est couverte par des tests unitaires dédiés et par les tests navigateur qui vérifient que les fonctions internes ne sont pas exposées sur `window`.
+
+### Étape 2 quater — Isoler le codec des liens de partage
+
+`src/share-encoding.mjs` contient les fonctions pures `toBase64Url` et `fromBase64Url`. Elles encodent les chaînes en UTF-8, utilisent l'alphabet URL sans padding et refusent les séquences UTF-8 invalides. `20-sharing.js` conserve la construction du payload, la restauration et les interactions navigateur. Les tests couvrent ASCII, accents, emoji, caractères multioctets et entrées invalides.
 
 ### Étape 2 ter — Isoler la préférence de thème
 

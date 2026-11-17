@@ -54,6 +54,8 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   assert.match(html, /function sanitizeScenario\(raw\)/, 'le module de normalisation doit être intégré');
   assert.match(html, /function createUrssafSessionState\(\)/, "l'état de session Urssaf doit être intégré");
   assert.match(html, /function deserializePersistedState[(]raw[)]/, "le codec de restauration doit être intégré");
+  assert.match(html, /function toBase64Url[(]value[)]/, "le codec Base64 URL doit être intégré");
+  assert.match(html, /function fromBase64Url[(]value[)]/, "le décodeur Base64 URL doit être intégré");
   assert.match(html, /function serializePersistedState[(]state[)]/, "le codec de sauvegarde doit être intégré");
   assert.match(html, /function createUrssafCalculationCache\(options\s*=\s*\{\}\)/, 'le cache Urssaf doit être intégré');
   assert.match(html, /function buildSmicScenario\(base, amount\)/, 'la construction du scénario SMIC doit être intégrée');
