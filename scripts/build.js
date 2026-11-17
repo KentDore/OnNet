@@ -2,12 +2,12 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { build } = require('esbuild');
-const { initializeThemePreference } = require('../src/theme-preference.mjs');
 const { readAppSource, readStylesSource } = require('./source-loader');
 
 async function buildRuntime(root){
   const app = readAppSource(root);
   const contents = [
+    "import { initializeThemePreference } from './src/theme-preference.mjs';",
     "import { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions } from './src/urssaf-api-client.mjs';",
     "import { scenarioDefaults, ICON, HEURES_BASE, parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc } from './src/ui-utils.mjs';",
     "import { METRIC_KEYS, METRIC_DEFAUT, sanitizeScenario, normalizeScenarioIds } from './src/state-normalizers.mjs';",
