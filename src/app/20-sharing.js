@@ -1,18 +1,4 @@
 // ---------- Partage par URL (l'état vit dans le hash — jamais envoyé à un serveur) ----------
-function toBase64Url(str){
-  const bytes = new TextEncoder().encode(str);
-  let bin = '';
-  bytes.forEach(b => { bin += String.fromCharCode(b); });
-  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
-}
-function fromBase64Url(str){
-  let b64 = str.replace(/-/g,'+').replace(/_/g,'/');
-  while(b64.length % 4) b64 += '=';
-  const bin = atob(b64);
-  const bytes = new Uint8Array(bin.length);
-  for(let i=0;i<bin.length;i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
-}
 
 function loadShareState(){
   try{
