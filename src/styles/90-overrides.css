@@ -911,3 +911,14 @@ body.salary-editor-open .integrated-offers{display:none!important}
 .urssaf-status.requires-consent:not(.is-error):not(.has-diagnostics){
   display:block!important;
 }
+
+/* Safari iOS agrandit automatiquement la page au focus des champs dont la
+   police est inférieure à 16 px. Garder le zoom par pincement disponible,
+   mais éviter ce zoom parasite sur les contrôles de saisie. */
+@media (max-width:640px){
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+}
