@@ -495,6 +495,30 @@ test('en cas d’échec de récupération du SMIC, ne présente pas le montant d
   }
 });
 
+test('refuse le repère SMIC quand l’API signale une EngineError malgré une valeur numérique', { timeout: 60000 }, async () => {
+  const { context, page, calls } = await openApp({
+    consent:false,
+    warnings:['[EngineError] comparaison impossible entre unités']
+  });
+  try {
+    await page.locator('#urssafConsentGrant').click();
+    await page.waitForFunction(() =>
+      (document.getElementById('urssafStatusText')?.textContent || '').includes('Le calcul n’a pas abouti'),
+      null, { timeout:15000 }
+    );
+    const smicRequests = calls.bodies.filter(body => body.expressions.includes('SMIC'));
+    assert.ok(smicRequests.length > 0, 'la règle officielle SMIC doit avoir été interrogée');
+    assert.ok(smicRequests.every(body =>
+      body.expressions.length === 1 && body.expressions[0] === 'SMIC'
+    ), 'les requêtes de référence ne doivent pas embarquer de données salariales');
+    const benchmark = await page.locator('#benchmarkBody').innerText();
+    assert.match(benchmark, /indisponible via l’API officielle/);
+    assert.doesNotMatch(benchmark, /1\s?867,02/);
+  } finally {
+    await context.close();
+  }
+});
+
 test('transmet la commune propre à chaque salaire et la conserve dans le lien partagé', { timeout: 60000 }, async () => {
   const { context, page, calls } = await openApp();
   try {

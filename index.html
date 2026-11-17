@@ -2037,7 +2037,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.7</span></div>
+    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.8</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2815,8 +2815,12 @@ function buildSmicScenario(base, amount) {
 // src/urssaf-calculation-cache.mjs
 function createUrssafCalculationCache(options = {}) {
   const maxResults = options.maxResults ?? 100;
+  const maxErrors = options.maxErrors ?? maxResults;
   if (!Number.isInteger(maxResults) || maxResults < 1) {
     throw new RangeError("maxResults doit \xEAtre un entier strictement positif.");
+  }
+  if (!Number.isInteger(maxErrors) || maxErrors < 1) {
+    throw new RangeError("maxErrors doit \xEAtre un entier strictement positif.");
   }
   const results = /* @__PURE__ */ new Map();
   const errors = /* @__PURE__ */ new Map();
@@ -2841,6 +2845,10 @@ function createUrssafCalculationCache(options = {}) {
       return errors.has(key);
     },
     setError(key, message) {
+      if (!errors.has(key) && errors.size >= maxErrors) {
+        const oldestKey = errors.keys().next().value;
+        errors.delete(oldestKey);
+      }
       errors.set(key, message);
     },
     deleteError(key) {
@@ -3130,6 +3138,12 @@ async function refreshOfficialSmic(forceRetry) {
         { fetchImpl: queuedUrssafFetch, signal: requestSignal }
       );
       if (requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
+      const engineErrors = (result.warnings || []).filter(
+        (warning) => /\[\s*EngineError\s*\]|(?:^|\s)EngineError\s*:/i.test(String(warning))
+      );
+      if (engineErrors.length) {
+        throw new Error("Le moteur Urssaf a signal\xE9 une erreur pendant la r\xE9cup\xE9ration du SMIC : " + engineErrors.map((warning) => String(warning).replace(/\s+/g, " ").trim()).join(" | "));
+      }
       if (!Number.isFinite(result.value) || result.value <= 0) throw new Error("L\u2019API Urssaf n\u2019a pas renvoy\xE9 de montant SMIC valide.");
       urssafSessionState.setOfficialSmicState({
         status: "ready",

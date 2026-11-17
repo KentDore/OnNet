@@ -44,20 +44,35 @@ test('keeps errors separate from successful results and supports retry cleanup',
   assert.equal(cache.getResult('scenario'), result);
 });
 
-test('uses a default result capacity of 100 while keeping error entries independent', () => {
+test('uses a default capacity of 100 for successful results and errors', () => {
   const cache = createUrssafCalculationCache();
   for(let index=0;index<101;index++){
     cache.setResult(String(index), { index });
+    cache.setError(`error-${index}`, `Failure ${index}`);
   }
-  cache.setError('old-error', 'Network failure');
 
   assert.equal(cache.getResult('0'), null);
   assert.deepEqual(cache.getResult('1'), { index:1 });
   assert.deepEqual(cache.getResult('100'), { index:100 });
-  assert.equal(cache.getError('old-error'), 'Network failure');
+  assert.equal(cache.getError('error-0'), null);
+  assert.equal(cache.getError('error-1'), 'Failure 1');
+  assert.equal(cache.getError('error-100'), 'Failure 100');
 });
 
-test('creates independent cache instances and validates result capacity', () => {
+test('evicts errors in FIFO order with an independently configurable capacity', () => {
+  const cache = createUrssafCalculationCache({ maxResults:5, maxErrors:2 });
+  cache.setError('a', 'first');
+  cache.setError('b', 'second');
+  // Updating an existing error does not turn FIFO into LRU.
+  cache.setError('a', 'updated');
+  cache.setError('c', 'third');
+
+  assert.equal(cache.getError('a'), null);
+  assert.equal(cache.getError('b'), 'second');
+  assert.equal(cache.getError('c'), 'third');
+});
+
+test('creates independent cache instances and validates cache capacities', () => {
   const first = createUrssafCalculationCache({ maxResults:2 });
   const second = createUrssafCalculationCache({ maxResults:2 });
   first.setResult('only-first', { value:1 });
@@ -70,6 +85,12 @@ test('creates independent cache instances and validates result capacity', () => 
     assert.throws(
       () => createUrssafCalculationCache({ maxResults }),
       /maxResults/
+    );
+  }
+  for(const maxErrors of [0, -1, 1.5, NaN, Infinity]){
+    assert.throws(
+      () => createUrssafCalculationCache({ maxErrors }),
+      /maxErrors/
     );
   }
 });
