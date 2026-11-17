@@ -291,8 +291,10 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
       'sur mobile, les actions d’en-tête partagent couleur, fond, bordure, rayon et hauteur');
     assert.equal(mobileShareStyle.borderRadius, '11px');
     const viewportContent = await page.locator('meta[name="viewport"]').getAttribute('content');
-    assert.doesNotMatch(viewportContent || '', /maximum-scale\s*=\s*1|user-scalable\s*=\s*no/i,
-      'le zoom tactile reste disponible pour les utilisateurs');
+    assert.match(viewportContent || '', /maximum-scale\s*=\s*1/i,
+      'le zoom tactile est volontairement désactivé sur mobile');
+    assert.match(viewportContent || '', /user-scalable\s*=\s*no/i,
+      'le double-tap et le pincement ne doivent pas modifier l’échelle de l’interface');
     assert.equal(await page.locator('#resetBtn').isVisible(), false);
     assert.equal(await page.locator('#printBtn').isVisible(), false);
     await page.locator('#headerMenu summary').click();
