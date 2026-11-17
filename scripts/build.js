@@ -2,6 +2,7 @@
 const fs = require('node:fs/promises');
 const path = require('node:path');
 const { build } = require('esbuild');
+const { initializeThemePreference } = require('../src/theme-preference.mjs');
 const { readAppSource, readStylesSource } = require('./source-loader');
 
 async function buildRuntime(root){
@@ -17,6 +18,7 @@ async function buildRuntime(root){
     "import { createUrssafSessionState } from './src/urssaf-session-state.mjs';",
     "import { deserializePersistedState, serializePersistedState } from './src/persistence-codec.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
+    'initializeThemePreference({ windowRef: window, documentRef: document });',
     app
   ].join('\n\n');
 
