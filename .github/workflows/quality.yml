@@ -107,6 +107,7 @@ jobs:
           node --check src/urssaf-calculation-cache.mjs
           node --check src/urssaf-session-state.mjs
           node --check src/persistence-codec.mjs
+          node --check src/theme-preference.mjs
           # Vérifier chaque fragment applicatif pour ne pas oublier les nouveaux fichiers.
           for file in src/app/*.js; do
             node --check "$file"
@@ -117,6 +118,8 @@ jobs:
       # Le build synthétique reste hors du dépôt : les tests de calcul doivent lire l'artefact livré.
       - name: Construire le HTML autonome
         run: node scripts/build.js 999.999.999 "$RUNNER_TEMP/Onnet-999.999.999.html"
+      - name: Tester le module de préférence de thème
+        run: node --test test/theme-preference.test.mjs
       - name: Tester le codec de sauvegarde locale
         run: node --test test/persistence-codec.test.mjs
       - name: Tester l'état de session Urssaf
