@@ -174,6 +174,13 @@ async function refreshOfficialSmic(forceRetry){
         'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch, signal:requestSignal }
       );
       if(requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
+      const engineErrors = (result.warnings || []).filter(warning =>
+        /\[\s*EngineError\s*\]|(?:^|\s)EngineError\s*:/i.test(String(warning))
+      );
+      if(engineErrors.length){
+        throw new Error('Le moteur Urssaf a signalé une erreur pendant la récupération du SMIC : ' +
+          engineErrors.map(warning => String(warning).replace(/\s+/g, ' ').trim()).join(' | '));
+      }
       if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
