@@ -1011,6 +1011,9 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
           `un espace doit séparer les cartes à ${width}px : ${JSON.stringify(layout.cards)}`);
       }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
+      const offerMeta = await page.locator('#maquetteYourSalary .offer-comparison-meta').nth(1).innerText();
+      assert.match(offerMeta.replace(/\\s+/g, ' '), /3\\s?400 € brut\\/mois · 40\\s?800 € brut\\/an · 35 h/,
+        'chaque offre affiche les deux montants bruts et la durée hebdomadaire dans le même ordre');
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
