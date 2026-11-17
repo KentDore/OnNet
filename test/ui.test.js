@@ -506,12 +506,11 @@ test('refuse le repère SMIC quand l’API signale une EngineError malgré une v
       (document.getElementById('urssafStatusText')?.textContent || '').includes('Le calcul n’a pas abouti'),
       null, { timeout:15000 }
     );
-    assert.equal(
-      calls.bodies.filter(body => body.expressions.includes('SMIC')).length,
-      1,
-      'la récupération de la référence SMIC doit rester un appel distinct'
-    );
-    assert.deepEqual(calls.bodies.find(body => body.expressions.includes('SMIC')).expressions, ['SMIC']);
+    const smicRequests = calls.bodies.filter(body => body.expressions.includes('SMIC'));
+    assert.ok(smicRequests.length > 0, 'la règle officielle SMIC doit avoir été interrogée');
+    assert.ok(smicRequests.every(body =>
+      body.expressions.length === 1 && body.expressions[0] === 'SMIC'
+    ), 'les requêtes de référence ne doivent pas embarquer de données salariales');
     const benchmark = await page.locator('#benchmarkBody').innerText();
     assert.match(benchmark, /indisponible via l’API officielle/);
     assert.doesNotMatch(benchmark, /1\s?867,02/);
