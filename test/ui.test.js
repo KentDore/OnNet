@@ -953,6 +953,10 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
     assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
       'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
     await page.locator('#editOfferName').click();
@@ -1606,6 +1610,10 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     const nameInput = page.locator('#editOfferName');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
     const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
     assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
       'le nom reste non sélectionné à l’ouverture');
