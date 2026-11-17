@@ -2117,3 +2117,37 @@ test('le renommage reste enregistrable avec des titres-restaurant historiques in
     await context.close();
   }
 });
+
+
+test('prépare les sections détaillées pour l’impression puis restaure leur état', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const before = await page.evaluate(() => {
+      window.__onnetPrintCalls = 0;
+      window.print = () => { window.__onnetPrintCalls += 1; };
+      return [...document.querySelectorAll('details.more, #moreMetrics, #legacySalaryCards')]
+        .map(el => ({ id:el.id, open:el.open }));
+    });
+
+    await page.locator('#headerMenu summary').click();
+    await page.locator('#printBtn').click();
+    await page.waitForFunction(() => window.__onnetPrintCalls === 1);
+
+    const duringPrint = await page.evaluate(() => ({
+      calls:window.__onnetPrintCalls,
+      states:[...document.querySelectorAll('details.more, #moreMetrics, #legacySalaryCards')]
+        .map(el => ({ id:el.id, open:el.open }))
+    }));
+    assert.equal(duringPrint.calls, 1, 'le bouton doit déclencher exactement une impression');
+    assert.ok(duringPrint.states.every(item => item.open),
+      'toutes les sections détaillées ciblées doivent être ouvertes avant impression');
+
+    await page.evaluate(() => window.dispatchEvent(new Event('afterprint')));
+    const afterPrint = await page.evaluate(() => [...document.querySelectorAll('details.more, #moreMetrics, #legacySalaryCards')]
+      .map(el => ({ id:el.id, open:el.open })));
+    assert.deepEqual(afterPrint, before,
+      'l’état initial des sections doit être restauré après fermeture de l’aperçu');
+  } finally {
+    await context.close();
+  }
+});
