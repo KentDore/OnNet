@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -2019,6 +2019,17 @@ body.salary-editor-open .integrated-offers{display:none!important}
   display:block!important;
 }
 
+/* Safari iOS agrandit automatiquement la page au focus des champs dont la
+   police est inférieure à 16 px. Garder le zoom par pincement disponible,
+   mais éviter ce zoom parasite sur les contrôles de saisie. */
+@media (max-width:640px){
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -2026,7 +2037,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.4</span></div>
+    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.5</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
