@@ -953,6 +953,10 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
     assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
       'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
     await page.locator('#editOfferName').click();
@@ -1032,6 +1036,17 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
           `un espace doit séparer les cartes à ${width}px : ${JSON.stringify(layout.cards)}`);
       }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
+      const offerMeta = await page.locator('#maquetteYourSalary .offer-comparison-meta').nth(1).innerText();
+      const normalizedOfferMeta = offerMeta.replace(/\s/g, '');
+      assert.ok(normalizedOfferMeta.includes('3400€brut/mois'));
+      assert.ok(normalizedOfferMeta.includes('40800€brut/an'));
+      assert.match(normalizedOfferMeta, /(?:35|39)h$/,
+        'la durée hebdomadaire réelle de l’offre doit être affichée');
+      assert.ok(
+        normalizedOfferMeta.indexOf('3400€brut/mois') < normalizedOfferMeta.indexOf('40800€brut/an') &&
+        normalizedOfferMeta.indexOf('40800€brut/an') < normalizedOfferMeta.search(/(?:35|39)h$/),
+        'les deux montants bruts et la durée hebdomadaire doivent être affichés dans le même ordre'
+      );
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
@@ -1595,6 +1610,10 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     const nameInput = page.locator('#editOfferName');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
     const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
     assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
       'le nom reste non sélectionné à l’ouverture');
