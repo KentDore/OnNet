@@ -357,9 +357,11 @@ function renderBenchmarks(computed){
       </article>`;
   const medianCard=`
       <article class="benchmark-item">
-        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div><span class="geo-inline"><span>Zone</span><strong>France</strong></span></div>
+        <div class="median-card-head"><div class="benchmark-label">Médiane des salaires privés</div></div>
+        <div class="benchmark-meta">Référence statistique · INSEE 2025 · France</div>
         <div class="benchmark-value">${format(medianValue)}</div>
-        <div class="benchmark-meta">Par ${unit} · INSEE 2025 · France</div>
+        <div class="benchmark-period">Net estimé · par ${unit}</div>
+        <div class="benchmark-gap-label">Écart avec la médiane</div>
         ${medianGap===null?'<div class="benchmark-result">Écart disponible après calcul</div>':'<div class="benchmark-result '+gapClass(medianGap)+'">'+gapText(medianGap)+'</div>'}
         <details class="benchmark-details"><summary>Que signifie la médiane ?</summary>
           <p>Données INSEE 2025, publiées en 2026, pour la France. La médiane publiée est de 2 238 € nets mensuels en EQTP. Le taux horaire est ramené à 151,67 h/mois ; les périodes mensuelle et annuelle sont ajustées à la durée du contrat comparé (${durationLabel}).</p>

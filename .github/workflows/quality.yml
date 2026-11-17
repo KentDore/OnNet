@@ -122,6 +122,8 @@ jobs:
         run: node --test test/theme-preference.test.mjs
       - name: Tester le codec de sauvegarde locale
         run: node --test test/persistence-codec.test.mjs
+      - name: Tester le codec des liens de partage
+        run: node --test test/share-encoding.test.mjs
       - name: Tester l'état de session Urssaf
         run: node --test test/urssaf-session-state.test.mjs
       - name: Tester le cache de calcul Urssaf
