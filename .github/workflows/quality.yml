@@ -32,8 +32,29 @@ jobs:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
         run: |
           git fetch origin "$BASE_REF"
+          is_app_change() {
+            case "$1" in
+              src/*|scripts/build.js|package.json|package-lock.json) return 0 ;;
+              *) return 1 ;;
+            esac
+          }
+
+          # Tests de contrat : une PR de tests ne doit pas publier, une PR source doit le faire.
+          is_app_change "test/ui.test.js" && { echo "Le filtre classe incorrectement un test comme applicatif."; exit 1; } || true
+          is_app_change "src/app/00-state-and-calculations.js" || { echo "Le filtre ignore un changement source."; exit 1; }
+          is_app_change "scripts/build.js" || { echo "Le filtre ignore le script de build."; exit 1; }
+          is_app_change "package-lock.json" || { echo "Le filtre ignore les dépendances."; exit 1; }
+
           CHANGED_FILES="$(git diff --name-only "origin/$BASE_REF...HEAD")"
-          if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(src/|scripts/build\.js$|package\.json$|package-lock\.json$)'; then
+          APP_CHANGED=false
+          while IFS= read -r file; do
+            if is_app_change "$file"; then
+              APP_CHANGED=true
+              break
+            fi
+          done <<< "$CHANGED_FILES"
+
+          if [ "$APP_CHANGED" = true ]; then
             echo "app_changed=true" >> "$GITHUB_OUTPUT"
             echo "La PR modifie les sources ou la chaîne de build : synchronisation HTML autorisée."
           else
