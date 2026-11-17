@@ -1,20 +1,23 @@
 'use strict';
 
-// ---------- Préférence d'apparence ----------
-// Le thème système est le défaut. Un choix manuel reste indépendant
-// des préférences du téléphone jusqu'au retour explicite au mode automatique.
-(() => {
+// Contrôleur du thème : seul ce module connaît les API navigateur utilisées.
+// Les dépendances sont injectées pour permettre des tests sans DOM réel.
+export function initializeThemePreference({ windowRef, documentRef } = {}){
+  if(!windowRef || !documentRef){
+    throw new TypeError('windowRef et documentRef sont requis.');
+  }
+
   const STORAGE_KEY = 'onnet.theme.preference';
-  const root = document.documentElement;
-  const selector = document.getElementById('themePreference');
-  const colorMeta = document.querySelector('meta[name="theme-color"]');
-  const systemPreference = window.matchMedia
-    ? window.matchMedia('(prefers-color-scheme: dark)')
+  const root = documentRef.documentElement;
+  const selector = documentRef.getElementById('themePreference');
+  const colorMeta = documentRef.querySelector('meta[name="theme-color"]');
+  const systemPreference = typeof windowRef.matchMedia === 'function'
+    ? windowRef.matchMedia('(prefers-color-scheme: dark)')
     : null;
 
   function readPreference(){
     try{
-      const saved = localStorage.getItem(STORAGE_KEY);
+      const saved = windowRef.localStorage.getItem(STORAGE_KEY);
       return saved === 'light' || saved === 'dark' ? saved : 'auto';
     }catch(_){
       return 'auto';
@@ -38,8 +41,8 @@
       const next = selector.value;
       preference = next === 'light' || next === 'dark' ? next : 'auto';
       try{
-        if(preference === 'auto') localStorage.removeItem(STORAGE_KEY);
-        else localStorage.setItem(STORAGE_KEY, preference);
+        if(preference === 'auto') windowRef.localStorage.removeItem(STORAGE_KEY);
+        else windowRef.localStorage.setItem(STORAGE_KEY, preference);
       }catch(_){
         // Le thème reste utilisable pour la session même si le stockage est bloqué.
       }
@@ -59,4 +62,4 @@
   }
 
   applyTheme();
-})();
+}

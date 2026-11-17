@@ -2037,7 +2037,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.8</span></div>
+    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.9</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2191,6 +2191,57 @@ body.salary-editor-open .integrated-offers{display:none!important}
 </div>
 
 <script type="module">
+// src/theme-preference.mjs
+function initializeThemePreference({ windowRef, documentRef } = {}) {
+  if (!windowRef || !documentRef) {
+    throw new TypeError("windowRef et documentRef sont requis.");
+  }
+  const STORAGE_KEY2 = "onnet.theme.preference";
+  const root = documentRef.documentElement;
+  const selector = documentRef.getElementById("themePreference");
+  const colorMeta = documentRef.querySelector('meta[name="theme-color"]');
+  const systemPreference = typeof windowRef.matchMedia === "function" ? windowRef.matchMedia("(prefers-color-scheme: dark)") : null;
+  function readPreference() {
+    try {
+      const saved = windowRef.localStorage.getItem(STORAGE_KEY2);
+      return saved === "light" || saved === "dark" ? saved : "auto";
+    } catch (_) {
+      return "auto";
+    }
+  }
+  let preference = readPreference();
+  function applyTheme() {
+    const theme = preference === "auto" ? systemPreference && systemPreference.matches ? "dark" : "light" : preference;
+    root.dataset.theme = theme;
+    if (colorMeta) colorMeta.content = theme === "dark" ? "#14181A" : "#176b49";
+    if (selector && selector.value !== preference) selector.value = preference;
+  }
+  if (selector) {
+    selector.value = preference;
+    selector.addEventListener("change", () => {
+      const next = selector.value;
+      preference = next === "light" || next === "dark" ? next : "auto";
+      try {
+        if (preference === "auto") windowRef.localStorage.removeItem(STORAGE_KEY2);
+        else windowRef.localStorage.setItem(STORAGE_KEY2, preference);
+      } catch (_) {
+      }
+      applyTheme();
+    });
+  }
+  if (systemPreference) {
+    const onSystemChange = () => {
+      if (preference === "auto") applyTheme();
+    };
+    if (typeof systemPreference.addEventListener === "function") {
+      systemPreference.addEventListener("change", onSystemChange);
+    } else if (typeof systemPreference.addListener === "function") {
+      systemPreference.addListener(onSystemChange);
+    }
+  }
+  applyTheme();
+}
+
 // src/urssaf-api-client.mjs
 var DEFAULT_ENDPOINT = "https://mon-entreprise.urssaf.fr/api/v1/evaluate";
 var DEFAULT_TIMEOUT_MS = 15e3;
@@ -2949,52 +3000,7 @@ function serializePersistedState(state) {
 
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
-(() => {
-  const STORAGE_KEY2 = "onnet.theme.preference";
-  const root = document.documentElement;
-  const selector = document.getElementById("themePreference");
-  const colorMeta = document.querySelector('meta[name="theme-color"]');
-  const systemPreference = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
-  function readPreference() {
-    try {
-      const saved = localStorage.getItem(STORAGE_KEY2);
-      return saved === "light" || saved === "dark" ? saved : "auto";
-    } catch (_) {
-      return "auto";
-    }
-  }
-  let preference = readPreference();
-  function applyTheme() {
-    const theme = preference === "auto" ? systemPreference && systemPreference.matches ? "dark" : "light" : preference;
-    root.dataset.theme = theme;
-    if (colorMeta) colorMeta.content = theme === "dark" ? "#14181A" : "#176b49";
-    if (selector && selector.value !== preference) selector.value = preference;
-  }
-  if (selector) {
-    selector.value = preference;
-    selector.addEventListener("change", () => {
-      const next = selector.value;
-      preference = next === "light" || next === "dark" ? next : "auto";
-      try {
-        if (preference === "auto") localStorage.removeItem(STORAGE_KEY2);
-        else localStorage.setItem(STORAGE_KEY2, preference);
-      } catch (_) {
-      }
-      applyTheme();
-    });
-  }
-  if (systemPreference) {
-    const onSystemChange = () => {
-      if (preference === "auto") applyTheme();
-    };
-    if (typeof systemPreference.addEventListener === "function") {
-      systemPreference.addEventListener("change", onSystemChange);
-    } else if (typeof systemPreference.addListener === "function") {
-      systemPreference.addListener(onSystemChange);
-    }
-  }
-  applyTheme();
-})();
+initializeThemePreference({ windowRef: window, documentRef: document });
 var idCounter = 0;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;

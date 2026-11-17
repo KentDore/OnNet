@@ -46,6 +46,9 @@ test('le build autonome embarque le client officiel et les modules source', t =>
     'les cinq ressources WOFF2 doivent être réinjectées dans les styles');
   assert.doesNotMatch(styles, /@@ONNET_FONT_/,
     'aucun marqueur de police ne doit subsister après assemblage');
+  assert.match(html, /function initializeThemePreference/, 'le module de thème doit être intégré au bundle');
+  assert.ok(html.includes('initializeThemePreference({ windowRef: window, documentRef: document });'),
+    'le contrôleur de thème doit recevoir explicitement les dépendances navigateur');
   assert.match(html, /function parseNum\(v\)/, 'le module utilitaire doit être intégré au bundle');
   assert.match(html, /function fmtHoraire\(n\)/, 'les fonctions de formatage doivent être conservées');
   assert.match(html, /function sanitizeScenario\(raw\)/, 'le module de normalisation doit être intégré');

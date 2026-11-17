@@ -7,6 +7,7 @@ const { readAppSource, readStylesSource } = require('./source-loader');
 async function buildRuntime(root){
   const app = readAppSource(root);
   const contents = [
+    "import { initializeThemePreference } from './src/theme-preference.mjs';",
     "import { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions } from './src/urssaf-api-client.mjs';",
     "import { scenarioDefaults, ICON, HEURES_BASE, parseNum, clamp, fmt, fmtHoraire, fmtHoraireSigned, fmtSigned, esc } from './src/ui-utils.mjs';",
     "import { METRIC_KEYS, METRIC_DEFAUT, sanitizeScenario, normalizeScenarioIds } from './src/state-normalizers.mjs';",
@@ -17,6 +18,7 @@ async function buildRuntime(root){
     "import { createUrssafSessionState } from './src/urssaf-session-state.mjs';",
     "import { deserializePersistedState, serializePersistedState } from './src/persistence-codec.mjs';",
     'window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };',
+    'initializeThemePreference({ windowRef: window, documentRef: document });',
     app
   ].join('\n\n');
 
