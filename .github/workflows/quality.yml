@@ -15,6 +15,7 @@ jobs:
       contents: read
     outputs:
       version: ${{ steps.meta.outputs.version }}
+      app_changed: ${{ steps.scope.outputs.app_changed }}
     steps:
       - name: Récupérer le dépôt
         uses: actions/checkout@v7
@@ -24,8 +25,23 @@ jobs:
         uses: actions/setup-node@v7
         with:
           node-version: 22
-      - name: Calculer la prochaine version SemVer
+      - name: Déterminer si la PR modifie l’application
+        id: scope
         if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        env:
+          BASE_REF: ${{ github.event.pull_request.base.ref }}
+        run: |
+          git fetch origin "$BASE_REF"
+          CHANGED_FILES="$(git diff --name-only "origin/$BASE_REF...HEAD")"
+          if printf '%s\\n' "$CHANGED_FILES" | grep -Eq '^(src/|scripts/build\\.js$|package\\.json$|package-lock\\.json$)'; then
+            echo "app_changed=true" >> "$GITHUB_OUTPUT"
+            echo "La PR modifie les sources ou la chaîne de build : synchronisation HTML autorisée."
+          else
+            echo "app_changed=false" >> "$GITHUB_OUTPUT"
+            echo "Aucun changement applicatif : pas de version ni de synchronisation HTML."
+          fi
+      - name: Calculer la prochaine version SemVer
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.scope.outputs.app_changed == 'true'
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
           PR_TITLE: ${{ github.event.pull_request.title }}
@@ -111,7 +127,7 @@ jobs:
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
       - name: Préparer le HTML et le lockfile validés
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.scope.outputs.app_changed == 'true'
         env:
           VERSION: ${{ steps.meta.outputs.version }}
         run: |
@@ -120,7 +136,7 @@ jobs:
           cp package.json "$RUNNER_TEMP/onnet-output/package.json"
           cp package-lock.json "$RUNNER_TEMP/onnet-output/package-lock.json"
       - name: Transmettre le HTML et le lockfile au job de synchronisation
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.scope.outputs.app_changed == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: onnet-html-${{ github.run_id }}
@@ -139,7 +155,7 @@ jobs:
   sync-generated-html:
     name: Synchroniser les HTML validés
     needs: test
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
+    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.test.outputs.app_changed == 'true'
     runs-on: ubuntu-24.04
     concurrency:
       group: onnet-html-sync-${{ github.event.pull_request.number }}
