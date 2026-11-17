@@ -409,3 +409,28 @@ test('interrompt une requête qui dépasse le délai configuré', async () => {
   }), /Délai dépassé/);
   assert.equal(receivedSignal.aborted, true);
 });
+
+
+test('annule une requête Urssaf active lorsque le consentement est retiré', async () => {
+  const controller = new AbortController();
+  let receivedSignal;
+  const fetchImpl = (_url, options) => new Promise((resolve, reject) => {
+    receivedSignal = options.signal;
+    options.signal.addEventListener('abort', () => {
+      const error = new Error('aborted');
+      error.name = 'AbortError';
+      reject(error);
+    }, { once:true });
+  });
+
+  const pending = evaluateUrssafExpression('SMIC', {}, {
+    fetchImpl,
+    signal:controller.signal
+  });
+  await new Promise(resolve => setImmediate(resolve));
+  controller.abort();
+  await assert.rejects(pending, error =>
+    error.name === 'AbortError' && /retrait du consentement/.test(error.message)
+  );
+  assert.equal(receivedSignal.aborted, true);
+});

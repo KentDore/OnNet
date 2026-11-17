@@ -7,7 +7,20 @@
 <meta name="theme-color" content="#176b49">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
-<script>try{const t=localStorage.getItem("onnet.theme");document.documentElement.dataset.theme=t==="dark"?"dark":"light";}catch(e){document.documentElement.dataset.theme="light";}</script>
+<script>
+  (() => {
+    try {
+      const preference = localStorage.getItem("onnet.theme.preference") || "auto";
+      const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = preference === "auto" ? (dark ? "dark" : "light") : preference;
+      document.documentElement.dataset.theme = theme;
+      const color = document.querySelector('meta[name="theme-color"]');
+      if (color) color.content = theme === "dark" ? "#14181A" : "#176b49";
+    } catch (_) {
+      document.documentElement.dataset.theme = "light";
+    }
+  })();
+</script>
 <style>
 @@ONNET_STYLES@@
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
@@ -20,9 +33,8 @@
     <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v@@ONNET_VERSION@@</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
-      <button type="button" class="print-btn theme-toggle" id="themeToggle" aria-label="Activer le mode sombre" aria-pressed="false"><span class="theme-toggle-icon" aria-hidden="true">☾</span><span class="theme-toggle-label">Sombre</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
-        <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
+        <div class="header-menu-panel"><label class="header-theme-setting" for="themePreference">Apparence<select id="themePreference" aria-label="Thème d’affichage"><option value="auto">Selon le téléphone</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
       </details>
     </div>
   </div>
@@ -38,7 +50,6 @@
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="comparison-subhead comparison-subhead-actions"><h2 id="maquetteCompareTitle">Vos offres</h2><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
 
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
@@ -47,17 +58,26 @@
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Détails du calcul</summary>
+        <summary>Informations Urssaf</summary>
+        <p class="sub-hint">Messages issus du calcul officiel Mon-entreprise.</p>
         <ul id="urssafWarningsList"></ul>
       </details>
+      <div class="urssaf-consent-actions">
+        <button type="button" class="urssaf-consent-grant" id="urssafConsentGrant" hidden>Autoriser les calculs Urssaf</button>
+        <details class="urssaf-consent-details" id="urssafConsentDetails">
+          <summary>Quelles données seront transmises ?</summary>
+          <p>Votre autorisation permet d’envoyer à l’API officielle Mon-entreprise / Urssaf les paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle et titres-restaurant. Elle est conservée séparément de vos offres sur cet appareil et peut être retirée ici.</p>
+        </details>
+        <button type="button" class="urssaf-consent-revoke" id="urssafConsentRevoke" hidden>Retirer l’autorisation</button>
+      </div>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Comparer les offres</h2>
     <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     
     <div class="hint" id="stackHint"></div>
-    <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
     <!-- Espace conservé pour les messages contextuels du comparatif. -->

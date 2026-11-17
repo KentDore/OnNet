@@ -85,3 +85,11 @@ test('the session API is read-only and exposes no mutable state fields', () => {
   assert.equal('consentGranted' in state, false);
   assert.equal('officialSmicState' in state, false);
 });
+
+test('revoking consent prevents further salary transmissions in this runtime', () => {
+  const state = createUrssafSessionState();
+  state.grantConsent();
+  assert.equal(state.isConsentGranted(), true);
+  state.revokeConsent();
+  assert.equal(state.isConsentGranted(), false);
+});

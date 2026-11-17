@@ -230,7 +230,7 @@ test('indique la source Urssaf et ne transmet aucune donnée avant la saisie du 
       'la récupération du SMIC ne doit transmettre aucun salaire');
     assert.equal(await page.locator('#absenceModule').count(), 0);
     assert.equal(await page.getByText('Simuler une absence', { exact: true }).count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
     assert.equal(await page.locator('#urssafRememberConsent').count(), 0,
       'le choix de consentement ne doit plus être mémorisé par une case à cocher');
     assert.equal(await page.locator('.urssaf-data-details').count(), 0, 'le panneau de consentement redondant doit rester supprimé');
@@ -291,8 +291,21 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
       'sur mobile, les actions d’en-tête partagent couleur, fond, bordure, rayon et hauteur');
     assert.equal(mobileShareStyle.borderRadius, '11px');
     const viewportContent = await page.locator('meta[name="viewport"]').getAttribute('content');
+    assert.match(viewportContent || '', /width\s*=\s*device-width/i,
+      'la mise en page doit suivre la largeur réelle de l’écran mobile');
+    assert.match(viewportContent || '', /initial-scale\s*=\s*1(?:\.0)?/i,
+      'la page doit démarrer à son échelle normale');
     assert.doesNotMatch(viewportContent || '', /maximum-scale\s*=\s*1|user-scalable\s*=\s*no/i,
-      'le zoom tactile reste disponible pour les utilisateurs');
+      'le navigateur doit conserver le zoom tactile pour l’accessibilité mobile');
+    const mobileFieldFontSizes = await page.locator('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea').evaluateAll(elements =>
+      elements.map(element => ({
+        field: element.tagName.toLowerCase() + (element.id ? '#' + element.id : ''),
+        fontSize: Number.parseFloat(getComputedStyle(element).fontSize)
+      }))
+    );
+    assert.ok(mobileFieldFontSizes.length > 0, 'les champs mobiles doivent être présents');
+    assert.ok(mobileFieldFontSizes.every(field => field.fontSize >= 16),
+      'les champs mobiles doivent rester à 16 px minimum pour éviter le zoom automatique au focus sur iOS : ' + JSON.stringify(mobileFieldFontSizes));
     assert.equal(await page.locator('#resetBtn').isVisible(), false);
     assert.equal(await page.locator('#printBtn').isVisible(), false);
     await page.locator('#headerMenu summary').click();
@@ -308,6 +321,54 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
       'les actions doivent rester alignées dans la même rangée que le logo sur mobile');
     assert.ok(actions.x + actions.width <= header.x + header.width + 1,
       'les actions doivent rester dans la barre supérieure');
+  } finally {
+    await context.close();
+  }
+});
+
+test('conserve l’autorisation Urssaf et les offres après rechargement sans réinitialisation', { timeout:60000 }, async () => {
+  const { context, page, calls } = await openApp({ consent:false });
+  try {
+    const salaryRequests = () => calls.bodies.filter(body =>
+      body.expressions.includes('salarié . rémunération . brut')
+    ).length;
+    const original = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.ok(original?.scenarios?.length, 'les offres existantes doivent être restaurées');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true,
+      'une autorisation absente doit être demandée sans effacer les offres');
+    assert.equal(salaryRequests(), 0,
+      'aucun salaire ne doit être transmis avant l’autorisation explicite');
+
+    await page.locator('#urssafConsentGrant').click();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.ok(salaryRequests() > 0, 'le calcul démarre après autorisation explicite');
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), 'granted');
+
+    await page.reload();
+    await page.waitForFunction(() => {
+      const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
+      return document.getElementById('urssafStatusText')?.textContent.includes('Calculs à jour') &&
+        cards.length > 0 && cards.every(card => card.dataset.resultState === 'ready');
+    }, null, { timeout:20000 });
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), false,
+      'l’autorisation enregistrée doit être restaurée après actualisation');
+    assert.equal(await page.locator('#urssafConsentRevoke').isVisible(), true);
+    const afterReload = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterReload.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      original.scenarios.map(s => ({name:s.name,brut:s.brut,dureeType:s.dureeType})),
+      'les offres sont conservées à l’identique');
+
+    await page.locator('#urssafConsentRevoke').click();
+    assert.equal(await page.evaluate(() => localStorage.getItem('onnet.urssaf.consent.v1')), null,
+      'le retrait doit supprimer uniquement l’autorisation');
+    assert.equal(await page.locator('#urssafConsentGrant').isVisible(), true);
+    const afterRevoke = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.deepEqual(afterRevoke.scenarios.map(s => s.name), original.scenarios.map(s => s.name),
+      'retirer l’autorisation ne doit pas effacer les offres');
   } finally {
     await context.close();
   }
@@ -479,19 +540,49 @@ test('transmet la commune propre à chaque salaire et la conserve dans le lien p
   }
 });
 
-test('affiche les avertissements et les variables par défaut renvoyés par Urssaf', { timeout: 60000 }, async () => {
+test('affiche les avertissements Urssaf sans exposer les diagnostics internes de valeurs par défaut', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({
     warnings: [{ message: 'Une règle expérimentale a été utilisée.' }],
     missingVariables: { 'salarié . contrat . catégorie professionnelle': 1 }
   });
   try {
     assert.equal(await page.locator('#urssafWarnings').isVisible(), true);
+    assert.equal(await page.locator('#urssafWarnings summary').innerText(), 'Informations Urssaf');
     await page.locator('#urssafWarnings summary').scrollIntoViewIfNeeded();
     await page.locator('#urssafWarnings summary').click();
+    assert.match(await page.locator('#urssafWarnings').innerText(), /Messages issus du calcul officiel Mon-entreprise\./);
     const diagnostics = await page.locator('#urssafWarningsList').innerText();
     assert.match(diagnostics, /règle expérimentale/);
-    assert.match(diagnostics, /catégorie professionnelle/);
-    assert.equal(await page.locator('#cardsBody .result-source details').count(), 1);
+    assert.doesNotMatch(diagnostics, /catégorie professionnelle|Valeur par défaut utilisée/);
+    assert.equal(await page.locator('#cardsBody .result-source details summary').first().innerText(), 'Voir les messages (1)',
+      'la source Urssaf doit être explicite sur chaque offre');
+    // Vérifie que le libellé reste cohérent après un second calcul, pas seulement
+    // lors du rendu initial de la carte.
+    await openSalaryEditor(page);
+    await page.locator('#editOfferGross').fill('2400');
+    await page.locator('#editOfferSave').click();
+    await page.waitForFunction(() => {
+      const card = document.querySelector('#cardsBody [data-card]');
+      return card?.dataset.resultState === 'ready' &&
+        card.querySelector('.result-source details summary')?.textContent === 'Voir les messages (1)';
+    });
+    assert.equal(await page.locator('#cardsBody .result-source details summary').first().innerText(), 'Voir les messages (1)');
+  } finally {
+    await context.close();
+  }
+});
+
+test('masque les diagnostics internes de valeurs par défaut quand aucun avertissement Urssaf ne remonte', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({
+    missingVariables: {
+      'entreprise . catégorie juridique': 1,
+      'entreprise . catégorie juridique . EI': 1,
+      'entreprise . catégorie juridique . SELAS': 1
+    }
+  });
+  try {
+    assert.equal(await page.locator('#urssafWarnings').isVisible(), false);
+    assert.equal(await page.locator('#cardsBody .result-source details').count(), 0);
   } finally {
     await context.close();
   }
@@ -862,6 +953,18 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
+      'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
+    await page.locator('#editOfferName').click();
+    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
+      'un clic dans le champ sélectionne tout le nom existant');
+    await page.locator('#editOfferName').pressSequentially('Nouvelle offre');
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Nouvelle offre',
+      'la saisie doit remplacer le nom existant sans suppression manuelle');
     assert.equal(await page.locator('#editOfferCommune').count(), 0);
     assert.equal(await page.locator('#editOfferMutuellePat').count(), 0);
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
@@ -933,6 +1036,17 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
           `un espace doit séparer les cartes à ${width}px : ${JSON.stringify(layout.cards)}`);
       }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
+      const offerMeta = await page.locator('#maquetteYourSalary .offer-comparison-meta').nth(1).innerText();
+      const normalizedOfferMeta = offerMeta.replace(/\s/g, '');
+      assert.ok(normalizedOfferMeta.includes('3400€brut/mois'));
+      assert.ok(normalizedOfferMeta.includes('40800€brut/an'));
+      assert.match(normalizedOfferMeta, /(?:35|39)h$/,
+        'la durée hebdomadaire réelle de l’offre doit être affichée');
+      assert.ok(
+        normalizedOfferMeta.indexOf('3400€brut/mois') < normalizedOfferMeta.indexOf('40800€brut/an') &&
+        normalizedOfferMeta.indexOf('40800€brut/an') < normalizedOfferMeta.search(/(?:35|39)h$/),
+        'les deux montants bruts et la durée hebdomadaire doivent être affichés dans le même ordre'
+      );
       assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
         `le graphique déborde à ${width}px : ${JSON.stringify(layout)}`);
     }
@@ -1001,6 +1115,10 @@ test('la page ne déborde pas horizontalement sur les largeurs mobiles', { timeo
 test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
   try {
+    assert.equal(await page.locator('#comparePanel .comparison-period').count(), 1,
+      'le sélecteur de période appartient au panneau de comparaison');
+    assert.equal(await page.locator('.unified-salary-panel .comparison-period').count(), 0,
+      'la gestion des offres ne doit pas contenir le sélecteur de période');
     const hour = page.locator('[data-maquette-period="hour"]');
     const month = page.locator('[data-maquette-period="month"]');
     const year = page.locator('[data-maquette-period="year"]');
@@ -1279,7 +1397,7 @@ test('le bouton principal informe explicitement de la transmission des données 
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0);
     assert.equal(await page.locator('#updateDeclaredSalary').count(), 0, 'aucun bouton de calcul ne doit être affiché');
     assert.equal(await page.locator('#urssafCalculateBtn').count(), 0);
-    assert.match(await page.locator('#urssafStatusText').innerText(), /Renseignez votre salaire pour autoriser sa transmission/);
+    assert.match(await page.locator('#urssafStatusText').innerText(), /Vos offres sont conservées/);
   } finally {
     await context.close();
   }
@@ -1483,7 +1601,6 @@ test('les repères SMIC et médiane restent en deux colonnes lisibles sur tous l
   }
 });
 
-
 test('la première offre peut être renommée et sauvegardée', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
@@ -1491,30 +1608,12 @@ test('la première offre peut être renommée et sauvegardée', { timeout: 60000
     await page.locator('#editOfferName').fill('Mon poste renommé');
     await page.locator('#editOfferSave').click();
     await page.waitForFunction(() => {
-      const state=JSON.parse(localStorage.getItem('onnet.state.v1'));
-      return state?.scenarios?.[0]?.name==='Mon poste renommé';
+      const state = JSON.parse(localStorage.getItem('onnet.state.v1'));
+      return state?.scenarios?.[0]?.name === 'Mon poste renommé';
     });
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(),'Mon poste renommé');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(), 'Mon poste renommé');
     await page.reload();
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(),'Mon poste renommé');
-  } finally {
-    await context.close();
-  }
-});
-
-test('le mode sombre est activable et mémorisé après rechargement', { timeout: 60000 }, async () => {
-  const { context, page } = await openApp({ consent:false });
-  try {
-    const root=page.locator('html');
-    await page.locator('#themeToggle').click();
-    assert.equal(await root.getAttribute('data-theme'),'dark');
-    assert.equal(await page.locator('#themeToggle').getAttribute('aria-pressed'),'true');
-    assert.equal(await page.evaluate(()=>localStorage.getItem('onnet.theme')),'dark');
-    await page.reload();
-    assert.equal(await root.getAttribute('data-theme'),'dark');
-    await page.locator('#themeToggle').click();
-    assert.equal(await root.getAttribute('data-theme'),'light');
-    assert.equal(await page.evaluate(()=>localStorage.getItem('onnet.theme')),'light');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').first().innerText(), 'Mon poste renommé');
   } finally {
     await context.close();
   }
@@ -1528,6 +1627,24 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     // les contrôles de renommage et de référence qui y sont volontairement masqués.
     
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
+    const nameInput = page.locator('#editOfferName');
+    await page.waitForFunction(() => {
+      const field = document.querySelector('#editOfferName');
+      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+    }, { timeout: 5000 });
+    const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
+    assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
+      'le nom reste non sélectionné à l’ouverture');
+    await nameInput.click();
+    const selectedName = await nameInput.evaluate(el => ({
+      value: el.value, start: el.selectionStart, end: el.selectionEnd
+    }));
+    assert.equal(selectedName.start, 0,
+      'un clic sélectionne le nom depuis son premier caractère');
+    assert.equal(selectedName.end, selectedName.value.length,
+      'la sélection couvre la totalité du nom, quelle que soit sa longueur');
+    assert.equal(await page.locator('#editOfferName').locator('xpath=..').innerText().then(text => text.includes('facultatif')), false,
+      'le libellé ne présente plus le nom comme facultatif');
     await page.locator('#editOfferName').fill('Proposition Rennes');
     await page.locator('#editOfferSave').click();
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-name').nth(1).innerText(), 'Proposition Rennes');
@@ -1650,6 +1767,24 @@ test('les cartes de gestion ne dupliquent pas les montants nets du comparatif', 
   }
 });
 
+
+test('le changement de période affiche un salaire arrondi sans dérive de conversion', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp();
+  try {
+    await page.locator('#maquetteAddSalary').click();
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddPeriod [data-period="mois"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '2458,33',
+      'le mensuel doit être affiché au centime, sans longue décimale flottante');
+    await page.locator('#modalAddPeriod [data-period="an"]').click();
+    assert.equal(await page.locator('#modalAddInput').inputValue(), '29500',
+      'le retour à l’annuel doit conserver le montant initial');
+    await page.locator('#modalAddCancel').click();
+  } finally {
+    await context.close();
+  }
+});
 
 test('compare correctement une offre 35 h et une offre 39 h sur les trois périodes', { timeout: 60000 }, async () => {
   const { context, page } = await openApp();
@@ -1789,6 +1924,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     });
     await page.reload();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    await page.locator('#editOfferName').click();
     await page.locator('#editOfferName').fill('Poste modifié');
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
@@ -1875,3 +2011,127 @@ test('les actions tactiles utiles vibrent brièvement seulement si l’API est d
   }
 });
 
+
+
+test('le thème automatique suit le système et les choix manuels restent prioritaires', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent: false });
+  try {
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.reload();
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
+      'le thème sombre du système doit être appliqué dès le chargement');
+    const darkSurfaces = await page.evaluate(() => {
+      const read = selector => {
+        const style = getComputedStyle(document.querySelector(selector));
+        return { background: style.backgroundColor, backgroundImage: style.backgroundImage, color: style.color };
+      };
+      return {
+        body: read('body'),
+        hero: read('header.hero'),
+        offerPanel: read('.unified-salary-panel'),
+        comparison: read('#comparePanel'),
+        benchmark: read('#benchmarkMount .benchmark-item')
+      };
+    });
+    for (const [name, surface] of Object.entries(darkSurfaces)) {
+      assert.notEqual(surface.background, 'rgb(255, 255, 255)',
+        `la surface ${name} ne doit pas rester blanche en thème sombre`);
+    }
+
+    const textContrasts = await page.evaluate(() => {
+      const luminance = color => {
+        const values = color.match(/[\d.]+/g)?.slice(0, 3).map(Number);
+        if (!values || values.length !== 3) return null;
+        const channels = values.map(value => {
+          const channel = value / 255;
+          return channel <= 0.04045 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2];
+      };
+      const ratio = (foreground, background) => {
+        const a = luminance(foreground), b = luminance(background);
+        if (a === null || b === null) return null;
+        return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+      };
+      const pairs = [
+        ['comparison title', '#comparePanel .bars-title', '#comparePanel'],
+        ['benchmark label', '#benchmarkMount .benchmark-label', '#benchmarkMount .benchmark-item'],
+        ['benchmark value', '#benchmarkMount .benchmark-value', '#benchmarkMount .benchmark-item']
+      ];
+      return pairs.map(([name, foreground, background]) => {
+        const fg = document.querySelector(foreground);
+        const bg = document.querySelector(background);
+        if (!fg || !bg) return { name, contrast: null };
+        return {
+          name,
+          contrast: ratio(getComputedStyle(fg).color, getComputedStyle(bg).backgroundColor)
+        };
+      });
+    });
+    for (const pair of textContrasts) {
+      assert.ok(pair.contrast !== null && pair.contrast >= 4.5,
+        `${pair.name} doit respecter le contraste WCAG AA (4,5:1), obtenu : ${pair.contrast}`);
+    }
+    assert.match(darkSurfaces.hero.backgroundImage, /linear-gradient/,
+      'le bandeau principal doit conserver son dégradé dédié en thème sombre');
+    assert.notEqual(darkSurfaces.comparison.background, darkSurfaces.body.background,
+      'le comparatif doit avoir une surface dédiée en thème sombre');
+    await page.locator('#headerMenu summary').click();
+    const theme = page.locator('#themePreference');
+    assert.equal(await theme.inputValue(), 'auto');
+
+    await theme.selectOption('light');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
+      'un choix manuel clair doit primer sur le système');
+    await page.emulateMedia({ colorScheme: 'dark' });
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light');
+
+    await theme.selectOption('auto');
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'dark',
+      'le retour au mode automatique doit reprendre la préférence système');
+    await page.emulateMedia({ colorScheme: 'light' });
+    await page.waitForFunction(() => document.documentElement.dataset.theme === 'light', null, { timeout: 3000 });
+    assert.equal(await page.locator('html').getAttribute('data-theme'), 'light',
+      'un changement système doit être suivi sans recharger la page');
+    assert.equal(await theme.inputValue(), 'auto');
+  } finally {
+    await context.close();
+  }
+});
+
+
+test('le renommage reste enregistrable avec des titres-restaurant historiques incomplets et le nom reste sans fond en thème sombre', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.evaluate(() => {
+      const state=JSON.parse(localStorage.getItem('onnet.state.v1'));
+      state.scenarios[0].joursResto=0;
+      state.scenarios[0].valeurResto=8;
+      state.scenarios[0].partResto=50;
+      localStorage.setItem('onnet.state.v1',JSON.stringify(state));
+      localStorage.setItem('onnet.theme.preference','dark');
+    });
+    await page.reload();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const save=page.locator('#editOfferSave');
+    assert.equal(await save.isEnabled(),true,
+      'un paramétrage historique inchangé ne doit pas bloquer le simple renommage');
+    await page.locator('#editOfferName').click();
+    await page.locator('#editOfferName').fill('Poste renommé');
+    await save.click();
+    const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('onnet.state.v1')));
+    assert.equal(saved.scenarios[0].name,'Poste renommé');
+    assert.equal(saved.scenarios[0].joursResto,0,'les paramètres historiques restent inchangés');
+    assert.equal(saved.scenarios[0].valeurResto,8,'les paramètres historiques restent inchangés');
+    await page.waitForFunction(()=>document.documentElement.dataset.theme==='dark');
+    const nameStyle=await page.locator('#maquetteYourSalary .offer-comparison-name').first().evaluate(el=>{
+      const style=getComputedStyle(el);
+      return {background:style.backgroundColor,backgroundImage:style.backgroundImage};
+    });
+    assert.equal(nameStyle.background,'rgba(0, 0, 0, 0)',
+      'le nom de l’offre ne doit pas avoir de fond en thème sombre');
+    assert.equal(nameStyle.backgroundImage,'none');
+  } finally {
+    await context.close();
+  }
+});

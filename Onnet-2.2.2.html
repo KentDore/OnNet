@@ -7,6 +7,20 @@
 <meta name="theme-color" content="#176b49">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
 <link rel="apple-touch-icon" href="./apple-touch-icon.png">
+<script>
+  (() => {
+    try {
+      const preference = localStorage.getItem("onnet.theme.preference") || "auto";
+      const dark = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const theme = preference === "auto" ? (dark ? "dark" : "light") : preference;
+      document.documentElement.dataset.theme = theme;
+      const color = document.querySelector('meta[name="theme-color"]');
+      if (color) color.content = theme === "dark" ? "#14181A" : "#176b49";
+    } catch (_) {
+      document.documentElement.dataset.theme = "light";
+    }
+  })();
+</script>
 <style>
 
 /* Polices auto-hébergées (embarquées, aucun appel réseau externe) — sous-ensemble
@@ -128,6 +142,16 @@
     .header-actions .print-btn svg{width:13px;height:13px;}
   }
 
+  .header-theme-setting{
+    display:flex; align-items:center; justify-content:space-between; gap:14px;
+    padding:10px 12px; color:var(--ink-soft); font-size:12.5px; font-weight:600;
+  }
+  .header-theme-setting select{
+    max-width:170px; min-height:36px; padding:7px 28px 7px 10px;
+    border:1px solid var(--line); border-radius:9px;
+    background:var(--surface); color:var(--ink); font:inherit;
+  }
+  .header-theme-setting select:focus-visible{outline:2px solid var(--accent);outline-offset:2px;}
   .share-banner{font-family:'Inter',sans-serif; font-size:12.5px; color:var(--ink-soft); background:var(--bg); border:1px solid var(--line); border-radius:10px; padding:9px 13px; margin:0 0 16px; display:flex; gap:8px; align-items:flex-start;}
   .share-banner[hidden]{display:none;}
   .toast{
@@ -1208,7 +1232,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
   color:#244B36;
   opacity:1;
 }
-.urssaf-status:not(.is-error):not(.has-diagnostics){
+.urssaf-status:not(.is-error):not(.has-diagnostics):not(.has-consent-actions){
   display:none !important;
 }
 .urssaf-status.is-error{
@@ -1618,6 +1642,383 @@ body.salary-editor-open .integrated-offers{display:none!important}
 }
 
 
+
+/* ---------- Cohérence visuelle du thème sombre ---------- */
+/* Les écrans principaux ont des styles éditoriaux explicites : ils doivent
+   suivre les mêmes surfaces et contrastes que les composants génériques. */
+:root[data-theme="dark"]{
+  --maquette-bg:#141a18;
+  --maquette-green:#65c99a;
+  --maquette-dark:#a8e4c2;
+}
+:root[data-theme="dark"] body{
+  background:linear-gradient(180deg,#171e1b 0%,var(--bg) 100%);
+}
+:root[data-theme="dark"] header.hero{
+  background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
+  border-color:#34463b;
+  box-shadow:0 8px 28px rgba(0,0,0,.22);
+}
+:root[data-theme="dark"] header.hero h1,
+:root[data-theme="dark"] .comparison-subhead h2,
+:root[data-theme="dark"] #comparePanel .bars-title,
+:root[data-theme="dark"] .maquette-top>.brand{
+  color:#edf5ef;
+}
+:root[data-theme="dark"] header.hero .intro,
+:root[data-theme="dark"] header.hero .trust,
+:root[data-theme="dark"] header.hero .trust strong{
+  color:#b7c8bd;
+}
+:root[data-theme="dark"] header.hero .eyebrow,
+:root[data-theme="dark"] .maquette-top>.brand .brand-accent{
+  color:#75d6a5;
+}
+:root[data-theme="dark"] header.hero .trust{
+  background:#24352b;
+  border-color:#3a5142;
+}
+:root[data-theme="dark"] header.hero .trust-icon{
+  background:#294637;
+  color:#8be0b2;
+}
+:root[data-theme="dark"] header.hero .wave path:nth-child(1){fill:#244332}
+:root[data-theme="dark"] header.hero .wave path:nth-child(2){fill:#28563d}
+:root[data-theme="dark"] header.hero .wave path:nth-child(3){fill:#367b54}
+
+:root[data-theme="dark"] #comparePanel,
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .unified-salary-panel{
+  background:#1c2420;
+  border-color:#344139;
+  box-shadow:0 8px 26px rgba(0,0,0,.18);
+}
+:root[data-theme="dark"] .panel-advanced,
+:root[data-theme="dark"] .advanced-scenarios{
+  background:#1b2420;
+  border-color:#3b4a41;
+  color:#c3d0c7;
+}
+:root[data-theme="dark"] .advanced-scenarios>summary{color:#c3d0c7}
+:root[data-theme="dark"] .comparison-subhead h2{color:#e5f0e8}
+:root[data-theme="dark"] .comparison-period{
+  background:#222d27;
+  border-color:#3a4b40;
+}
+:root[data-theme="dark"] .comparison-period>span{color:#bdcfc3}
+:root[data-theme="dark"] .comparison-period-tabs{background:#17201b}
+:root[data-theme="dark"] .comparison-period-tabs button{color:#aebdb3}
+:root[data-theme="dark"] .comparison-period-tabs button[aria-pressed=true]{
+  background:#397b58;color:#fff;
+}
+:root[data-theme="dark"] .offer-tabs{background:#17221c}
+:root[data-theme="dark"] .offer-tab{color:#b8c9be}
+:root[data-theme="dark"] .offer-tab.active{
+  background:#293a30;border-color:#496653;color:#a2e3bd;
+}
+:root[data-theme="dark"] .offer-tab small{color:#9cac9f}
+:root[data-theme="dark"] .comparison-subhead-actions .add-salary{
+  background:#263d30;border-color:#42644d;color:#a1e1b9;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary{
+  background:linear-gradient(145deg,#263a2e,#202d25);
+  border-color:#3c6248;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>span{color:#d5e8da}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>strong{color:#91dfb0}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-comparison-base{
+  border-color:rgba(125,207,157,.2);color:#aebfb3;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-item{
+  background:#222c26;border-color:#3b4a40;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-label{color:#d0e0d5}
+:root[data-theme="dark"] #benchmarkMount .benchmark-value{color:#a5e3bb}
+:root[data-theme="dark"] #benchmarkMount .benchmark-meta,
+:root[data-theme="dark"] #benchmarkMount .benchmark-details p{color:#a4b3a9}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result{
+  background:#294735;color:#a8e6bd;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result.benchmark-negative{
+  background:#482d25;color:#f0a98b;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details{border-color:#3b4a40}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details summary{color:#8cdbac}
+
+:root[data-theme="dark"] .offer-comparison-card,
+:root[data-theme="dark"] .comparison-offer-card{
+  background:#222c26;border-color:#3b4a40;color:#e3ece5;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] .offer-comparison-card.is-reference,
+:root[data-theme="dark"] .comparison-offer-card.is-reference{
+  background:linear-gradient(145deg,#293d30,#222d26);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] .offer-comparison-card h4,
+:root[data-theme="dark"] .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] .offer-comparison-index,
+:root[data-theme="dark"] .offer-comparison-meta,
+:root[data-theme="dark"] .comparison-offer-index,
+:root[data-theme="dark"] .comparison-offer-value-label,
+:root[data-theme="dark"] .comparison-offer-value small,
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] .offer-comparison-net,
+:root[data-theme="dark"] .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] .offer-reference-label,
+:root[data-theme="dark"] .comparison-reference-badge{
+  background:#304c39;color:#a8e5bc;border-color:#45664d;
+}
+:root[data-theme="dark"] .offer-comparison-edit,
+:root[data-theme="dark"] .comparison-offer-head .offer-comparison-edit{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .insight{background:#26382d;color:#d5e6d9}
+:root[data-theme="dark"] #comparePanel .insight strong,
+:root[data-theme="dark"] .offer-net-details summary{color:#8cdbac}
+:root[data-theme="dark"] #comparePanel .insight-caption{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .insight.neutral{background:#29332d;color:#b7c5bb}
+
+:root[data-theme="dark"] .module-card,
+:root[data-theme="dark"] .module-card .module-body{
+  background:#202a24;border-color:#39483e;
+}
+:root[data-theme="dark"] .module-name{color:#e0ebe3}
+:root[data-theme="dark"] .module-desc,
+:root[data-theme="dark"] .modules-sub{color:#a9b8ae}
+:root[data-theme="dark"] .module-icon{background:#2a4032;color:#8fdbac}
+:root[data-theme="dark"] .module-card.is-open .module-icon{background:#397b58;color:#fff}
+:root[data-theme="dark"] .module-switch{background:#46534a}
+:root[data-theme="dark"] .panel-nested,
+:root[data-theme="dark"] .onboarding-optional{border-color:#39483f}
+:root[data-theme="dark"] .onboarding-optional .optional-label{
+  background:#27332b;border-color:#405047;color:#b4c3b8;
+}
+:root[data-theme="dark"] .share-banner,
+:root[data-theme="dark"] .modal-share-input{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+}
+:root[data-theme="dark"] .header-menu-panel{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+  box-shadow:0 12px 32px rgba(0,0,0,.38);
+}
+:root[data-theme="dark"] .header-menu-panel button{color:#dce8df}
+:root[data-theme="dark"] .header-menu-panel button:hover{background:#2a4032}
+:root[data-theme="dark"] .header-theme-setting{color:#b9c8be}
+:root[data-theme="dark"] .header-theme-setting select{
+  background:#17201b;border-color:#46564b;color:#e3ece5;
+}
+:root[data-theme="dark"] .maquette-top>.brand .brand-version{
+  background:#29352e;color:#aebdb3;
+}
+:root[data-theme="dark"] .add-salary,
+:root[data-theme="dark"] .offer-rename-button,
+:root[data-theme="dark"] .salary-editor-back{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
+:root[data-theme="dark"] input,
+:root[data-theme="dark"] select,
+:root[data-theme="dark"] textarea{
+  background-color:#18211c;border-color:#46564b;color:#e5eee7;
+}
+:root[data-theme="dark"] input::placeholder,
+:root[data-theme="dark"] textarea::placeholder{color:#8e9f93}
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus{
+  border-color:#70c995;box-shadow:0 0 0 2px rgba(112,201,149,.18);
+}
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-actions{
+  background:#202a24;border-color:#3b4a40;color:#e2ebe4;
+}
+:root[data-theme="dark"] .modal-btn-cancel{
+  background:#29352e;border-color:#46564b;color:#e0eae3;
+}
+:root[data-theme="dark"] .toast{background:#e1eee5;color:#18221c}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .disclaimer-summary,
+:root[data-theme="dark"] .more-body{color:#bdc9c0}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .more-body{border-color:#39483f}
+:root[data-theme="dark"] .result-source,
+:root[data-theme="dark"] .urssaf-status{color:#c4d0c7}
+:root[data-theme="dark"] .urssaf-status-dot{background:#70d49a}
+:root[data-theme="dark"] .benchmark-positive{color:#8cdbac}
+:root[data-theme="dark"] .benchmark-negative{color:#f0a98b}
+:root[data-theme="dark"] .commune-suggestions{
+  background:#202a24;border-color:#46564b;
+}
+:root[data-theme="dark"] .commune-option{border-color:#39483f;color:#e0eae3}
+:root[data-theme="dark"] .commune-option:hover,
+:root[data-theme="dark"] .commune-option:focus-visible{background:#2a4032}
+:root[data-theme="dark"] .commune-search-status{color:#aab9ae}
+:root[data-theme="dark"] .onboarding-mutuelle-icon,
+:root[data-theme="dark"] .onboarding-consent-icon,
+:root[data-theme="dark"] .onboarding-tr-icon{
+  background:#294735;color:#8cdbac;
+}
+:root[data-theme="dark"] .stack-seg-net,
+:root[data-theme="dark"] .wf-stack-net{filter:brightness(1.18) saturate(.85)}
+:root[data-theme="dark"] .stack-seg{box-shadow:0 1px 2px rgba(0,0,0,.28)}
+:root[data-theme="dark"] .skip-link{color:#102017}
+
+
+/* Actions des offres : compactes, lisibles et cohérentes sur mobile. */
+.offer-comparison-card-head{min-width:0;flex-wrap:wrap;align-items:center}
+.offer-comparison-card-head>div:first-child{min-width:0;flex:1 1 120px}
+.offer-comparison-card-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 1 auto;min-width:0}
+.offer-reference-select{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:6px 10px;border:1px solid #cfe3d4;border-radius:9px;
+  background:#edf6ef;color:#176b49;font-size:11px;font-weight:750;line-height:1.2;
+  white-space:nowrap;cursor:pointer;
+}
+.offer-reference-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:28px;padding:5px 9px;border-radius:999px;
+  background:#e2f2e6;color:#176b49;font-size:10px;font-weight:800;
+}
+.offer-comparison-remove{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:36px;height:36px;min-width:36px;min-height:36px;padding:0;
+  border:1px solid #eadbd5;border-radius:9px;background:#fff;
+  color:#a94d35;font-size:19px;line-height:1;cursor:pointer;
+}
+.offer-reference-select:focus-visible,.offer-comparison-remove:focus-visible{
+  outline:2px solid #247653;outline-offset:2px;
+}
+@media(max-width:640px){
+  .offer-comparison-card-head{gap:8px}
+  .offer-comparison-card-actions{gap:6px}
+  .offer-reference-select{min-height:34px;padding:6px 9px;font-size:10px}
+  .offer-comparison-remove{width:36px;height:36px;min-width:36px;min-height:36px}
+}
+:root[data-theme="dark"] .offer-reference-select{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] .offer-reference-label{
+  background:#304c39;color:#a8e5bc;border:1px solid #45664d;
+}
+:root[data-theme="dark"] .offer-comparison-remove{
+  background:#302722;border-color:#68483b;color:#f0ad91;
+}
+:root[data-theme="dark"] .offer-reference-select:focus-visible,
+:root[data-theme="dark"] .offer-comparison-remove:focus-visible{
+  outline-color:#83d6a4;
+}
+
+
+/* Le sélecteur #comparePanel des styles de base est plus spécifique que
+   les règles sombres génériques : rétablir explicitement toute la palette. */
+:root[data-theme="dark"] #comparePanel .comparison-offer-card{
+  background:#222c26;color:#e3ece5;border-color:#3b4a40;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{
+  background:linear-gradient(155deg,#293d30 0%,#222d26 72%);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] #comparePanel .comparison-offer-index,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value-label,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value small,
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] #comparePanel .comparison-reference-badge{
+  background:#304c39;border-color:#45664d;color:#a8e5bc;
+}
+:root[data-theme="dark"] #comparePanel .comparison-set-reference{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
+
+
+/* Repère géographique : ne pas partager la ligne avec le titre long. */
+#benchmarkMount .median-card-head{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+  gap:7px;min-height:0;
+}
+#benchmarkMount .median-card-head .benchmark-label{
+  flex:none;width:100%;min-width:0;min-height:0;line-height:1.3;
+}
+#benchmarkMount .median-card-head .geo-inline{
+  align-self:flex-start;margin:0;padding:4px 9px;
+}
+
+
+/* Badge Zone France : palette dédiée au thème sombre. */
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline span{
+  color:#b8c9be;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline strong{
+  color:#a9e5bd;
+}
+
+
+/* Consentement Urssaf : préserver le comparatif et rendre l'autorisation réversible. */
+.urssaf-consent-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px 14px;margin-top:10px;
+}
+.urssaf-consent-grant{
+  min-height:38px;padding:8px 13px;border:1px solid var(--accent);
+  border-radius:10px;background:var(--accent);color:#fff;
+  font:700 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-details{max-width:620px;font-size:11px;line-height:1.45;color:var(--ink-soft)}
+.urssaf-consent-details summary{font-weight:700;color:var(--accent);cursor:pointer}
+.urssaf-consent-details p{margin:7px 0 0}
+.urssaf-consent-revoke{
+  min-height:32px;padding:5px 9px;border:1px solid var(--line);
+  border-radius:8px;background:transparent;color:var(--ink-soft);
+  font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-grant:focus-visible,.urssaf-consent-revoke:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+:root[data-theme="dark"] .urssaf-consent-grant{
+  background:#267b57;border-color:#479c73;color:#fff;
+}
+:root[data-theme="dark"] .urssaf-consent-details{color:#bdc9c0}
+:root[data-theme="dark"] .urssaf-consent-details summary{color:#8cdbac}
+:root[data-theme="dark"] .urssaf-consent-revoke{
+  background:#222c26;border-color:#46564b;color:#bdc9c0;
+}
+
+
+/* La demande d'autorisation doit rester visible même lorsque l'état n'est pas une erreur. */
+.urssaf-status.requires-consent{
+  display:block!important;margin:12px 0 0;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--surface));color:var(--ink-soft);
+}
+
+/* Surclasse la règle historique qui masque les statuts sans erreur. */
+.urssaf-status.requires-consent:not(.is-error):not(.has-diagnostics){
+  display:block!important;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -1629,7 +2030,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
-        <div class="header-menu-panel"><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
+        <div class="header-menu-panel"><label class="header-theme-setting" for="themePreference">Apparence<select id="themePreference" aria-label="Thème d’affichage"><option value="auto">Selon le téléphone</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
       </details>
     </div>
   </div>
@@ -1645,7 +2046,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
   <section class="panel unified-salary-panel" aria-labelledby="maquetteCompareTitle">
     <div class="comparison-subhead comparison-subhead-actions"><h2 id="maquetteCompareTitle">Vos offres</h2><button type="button" class="add-salary" id="maquetteAddSalary">+ Ajouter</button></div>
 
-    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
@@ -1654,17 +2054,26 @@ body.salary-editor-open .integrated-offers{display:none!important}
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
-        <summary>Détails du calcul</summary>
+        <summary>Informations Urssaf</summary>
+        <p class="sub-hint">Messages issus du calcul officiel Mon-entreprise.</p>
         <ul id="urssafWarningsList"></ul>
       </details>
+      <div class="urssaf-consent-actions">
+        <button type="button" class="urssaf-consent-grant" id="urssafConsentGrant" hidden>Autoriser les calculs Urssaf</button>
+        <details class="urssaf-consent-details" id="urssafConsentDetails">
+          <summary>Quelles données seront transmises ?</summary>
+          <p>Votre autorisation permet d’envoyer à l’API officielle Mon-entreprise / Urssaf les paramètres nécessaires au calcul : salaire brut, durée du travail, commune, mutuelle et titres-restaurant. Elle est conservée séparément de vos offres sur cet appareil et peut être retirée ici.</p>
+        </details>
+        <button type="button" class="urssaf-consent-revoke" id="urssafConsentRevoke" hidden>Retirer l’autorisation</button>
+      </div>
     </div>
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Comparer les offres</h2>
     <p class="sub">Même période pour toutes les offres · durée réelle de chaque contrat.</p>
+    <div class="comparison-period" role="group" aria-label="Période de comparaison"><span>Comparer</span><div class="comparison-period-tabs"><button type="button" data-maquette-period="hour" aria-pressed="true">Heure</button><button type="button" data-maquette-period="month" aria-pressed="false">Mois</button><button type="button" data-maquette-period="year" aria-pressed="false">Année</button></div></div>
     
     <div class="hint" id="stackHint"></div>
-    <div id="insightBox"></div>
     <div class="stack-chart-scroll"><div class="stack-chart" id="stackChart"></div></div>
     <div class="stack-legend" id="stackLegend"></div>
     <!-- Espace conservé pour les messages contextuels du comparatif. -->
@@ -1897,8 +2306,11 @@ function describeApiFailure(status) {
   if (status >= 500) return `Le service de calcul Urssaf est temporairement indisponible (HTTP ${status}).`;
   return `L\u2019API Urssaf a r\xE9pondu avec une erreur HTTP ${status}.`;
 }
-async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions) {
+async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expressions, externalSignal) {
   const controller = new AbortController();
+  const abortFromCaller = () => controller.abort();
+  if (externalSignal?.aborted) controller.abort();
+  else externalSignal?.addEventListener("abort", abortFromCaller, { once: true });
   const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   try {
     let response;
@@ -1914,6 +2326,11 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
       });
     } catch (error) {
       if (error?.name === "AbortError") {
+        if (externalSignal?.aborted) {
+          const aborted = new Error("Requ\xEAte annul\xE9e apr\xE8s retrait du consentement.");
+          aborted.name = "AbortError";
+          throw aborted;
+        }
         throw new Error(`D\xE9lai d\xE9pass\xE9 : l\u2019API Urssaf n\u2019a pas r\xE9pondu en ${timeoutMs / 1e3} secondes.`);
       }
       throw new Error("Impossible de joindre l\u2019API Urssaf. V\xE9rifier la connexion Internet puis r\xE9essayer.");
@@ -1968,6 +2385,7 @@ async function evaluateRequest(fetchImpl, endpoint, timeoutMs, situation, expres
     };
   } finally {
     clearTimeout(timeoutId);
+    externalSignal?.removeEventListener("abort", abortFromCaller);
   }
 }
 async function evaluateUrssafExpression(expression, situation = {}, options = {}) {
@@ -1987,7 +2405,7 @@ async function evaluateUrssafExpression(expression, situation = {}, options = {}
   if (typeof normalizedSituation.date === "string" && /^\d{4}-\d{2}-\d{2}$/.test(normalizedSituation.date)) {
     normalizedSituation.date = formatDate(normalizedSituation.date);
   }
-  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression]);
+  const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, normalizedSituation, [expression], options.signal);
   return Object.freeze({
     expression,
     value: evaluation.values[0],
@@ -2035,7 +2453,7 @@ async function calculateWithUrssafApi(input = {}, options = {}) {
   let grossCalculated = NaN;
   for (let attempt = 0; attempt < (durationType === "39" ? MAX_GROSS_CALIBRATION_ATTEMPTS : 1); attempt += 1) {
     finalSituation = buildSituation(input, baseGross, overtimeHours);
-    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions);
+    const evaluation = await evaluateRequest(fetchImpl, endpoint, timeoutMs, finalSituation, socialExpressions, options.signal);
     grossCalculated = evaluation.values[0];
     finalEvaluation = evaluation;
     if (Math.abs(grossCalculated - grossTarget) <= 5e-3) break;
@@ -2271,7 +2689,6 @@ function mapUrssafResultToOnNet(result) {
     return {
       engine: result.engine,
       checkedAt: result.checkedAt,
-      missingVariables: result.missingVariables,
       warnings: result.warnings,
       netApres: result.netBeforeTax
     };
@@ -2300,7 +2717,6 @@ function mapUrssafResultToOnNet(result) {
   return {
     engine: result.engine,
     checkedAt: result.checkedAt,
-    missingVariables: result.missingVariables,
     warnings: result.warnings,
     hasHS: overtimeHours > 0,
     heuresSup: overtimeHours,
@@ -2337,9 +2753,19 @@ function createRateLimitedFetch(fetchImpl, options = {}) {
   let lastRequestAt = null;
   return function rateLimitedFetch(url, init) {
     const request = queue.then(async () => {
+      if (init?.signal?.aborted) {
+        const error = new Error("La requ\xEAte a \xE9t\xE9 annul\xE9e.");
+        error.name = "AbortError";
+        throw error;
+      }
       if (lastRequestAt !== null) {
         const delay = Math.max(0, minimumIntervalMs - (now() - lastRequestAt));
         if (delay > 0) await wait(delay);
+      }
+      if (init?.signal?.aborted) {
+        const error = new Error("La requ\xEAte a \xE9t\xE9 annul\xE9e.");
+        error.name = "AbortError";
+        throw error;
       }
       lastRequestAt = now();
       return fetchImpl(url, init);
@@ -2444,6 +2870,9 @@ function createUrssafSessionState() {
     grantConsent() {
       consentGranted = true;
     },
+    revokeConsent() {
+      consentGranted = false;
+    },
     getOfficialSmicState() {
       return copySmicState(officialSmicState);
     },
@@ -2501,11 +2930,87 @@ function serializePersistedState(state) {
 
 // src/runtime-entry.mjs
 window.OnNetUrssafApi = { calculateWithUrssafApi, evaluateUrssafExpression, urssafApiExpressions };
+(() => {
+  const STORAGE_KEY2 = "onnet.theme.preference";
+  const root = document.documentElement;
+  const selector = document.getElementById("themePreference");
+  const colorMeta = document.querySelector('meta[name="theme-color"]');
+  const systemPreference = window.matchMedia ? window.matchMedia("(prefers-color-scheme: dark)") : null;
+  function readPreference() {
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY2);
+      return saved === "light" || saved === "dark" ? saved : "auto";
+    } catch (_) {
+      return "auto";
+    }
+  }
+  let preference = readPreference();
+  function applyTheme() {
+    const theme = preference === "auto" ? systemPreference && systemPreference.matches ? "dark" : "light" : preference;
+    root.dataset.theme = theme;
+    if (colorMeta) colorMeta.content = theme === "dark" ? "#14181A" : "#176b49";
+    if (selector && selector.value !== preference) selector.value = preference;
+  }
+  if (selector) {
+    selector.value = preference;
+    selector.addEventListener("change", () => {
+      const next = selector.value;
+      preference = next === "light" || next === "dark" ? next : "auto";
+      try {
+        if (preference === "auto") localStorage.removeItem(STORAGE_KEY2);
+        else localStorage.setItem(STORAGE_KEY2, preference);
+      } catch (_) {
+      }
+      applyTheme();
+    });
+  }
+  if (systemPreference) {
+    const onSystemChange = () => {
+      if (preference === "auto") applyTheme();
+    };
+    if (typeof systemPreference.addEventListener === "function") {
+      systemPreference.addEventListener("change", onSystemChange);
+    } else if (typeof systemPreference.addListener === "function") {
+      systemPreference.addListener(onSystemChange);
+    }
+  }
+  applyTheme();
+})();
 var idCounter = 0;
 var urssafGeneration = 0;
 var urssafDebounceTimer = null;
+var urssafConsentController = new AbortController();
 var urssafCalculationCache = createUrssafCalculationCache({ maxResults: 100 });
 var urssafSessionState = createUrssafSessionState();
+var URSSAF_CONSENT_STORAGE_KEY = "onnet.urssaf.consent.v1";
+try {
+  if (localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === "granted") {
+    urssafSessionState.grantConsent();
+  }
+} catch (error) {
+}
+function grantUrssafConsent() {
+  if (urssafConsentController.signal.aborted) urssafConsentController = new AbortController();
+  urssafSessionState.grantConsent();
+  try {
+    localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, "granted");
+  } catch (error) {
+  }
+}
+function revokeUrssafConsent() {
+  urssafSessionState.revokeConsent();
+  urssafConsentController.abort();
+  try {
+    localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  } catch (error) {
+  }
+  if (urssafDebounceTimer) {
+    clearTimeout(urssafDebounceTimer);
+    urssafDebounceTimer = null;
+  }
+  urssafGeneration += 1;
+  updateUrssafStatus(getCurrentComputed());
+}
 function currentCalculationDate() {
   const d = /* @__PURE__ */ new Date();
   return d.getFullYear() + "-" + String(d.getMonth() + 1).padStart(2, "0") + "-" + String(d.getDate()).padStart(2, "0");
@@ -2539,14 +3044,25 @@ function updateUrssafStatus(computed) {
   const statusText = document.getElementById("urssafStatusText");
   if (!statusText) return;
   const status = document.getElementById("urssafStatus");
-  if (status) status.classList.remove("is-error", "has-diagnostics");
+  if (status) status.classList.remove("is-error", "has-diagnostics", "requires-consent");
   const diagnostics = document.getElementById("urssafWarnings");
   const diagnosticsList = document.getElementById("urssafWarningsList");
+  const consentGrant = document.getElementById("urssafConsentGrant");
+  const consentRevoke = document.getElementById("urssafConsentRevoke");
+  const consentDetails = document.getElementById("urssafConsentDetails");
   if (diagnostics) diagnostics.hidden = true;
   if (diagnosticsList) diagnosticsList.innerHTML = "";
+  const hasConsent = urssafSessionState.isConsentGranted();
+  if (status) {
+    status.classList.toggle("requires-consent", !hasConsent);
+    status.classList.toggle("has-consent-actions", hasConsent);
+  }
+  if (consentGrant) consentGrant.hidden = hasConsent;
+  if (consentRevoke) consentRevoke.hidden = !hasConsent;
+  if (consentDetails) consentDetails.hidden = hasConsent;
   const smicState = urssafSessionState.getOfficialSmicState();
-  if (!urssafSessionState.isConsentGranted()) {
-    statusText.textContent = "Renseignez votre salaire pour autoriser sa transmission \xE0 l\u2019API Urssaf. Aucune donn\xE9e salariale n\u2019est transmise avant cette saisie.";
+  if (!hasConsent) {
+    statusText.textContent = "Vos offres sont conserv\xE9es. Autorisez leur transmission \xE0 l\u2019API officielle Urssaf pour calculer ou actualiser les r\xE9sultats. Vous n\u2019avez pas \xE0 r\xE9initialiser le comparatif.";
     return;
   }
   const failed = computed.filter(({ s, r }) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s, scenarioCalculationDate(s))));
@@ -2577,14 +3093,9 @@ function updateUrssafStatus(computed) {
   const ready = computed.map((x) => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
   if (smicState.status === "ready") ready.push(smicState);
   const warnings = [...new Set(ready.flatMap((r) => r.warnings || []))];
-  const missing = [...new Set(ready.flatMap((r) => r.missingVariables || []))];
-  const checkedAt = ready.map((r) => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
   statusText.textContent = "Calculs \xE0 jour.";
-  if (diagnostics && diagnosticsList && (missing.length || warnings.length)) {
-    diagnosticsList.innerHTML = [
-      ...missing.map((name) => `<li>Valeur par d\xE9faut utilis\xE9e pour : ${esc(name)}</li>`),
-      ...warnings.map((warning) => `<li>${esc(warning)}</li>`)
-    ].join("");
+  if (diagnostics && diagnosticsList && warnings.length) {
+    diagnosticsList.innerHTML = warnings.map((warning) => `<li>${esc(warning)}</li>`).join("");
     diagnostics.hidden = false;
     if (status) status.classList.add("has-diagnostics");
   }
@@ -2596,6 +3107,7 @@ async function refreshOfficialSmic(forceRetry) {
   if (currentSmicState.status === "ready" && !forceRetry) return currentSmicState;
   urssafSessionState.setOfficialSmicState({ status: "loading", amount: null, checkedAt: null, missingVariables: [], warnings: [], error: null });
   updateUrssafStatus(getCurrentComputed());
+  const requestSignal = urssafConsentController.signal;
   officialSmicPromise = (async () => {
     try {
       if (!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== "function") {
@@ -2604,8 +3116,9 @@ async function refreshOfficialSmic(forceRetry) {
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
         "SMIC",
         { date: currentCalculationDate() },
-        { fetchImpl: queuedUrssafFetch }
+        { fetchImpl: queuedUrssafFetch, signal: requestSignal }
       );
+      if (requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       if (!Number.isFinite(result.value) || result.value <= 0) throw new Error("L\u2019API Urssaf n\u2019a pas renvoy\xE9 de montant SMIC valide.");
       urssafSessionState.setOfficialSmicState({
         status: "ready",
@@ -2616,6 +3129,7 @@ async function refreshOfficialSmic(forceRetry) {
         error: null
       });
     } catch (error) {
+      if (requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       urssafSessionState.setOfficialSmicState({
         status: "error",
         amount: null,
@@ -2627,7 +3141,7 @@ async function refreshOfficialSmic(forceRetry) {
     } finally {
       officialSmicPromise = null;
       updateComputed({ skipUrssafSchedule: true });
-      if (urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === "ready") scheduleUrssafCalculations(true, false);
+      if (!requestSignal.aborted && urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === "ready") scheduleUrssafCalculations(true, false);
     }
     return urssafSessionState.getOfficialSmicState();
   })();
@@ -2638,6 +3152,8 @@ async function executeUrssafCalculations(generation, forceRetry) {
     await refreshOfficialSmic(forceRetry === true);
     if (generation !== urssafGeneration) return;
   }
+  const requestSignal = urssafConsentController.signal;
+  if (requestSignal.aborted || !urssafSessionState.isConsentGranted()) return;
   const jobs = scenarios.map((s) => Object.assign({}, s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base, getSmicGross()) : null;
@@ -2658,8 +3174,9 @@ async function executeUrssafCalculations(generation, forceRetry) {
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
         buildUrssafInput(s, scenarioCalculationDate(s)),
-        { fetchImpl: queuedUrssafFetch }
+        { fetchImpl: queuedUrssafFetch, signal: requestSignal }
       );
+      if (requestSignal.aborted || generation !== urssafGeneration) return;
       urssafCalculationCache.setResult(key, mapUrssafResultToOnNet(result));
       urssafCalculationCache.deleteError(key);
     } catch (error) {
@@ -3000,7 +3517,7 @@ function renderCard(s, r, showRemove) {
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : "\u2014"}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="result-source ${calculationError ? "result-error" : ""}" id="c-result-state-${uid}" role="status" ${r ? "hidden" : ""}>${esc(resultText)}</div>
-      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? "" : "hidden"}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></details>` : ""}</div>
+      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? "" : "hidden"}>${r && r.warnings && r.warnings.length ? `<details><summary>Voir les messages (${r.warnings.length})</summary><ul>${r.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></details>` : ""}</div>
     </div>
 
     <div class="scenario-edit-hint">
@@ -3279,7 +3796,7 @@ function renderMaquetteControls(computedOverride) {
         showEditScenarioModal(scenario).then((answers) => {
           if (!answers) return;
           Object.assign(scenario, answers);
-          urssafSessionState.grantConsent();
+          grantUrssafConsent();
           saveState();
           render();
           scheduleUrssafCalculations(false, false);
@@ -3519,7 +4036,7 @@ function updateComputed(options = {}) {
     const warnings = document.getElementById(`c-result-warnings-${u}`);
     if (warnings) {
       warnings.hidden = !(r && r.warnings && r.warnings.length);
-      warnings.innerHTML = r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></details>` : "";
+      warnings.innerHTML = r && r.warnings && r.warnings.length ? `<details><summary>Voir les messages (${r.warnings.length})</summary><ul>${r.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></details>` : "";
     }
     const trWarn = !!(r && r.tr && r.tr.reintegre > 5e-3);
     setShown(`c-trwarn-${u}`, trWarn);
@@ -3762,7 +4279,7 @@ async function addScenario() {
     const last = scenarios[scenarios.length - 1];
     const answers = await showAddScenarioModal(last.brut, last.dureeType, "Offre " + (scenarios.length + 1));
     if (!answers) return;
-    urssafSessionState.grantConsent();
+    grantUrssafConsent();
     disableCardSnap();
     const created = mkScenario(Object.assign({
       name: "Salaire " + (scenarios.length + 1),
@@ -3801,6 +4318,13 @@ async function removeScenario(id) {
     doRemove();
   }
 }
+document.getElementById("urssafConsentGrant")?.addEventListener("click", () => {
+  grantUrssafConsent();
+  scheduleUrssafCalculations(true, false);
+});
+document.getElementById("urssafConsentRevoke")?.addEventListener("click", () => {
+  revokeUrssafConsent();
+});
 document.getElementById("resetBtn").addEventListener("click", async () => {
   const ok = await showConfirmModal(
     "Effacer tous les salaires enregistr\xE9s et revenir \xE0 l'exemple de d\xE9part ? Cette action est irr\xE9versible.",
@@ -4043,7 +4567,7 @@ function bindMutuelleTrFields(overlay, idPrefix) {
 function formatSalaryInput(input) {
   const value = parseNum(input.value);
   if (!(value > 0)) return;
-  input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 15 }).format(value);
+  input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(value);
 }
 function showOnboardingModal() {
   const html = `
@@ -4125,10 +4649,11 @@ function showOnboardingModal() {
   return pending;
 }
 function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
+  const initialSalary = Number.isFinite(Number(brutPrefill)) && Number(brutPrefill) > 0 ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(Number(brutPrefill)) : "";
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
     <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddName">Nom de l\u2019offre <span class="field-optional">(facultatif)</span></label>
+      <label for="modalAddName">Nom de l\u2019offre</label>
       <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || "Nouvelle offre")}" autocomplete="off">
     </div>
         ${renderUrssafConsentNotice()}
@@ -4141,7 +4666,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
     </div>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (\u20AC)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${brutPrefill || ""}" placeholder="Ex. 2 500" autocomplete="off">
+      <input type="text" inputmode="decimal" id="modalAddInput" value="${initialSalary}" placeholder="Ex. 2 500" autocomplete="off">
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
@@ -4166,13 +4691,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
   const periodToggle = overlay.querySelector("#modalAddPeriod");
   const periodLabel = overlay.querySelector("#modalAddLabel");
   let salaryPeriod = "mois";
+  let exactSalaryValue = parseNum(brutPrefill);
   periodToggle.querySelectorAll("button").forEach((button) => {
     button.addEventListener("click", () => {
       if (button.dataset.period === salaryPeriod) return;
-      const current = parseNum(input.value);
+      const current = exactSalaryValue || parseNum(input.value);
       if (current > 0) {
-        const converted = salaryPeriod === "mois" ? current * 12 : current / 12;
-        input.value = String(converted).replace(".", ",");
+        exactSalaryValue = salaryPeriod === "mois" ? current * 12 : current / 12;
+        input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
       }
       salaryPeriod = button.dataset.period;
       periodToggle.querySelectorAll("button").forEach((x) => {
@@ -4208,7 +4734,10 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
     submitBtn.disabled = !(parseNum(input.value) > 0);
   };
   updateSubmitState();
-  input.addEventListener("input", updateSubmitState);
+  input.addEventListener("input", () => {
+    exactSalaryValue = parseNum(input.value);
+    updateSubmitState();
+  });
   input.addEventListener("blur", () => formatSalaryInput(input));
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
@@ -4229,7 +4758,7 @@ function showEditScenarioModal(scenario) {
   const html = `
     <div class="edit-offer-modal">
       <div class="field-row">
-        <label for="editOfferName">Nom de l\u2019offre <span class="field-optional">(facultatif)</span></label>
+        <label for="editOfferName">Nom de l\u2019offre</label>
         <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
       </div>
       ${renderUrssafConsentNotice(true)}
@@ -4281,13 +4810,15 @@ function showEditScenarioModal(scenario) {
         <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
       </div>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: "#editOfferPeriod button", className: "modal-edit-offer", dismissible: true, role: "dialog", ariaLabel: "Modifier une offre salariale" });
+  const pending = openModal(html, { initialFocusSelector: "#editOfferName", className: "modal-edit-offer", dismissible: true, role: "dialog", ariaLabel: "Modifier une offre salariale" });
   const overlay = document.getElementById("modalOverlay");
   const input = (id) => overlay.querySelector("#" + id);
   let period = initialPeriod;
   let hours = scenario.dureeType === "39" ? "39" : "35";
   let trEnabledNow = trEnabled;
   let mealShare = initialShare;
+  const initialMealDays = Number(scenario.joursResto) || 0;
+  const initialMealValue = Number(scenario.valeurResto) || 0;
   const periodToggle = input("editOfferPeriod");
   const grossInput = input("editOfferGross");
   periodToggle.querySelectorAll("button[data-period]").forEach((button) => button.addEventListener("click", () => {
@@ -4324,7 +4855,11 @@ function showEditScenarioModal(scenario) {
   const updateSaveState = () => {
     const gross = parseNum(grossInput.value);
     const mutuelle = input("editOfferMutuelle").value;
-    const valid = gross > 0 && gross <= 12e5 && validNumber("editOfferMutuelle") && parseNum(mutuelle) >= 0 && parseNum(mutuelle) <= 1e5 && (!trEnabledNow || Number.isInteger(Number(input("editOfferMealDays").value)) && Number(input("editOfferMealDays").value) >= 1 && Number(input("editOfferMealDays").value) <= 31 && validNumber("editOfferMealValue") && parseNum(input("editOfferMealValue").value) > 0 && parseNum(input("editOfferMealValue").value) <= 500);
+    const mealDays = Number(input("editOfferMealDays").value);
+    const mealValue = parseNum(input("editOfferMealValue").value);
+    const mealConfigUnchanged = trEnabledNow === trEnabled && mealDays === initialMealDays && mealValue === initialMealValue && mealShare === initialShare;
+    const mealConfigValid = Number.isInteger(mealDays) && mealDays >= 1 && mealDays <= 31 && validNumber("editOfferMealValue") && mealValue > 0 && mealValue <= 500;
+    const valid = gross > 0 && gross <= 12e5 && validNumber("editOfferMutuelle") && parseNum(mutuelle) >= 0 && parseNum(mutuelle) <= 1e5 && (!trEnabledNow || mealConfigValid || mealConfigUnchanged);
     input("editOfferSave").disabled = !valid;
   };
   ["editOfferGross", "editOfferMutuelle", "editOfferMealDays", "editOfferMealValue"].forEach((id) => input(id).addEventListener("input", updateSaveState));
@@ -4599,7 +5134,7 @@ if (showOnboarding) {
   showOnboardingModal().then((result) => {
     Object.assign(scenarios[0], result);
     onboardingCompleted = true;
-    urssafSessionState.grantConsent();
+    grantUrssafConsent();
     render();
     saveState();
     scheduleUrssafCalculations(true, true);

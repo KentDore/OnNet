@@ -36,7 +36,7 @@ function renderCard(s, r, showRemove){
       <div class="hero-value" id="c-hero-${uid}" aria-live="polite">${r && heroValue(r) !== null ? fmt(heroValue(r)) : '—'}</div>
       <div class="hero-label" id="c-herolabel-${uid}">${heroLabel()}</div>
       <div class="result-source ${calculationError ? 'result-error' : ''}" id="c-result-state-${uid}" role="status" ${r ? 'hidden' : ''}>${esc(resultText)}</div>
-      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Avertissements du moteur (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
+      <div class="result-source" id="c-result-warnings-${uid}" ${r && r.warnings && r.warnings.length ? '' : 'hidden'}>${r && r.warnings && r.warnings.length ? `<details><summary>Voir les messages (${r.warnings.length})</summary><ul>${r.warnings.map(w => `<li>${esc(w)}</li>`).join('')}</ul></details>` : ''}</div>
     </div>
 
     <div class="scenario-edit-hint">
@@ -409,7 +409,7 @@ function renderMaquetteControls(computedOverride){
       const value=hourly===null?null:hourly*factor;
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
         '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir réf.</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
-        '<div class="offer-comparison-meta">Contrat : '+(s.salaireSaisiPeriode==='an'&&Number.isFinite(Number(s.salaireSaisi))?fmt(s.salaireSaisi)+' brut / an':fmt(s.brut)+' brut / mois')+' · '+weekly+' h / semaine</div>'+
+        '<div class="offer-comparison-meta">Contrat : '+fmt(s.brut)+' brut/mois · '+fmt(s.brut*12)+' brut/an · '+weekly+' h</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
     }).join('');
@@ -431,12 +431,10 @@ function renderMaquetteControls(computedOverride){
         const scenarioId = scenario.id;
         showEditScenarioModal(scenario).then(answers=>{
           if(!answers) return;
-          // Réacquérir l'objet par son identifiant après la fermeture asynchrone :
-          // une mise à jour intermédiaire peut avoir remplacé le tableau scenarios.
           const currentScenario = findScenario(scenarioId);
           if(!currentScenario) return;
           Object.assign(currentScenario,answers);
-          urssafSessionState.grantConsent();
+          grantUrssafConsent();
           saveState();
           render();
           scheduleUrssafCalculations(false,false);

@@ -29,9 +29,21 @@ export function createRateLimitedFetch(fetchImpl, options = {}){
 
   return function rateLimitedFetch(url, init){
     const request = queue.then(async () => {
+      if(init?.signal?.aborted){
+        const error = new Error('La requête a été annulée.');
+        error.name = 'AbortError';
+        throw error;
+      }
       if(lastRequestAt !== null){
         const delay = Math.max(0, minimumIntervalMs - (now() - lastRequestAt));
         if(delay > 0) await wait(delay);
+      }
+      // Le consentement peut être retiré pendant l'attente dans la file.
+      // Vérifier juste avant fetch empêche alors tout nouvel envoi réseau.
+      if(init?.signal?.aborted){
+        const error = new Error('La requête a été annulée.');
+        error.name = 'AbortError';
+        throw error;
       }
       lastRequestAt = now();
       return fetchImpl(url, init);

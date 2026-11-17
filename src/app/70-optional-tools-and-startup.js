@@ -158,10 +158,9 @@ if(showOnboarding){
   showOnboardingModal().then(result => {
     Object.assign(scenarios[0], result);
     onboardingCompleted = true;
-    urssafSessionState.grantConsent();
+    grantUrssafConsent();
     render();
     saveState();
     scheduleUrssafCalculations(true,true);
   });
 }
-\n\n// ---------- Thème clair / sombre ----------\n(function setupThemeToggle(){\n  const root=document.documentElement;\n  const button=document.getElementById('themeToggle');\n  if(!button) return;\n  const apply=theme=>{\n    const dark=theme==='dark';\n    root.dataset.theme=dark?'dark':'light';\n    button.setAttribute('aria-pressed',String(dark));\n    button.setAttribute('aria-label',dark?'Activer le mode clair':'Activer le mode sombre');\n    const icon=button.querySelector('.theme-toggle-icon');\n    const label=button.querySelector('.theme-toggle-label');\n    if(icon) icon.textContent=dark?'☀':'☾';\n    if(label) label.textContent=dark?'Clair':'Sombre';\n    try{localStorage.setItem('onnet.theme',dark?'dark':'light');}catch(error){}\n    const meta=document.querySelector('meta[name="theme-color"]');\n    if(meta) meta.content=dark?'#14181A':'#176b49';\n  };\n  const stored=(()=>{try{return localStorage.getItem('onnet.theme');}catch(error){return null;}})();\n  apply(stored==='dark'?'dark':'light');\n  button.addEventListener('click',()=>apply(root.dataset.theme==='dark'?'light':'dark'));\n})();\n

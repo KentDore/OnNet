@@ -8,8 +8,47 @@ let idCounter = 0;
 // sans persistance locale ni stockage dans un global mutable.
 let urssafGeneration = 0;
 let urssafDebounceTimer = null;
+let urssafConsentController = new AbortController();
 const urssafCalculationCache = createUrssafCalculationCache({ maxResults:100 });
 const urssafSessionState = createUrssafSessionState();
+const URSSAF_CONSENT_STORAGE_KEY = 'onnet.urssaf.consent.v1';
+
+// L'autorisation explicite est distincte des salaires et survit aux mises à jour
+// de la page. Elle reste révocable sans effacer le comparatif.
+try{
+  if(localStorage.getItem(URSSAF_CONSENT_STORAGE_KEY) === 'granted'){
+    urssafSessionState.grantConsent();
+  }
+}catch(error){
+  // Le calcul restera possible dans cette session si le stockage est bloqué.
+}
+
+function grantUrssafConsent(){
+  if(urssafConsentController.signal.aborted) urssafConsentController = new AbortController();
+  urssafSessionState.grantConsent();
+  try{
+    localStorage.setItem(URSSAF_CONSENT_STORAGE_KEY, 'granted');
+  }catch(error){
+    // L'autorisation reste valable pour la session en cours.
+  }
+}
+
+function revokeUrssafConsent(){
+  urssafSessionState.revokeConsent();
+  // Interrompt les requêtes actives et marque celles en file comme annulées.
+  urssafConsentController.abort();
+  try{
+    localStorage.removeItem(URSSAF_CONSENT_STORAGE_KEY);
+  }catch(error){
+    // L'autorisation est tout de même retirée en mémoire.
+  }
+  if(urssafDebounceTimer){
+    clearTimeout(urssafDebounceTimer);
+    urssafDebounceTimer = null;
+  }
+  urssafGeneration += 1;
+  updateUrssafStatus(getCurrentComputed());
+}
 
 function currentCalculationDate(){
   const d = new Date();
@@ -55,14 +94,25 @@ function updateUrssafStatus(computed){
   const statusText = document.getElementById('urssafStatusText');
   if(!statusText) return;
   const status = document.getElementById('urssafStatus');
-  if(status) status.classList.remove('is-error','has-diagnostics');
+  if(status) status.classList.remove('is-error','has-diagnostics','requires-consent');
   const diagnostics = document.getElementById('urssafWarnings');
   const diagnosticsList = document.getElementById('urssafWarningsList');
+  const consentGrant = document.getElementById('urssafConsentGrant');
+  const consentRevoke = document.getElementById('urssafConsentRevoke');
+  const consentDetails = document.getElementById('urssafConsentDetails');
   if(diagnostics) diagnostics.hidden = true;
   if(diagnosticsList) diagnosticsList.innerHTML = '';
+  const hasConsent = urssafSessionState.isConsentGranted();
+  if(status){
+    status.classList.toggle('requires-consent', !hasConsent);
+    status.classList.toggle('has-consent-actions', hasConsent);
+  }
+  if(consentGrant) consentGrant.hidden = hasConsent;
+  if(consentRevoke) consentRevoke.hidden = !hasConsent;
+  if(consentDetails) consentDetails.hidden = hasConsent;
   const smicState = urssafSessionState.getOfficialSmicState();
-  if(!urssafSessionState.isConsentGranted()){
-    statusText.textContent = 'Renseignez votre salaire pour autoriser sa transmission à l’API Urssaf. Aucune donnée salariale n’est transmise avant cette saisie.';
+  if(!hasConsent){
+    statusText.textContent = 'Vos offres sont conservées. Autorisez leur transmission à l’API officielle Urssaf pour calculer ou actualiser les résultats. Vous n’avez pas à réinitialiser le comparatif.';
     return;
   }
   const failed = computed.filter(({s,r}) => !r && urssafCalculationCache.hasError(buildUrssafCalculationKey(s,scenarioCalculationDate(s))));
@@ -94,14 +144,13 @@ function updateUrssafStatus(computed){
   const ready = computed.map(x => x.r).filter(Boolean).concat(smicResult ? [smicResult] : []);
   if(smicState.status === 'ready') ready.push(smicState);
   const warnings = [...new Set(ready.flatMap(r => r.warnings || []))];
-  const missing = [...new Set(ready.flatMap(r => r.missingVariables || []))];
-  const checkedAt = ready.map(r => r.checkedAt).filter(Boolean).sort().slice(-1)[0];
   statusText.textContent = 'Calculs à jour.';
-  if(diagnostics && diagnosticsList && (missing.length || warnings.length)){
-    diagnosticsList.innerHTML = [
-      ...missing.map(name => `<li>Valeur par défaut utilisée pour : ${esc(name)}</li>`),
-      ...warnings.map(warning => `<li>${esc(warning)}</li>`)
-    ].join('');
+  // Les missingVariables Publicodes détaillent des variables et branches internes
+  // sans distinguer celles qui influencent réellement le net. Ne pas les présenter
+  // comme des alertes individuelles : seuls les avertissements explicites de l'API
+  // sont assez précis pour être affichés ici.
+  if(diagnostics && diagnosticsList && warnings.length){
+    diagnosticsList.innerHTML = warnings.map(warning => `<li>${esc(warning)}</li>`).join('');
     diagnostics.hidden = false;
     if(status) status.classList.add('has-diagnostics');
   }
@@ -115,24 +164,27 @@ async function refreshOfficialSmic(forceRetry){
   if(currentSmicState.status === 'ready' && !forceRetry) return currentSmicState;
   urssafSessionState.setOfficialSmicState({ status:'loading', amount:null, checkedAt:null, missingVariables:[], warnings:[], error:null });
   updateUrssafStatus(getCurrentComputed());
+  const requestSignal = urssafConsentController.signal;
   officialSmicPromise = (async () => {
     try{
       if(!window.OnNetUrssafApi || typeof window.OnNetUrssafApi.evaluateUrssafExpression !== 'function'){
         throw new Error('Le client de règle SMIC officiel n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.evaluateUrssafExpression(
-        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch }
+        'SMIC', { date:currentCalculationDate() }, { fetchImpl:queuedUrssafFetch, signal:requestSignal }
       );
+      if(requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       if(!Number.isFinite(result.value) || result.value <= 0) throw new Error('L’API Urssaf n’a pas renvoyé de montant SMIC valide.');
       urssafSessionState.setOfficialSmicState({ status:'ready', amount:result.value, checkedAt:result.checkedAt,
         missingVariables:result.missingVariables || [], warnings:result.warnings || [], error:null });
     }catch(error){
+      if(requestSignal.aborted) return urssafSessionState.getOfficialSmicState();
       urssafSessionState.setOfficialSmicState({ status:'error', amount:null, checkedAt:null, missingVariables:[], warnings:[],
         error:error instanceof Error ? error.message : 'Erreur de récupération du SMIC officiel.' });
     }finally{
       officialSmicPromise = null;
       updateComputed({skipUrssafSchedule:true});
-      if(urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === 'ready') scheduleUrssafCalculations(true,false);
+      if(!requestSignal.aborted && urssafSessionState.isConsentGranted() && urssafSessionState.getOfficialSmicState().status === 'ready') scheduleUrssafCalculations(true,false);
     }
     return urssafSessionState.getOfficialSmicState();
   })();
@@ -145,6 +197,8 @@ async function executeUrssafCalculations(generation, forceRetry){
     if(generation !== urssafGeneration) return;
   }
 
+  const requestSignal = urssafConsentController.signal;
+  if(requestSignal.aborted || !urssafSessionState.isConsentGranted()) return;
   const jobs = scenarios.map(s => Object.assign({},s));
   const base = findScenario(refId) || scenarios[0];
   const smicScenario = base ? buildSmicScenario(base,getSmicGross()) : null;
@@ -164,8 +218,9 @@ async function executeUrssafCalculations(generation, forceRetry){
         throw new Error('Le client de calcul Urssaf n’est pas chargé. Rechargez la page.');
       }
       const result = await window.OnNetUrssafApi.calculateWithUrssafApi(
-        buildUrssafInput(s,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch}
+        buildUrssafInput(s,scenarioCalculationDate(s)), {fetchImpl:queuedUrssafFetch, signal:requestSignal}
       );
+      if(requestSignal.aborted || generation !== urssafGeneration) return;
       // Une réponse valide reste réutilisable pour ses paramètres exacts,
       // même si une saisie plus récente a rendu son affichage obsolète.
       urssafCalculationCache.setResult(key,mapUrssafResultToOnNet(result));

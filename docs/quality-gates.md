@@ -1,0 +1,115 @@
+# OnNet — Quality and release gates
+
+This document defines the evidence required before changes are considered safe to merge or release.
+
+## Application scope and business invariants
+
+OnNet is a static web application hosted on GitHub Pages. Salary calculations are delegated to the official Mon-entreprise / Urssaf API. The browser stores comparison scenarios locally; sharing by URL encodes selected data in the URL fragment.
+
+The following rules are product invariants:
+
+- Never silently convert a 39-hour salary to a 35-hour equivalent.
+- Keep gross and net amounts distinct.
+- Do not reintroduce income-tax or withholding-tax calculations.
+- Do not send salary data to the Urssaf API before explicit user consent.
+- Revoking consent must not delete saved comparison scenarios.
+- Updates must not reset or overwrite saved scenarios.
+- SMIC and INSEE median are reference data, not substitutes for an individual Urssaf calculation.
+- A 39-hour scenario currently relies on the documented assumption of 4 overtime hours paid with a 25% premium; this is not a universal collective-agreement calculation.
+
+## Toolchain and dependency reproducibility
+
+The project pins its build and validation tools in `devDependencies`:
+- Playwright `1.65.1`.
+- ESLint `10.15.0`.
+- Stylelint `18.0.0`.
+- esbuild `0.28.2`.
+
+The supported Node.js range is `^22.22.2 || ^24.15.0 || >=26.0.0`, matching the minimum supported versions required by Stylelint 18. The CI uses the latest Node 22 maintenance release.
+
+The test job resolves `package-lock.json` without running lifecycle scripts, installs the exact dependency tree with `npm ci`, and runs lint/tests with local binaries. After all checks pass, it uploads the generated HTML and lockfile as artifacts. The isolated write-enabled job commits those validated files to same-repository PR branches. The security job independently resolves the complete lockfile without lifecycle scripts before auditing it, so temporary/off-lockfile CI tooling is no longer excluded from the audit.
+
+A CI-generated lockfile or HTML commit creates a new branch head. The new head must receive a fresh complete validation cycle; results attached to the previous SHA are not transferable. Merge only the latest PR head after functional, security and artifact-sync checks have completed successfully.
+
+## Two complementary workflows
+
+### 1. Functional quality — `.github/workflows/quality.yml`
+
+This is the primary quality pipeline. It already runs:
+- JavaScript syntax checks.
+- ESLint and Stylelint.
+- Unit and integration tests covering persistence, session state, API client and calculation adapters.
+- Build verification.
+- Playwright/Chromium browser journeys.
+- Generation of the standalone HTML artifacts in the read-only test job.
+- Browser test and visual artifact publication.
+- Reproducible installation from the full `package-lock.json`, including runtime and development tools.
+- Synchronization of the tested HTML and generated lockfile in a separate, write-enabled job for eligible same-repository pull requests. The write-enabled job does not execute repository scripts or tests.
+
+Do not duplicate these jobs in the Security Guardian workflow. Keep this pipeline as the required functional gate.
+
+### 2. Security — `.github/workflows/quality-guardian.yml`
+
+The Security Guardian runs on pull requests to `main`, pushes to `main`, manual dispatch, and every Tuesday at 03:17 UTC.
+
+It deliberately focuses on checks that the functional pipeline does not provide:
+- Regenerate the lockfile without executing lifecycle scripts and fail if that would change the committed `package-lock.json`; this enforces that the committed lock matches `package.json`.
+- Run `npm audit --package-lock-only --audit-level=high` against the committed dependency tree, including Playwright, ESLint and Stylelint.
+- CodeQL JavaScript/TypeScript analysis using the `security-extended` query suite.
+
+It does not rebuild the application or repeat the browser/unit suite. This separation reduces duplicate CI execution while keeping the security checks independently visible.
+
+## Merge and release criteria
+
+Do not merge a change when:
+- The `Vérifications / test` job fails or has not completed.
+- `npm dependency audit` or `CodeQL security analysis` fails or has not completed.
+- A P0/P1 defect remains unresolved.
+- A changed user journey has not been exercised by an appropriate browser test.
+- A calculation change lacks a documented reference case and expected result.
+- A persistence change has not tested reload and legacy-state behavior.
+
+A successful build alone is never sufficient evidence.
+
+After validation, inspect the actual GitHub Pages deployment for changes that affect the published site. A PR check is not a production smoke test.
+
+## Branch protection / ruleset
+
+To make the gates mandatory, configure protection for `main` and require these exact checks after they have appeared in GitHub:
+
+- `test` (from the `Vérifications` workflow).
+- `Synchroniser les HTML validés` (required for same-repository PRs; skipped for forks because they have no write permission).
+- `npm dependency audit`.
+- `CodeQL security analysis`.
+
+Also enable:
+- Require a pull request before merging.
+- Require conversation resolution.
+- Block force pushes to `main`.
+- Require branches to be up to date before merging only if this does not create excessive merge friction.
+
+The repository rulesets listing currently returned no rulesets. The branch-protection endpoint could not be read with the active GitHub integration (403), so the presence or absence of classic branch protection has not been verified. Confirm the settings in GitHub's repository settings before claiming that merges are blocked on failed checks.
+
+## Security boundaries
+
+- `npm audit` checks known advisories in the runtime and development dependency lockfile; it is not a complete security audit.
+- Playwright, ESLint, Stylelint and esbuild are pinned in `devDependencies`; lint scripts use the local locked binaries instead of downloading tools through `npx --yes`.
+- The CI regenerates the lockfile without lifecycle scripts before `npm ci`, then publishes that exact lockfile alongside the tested HTML artifact. This keeps first-time dependency changes auditable while preserving the read-only/write-separated job boundary.
+- CodeQL is static analysis; it does not prove the absence of vulnerabilities.
+- GitHub Pages does not provide application-server controls or server-side secret storage.
+- Browser local storage and URL fragments are not encrypted. Do not place credentials or sensitive personal data in them.
+- Mocked browser tests do not validate real Urssaf amounts. External API availability and calculation accuracy require separate, controlled checks.
+
+## Required evidence for each finding
+
+| Field | Required content |
+| --- | --- |
+| ID | Stable identifier |
+| Severity | P0 / P1 / P2 / P3 |
+| Status | Verified / Failed / Partial / Not tested / Not verifiable |
+| Evidence | Exact test, output, file/line, or reproduction |
+| Impact | User or security consequence |
+| Fix | Minimal proposed correction |
+| Regression test | Test added or reason it is not automatable |
+
+Never report an unexecuted test as passed. Distinguish source inspection, mocked tests, real API checks, and production browser checks.

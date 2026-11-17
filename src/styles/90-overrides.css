@@ -125,7 +125,7 @@
   color:#244B36;
   opacity:1;
 }
-.urssaf-status:not(.is-error):not(.has-diagnostics){
+.urssaf-status:not(.is-error):not(.has-diagnostics):not(.has-consent-actions){
   display:none !important;
 }
 .urssaf-status.is-error{
@@ -536,86 +536,389 @@ body.salary-editor-open .integrated-offers{display:none!important}
 
 
 
-/* Thème sombre : conserver la palette OnNet tout en inversant les surfaces
-   qui utilisent encore des couleurs fixes dans la maquette. */
-.theme-toggle{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-width:94px}
-.theme-toggle-icon{font-size:16px;line-height:1}
-:root[data-theme="dark"] body{background:linear-gradient(180deg,#171d1a 0%,#111614 100%);color:var(--ink)}
-:root[data-theme="dark"] header.hero{background:linear-gradient(145deg,#202a24 0%,#1b2821 72%,#18251e 100%);border-color:#34443a;box-shadow:0 8px 26px rgba(0,0,0,.22)}
+/* ---------- Cohérence visuelle du thème sombre ---------- */
+/* Les écrans principaux ont des styles éditoriaux explicites : ils doivent
+   suivre les mêmes surfaces et contrastes que les composants génériques. */
+:root[data-theme="dark"]{
+  --maquette-bg:#141a18;
+  --maquette-green:#65c99a;
+  --maquette-dark:#a8e4c2;
+}
+:root[data-theme="dark"] body{
+  background:linear-gradient(180deg,#171e1b 0%,var(--bg) 100%);
+}
+:root[data-theme="dark"] header.hero{
+  background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
+  border-color:#34463b;
+  box-shadow:0 8px 28px rgba(0,0,0,.22);
+}
 :root[data-theme="dark"] header.hero h1,
 :root[data-theme="dark"] .comparison-subhead h2,
-:root[data-theme="dark"] #comparePanel .bars-title{color:#e5f1e8}
+:root[data-theme="dark"] #comparePanel .bars-title,
+:root[data-theme="dark"] .maquette-top>.brand{
+  color:#edf5ef;
+}
 :root[data-theme="dark"] header.hero .intro,
-:root[data-theme="dark"] header.hero .trust{color:#b3c5b8}
-:root[data-theme="dark"] header.hero .trust{background:#24372c;border-color:#3b5946}
-:root[data-theme="dark"] header.hero .trust strong{color:#8cdbad}
-:root[data-theme="dark"] header.hero .wave{opacity:.16}
-:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] header.hero .trust,
+:root[data-theme="dark"] header.hero .trust strong{
+  color:#b7c8bd;
+}
+:root[data-theme="dark"] header.hero .eyebrow,
+:root[data-theme="dark"] .maquette-top>.brand .brand-accent{
+  color:#75d6a5;
+}
+:root[data-theme="dark"] header.hero .trust{
+  background:#24352b;
+  border-color:#3a5142;
+}
+:root[data-theme="dark"] header.hero .trust-icon{
+  background:#294637;
+  color:#8be0b2;
+}
+:root[data-theme="dark"] header.hero .wave path:nth-child(1){fill:#244332}
+:root[data-theme="dark"] header.hero .wave path:nth-child(2){fill:#28563d}
+:root[data-theme="dark"] header.hero .wave path:nth-child(3){fill:#367b54}
+
 :root[data-theme="dark"] #comparePanel,
-:root[data-theme="dark"] .unified-salary-panel{background:#1c2420;border-color:#303c34;box-shadow:0 8px 26px rgba(0,0,0,.18)}
-:root[data-theme="dark"] .comparison-period{background:#222e27;border-color:#35483b}
-:root[data-theme="dark"] .comparison-period>span,
-:root[data-theme="dark"] .comparison-period-tabs button{color:#b9c9bd}
-:root[data-theme="dark"] .comparison-period-tabs{background:#18221c}
-:root[data-theme="dark"] .comparison-period-tabs button[aria-pressed=true]{background:#3d9b6c;color:#fff}
-:root[data-theme="dark"] .offer-tabs{background:#17231c}
-:root[data-theme="dark"] .offer-tab{color:#b8c9bd}
-:root[data-theme="dark"] .offer-tab.active{background:#26372c;border-color:#42664d;color:#a6e2ba}
-:root[data-theme="dark"] .offer-tab small{color:#9eafa3}
-:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary{background:linear-gradient(110deg,#21392a,#1c3024);border-color:#355b40}
-:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>span,
-:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>strong{color:#a7e0b8}
-:root[data-theme="dark"] #benchmarkMount .benchmark-item{background:#222b26;border-color:#35443a}
-:root[data-theme="dark"] #benchmarkMount .benchmark-label,
-:root[data-theme="dark"] #benchmarkMount .benchmark-value{color:#dcebe0}
+:root[data-theme="dark"] .panel,
+:root[data-theme="dark"] .unified-salary-panel{
+  background:#1c2420;
+  border-color:#344139;
+  box-shadow:0 8px 26px rgba(0,0,0,.18);
+}
+:root[data-theme="dark"] .panel-advanced,
+:root[data-theme="dark"] .advanced-scenarios{
+  background:#1b2420;
+  border-color:#3b4a41;
+  color:#c3d0c7;
+}
+:root[data-theme="dark"] .advanced-scenarios>summary{color:#c3d0c7}
+:root[data-theme="dark"] .comparison-subhead h2{color:#e5f0e8}
+:root[data-theme="dark"] .comparison-period{
+  background:#222d27;
+  border-color:#3a4b40;
+}
+:root[data-theme="dark"] .comparison-period>span{color:#bdcfc3}
+:root[data-theme="dark"] .comparison-period-tabs{background:#17201b}
+:root[data-theme="dark"] .comparison-period-tabs button{color:#aebdb3}
+:root[data-theme="dark"] .comparison-period-tabs button[aria-pressed=true]{
+  background:#397b58;color:#fff;
+}
+:root[data-theme="dark"] .offer-tabs{background:#17221c}
+:root[data-theme="dark"] .offer-tab{color:#b8c9be}
+:root[data-theme="dark"] .offer-tab.active{
+  background:#293a30;border-color:#496653;color:#a2e3bd;
+}
+:root[data-theme="dark"] .offer-tab small{color:#9cac9f}
+:root[data-theme="dark"] .comparison-subhead-actions .add-salary{
+  background:#263d30;border-color:#42644d;color:#a1e1b9;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary{
+  background:linear-gradient(145deg,#263a2e,#202d25);
+  border-color:#3c6248;
+}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>span{color:#d5e8da}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-your-salary>strong{color:#91dfb0}
+:root[data-theme="dark"] #maquetteYourSalary .benchmark-comparison-base{
+  border-color:rgba(125,207,157,.2);color:#aebfb3;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-item{
+  background:#222c26;border-color:#3b4a40;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-label{color:#d0e0d5}
+:root[data-theme="dark"] #benchmarkMount .benchmark-value{color:#a5e3bb}
 :root[data-theme="dark"] #benchmarkMount .benchmark-meta,
-:root[data-theme="dark"] #benchmarkMount .benchmark-details p{color:#a3b1a7}
-:root[data-theme="dark"] #benchmarkMount .benchmark-result{background:#244331;color:#a5e0b8}
-:root[data-theme="dark"] #benchmarkMount .benchmark-result.benchmark-negative{background:#452c25;color:#f0aa8b}
-:root[data-theme="dark"] #benchmarkMount .benchmark-details{border-color:#39463d}
-:root[data-theme="dark"] #benchmarkMount .benchmark-details summary{color:#8fd4a8}
-:root[data-theme="dark"] #comparePanel .comparison-offer-card{background:#222b26;border-color:#39473e;color:#dce8df;box-shadow:0 3px 12px rgba(0,0,0,.16)}
-:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{background:linear-gradient(155deg,#243b2b,#222b26 72%);border-color:#4d9b68}
-:root[data-theme="dark"] .comparison-offer-head h3,
-:root[data-theme="dark"] .comparison-offer-value{color:#a6dfb7}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details p{color:#a4b3a9}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result{
+  background:#294735;color:#a8e6bd;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-result.benchmark-negative{
+  background:#482d25;color:#f0a98b;
+}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details{border-color:#3b4a40}
+:root[data-theme="dark"] #benchmarkMount .benchmark-details summary{color:#8cdbac}
+
+:root[data-theme="dark"] .offer-comparison-card,
+:root[data-theme="dark"] .comparison-offer-card{
+  background:#222c26;border-color:#3b4a40;color:#e3ece5;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] .offer-comparison-card.is-reference,
+:root[data-theme="dark"] .comparison-offer-card.is-reference{
+  background:linear-gradient(145deg,#293d30,#222d26);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] .offer-comparison-card h4,
+:root[data-theme="dark"] .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] .offer-comparison-index,
+:root[data-theme="dark"] .offer-comparison-meta,
+:root[data-theme="dark"] .comparison-offer-index,
 :root[data-theme="dark"] .comparison-offer-value-label,
 :root[data-theme="dark"] .comparison-offer-value small,
 :root[data-theme="dark"] .comparison-offer-meta,
-:root[data-theme="dark"] .comparison-offer-delta span{color:#a6b5aa}
-:root[data-theme="dark"] .comparison-offer-meta,
-:root[data-theme="dark"] .offer-net-details{border-color:#3b4840}
-:root[data-theme="dark"] .comparison-reference-badge,
-:root[data-theme="dark"] .comparison-set-reference{background:#263d2e;border-color:#3d6549;color:#a5dfb6}
-:root[data-theme="dark"] .comparison-offer-delta{background:#26332a}
-:root[data-theme="dark"] .comparison-offer-delta.is-positive{background:#203b2a;color:#9de0b2}
-:root[data-theme="dark"] .comparison-offer-delta.is-negative{background:#402c25;color:#f0a88a}
-:root[data-theme="dark"] .comparison-offer-delta.is-neutral{background:#303832;color:#c2cdc5}
-:root[data-theme="dark"] #comparePanel .insight{background:#26392c;color:#d6e9db}
-:root[data-theme="dark"] #comparePanel .insight strong,
-:root[data-theme="dark"] .offer-net-details summary{color:#9cddb0}
-:root[data-theme="dark"] #comparePanel .insight-caption{color:#a8b8ad}
-:root[data-theme="dark"] #comparePanel .insight.neutral{background:#29322c;color:#b9c6bd}
-:root[data-theme="dark"] .offer-comparison-name{color:#d9e8dd}
-:root[data-theme="dark"] .offer-comparison-name:focus{background:#26352b}
+:root[data-theme="dark"] .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] .offer-comparison-net,
+:root[data-theme="dark"] .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] .offer-reference-label,
+:root[data-theme="dark"] .comparison-reference-badge{
+  background:#304c39;color:#a8e5bc;border-color:#45664d;
+}
 :root[data-theme="dark"] .offer-comparison-edit,
-:root[data-theme="dark"] .offer-rename-button{background:#26382d;border-color:#3c5b45;color:#a4dfb5}
-:root[data-theme="dark"] .offer-reference-select{background:#26382d;border-color:#3c5b45;color:#a4dfb5}
-:root[data-theme="dark"] .offer-reference-label{color:#a4dfb5}
-:root[data-theme="dark"] .advanced-workspace,
+:root[data-theme="dark"] .comparison-offer-head .offer-comparison-edit{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
+:root[data-theme="dark"] .comparison-offer-meta,
+:root[data-theme="dark"] .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .insight{background:#26382d;color:#d5e6d9}
+:root[data-theme="dark"] #comparePanel .insight strong,
+:root[data-theme="dark"] .offer-net-details summary{color:#8cdbac}
+:root[data-theme="dark"] #comparePanel .insight-caption{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .insight.neutral{background:#29332d;color:#b7c5bb}
+
 :root[data-theme="dark"] .module-card,
-:root[data-theme="dark"] .disclaimer{background:#1d2621;border-color:#354139;color:#d7e2da}
-:root[data-theme="dark"] .advanced-workspace>summary,
-:root[data-theme="dark"] .modules-title{color:#e0ece3}
-:root[data-theme="dark"] .advanced-workspace-intro,
-:root[data-theme="dark"] .modules-sub,
-:root[data-theme="dark"] .disclaimer p{color:#aab8ae}
-:root[data-theme="dark"] .module-toggle-head{color:#dbe8de}
-:root[data-theme="dark"] .module-desc{color:#a8b6ac}
+:root[data-theme="dark"] .module-card .module-body{
+  background:#202a24;border-color:#39483e;
+}
+:root[data-theme="dark"] .module-name{color:#e0ebe3}
+:root[data-theme="dark"] .module-desc,
+:root[data-theme="dark"] .modules-sub{color:#a9b8ae}
+:root[data-theme="dark"] .module-icon{background:#2a4032;color:#8fdbac}
+:root[data-theme="dark"] .module-card.is-open .module-icon{background:#397b58;color:#fff}
+:root[data-theme="dark"] .module-switch{background:#46534a}
+:root[data-theme="dark"] .panel-nested,
+:root[data-theme="dark"] .onboarding-optional{border-color:#39483f}
+:root[data-theme="dark"] .onboarding-optional .optional-label{
+  background:#27332b;border-color:#405047;color:#b4c3b8;
+}
+:root[data-theme="dark"] .share-banner,
+:root[data-theme="dark"] .modal-share-input{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+}
+:root[data-theme="dark"] .header-menu-panel{
+  background:#202a24;border-color:#3b4a40;color:#e0eae3;
+  box-shadow:0 12px 32px rgba(0,0,0,.38);
+}
+:root[data-theme="dark"] .header-menu-panel button{color:#dce8df}
+:root[data-theme="dark"] .header-menu-panel button:hover{background:#2a4032}
+:root[data-theme="dark"] .header-theme-setting{color:#b9c8be}
+:root[data-theme="dark"] .header-theme-setting select{
+  background:#17201b;border-color:#46564b;color:#e3ece5;
+}
+:root[data-theme="dark"] .maquette-top>.brand .brand-version{
+  background:#29352e;color:#aebdb3;
+}
+:root[data-theme="dark"] .add-salary,
+:root[data-theme="dark"] .offer-rename-button,
+:root[data-theme="dark"] .salary-editor-back{
+  background:#263a2e;border-color:#405c49;color:#a3dfb8;
+}
 :root[data-theme="dark"] input,
 :root[data-theme="dark"] select,
-:root[data-theme="dark"] textarea{background:#202a24;border-color:#3b4940;color:#e2ece5}
+:root[data-theme="dark"] textarea{
+  background-color:#18211c;border-color:#46564b;color:#e5eee7;
+}
 :root[data-theme="dark"] input::placeholder,
-:root[data-theme="dark"] textarea::placeholder{color:#87968b}
-:root[data-theme="dark"] .urssaf-status{background:#202a24;border-color:#39483e;color:#dce8df}
-:root[data-theme="dark"] .skip-link{background:#263b2d;color:#e5f2e8}
-@media(prefers-reduced-motion:reduce){.theme-toggle{transition:none}}
+:root[data-theme="dark"] textarea::placeholder{color:#8e9f93}
+:root[data-theme="dark"] input:focus,
+:root[data-theme="dark"] select:focus,
+:root[data-theme="dark"] textarea:focus{
+  border-color:#70c995;box-shadow:0 0 0 2px rgba(112,201,149,.18);
+}
+:root[data-theme="dark"] .modal,
+:root[data-theme="dark"] .modal-actions{
+  background:#202a24;border-color:#3b4a40;color:#e2ebe4;
+}
+:root[data-theme="dark"] .modal-btn-cancel{
+  background:#29352e;border-color:#46564b;color:#e0eae3;
+}
+:root[data-theme="dark"] .toast{background:#e1eee5;color:#18221c}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .disclaimer-summary,
+:root[data-theme="dark"] .more-body{color:#bdc9c0}
+:root[data-theme="dark"] .disclaimer,
+:root[data-theme="dark"] .more-body{border-color:#39483f}
+:root[data-theme="dark"] .result-source,
+:root[data-theme="dark"] .urssaf-status{color:#c4d0c7}
+:root[data-theme="dark"] .urssaf-status-dot{background:#70d49a}
+:root[data-theme="dark"] .benchmark-positive{color:#8cdbac}
+:root[data-theme="dark"] .benchmark-negative{color:#f0a98b}
+:root[data-theme="dark"] .commune-suggestions{
+  background:#202a24;border-color:#46564b;
+}
+:root[data-theme="dark"] .commune-option{border-color:#39483f;color:#e0eae3}
+:root[data-theme="dark"] .commune-option:hover,
+:root[data-theme="dark"] .commune-option:focus-visible{background:#2a4032}
+:root[data-theme="dark"] .commune-search-status{color:#aab9ae}
+:root[data-theme="dark"] .onboarding-mutuelle-icon,
+:root[data-theme="dark"] .onboarding-consent-icon,
+:root[data-theme="dark"] .onboarding-tr-icon{
+  background:#294735;color:#8cdbac;
+}
+:root[data-theme="dark"] .stack-seg-net,
+:root[data-theme="dark"] .wf-stack-net{filter:brightness(1.18) saturate(.85)}
+:root[data-theme="dark"] .stack-seg{box-shadow:0 1px 2px rgba(0,0,0,.28)}
+:root[data-theme="dark"] .skip-link{color:#102017}
+
+
+/* Actions des offres : compactes, lisibles et cohérentes sur mobile. */
+.offer-comparison-card-head{min-width:0;flex-wrap:wrap;align-items:center}
+.offer-comparison-card-head>div:first-child{min-width:0;flex:1 1 120px}
+.offer-comparison-card-actions{display:flex;align-items:center;justify-content:flex-end;gap:7px;flex:0 1 auto;min-width:0}
+.offer-reference-select{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:34px;padding:6px 10px;border:1px solid #cfe3d4;border-radius:9px;
+  background:#edf6ef;color:#176b49;font-size:11px;font-weight:750;line-height:1.2;
+  white-space:nowrap;cursor:pointer;
+}
+.offer-reference-label{
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:28px;padding:5px 9px;border-radius:999px;
+  background:#e2f2e6;color:#176b49;font-size:10px;font-weight:800;
+}
+.offer-comparison-remove{
+  display:inline-flex;align-items:center;justify-content:center;flex:none;
+  width:36px;height:36px;min-width:36px;min-height:36px;padding:0;
+  border:1px solid #eadbd5;border-radius:9px;background:#fff;
+  color:#a94d35;font-size:19px;line-height:1;cursor:pointer;
+}
+.offer-reference-select:focus-visible,.offer-comparison-remove:focus-visible{
+  outline:2px solid #247653;outline-offset:2px;
+}
+@media(max-width:640px){
+  .offer-comparison-card-head{gap:8px}
+  .offer-comparison-card-actions{gap:6px}
+  .offer-reference-select{min-height:34px;padding:6px 9px;font-size:10px}
+  .offer-comparison-remove{width:36px;height:36px;min-width:36px;min-height:36px}
+}
+:root[data-theme="dark"] .offer-reference-select{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] .offer-reference-label{
+  background:#304c39;color:#a8e5bc;border:1px solid #45664d;
+}
+:root[data-theme="dark"] .offer-comparison-remove{
+  background:#302722;border-color:#68483b;color:#f0ad91;
+}
+:root[data-theme="dark"] .offer-reference-select:focus-visible,
+:root[data-theme="dark"] .offer-comparison-remove:focus-visible{
+  outline-color:#83d6a4;
+}
+
+
+/* Le sélecteur #comparePanel des styles de base est plus spécifique que
+   les règles sombres génériques : rétablir explicitement toute la palette. */
+:root[data-theme="dark"] #comparePanel .comparison-offer-card{
+  background:#222c26;color:#e3ece5;border-color:#3b4a40;
+  box-shadow:0 3px 12px rgba(0,0,0,.16);
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-card.is-reference{
+  background:linear-gradient(155deg,#293d30 0%,#222d26 72%);
+  border-color:#52785d;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-head h3{color:#e0eee4}
+:root[data-theme="dark"] #comparePanel .comparison-offer-index,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value-label,
+:root[data-theme="dark"] #comparePanel .comparison-offer-value small,
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .comparison-reference-note{color:#aab9ae}
+:root[data-theme="dark"] #comparePanel .comparison-offer-value{color:#91dfb0}
+:root[data-theme="dark"] #comparePanel .comparison-reference-badge{
+  background:#304c39;border-color:#45664d;color:#a8e5bc;
+}
+:root[data-theme="dark"] #comparePanel .comparison-set-reference{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #comparePanel .comparison-offer-meta,
+:root[data-theme="dark"] #comparePanel .offer-net-details{border-color:#3b4a40}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta{background:#29372e;color:#d5e5d9}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta span{color:#aebdb3}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-positive{background:#294735;color:#a8e6bd}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-negative{background:#482d25;color:#f0a98b}
+:root[data-theme="dark"] #comparePanel .comparison-offer-delta.is-neutral{background:#303a34;color:#c2cec5}
+:root[data-theme="dark"] #comparePanel .offer-net-details summary{color:#8cdbac}
+
+
+/* Repère géographique : ne pas partager la ligne avec le titre long. */
+#benchmarkMount .median-card-head{
+  display:flex;flex-direction:column;align-items:flex-start;justify-content:flex-start;
+  gap:7px;min-height:0;
+}
+#benchmarkMount .median-card-head .benchmark-label{
+  flex:none;width:100%;min-width:0;min-height:0;line-height:1.3;
+}
+#benchmarkMount .median-card-head .geo-inline{
+  align-self:flex-start;margin:0;padding:4px 9px;
+}
+
+
+/* Badge Zone France : palette dédiée au thème sombre. */
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline{
+  background:#293f32;border-color:#496b53;color:#a9e5bd;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline span{
+  color:#b8c9be;
+}
+:root[data-theme="dark"] #benchmarkMount .median-card-head .geo-inline strong{
+  color:#a9e5bd;
+}
+
+
+/* Consentement Urssaf : préserver le comparatif et rendre l'autorisation réversible. */
+.urssaf-consent-actions{
+  display:flex;align-items:center;flex-wrap:wrap;gap:9px 14px;margin-top:10px;
+}
+.urssaf-consent-grant{
+  min-height:38px;padding:8px 13px;border:1px solid var(--accent);
+  border-radius:10px;background:var(--accent);color:#fff;
+  font:700 12px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-details{max-width:620px;font-size:11px;line-height:1.45;color:var(--ink-soft)}
+.urssaf-consent-details summary{font-weight:700;color:var(--accent);cursor:pointer}
+.urssaf-consent-details p{margin:7px 0 0}
+.urssaf-consent-revoke{
+  min-height:32px;padding:5px 9px;border:1px solid var(--line);
+  border-radius:8px;background:transparent;color:var(--ink-soft);
+  font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  cursor:pointer;
+}
+.urssaf-consent-grant:focus-visible,.urssaf-consent-revoke:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;
+}
+:root[data-theme="dark"] .urssaf-consent-grant{
+  background:#267b57;border-color:#479c73;color:#fff;
+}
+:root[data-theme="dark"] .urssaf-consent-details{color:#bdc9c0}
+:root[data-theme="dark"] .urssaf-consent-details summary{color:#8cdbac}
+:root[data-theme="dark"] .urssaf-consent-revoke{
+  background:#222c26;border-color:#46564b;color:#bdc9c0;
+}
+
+
+/* La demande d'autorisation doit rester visible même lorsque l'état n'est pas une erreur. */
+.urssaf-status.requires-consent{
+  display:block!important;margin:12px 0 0;padding:10px 12px;
+  border:1px solid var(--line);border-radius:12px;
+  background:var(--surface-secondary,var(--surface));color:var(--ink-soft);
+}
+
+/* Surclasse la règle historique qui masque les statuts sans erreur. */
+.urssaf-status.requires-consent:not(.is-error):not(.has-diagnostics){
+  display:block!important;
+}
+
+/* Safari iOS agrandit automatiquement la page au focus des champs dont la
+   police est inférieure à 16 px. Garder le zoom par pincement disponible,
+   mais éviter ce zoom parasite sur les contrôles de saisie. */
+@media (max-width:640px){
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+}

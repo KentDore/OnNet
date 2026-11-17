@@ -107,3 +107,26 @@ test('validates injected dependencies and the minimum interval', () => {
     wait:1
   }), /wait/);
 });
+
+
+test('does not send a queued request if its signal is aborted while waiting', async () => {
+  let releaseWait;
+  const starts = [];
+  const controller = new AbortController();
+  const rateLimitedFetch = createRateLimitedFetch(async url => {
+    starts.push(url);
+    return { ok:true, url };
+  }, {
+    minimumIntervalMs:350,
+    now:() => 1000,
+    wait:() => new Promise(resolve => { releaseWait = resolve; })
+  });
+
+  await rateLimitedFetch('/first');
+  const queued = rateLimitedFetch('/queued', { signal:controller.signal });
+  await new Promise(resolve => setImmediate(resolve));
+  controller.abort();
+  releaseWait();
+  await assert.rejects(queued, error => error.name === 'AbortError');
+  assert.deepEqual(starts, ['/first']);
+});
