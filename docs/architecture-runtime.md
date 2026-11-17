@@ -18,20 +18,22 @@ Ce document décrit le fonctionnement actuel et fixe une trajectoire de migratio
 8. `src/urssaf-session-state.mjs` possède le consentement en mémoire pendant l'exécution et l'état de récupération du SMIC, avec lecture/écriture par snapshots. Le fragment applicatif persiste séparément l'accord explicite dans `localStorage`, sous la clé `onnet.urssaf.consent.v1`.
 9. `src/smic-reference.mjs` contient les fonctions pures qui construisent le repère SMIC en 35 h ou en 39 h, avec quatre heures supplémentaires majorées à 25 %.
 10. `src/rate-limited-fetch.mjs` encapsule la file d'appels réseau et l'intervalle minimal entre deux démarrages ; le fetch, l'horloge et l'attente sont injectables.
-11. `src/app/manifest.json` impose l'ordre d'assemblage des neuf fragments applicatifs.
-12. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
-13. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs, les adaptateurs de calcul, le cache, le codec de persistance, l'état de session, le repère SMIC, l'ordonnanceur réseau et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-X.Y.Z.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
+11. `src/theme-preference.mjs` initialise le thème avec les dépendances navigateur injectées ; il est regroupé séparément des fragments applicatifs.
+12. `src/app/manifest.json` impose l'ordre d'assemblage des huit fragments applicatifs restants.
+13. `src/styles/manifest.json` impose l'ordre d'assemblage des fragments CSS. Les ressources de police sont réinjectées depuis `src/fonts/`.
+14. `scripts/build.js` utilise esbuild pour regrouper le client Urssaf, les utilitaires, les normalisateurs, les adaptateurs de calcul, le cache, le codec de persistance, l'état de session, le repère SMIC, l'ordonnanceur réseau le contrôleur de thème et les fragments applicatifs en un seul module embarqué. `index.html` et `Onnet-X.Y.Z.html` sont des artefacts générés : ne pas les modifier indépendamment des sources.
 
 Depuis la [PR #91](https://github.com/KentDore/OnNet/pull/91), le runtime est encapsulé dans un unique `<script type="module">`. La [PR #94](https://github.com/KentDore/OnNet/pull/94) a extrait les utilitaires purs et le client Urssaf en véritables modules ES. La [PR #95](https://github.com/KentDore/OnNet/pull/95) extrait les règles de normalisation des scénarios. La PR #96 isole les adaptateurs purs entre l'état de l'application et le contrat de l'API Urssaf. La PR #97 ajoute à ce module la construction pure de la clé qui identifie les paramètres d'un calcul et gouverne la réutilisation du cache. La PR #98 sépare l'ordonnanceur de requêtes réseau, avec des dépendances de temps injectées pour tester la sérialisation et la reprise après erreur. La PR #99 isole le calcul du scénario SMIC, notamment le cas 39 h avec quatre heures supplémentaires majorées. La PR #100 sort les caches Urssaf du fichier d'orchestration et verrouille leur éviction FIFO ainsi que l'indépendance des instances. La PR #101 isole le consentement et l'état du SMIC réellement partagés entre les fragments, sans déplacer l'orchestration. La PR #102 extrait le codec JSON des sauvegardes locales tout en laissant l'accès à `localStorage` dans le fragment adaptateur.
 
 L'instance `urssafSessionState` est créée une seule fois dans le premier fragment applicatif, puis consommée par les fragments de rendu, d'événements et de démarrage. Son interface ne s'expose pas sur `window` ; les accesseurs SMIC renvoient des copies défensives ; l'accord explicite est conservé séparément dans `localStorage` et peut être retiré depuis l'interface.
 
-Le wrapper démarre la première requête sans attente, puis impose au moins 350 ms entre les démarrages suivants. Il remet la file dans un état utilisable après un rejet ; le module ne dépend pas directement de `window`, car le fetch concret lui est fourni par l'application. esbuild regroupe ces modules avec les fragments applicatifs au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Les neuf fragments applicatifs sont encore assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
+Le wrapper démarre la première requête sans attente, puis impose au moins 350 ms entre les démarrages suivants. Il remet la file dans un état utilisable après un rejet ; le module ne dépend pas directement de `window`, car le fetch concret lui est fourni par l'application. esbuild regroupe ces modules avec les fragments applicatifs au moment du build. Le point d'accès volontaire sur `window` reste `window.OnNetUrssafApi`. Le gestionnaire de thème est désormais un module ES autonome, initialisé par une fonction recevant explicitement `window` et `document`. Les huit autres fragments applicatifs restent assemblés dans un seul espace lexical ; ils ne sont pas encore des modules indépendants.
 
 ## Responsabilités actuelles
 
 | Source | Responsabilité principale | Dépendances ou points d'attention |
 | --- | --- | --- |
+| `theme-preference.mjs` | Initialisation de la préférence de thème | Module ES autonome ; `window` et `document` sont injectés, stockage et événements navigateur confinés au module |
 | `00-state-and-calculations.js` | État des simulations, cache et orchestration des appels Urssaf | État mutable utilisé par le rendu, les événements et le démarrage ; délègue désormais les transformations pures au module de calcul |
 | `state-normalizers.mjs` | Validation pure des scénarios et normalisation des identifiants | Dépend des utilitaires de présentation ; partagé par la restauration locale et le partage d'URL |
 | `urssaf-calculation.mjs` | Clé d'identification des paramètres de calcul, validation du périmètre, construction des entrées API et conversion des réponses | Fonctions pures testées séparément ; ne gère ni état de cache, ni stockage, ni requête réseau |
@@ -76,6 +78,10 @@ Les vérifications GitHub Actions reconstruisent `index.html` et `Onnet-X.Y.Z.ht
 **Réalisée pour les utilitaires de présentation** : formatage, échappement HTML, parsing numérique, constantes d'interface et valeurs par défaut sont exportés par `src/ui-utils.mjs`. Le build les regroupe avec le client Urssaf et les fragments applicatifs au moyen d'esbuild. Le HTML final reste autonome et n'effectue aucune requête supplémentaire vers les modules source.
 
 Cette extraction est couverte par des tests unitaires dédiés et par les tests navigateur qui vérifient que les fonctions internes ne sont pas exposées sur `window`.
+
+### Étape 2 ter — Isoler la préférence de thème
+
+**Premier fragment applicatif extrait** : `src/theme-preference.mjs` expose uniquement `initializeThemePreference({ windowRef, documentRef })`. Il possède le stockage de la préférence, l'écoute du thème système et la mise à jour de la métadonnée de couleur. Le manifeste applicatif ne charge donc plus `05-theme-preference.js` ; le build initialise le module avant les fragments applicatifs restants. Les tests injectent un environnement navigateur simulé et couvrent le mode automatique, le choix manuel, le retour au mode automatique et l'indisponibilité du stockage.
 
 ### Étape 2 bis — Extraire les normalisateurs d'état
 
