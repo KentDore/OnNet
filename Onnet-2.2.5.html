@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no, interactive-widget=resizes-content">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
 <link rel="icon" type="image/svg+xml" href="./favicon.svg">
@@ -2019,6 +2019,17 @@ body.salary-editor-open .integrated-offers{display:none!important}
   display:block!important;
 }
 
+/* Safari iOS agrandit automatiquement la page au focus des champs dont la
+   police est inférieure à 16 px. Garder le zoom par pincement disponible,
+   mais éviter ce zoom parasite sur les contrôles de saisie. */
+@media (max-width:640px){
+  input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea{
+    font-size:16px!important;
+  }
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -3773,7 +3784,7 @@ function renderMaquetteControls(computedOverride) {
       const hourly = r && Number.isFinite(r.netHoraire) ? r.netHoraire : null;
       const factor = maquetteComparisonPeriod === "hour" ? 1 : maquetteComparisonPeriod === "year" ? weekly * 52 : hoursMonth;
       const value = hourly === null ? null : hourly * factor;
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir r\xE9f.</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut/mois \xB7 " + fmt(s.brut * 12) + " brut/an \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir r\xE9f.</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + (s.salaireSaisiPeriode === "an" && Number.isFinite(Number(s.salaireSaisi)) ? fmt(s.salaireSaisi) + " brut / an" : fmt(s.brut) + " brut / mois") + " \xB7 " + weekly + ' h / semaine</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
       summary.addEventListener("click", (event) => {
