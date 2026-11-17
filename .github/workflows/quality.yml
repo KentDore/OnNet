@@ -33,7 +33,7 @@ jobs:
         run: |
           git fetch origin "$BASE_REF"
           CHANGED_FILES="$(git diff --name-only "origin/$BASE_REF...HEAD")"
-          if printf '%s\\n' "$CHANGED_FILES" | grep -Eq '^(src/|scripts/build\\.js$|package\\.json$|package-lock\\.json$)'; then
+          if printf '%s\n' "$CHANGED_FILES" | grep -Eq '^(src/|scripts/build\.js$|package\.json$|package-lock\.json$)'; then
             echo "app_changed=true" >> "$GITHUB_OUTPUT"
             echo "La PR modifie les sources ou la chaîne de build : synchronisation HTML autorisée."
           else
