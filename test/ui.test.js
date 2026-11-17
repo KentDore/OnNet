@@ -297,6 +297,15 @@ test('le haut de page garde le partage visible et regroupe les actions secondair
       'la page doit démarrer à son échelle normale');
     assert.doesNotMatch(viewportContent || '', /maximum-scale\s*=\s*1|user-scalable\s*=\s*no/i,
       'le navigateur doit conserver le zoom tactile pour l’accessibilité mobile');
+    const mobileFieldFontSizes = await page.locator('input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):not([type="range"]), select, textarea').evaluateAll(elements =>
+      elements.map(element => ({
+        field: element.tagName.toLowerCase() + (element.id ? '#' + element.id : ''),
+        fontSize: Number.parseFloat(getComputedStyle(element).fontSize)
+      }))
+    );
+    assert.ok(mobileFieldFontSizes.length > 0, 'les champs mobiles doivent être présents');
+    assert.ok(mobileFieldFontSizes.every(field => field.fontSize >= 16),
+      'les champs mobiles doivent rester à 16 px minimum pour éviter le zoom automatique au focus sur iOS : ' + JSON.stringify(mobileFieldFontSizes));
     assert.equal(await page.locator('#resetBtn').isVisible(), false);
     assert.equal(await page.locator('#printBtn').isVisible(), false);
     await page.locator('#headerMenu summary').click();
