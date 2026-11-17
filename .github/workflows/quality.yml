@@ -107,14 +107,10 @@ jobs:
           node --check src/urssaf-calculation-cache.mjs
           node --check src/urssaf-session-state.mjs
           node --check src/persistence-codec.mjs
-          node --check src/app/00-state-and-calculations.js
-          node --check src/app/10-persistence.js
-          node --check src/app/20-sharing.js
-          node --check src/app/30-rendering.js
-          node --check src/app/40-household-and-navigation.js
-          node --check src/app/50-input-events.js
-          node --check src/app/60-notifications-and-modals.js
-          node --check src/app/70-optional-tools-and-startup.js
+          # Vérifier chaque fragment applicatif pour ne pas oublier les nouveaux fichiers.
+          for file in src/app/*.js; do
+            node --check "$file"
+          done
           node --check scripts/build.js
       - name: Contrôler la qualité JavaScript et CSS
         run: npm run lint
