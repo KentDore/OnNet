@@ -1,12 +1,16 @@
 /**
  * Owns the result and error caches used by the Urssaf calculation flow.
- * Successful results use bounded FIFO eviction; error entries are kept
- * separately so a failed request never masquerades as a successful result.
+ * Successful results and errors use independent bounded FIFO caches so
+ * repeated failures for distinct scenarios cannot grow memory indefinitely.
  */
 export function createUrssafCalculationCache(options = {}){
   const maxResults = options.maxResults ?? 100;
+  const maxErrors = options.maxErrors ?? maxResults;
   if(!Number.isInteger(maxResults) || maxResults < 1){
     throw new RangeError('maxResults doit être un entier strictement positif.');
+  }
+  if(!Number.isInteger(maxErrors) || maxErrors < 1){
+    throw new RangeError('maxErrors doit être un entier strictement positif.');
   }
 
   const results = new Map();
@@ -33,6 +37,10 @@ export function createUrssafCalculationCache(options = {}){
       return errors.has(key);
     },
     setError(key, message){
+      if(!errors.has(key) && errors.size >= maxErrors){
+        const oldestKey = errors.keys().next().value;
+        errors.delete(oldestKey);
+      }
       errors.set(key, message);
     },
     deleteError(key){
