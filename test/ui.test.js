@@ -1025,7 +1025,7 @@ test('les actions et les barres restent cohérentes avec plusieurs postes sur mo
       }
       assert.ok(await page.locator('#maquetteYourSalary .offer-comparison-card').count() === 2);
       const offerMeta = await page.locator('#maquetteYourSalary .offer-comparison-meta').nth(1).innerText();
-      const normalizedOfferMeta = offerMeta.replace(/\\s/g, '');
+      const normalizedOfferMeta = offerMeta.replace(/\s/g, '');
       assert.ok(normalizedOfferMeta.includes('3400€brut/mois'));
       assert.ok(normalizedOfferMeta.includes('40800€brut/an'));
       assert.match(normalizedOfferMeta, /(?:35|39)h$/,
