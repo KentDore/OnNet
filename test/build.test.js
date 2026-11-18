@@ -32,8 +32,8 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   const styles = readStylesSource(root).trim();
   const favicon = fs.readFileSync(path.join(root, 'favicon.svg'), 'utf8');
   const appleTouchIcon = fs.readFileSync(path.join(root, 'apple-touch-icon.png'));
-  assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="./favicon.svg">'));
-  assert.ok(html.includes('<link rel="apple-touch-icon" href="./apple-touch-icon.png">'));
+  assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=9.9.9">'));
+  assert.ok(html.includes('<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=9.9.9">'));
   assert.match(html, /<meta name="theme-color" content="#176b49">/);
   assert.match(favicon, /<svg[^>]+viewBox="0 0 64 64"/);
   assert.equal(appleTouchIcon.readUInt32BE(16), 180, 'l’icône iOS doit mesurer 180 px de large');
