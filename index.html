@@ -2718,6 +2718,122 @@ header.hero .hero-copy .trust-service{
 #urssafFooterMount .urssaf-consent-revoke:hover,#urssafFooterMount .urssaf-consent-details summary:hover{color:var(--ink)!important;text-decoration:underline!important;text-underline-offset:3px}
 @media(max-width:560px){.urssaf-footer{margin-top:22px;padding-top:12px}#urssafFooterMount .urssaf-status-copy{gap:5px 10px!important}#urssafFooterMount .urssaf-status-message{font-size:10px!important}#urssafFooterMount #urssafWarnings summary,#urssafFooterMount .urssaf-consent-revoke{font-size:10px!important}}
 
+
+/* Pied de page Urssaf — version discrète, alignée sur la typographie OnNet. */
+.urssaf-footer{
+  margin:22px 0 8px!important;
+  padding:10px 0 0!important;
+  border-top:1px solid var(--line)!important;
+}
+#urssafFooterMount #urssafStatus.urssaf-status,
+#urssafFooterMount #urssafStatus.urssaf-status.has-consent-actions{
+  display:block!important;
+  width:100%!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  color:var(--ink-soft)!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-status-copy{
+  display:flex!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  justify-content:flex-start!important;
+  flex-wrap:wrap!important;
+  gap:5px 16px!important;
+  width:100%!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-status-message{
+  display:inline-flex!important;
+  flex:0 0 auto!important;
+  align-items:center!important;
+  gap:7px!important;
+  margin:0!important;
+  color:var(--ink-soft)!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  line-height:1.35!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-status-message::before{
+  content:"";
+  display:inline-block;
+  width:6px;height:6px;flex:none;
+  border-radius:50%;
+  background:var(--accent);
+  opacity:.9;
+}
+#urssafFooterMount #urssafStatus.is-error .urssaf-status-message::before{background:var(--warn)}
+#urssafFooterMount #urssafStatus #urssafWarnings{
+  display:block!important;
+  flex:0 1 auto!important;
+  margin:0!important;
+  font-size:11px!important;
+}
+#urssafFooterMount #urssafStatus #urssafWarnings[hidden]{display:none!important}
+#urssafFooterMount #urssafStatus #urssafWarnings summary,
+#urssafFooterMount #urssafStatus .urssaf-consent-details summary{
+  min-height:0!important;
+  padding:0!important;
+  color:var(--ink-soft)!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  line-height:1.35!important;
+  cursor:pointer;
+}
+#urssafFooterMount #urssafStatus .urssaf-consent-actions{
+  display:flex!important;
+  flex:0 1 auto!important;
+  flex-direction:row!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:5px 14px!important;
+  margin:0!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-consent-details{
+  margin:0!important;
+  color:var(--ink-soft)!important;
+  font-size:11px!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-consent-details p{
+  max-width:560px;
+  margin:8px 0 0!important;
+  color:var(--ink-soft)!important;
+  font-size:11px!important;
+  line-height:1.5!important;
+}
+#urssafFooterMount #urssafStatus .urssaf-consent-revoke{
+  min-height:0!important;
+  margin:0!important;
+  padding:0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--muted,var(--ink-soft))!important;
+  font-size:11px!important;
+  font-weight:500!important;
+  line-height:1.35!important;
+  text-decoration:none!important;
+  cursor:pointer;
+}
+#urssafFooterMount #urssafStatus .urssaf-consent-revoke:hover,
+#urssafFooterMount #urssafStatus .urssaf-consent-details summary:hover,
+#urssafFooterMount #urssafStatus #urssafWarnings summary:hover{
+  color:var(--accent)!important;
+  text-decoration:underline!important;
+  text-underline-offset:3px;
+}
+@media(max-width:560px){
+  .urssaf-footer{margin-top:18px!important;padding-top:9px!important}
+  #urssafFooterMount #urssafStatus .urssaf-status-copy{gap:6px 12px!important}
+  #urssafFooterMount #urssafStatus .urssaf-status-message,
+  #urssafFooterMount #urssafStatus #urssafWarnings summary,
+  #urssafFooterMount #urssafStatus .urssaf-consent-details summary,
+  #urssafFooterMount #urssafStatus .urssaf-consent-revoke{font-size:10px!important}
+}
+
 </style>
 </head>
 <body>
