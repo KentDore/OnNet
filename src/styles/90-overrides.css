@@ -1190,3 +1190,17 @@ header.hero .hero-copy .trust-service{
 }
 .modal-edit-offer .onboarding-tr-fields[hidden],
 .modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none!important}
+
+
+/* iOS : conserver 16 px minimum sur les champs pour éviter le zoom au focus. */
+@media(max-width:560px){
+  .modal-edit-offer input,
+  .modal-edit-offer select,
+  .modal-edit-offer textarea,
+  #themePreference{
+    font-size:16px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-row input{
+    font-size:16px!important;
+  }
+}
