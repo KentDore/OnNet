@@ -1274,40 +1274,54 @@ header.hero .hero-copy .trust-service{
 /* Une seule commande globale pour définir l'offre de référence. */
 .offer-reference-control{
   grid-column:1/-1;
-  display:flex;
+  display:grid;
+  grid-template-columns:minmax(0,1fr) minmax(170px,240px);
   align-items:center;
-  justify-content:space-between;
-  gap:16px;
+  gap:12px;
   min-width:0;
   margin:0 0 4px;
-  padding:14px 16px;
-  border:1px solid #dce8df;
-  border-radius:14px;
-  background:#f5faf6;
+  padding:12px 14px;
+  border:1px solid var(--line);
+  border-radius:12px;
+  background:var(--surface);
+  color:var(--ink);
 }
-.offer-reference-control label{display:flex;flex-direction:column;gap:3px;min-width:0}
-.offer-reference-control label span{color:#244b36;font-size:13px;font-weight:800}
-.offer-reference-control label small{color:#718076;font-size:11px;line-height:1.35}
+.offer-reference-control label{display:flex;flex-direction:column;gap:2px;min-width:0}
+.offer-reference-control label span{color:var(--ink);font-size:14px;font-weight:750;line-height:1.25}
+.offer-reference-control label small{color:var(--ink-soft);font-size:11px;line-height:1.35}
 .offer-reference-control select{
-  flex:0 1 220px;
-  min-width:130px;
-  min-height:40px;
+  display:block;
+  width:100%;
+  min-width:0;
+  min-height:42px;
   padding:8px 34px 8px 11px;
-  border:1px solid #cfe3d4;
-  border-radius:10px;
-  background:#fff;
-  color:#176b49;
-  font:700 13px/1.2 inherit;
+  border:1px solid var(--line-strong,var(--line));
+  border-radius:9px;
+  background:var(--surface-2,var(--surface));
+  color:var(--ink);
+  font-family:inherit;
+  font-size:14px;
+  font-weight:650;
+  line-height:1.25;
 }
 .offer-reference-control select:focus-visible{
-  outline:2px solid #1b7652;
+  outline:2px solid var(--accent);
   outline-offset:2px;
 }
 .offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
 .offer-reference-label{white-space:nowrap}
+:root[data-theme="dark"] .offer-reference-control{
+  background:var(--surface);
+  border-color:var(--line);
+}
+:root[data-theme="dark"] .offer-reference-control select{
+  background:var(--surface-2,var(--surface));
+  color:var(--ink);
+  border-color:var(--line);
+}
 @media(max-width:560px){
-  .offer-reference-control{align-items:stretch;flex-direction:column;gap:9px;padding:12px}
-  .offer-reference-control select{width:100%;max-width:none;flex:1}
+  .offer-reference-control{grid-template-columns:minmax(0,1fr);gap:7px;padding:10px 11px}
+  .offer-reference-control select{width:100%}
 }
 
 
