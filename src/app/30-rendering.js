@@ -653,3 +653,5 @@ function bindRefPickers(){
   });
 }
 
+
+/* Rebuild marker: synchronize generated HTML on direct pushes to main. */
