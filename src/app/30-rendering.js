@@ -481,9 +481,6 @@ function renderComparisonChart(computed){
   chart.className='comparison-offer-grid';
   chart.innerHTML=renderComparisonCards(computed);
 
-  if(chart.dataset.comparisonReferenceBound!=='true'){
-    chart.dataset.comparisonReferenceBound='true';
-  }
 }
 
 function render(){
