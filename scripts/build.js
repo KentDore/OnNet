@@ -61,7 +61,7 @@ async function main(){
     ['@@ONNET_RUNTIME@@', runtime]
   ]){
     if(!html.includes(token)) throw new Error('Template marker missing: ' + token);
-    html = html.replace(token, value);
+    html = html.replaceAll(token, value);
   }
   if(html.includes('@@ONNET_')) throw new Error('Unresolved template marker');
   const output = process.argv[3]
