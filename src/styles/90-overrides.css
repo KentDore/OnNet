@@ -1162,3 +1162,31 @@ header.hero .hero-copy .trust-service{
 :root[data-theme="dark"] .modal-edit-offer .modal-actions{
   border-color:#3d4942!important;
 }
+
+
+/* Édition d'offre sur mobile : garder les titres-restaurant visibles sans
+   imposer un long défilement dans la fenêtre. */
+@media(max-width:560px){
+  .modal.modal-edit-offer{
+    max-height:calc(100dvh - 16px)!important;
+    padding:10px!important;
+  }
+  .modal-edit-offer .edit-offer-modal{gap:6px!important}
+  .modal-edit-offer .field-row label{margin-bottom:3px!important;font-size:11px!important}
+  .modal-edit-offer input{min-height:36px!important;padding:6px 9px!important}
+  .modal-edit-offer .onboarding-consent-compact{padding:6px 8px!important}
+  .modal-edit-offer .onboarding-consent-compact p{font-size:10px!important;line-height:1.3!important}
+  .modal-edit-offer .onboarding-benefits{gap:5px!important}
+  .modal-edit-offer .onboarding-mutuelle-note{min-height:32px!important;padding:5px 8px!important}
+  .modal-edit-offer .onboarding-tr{padding:6px 8px!important;gap:5px!important}
+  .modal-edit-offer .onboarding-tr-fields{padding-top:4px!important}
+  .modal-edit-offer .onboarding-tr-fields .three-col{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .modal-edit-offer .onboarding-tr-fields .field-row label,
+  .modal-edit-offer .onboarding-tr-fields .field-label{font-size:9px!important;line-height:1.15!important}
+  .modal-edit-offer .onboarding-tr-fields .field-row input,
+  .modal-edit-offer .onboarding-tr-fields .meal-share-toggle{height:36px!important;min-height:36px!important}
+  .modal-edit-offer .onboarding-tr-fields .meal-share-toggle button{padding:5px 3px!important;font-size:10px!important}
+  .modal-edit-offer .modal-actions{margin-top:3px!important;padding-top:6px!important}
+}
+.modal-edit-offer .onboarding-tr-fields[hidden],
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none!important}
