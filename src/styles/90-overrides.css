@@ -1026,3 +1026,49 @@ header.hero .hero-copy .trust{
   header.hero .hero-copy .trust{white-space:normal}
   .offer-reference-select,.offer-reference-label{font-size:10px;padding:6px 8px}
 }
+
+
+/* Fix mobile hero trust badge: compact, below the intro, never floated beside the title. */
+header.hero .hero-copy{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+}
+header.hero .hero-copy .trust{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  display:inline-flex!important;
+  align-self:flex-start!important;
+  width:max-content!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  margin:10px 0 0!important;
+  padding:4px 8px!important;
+  gap:6px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+header.hero .hero-copy .trust strong{
+  display:inline!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+header.hero .hero-copy .trust-icon{
+  display:grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  flex:0 0 18px!important;
+  border-radius:50%!important;
+}
+header.hero .hero-copy .trust-icon svg{
+  display:block!important;
+  width:12px!important;
+  height:12px!important;
+}
