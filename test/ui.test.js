@@ -972,17 +972,13 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   const { context, page } = await openApp({ consent:false });
   try {
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
+    assert.equal(await page.locator('.modal-add-salary').isVisible(), true);
     assert.equal(await page.locator('#modalBox').getAttribute('role'), 'dialog');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-label'), 'Modifier une offre salariale');
     assert.equal(await page.locator('#modalBox').getAttribute('aria-describedby'), null);
     assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
-    await page.waitForFunction(() => {
-      const field = document.querySelector('#editOfferName');
-      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
-    }, { timeout: 5000 });
-    assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), ['Poste actuel'.length, 'Poste actuel'.length],
-      'à l’ouverture, aucun texte ne doit être sélectionné et le curseur doit rester à la fin du nom');
+    await page.waitForFunction(() => document.activeElement === document.querySelector('#editOfferGross'), { timeout: 5000 });
+    assert.equal(await page.locator('#editOfferName').inputValue(), 'Poste actuel');
     await page.locator('#editOfferName').click();
     assert.deepEqual(await page.locator('#editOfferName').evaluate(el => [el.selectionStart, el.selectionEnd]), [0, 'Poste actuel'.length],
       'un clic dans le champ sélectionne tout le nom existant');
@@ -994,13 +990,13 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.equal(await page.locator('#editOfferMonths').count(), 0);
     assert.equal(await page.locator('#editOfferBonus').count(), 0);
     assert.equal(await page.locator('#editOffer13thBase').count(), 0);
-    assert.equal((await page.locator('#editOfferMutuelleToggle').innerText()).replace(/\s+/g, ' ').trim(), '30 € / mois');
-    await page.locator('#editOfferMutuelleToggle').click();
-    assert.equal(await page.locator('#editOfferMutuelle').isVisible(), true);
+    assert.equal(await page.locator('#editOfferMutuelleToggle').count(), 0,
+      'la modification reprend la présentation simple de la création, sans éditeur spécifique de mutuelle');
+    assert.match(await page.locator('.onboarding-mutuelle-note').innerText(), /30 € salarié/);
     await page.setViewportSize({ width:375, height:667 });
     const modalFit = await page.locator('#modalBox').evaluate(el => {
       const rect = el.getBoundingClientRect();
-      const form=el.querySelector('.edit-offer-modal');
+      const form=el;
       return { top:rect.top, bottom:rect.bottom, scrollHeight:el.scrollHeight, clientHeight:el.clientHeight, viewportHeight:window.innerHeight,
         children:[...form.children].map(node=>({className:node.className,tag:node.tagName,height:Math.round(node.getBoundingClientRect().height),margin:getComputedStyle(node).margin,gap:getComputedStyle(form).rowGap})),
         trColumns:getComputedStyle(el.querySelector('#editOfferTrFields .three-col')).gridTemplateColumns } ;
@@ -1010,7 +1006,7 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
     assert.ok(modalFit.scrollHeight <= modalFit.clientHeight + 1,
       `l’éditeur ne doit pas imposer de défilement interne : ${JSON.stringify(modalFit)}`);
     await page.locator('#editOfferCancel').click();
-    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
+    await page.locator('.modal-add-salary').waitFor({ state: 'detached' });
   } finally {
     await context.close();
   }
@@ -1020,12 +1016,10 @@ test('ajout et modification utilisent le même composant de formulaire salaire',
   const { context, page } = await openApp({ consent:false });
   try {
     await page.locator('#maquetteAddSalary').click();
-    const addStructure=await page.locator('#modalBox .salary-form-fields').evaluate(el=>[...el.children].map(node=>node.classList[0]));
-    assert.deepEqual(addStructure,['field-row','onboarding-consent','field-row','field-row','field-row','onboarding-benefits'],
-      'le formulaire d’ajout doit utiliser la structure partagée');
+    const addStructure=await page.locator('#modalBox').evaluate(el=>[...el.children].map(node=>node.tagName+':'+node.className));
     await page.locator('#modalAddCancel').click();
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    const editStructure=await page.locator('#modalBox .salary-form-fields').evaluate(el=>[...el.children].map(node=>node.classList[0]));
+    const editStructure=await page.locator('#modalBox').evaluate(el=>[...el.children].map(node=>node.tagName+':'+node.className));
     assert.deepEqual(editStructure,addStructure,
       'le formulaire de modification doit reprendre exactement la structure de l’ajout');
     assert.equal(await page.locator('#editOfferTrToggle').isVisible(),true);
@@ -1453,9 +1447,9 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     assert.equal(await card.locator('[data-key="brut"]').count(), 0, 'pas de second champ de salaire dans la fiche détaillée');
     assert.equal(await card.locator('[data-duree]').count(), 0, 'pas de second réglage horaire dans la fiche détaillée');
     assert.match(await card.locator('.scenario-edit-hint').innerText(), /Modifier cette offre/);
-    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'aucune fenêtre ne reste ouverte dans le comparatif');
+    assert.equal(await page.locator('.modal-add-salary').count(), 0, 'aucune fenêtre ne reste ouverte dans le comparatif');
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true, 'la fenêtre flottante apparaît après sélection d’une offre');
+    assert.equal(await page.locator('.modal-add-salary').isVisible(), true, 'la fenêtre flottante apparaît après sélection d’une offre');
     const period = page.locator('#editOfferPeriod');
     assert.equal(await period.locator('button[data-period]').count(), 2, 'mensuel et annuel utilisent le même sélecteur à boutons');
     assert.equal(await period.locator('[data-period="mois"]').getAttribute('aria-pressed'), 'true');
@@ -1464,8 +1458,8 @@ test('les valeurs principales se modifient dans un écran dédié à l’offre s
     assert.equal(await page.locator('#moreMetrics').count(), 0, 'les indicateurs secondaires ont été retirés');
     
     await page.locator('#editOfferCancel').click();
-    await page.locator('.modal-edit-offer').waitFor({ state: 'detached' });
-    assert.equal(await page.locator('.modal-edit-offer').count(), 0, 'la fenêtre se ferme à l’annulation');
+    await page.locator('.modal-add-salary').waitFor({ state: 'detached' });
+    assert.equal(await page.locator('.modal-add-salary').count(), 0, 'la fenêtre se ferme à l’annulation');
   } finally {
     await context.close();
   }
@@ -1576,8 +1570,8 @@ test('capture visuelle desktop et mobile du parcours V33', { timeout: 60000 }, a
 
     await page.setViewportSize({ width:1440, height:1000 });
     await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
-    assert.equal(await page.locator('.modal-edit-offer').isVisible(), true);
-    assert.ok(await page.locator('.modal-edit-offer').evaluate(el => el.scrollHeight > 0));
+    assert.equal(await page.locator('.modal-add-salary').isVisible(), true);
+    assert.ok(await page.locator('.modal-add-salary').evaluate(el => el.scrollHeight > 0));
     await page.locator('#editOfferCancel').click();
 
     // Les captures doivent montrer le comparatif, sans fenêtre ouverte.
@@ -1694,8 +1688,8 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     await page.locator('#maquetteYourSalary [data-edit-offer]').nth(1).click();
     const nameInput = page.locator('#editOfferName');
     await page.waitForFunction(() => {
-      const field = document.querySelector('#editOfferName');
-      return field && document.activeElement === field && field.selectionStart === field.value.length && field.selectionEnd === field.value.length;
+      const field = document.querySelector('#editOfferGross');
+      return field && document.activeElement === field;
     }, { timeout: 5000 });
     const initialSelection = await nameInput.evaluate(el => [el.selectionStart, el.selectionEnd, el.value.length]);
     assert.notDeepEqual(initialSelection.slice(0, 2), [0, initialSelection[2]],
@@ -1774,7 +1768,7 @@ test('le repère SMIC suit la durée de l’offre de référence et applique la 
     await page.locator('#editOfferHours [data-hours="35"]').click();
     await page.locator('#editOfferSubmit').click();
     // Le repère SMIC suit l'offre de référence : sélectionner explicitement l'offre 35 h.
-    await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
+    await page.locator('#offerReferenceSelect').selectOption({index:1});
     await page.waitForFunction(() =>
       [...document.querySelectorAll('#cardsBody [data-card]')].length === 2 &&
       [...document.querySelectorAll('#cardsBody [data-card]')].every(card => card.dataset.resultState === 'ready') &&
@@ -2015,7 +2009,7 @@ test('conserve aussi le brut annuel saisi pendant le premier démarrage', { time
 });
 
 
-test('la fenêtre de modification simplifiée conserve les paramètres masqués et permet de modifier la mutuelle', { timeout: 60000 }, async () => {
+test('la fenêtre de modification conserve les paramètres masqués avec le formulaire de création', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     await page.evaluate(() => {
@@ -2034,8 +2028,6 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     await page.locator('#editOfferPeriod [data-period="an"]').click();
     await page.locator('#editOfferGross').fill('29500');
     await page.locator('#editOfferHours [data-hours="39"]').click();
-    await page.locator('#editOfferMutuelleToggle').click();
-    await page.locator('#editOfferMutuelle').fill('42,50');
     await page.locator('#editOfferMealDays').fill('20');
     await page.locator('#editOfferMealValue').fill('9,50');
     await page.locator('#editOfferMealShare [data-share="40"]').click();
@@ -2051,7 +2043,7 @@ test('la fenêtre de modification simplifiée conserve les paramètres masqués 
     assert.equal(saved.departement, 'Ille-et-Vilaine');
     assert.equal(saved.codeCommune, '35210');
     assert.equal(saved.codeDepartement, '35');
-    assert.equal(saved.mutuelle, 42.5);
+    assert.equal(saved.mutuelle, 30, 'la valeur de mutuelle existante est conservée, comme dans le formulaire de création');
     assert.equal(saved.mutuellePat, 55);
     assert.equal(saved.joursResto, 20);
     assert.equal(saved.valeurResto, 9.5);
