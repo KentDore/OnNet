@@ -1716,13 +1716,15 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     let saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.scenarios[1].name, 'Proposition Rennes', 'le nom est conservé localement');
 
-    await page.locator('#maquetteYourSalary [data-set-offer-reference]').click();
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference').count(), 1);
-    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').innerText(), 'Référence');
+    const referenceSelect=page.locator('#offerReferenceSelect');
+    assert.equal(await referenceSelect.count(),1,'un seul sélecteur global de référence est affiché');
+    await referenceSelect.selectOption({index:1});
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference').count(),1);
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').innerText(),'Référence actuelle');
+    assert.equal(await page.locator('#maquetteYourSalary [data-set-offer-reference]').count(),0,
+      'les cartes ne proposent plus de bouton individuel de référence');
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
-    assert.equal(saved.refId, saved.scenarios[1].id, 'le choix de référence est conservé localement');
-    assert.equal(await page.locator('#maquetteYourSalary [data-set-offer-reference]').count(), 1,
-      'seule l’offre non sélectionnée propose de devenir référence');
+    assert.equal(saved.refId, saved.scenarios[1].id, 'le choix global de référence est conservé localement');
   } finally {
     await context.close();
   }
