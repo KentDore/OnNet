@@ -381,22 +381,24 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
   const initialMealDays=editing?Number(scenario.joursResto)||0:21;
   const initialMealValue=editing?Number(scenario.valeurResto)||0:8;
   const initialMealShare=editing&&Number(scenario.partResto)===40?40:50;
+  const prefix=editing?'editOffer':'modalAdd';
+  const fieldId=suffix=>prefix+suffix;
   const html='<p id="modalMsg" class="modal-msg"></p>'+
-    renderSalaryFormFields({prefix:'modalAdd',name:initialName,period:initialPeriod,salary:initialSalary,hours:initialHours,mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialMealShare,maxNameLength:60})+
-    '<div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button><button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>'+(editing?'Enregistrer':'Ajouter ce salaire')+'</button></div>';
-  const pending=openModal(html,{initialFocusSelector:'#modalAddGross',className:'modal-add-salary',dismissible:true,role:'dialog',ariaLabel:editing?'Modifier une offre salariale':'Ajouter une offre salariale'});
+    renderSalaryFormFields({prefix:prefix,name:initialName,period:initialPeriod,salary:initialSalary,hours:initialHours,mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialMealShare,maxNameLength:60})+
+    '<div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="'+fieldId('Cancel')+'">Annuler</button><button type="button" class="btn btn-primary" id="'+fieldId('Submit')+'" disabled>'+(editing?'Enregistrer':'Ajouter ce salaire')+'</button></div>';
+  const pending=openModal(html,{initialFocusSelector:'#'+fieldId('Gross'),className:editing?'modal-edit-offer':'modal-add-salary',dismissible:true,role:'dialog',ariaLabel:editing?'Modifier une offre salariale':'Ajouter une offre salariale'});
   const overlay=document.getElementById('modalOverlay');
-  const input=overlay.querySelector('#modalAddGross');
-  const nameInput=overlay.querySelector('#modalAddName');
-  const submitBtn=overlay.querySelector('#modalAddSubmit');
-  const periodToggle=overlay.querySelector('#modalAddPeriod');
-  const periodLabel=overlay.querySelector('#modalAddGrossLabel');
-  const hoursToggle=overlay.querySelector('#modalAddHours');
-  const trToggle=overlay.querySelector('#modalAddTrToggle');
-  const trFields=overlay.querySelector('#modalAddTrFields');
-  const daysInput=overlay.querySelector('#modalAddMealDays');
-  const mealValueInput=overlay.querySelector('#modalAddMealValue');
-  const mealShareToggle=overlay.querySelector('#modalAddMealShare');
+  const input=overlay.querySelector('#'+fieldId('Gross'));
+  const nameInput=overlay.querySelector('#'+fieldId('Name'));
+  const submitBtn=overlay.querySelector('#'+fieldId('Submit'));
+  const periodToggle=overlay.querySelector('#'+fieldId('Period'));
+  const periodLabel=overlay.querySelector('#'+fieldId('GrossLabel'));
+  const hoursToggle=overlay.querySelector('#'+fieldId('Hours'));
+  const trToggle=overlay.querySelector('#'+fieldId('TrToggle'));
+  const trFields=overlay.querySelector('#'+fieldId('TrFields'));
+  const daysInput=overlay.querySelector('#'+fieldId('MealDays'));
+  const mealValueInput=overlay.querySelector('#'+fieldId('MealValue'));
+  const mealShareToggle=overlay.querySelector('#'+fieldId('MealShare'));
   let salaryPeriod=initialPeriod,hours=initialHours,mealShare=initialMealShare,trEnabledNow=trEnabled,exactSalaryValue=initialSalaryValue;
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.period===salaryPeriod)return;
@@ -454,7 +456,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
     closeModal(result);
   };
   submitBtn.addEventListener('click',trySubmit);
-  overlay.querySelector('#modalAddCancel').addEventListener('click',()=>closeModal(false));
+  overlay.querySelector('#'+fieldId('Cancel')).addEventListener('click',()=>closeModal(false));
   updateSubmitState();
   return pending;
 }
