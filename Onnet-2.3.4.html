@@ -2370,6 +2370,144 @@ header.hero .hero-copy .trust-service{
   }
 }
 
+
+/* Un seul layout partagé entre ajout et modification d'un salaire. */
+.modal-add-salary .salary-form-fields,
+.modal-edit-offer .salary-form-fields{
+  display:grid!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+.modal-add-salary .salary-form-fields>.field-row,
+.modal-edit-offer .salary-form-fields>.field-row{
+  margin:0!important;
+  min-width:0!important;
+}
+.modal-add-salary .salary-form-fields .onboarding-benefits,
+.modal-edit-offer .salary-form-fields .onboarding-benefits{
+  display:grid!important;
+  gap:8px!important;
+  margin:0!important;
+}
+.modal-add-salary .salary-form-fields .onboarding-tr,
+.modal-edit-offer .salary-form-fields .onboarding-tr{
+  margin:0!important;
+}
+.modal-add-salary .salary-form-fields .salary-period-row,
+.modal-edit-offer .salary-form-fields .salary-period-row,
+.modal-add-salary .salary-form-fields .salary-hours-row,
+.modal-edit-offer .salary-form-fields .salary-hours-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+}
+.modal-add-salary .salary-form-actions,
+.modal-edit-offer .salary-form-actions{
+  margin-top:10px!important;
+}
+@media(max-width:560px){
+  .modal-add-salary .salary-form-fields,
+  .modal-edit-offer .salary-form-fields{gap:8px!important}
+  .modal-add-salary .salary-form-fields .onboarding-benefits,
+  .modal-edit-offer .salary-form-fields .onboarding-benefits{gap:7px!important}
+}
+
+
+/* Une seule commande globale pour définir l'offre de référence. */
+.offer-reference-control{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-width:0;
+  margin:0 0 4px;
+  padding:14px 16px;
+  border:1px solid #dce8df;
+  border-radius:14px;
+  background:#f5faf6;
+}
+.offer-reference-control label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.offer-reference-control label span{color:#244b36;font-size:13px;font-weight:800}
+.offer-reference-control label small{color:#718076;font-size:11px;line-height:1.35}
+.offer-reference-control select{
+  flex:0 1 220px;
+  min-width:130px;
+  min-height:40px;
+  padding:8px 34px 8px 11px;
+  border:1px solid #cfe3d4;
+  border-radius:10px;
+  background:#fff;
+  color:#176b49;
+  font:700 13px/1.2 inherit;
+}
+.offer-reference-control select:focus-visible{
+  outline:2px solid #1b7652;
+  outline-offset:2px;
+}
+.offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
+.offer-reference-label{white-space:nowrap}
+@media(max-width:560px){
+  .offer-reference-control{align-items:stretch;flex-direction:column;gap:9px;padding:12px}
+  .offer-reference-control select{width:100%;max-width:none;flex:1}
+}
+
+
+/* Formulaire unique ajout/modification : compact sur petits écrans sans
+   réduire la taille des contrôles tactiles ni masquer les champs. */
+@media(max-width:560px){
+  .modal-add-salary>.field-row{
+    margin-bottom:5px!important;
+  }
+  .modal-add-salary>.field-row label{
+    margin-bottom:2px!important;
+    line-height:1.15!important;
+  }
+  .modal-add-salary>.onboarding-consent{
+    padding:5px 8px!important;
+    margin-bottom:5px!important;
+  }
+  .modal-add-salary .onboarding-consent-top{
+    gap:7px!important;
+  }
+  .modal-add-salary .onboarding-consent-copy small{
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+  .modal-add-salary .onboarding-consent-details{
+    margin-top:2px!important;
+    font-size:10px!important;
+  }
+  .modal-add-salary .onboarding-benefits{
+    gap:4px!important;
+    margin-top:3px!important;
+  }
+  .modal-add-salary .onboarding-mutuelle-note{
+    min-height:32px!important;
+    padding:5px 8px!important;
+  }
+  .modal-add-salary .onboarding-tr{
+    gap:5px!important;
+    padding:6px 8px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields{
+    padding-top:4px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields .three-col{
+    gap:4px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields .field-row label{
+    margin-bottom:2px!important;
+    line-height:1.15!important;
+  }
+  .modal-add-salary .modal-actions{
+    margin-top:4px!important;
+    padding-bottom:2px!important;
+  }
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -4173,25 +4311,24 @@ function renderMaquetteControls(computedOverride) {
   const summary = document.getElementById("maquetteYourSalary");
   if (summary) {
     const allComputed = computedOverride || getCurrentComputed();
-    summary.innerHTML = allComputed.map(({ s, r }, index) => {
-      const weekly = Number(s.dureeType), hoursMonth = weekly * 52 / 12;
-      const hourly = r && Number.isFinite(r.netHoraire) ? r.netHoraire : null;
-      const factor = maquetteComparisonPeriod === "hour" ? 1 : maquetteComparisonPeriod === "year" ? weekly * 52 : hoursMonth;
-      const value = hourly === null ? null : hourly * factor;
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut/mois \xB7 " + fmt(s.brut * 12) + " brut/an \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+    const selectedReference = allComputed.find((item) => item.s.id === refId) || allComputed[0];
+    const referenceControl = allComputed.length > 1 ? '<div class="offer-reference-control"><label for="offerReferenceSelect"><span>Offre de r\xE9f\xE9rence</span><small>Utilis\xE9e pour calculer tous les \xE9carts</small></label><select id="offerReferenceSelect" aria-label="Choisir l\u2019offre de r\xE9f\xE9rence">' + allComputed.map(({ s }) => '<option value="' + s.id + '" ' + (s.id === selectedReference.s.id ? "selected" : "") + ">" + esc(s.name) + "</option>").join("") + "</select></div>" : "";
+    summary.innerHTML = referenceControl + allComputed.map(({ s, r }, index) => {
+      const weekly = Number(s.dureeType);
+      return '<article class="offer-comparison-card ' + (s.id === selectedReference.s.id ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === selectedReference.s.id ? '<span class="offer-reference-label">R\xE9f\xE9rence actuelle</span>' : "") + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut/mois \xB7 " + fmt(s.brut * 12) + " brut/an \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
+      summary.addEventListener("change", (event) => {
+        const selector = event.target.closest("#offerReferenceSelect");
+        if (!selector) return;
+        refId = Number(selector.value);
+        saveState();
+        render();
+      });
       summary.addEventListener("click", (event) => {
         const remove = event.target.closest("[data-delete-offer]");
         if (remove) {
           removeScenario(Number(remove.dataset.deleteOffer));
-          return;
-        }
-        const reference = event.target.closest("[data-set-offer-reference]");
-        if (reference) {
-          refId = Number(reference.dataset.setOfferReference);
-          saveState();
-          render();
           return;
         }
         const button = event.target.closest("[data-edit-offer]");
@@ -4907,7 +5044,15 @@ function renderUrssafConsentNotice(compact = false) {
       </details>
     </div>`;
 }
-function renderMutuelleTrFields(idPrefix) {
+function renderMutuelleTrFields(idPrefix, options = {}) {
+  const mutuelle = Number.isFinite(Number(options.mutuelle)) ? Number(options.mutuelle) : 30;
+  const trEnabled = Boolean(options.trEnabled);
+  const days = options.mealDays ?? 21;
+  const value = options.mealValue ?? 8;
+  const share = Number(options.mealShare) === 40 ? 40 : 50;
+  const suffixes = options.suffixes || { jours: "Jours", valeur: "Valeur", part: "Part" };
+  const daysId = idPrefix + suffixes.jours, valueId = idPrefix + suffixes.valeur, shareId = idPrefix + suffixes.part;
+  const money2 = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(mutuelle);
   return `
     <div class="onboarding-benefits">
       <div class="onboarding-mutuelle-note">
@@ -4915,7 +5060,7 @@ function renderMutuelleTrFields(idPrefix) {
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
         </span>
         <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-        <strong>30 \u20AC salari\xE9</strong>
+        <strong>${money2} \u20AC salari\xE9</strong>
       </div>
       <div class="onboarding-tr">
         <div class="onboarding-tr-heading">
@@ -4923,40 +5068,48 @@ function renderMutuelleTrFields(idPrefix) {
           <strong>Titres-restaurant</strong>
         </div>
         <div class="pill-toggle onboarding-tr-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Avez-vous des titres-restaurant ?">
-          <button type="button" data-tr="non" aria-pressed="true">Non</button>
-          <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+          <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
+          <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
         </div>
-        <div id="${idPrefix}TrFields" class="onboarding-tr-fields" hidden>
+        <div id="${idPrefix}TrFields" class="onboarding-tr-fields" ${trEnabled ? "" : "hidden"}>
           <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (\u20AC)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
-            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${idPrefix}Part" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
+            <div class="field-row"><label for="${daysId}">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${daysId}" value="${days}"></div>
+            <div class="field-row"><label for="${valueId}">Valeur faciale (\u20AC)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${valueId}" value="${value}"></div>
+            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${shareId}" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="${share === 50}">50 %</button><button type="button" data-share="40" aria-pressed="${share === 40}">40 %</button></div></div>
           </div>
         </div>
       </div>
     </div>`;
 }
-function bindMutuelleTrFields(overlay, idPrefix) {
-  const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
-  const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
-  const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
-  const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
-  const partInput = overlay.querySelector(`#${idPrefix}Part`);
-  let partResto = 50;
-  let trOui = false;
-  partInput.querySelectorAll("button[data-share]").forEach((button) => button.addEventListener("click", () => {
-    partResto = Number(button.dataset.share);
-    partInput.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-  }));
-  trToggle.querySelectorAll("button").forEach((b) => {
-    b.addEventListener("click", () => {
-      trOui = b.dataset.tr === "oui";
-      trToggle.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+function bindMutuelleTrFields(overlay, idPrefix, options = {}) {
+  const suffixes = options.suffixes || { jours: "Jours", valeur: "Valeur", part: "Part" };
+  const trToggle = overlay.querySelector("#" + idPrefix + "TrToggle");
+  const trFields = overlay.querySelector("#" + idPrefix + "TrFields");
+  const joursInput = overlay.querySelector("#" + idPrefix + suffixes.jours);
+  const valeurInput = overlay.querySelector("#" + idPrefix + suffixes.valeur);
+  const partInput = overlay.querySelector("#" + idPrefix + suffixes.part);
+  let partResto = Number(options.mealShare) === 40 ? 40 : 50;
+  let trOui = Boolean(options.trEnabled);
+  const initialMutuelle = Number.isFinite(Number(options.mutuelle)) ? Number(options.mutuelle) : 30;
+  const initialMutuellePat = Number.isFinite(Number(options.mutuellePat)) ? Number(options.mutuellePat) : 30;
+  trFields.hidden = !trOui;
+  trToggle.querySelectorAll("button[data-tr]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(button.dataset.tr === "oui" === trOui));
+    button.addEventListener("click", () => {
+      trOui = button.dataset.tr === "oui";
+      trToggle.querySelectorAll("button[data-tr]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
       trFields.hidden = !trOui;
     });
   });
+  partInput.querySelectorAll("button[data-share]").forEach((button) => {
+    button.setAttribute("aria-pressed", String(Number(button.dataset.share) === partResto));
+    button.addEventListener("click", () => {
+      partResto = Number(button.dataset.share);
+      partInput.querySelectorAll("button[data-share]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    });
+  });
   const read = () => {
-    const result = { mutuelle: 30, mutuellePat: 30, joursResto: 0 };
+    const result = { mutuelle: initialMutuelle, mutuellePat: initialMutuellePat, joursResto: 0 };
     if (trOui) {
       result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
       result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
@@ -4964,9 +5117,7 @@ function bindMutuelleTrFields(overlay, idPrefix) {
     }
     return result;
   };
-  read.isValid = () => !trOui || [joursInput, valeurInput].every(
-    (input) => input.value.trim() !== "" && input.checkValidity()
-  );
+  read.isValid = () => !trOui || [joursInput, valeurInput].every((input) => input.value.trim() !== "" && input.checkValidity());
   return read;
 }
 function formatSalaryInput(input) {
@@ -5053,254 +5204,166 @@ function showOnboardingModal() {
   submitBtn.addEventListener("click", trySubmit);
   return pending;
 }
-function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
-  const initialSalary = Number.isFinite(Number(brutPrefill)) && Number(brutPrefill) > 0 ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(Number(brutPrefill)) : "";
+function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario = null) {
+  const editing = Boolean(scenario);
+  const prefix = editing ? "editOffer" : "modalAdd";
+  const initialPeriod = editing && scenario.salaireSaisiPeriode === "an" ? "an" : "mois";
+  const initialSalaryValue = editing ? Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0 ? Number(scenario.salaireSaisi) : Number(scenario.brut) * (initialPeriod === "an" ? 12 : 1) : parseNum(brutPrefill);
+  const initialSalary = initialSalaryValue > 0 ? new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(initialSalaryValue) : "";
+  const initialHours = editing ? scenario.dureeType === "39" ? "39" : "35" : dureePrefill === "39" ? "39" : "35";
+  const initialName = editing ? scenario.name : namePrefill || "Nouvelle offre";
+  const initialMutuelle = editing && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
+  const initialMutuellePat = editing && Number.isFinite(Number(scenario.mutuellePat)) ? Number(scenario.mutuellePat) : 30;
+  const trEnabled = editing && (Number(scenario.joursResto) > 0 || Number(scenario.valeurResto) > 0);
+  const initialMealDays = editing ? Number(scenario.joursResto) || 0 : 21;
+  const initialMealValue = editing ? Number(scenario.valeurResto) || 0 : 8;
+  const initialMealShare = editing && Number(scenario.partResto) === 40 ? 40 : 50;
+  const field = (id) => prefix + id;
+  const trSuffixes = { jours: "MealDays", valeur: "MealValue", part: "MealShare" };
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
     <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddName">Nom de l\u2019offre</label>
-      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || "Nouvelle offre")}" autocomplete="off">
+      <label for="${field("Name")}">Nom de l\u2019offre</label>
+      <input type="text" id="${field("Name")}" maxlength="60" value="${esc(initialName)}" autocomplete="off">
     </div>
-        ${renderUrssafConsentNotice()}
+    ${renderUrssafConsentNotice()}
     <div class="field-row" style="margin:0 0 14px;">
       <label>Votre salaire est indiqu\xE9 en</label>
-      <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="P\xE9riode du salaire">
-        <button type="button" data-period="mois" aria-pressed="true">Mensuel</button>
-        <button type="button" data-period="an" aria-pressed="false">Annuel</button>
+      <div class="pill-toggle" id="${field("Period")}" role="group" aria-label="P\xE9riode du salaire">
+        <button type="button" data-period="mois" aria-pressed="${initialPeriod === "mois"}">Mensuel</button>
+        <button type="button" data-period="an" aria-pressed="${initialPeriod === "an"}">Annuel</button>
       </div>
     </div>
     <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (\u20AC)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${initialSalary}" placeholder="Ex. 2 500" autocomplete="off">
+      <label for="${field("Gross")}" id="${field("GrossLabel")}">Salaire brut ${initialPeriod === "an" ? "annuel" : "mensuel"} (\u20AC)</label>
+      <input type="text" inputmode="decimal" id="${field("Gross")}" value="${initialSalary}" placeholder="${initialPeriod === "an" ? "Ex. 30 000" : "Ex. 2 500"}" autocomplete="off">
     </div>
     <div class="field-row" style="margin:0 0 4px;">
       <label>Base horaire</label>
-      <div class="pill-toggle" id="modalAddDuree">
-        <button type="button" data-duree="35" aria-pressed="${dureePrefill !== "39"}">35 h</button>
-        <button type="button" data-duree="39" aria-pressed="${dureePrefill === "39"}">39 h</button>
+      <div class="pill-toggle" id="${field("Hours")}">
+        <button type="button" data-duree="35" data-hours="35" aria-pressed="${initialHours !== "39"}">35 h</button>
+        <button type="button" data-duree="39" data-hours="39" aria-pressed="${initialHours === "39"}">39 h</button>
       </div>
     </div>
-
-    ${renderMutuelleTrFields("modalAdd")}
-
+    ${renderMutuelleTrFields(prefix, { mutuelle: initialMutuelle, trEnabled, mealDays: initialMealDays, mealValue: initialMealValue, mealShare: initialMealShare, suffixes: trSuffixes })}
     <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
-      <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
+      <button type="button" class="btn modal-btn-cancel" id="${field("Cancel")}">Annuler</button>
+      <button type="button" class="btn btn-primary" id="${field("Submit")}" disabled>${editing ? "Enregistrer" : "Ajouter ce salaire"}</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: "#modalAddInput", className: "modal-add-salary", dismissible: true });
+  const pending = openModal(html, {
+    initialFocusSelector: "#" + field("Gross"),
+    className: "modal-add-salary",
+    dismissible: true,
+    role: "dialog",
+    ariaLabel: editing ? "Modifier une offre salariale" : "Ajouter une offre salariale"
+  });
   const overlay = document.getElementById("modalOverlay");
-  const input = overlay.querySelector("#modalAddInput");
-  const nameInput = overlay.querySelector("#modalAddName");
-  const submitBtn = overlay.querySelector("#modalAddSubmit");
-  const readMutuelleTr = bindMutuelleTrFields(overlay, "modalAdd");
-  const periodToggle = overlay.querySelector("#modalAddPeriod");
-  const periodLabel = overlay.querySelector("#modalAddLabel");
-  let salaryPeriod = "mois";
-  let exactSalaryValue = parseNum(brutPrefill);
-  periodToggle.querySelectorAll("button").forEach((button) => {
-    button.addEventListener("click", () => {
-      if (button.dataset.period === salaryPeriod) return;
-      const current = exactSalaryValue || parseNum(input.value);
-      if (current > 0) {
-        exactSalaryValue = salaryPeriod === "mois" ? current * 12 : current / 12;
-        input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
-      }
-      salaryPeriod = button.dataset.period;
-      periodToggle.querySelectorAll("button").forEach((x) => {
-        x.setAttribute("aria-pressed", x === button ? "true" : "false");
-      });
-      const annual = salaryPeriod === "an";
-      periodLabel.textContent = annual ? "Salaire brut annuel (\u20AC)" : "Salaire brut mensuel (\u20AC)";
-      input.placeholder = annual ? "Ex. 30 000" : "Ex. 2 500";
-      updateSubmitState();
-    });
+  const input = overlay.querySelector("#" + field("Gross"));
+  const nameInput = overlay.querySelector("#" + field("Name"));
+  const submitBtn = overlay.querySelector("#" + field("Submit"));
+  nameInput.addEventListener("focus", (event) => {
+    const target = event.currentTarget;
+    target.setSelectionRange(target.value.length, target.value.length);
+  }, { once: true });
+  nameInput.addEventListener("click", (event) => event.currentTarget.select());
+  const periodToggle = overlay.querySelector("#" + field("Period"));
+  const periodLabel = overlay.querySelector("#" + field("GrossLabel"));
+  const hoursToggle = overlay.querySelector("#" + field("Hours"));
+  const readMutuelleTr = bindMutuelleTrFields(overlay, prefix, {
+    mutuelle: initialMutuelle,
+    mutuellePat: initialMutuellePat,
+    trEnabled,
+    mealShare: initialMealShare,
+    suffixes: trSuffixes
   });
-  let dureeType = dureePrefill === "39" ? "39" : "35";
-  const dureeToggle = overlay.querySelector("#modalAddDuree");
-  dureeToggle.querySelectorAll("button").forEach((b) => {
-    b.addEventListener("click", () => {
-      dureeType = b.dataset.duree;
-      dureeToggle.querySelectorAll("button").forEach((x) => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
-    });
-  });
-  const trySubmit = () => {
-    const v = parseNum(input.value);
-    if (!(v > 0)) return;
-    if (!readMutuelleTr.isValid()) {
-      setText("modalMsg", "V\xE9rifiez les titres-restaurant : 0 \xE0 31 jours entiers, 0 \xE0 500 \u20AC par titre et une part salariale de 40 \xE0 50 %.");
-      return;
+  let salaryPeriod = initialPeriod;
+  let hours = initialHours;
+  let exactSalaryValue = initialSalaryValue;
+  const daysInput = overlay.querySelector("#" + field("MealDays"));
+  const mealValueInput = overlay.querySelector("#" + field("MealValue"));
+  const mealShareToggle = overlay.querySelector("#" + field("MealShare"));
+  const initialDays = initialMealDays, initialValue = initialMealValue;
+  let mealShare = initialMealShare;
+  periodToggle.querySelectorAll("button[data-period]").forEach((button) => button.addEventListener("click", () => {
+    if (button.dataset.period === salaryPeriod) return;
+    const current = exactSalaryValue || parseNum(input.value);
+    if (current > 0) {
+      exactSalaryValue = salaryPeriod === "mois" ? current * 12 : current / 12;
+      input.value = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
     }
-    const brutMensuel = salaryPeriod === "an" ? v / 12 : v;
-    const defaultName = String(namePrefill || "Nouvelle offre").trim() || "Nouvelle offre";
-    const name = nameInput.value.trim().slice(0, 60) || defaultName;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType, name, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr()));
-  };
+    salaryPeriod = button.dataset.period;
+    periodToggle.querySelectorAll("button[data-period]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+    const annual = salaryPeriod === "an";
+    periodLabel.textContent = annual ? "Salaire brut annuel (\u20AC)" : "Salaire brut mensuel (\u20AC)";
+    input.placeholder = annual ? "Ex. 30 000" : "Ex. 2 500";
+    updateSubmitState();
+  }));
+  hoursToggle.querySelectorAll("button[data-duree]").forEach((button) => button.addEventListener("click", () => {
+    hours = button.dataset.duree;
+    hoursToggle.querySelectorAll("button[data-duree]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+  }));
+  mealShareToggle.querySelectorAll("button[data-share]").forEach((button) => button.addEventListener("click", () => {
+    mealShare = Number(button.dataset.share);
+    updateSubmitState();
+  }));
+  const isTrEnabled = () => trToggle.querySelector('[data-tr="oui"]').getAttribute("aria-pressed") === "true";
+  const trToggle = overlay.querySelector("#" + field("TrToggle"));
   const updateSubmitState = () => {
-    submitBtn.disabled = !(parseNum(input.value) > 0);
+    const gross = parseNum(input.value);
+    const days = Number(daysInput.value), mealValue = parseNum(mealValueInput.value);
+    const trUnchanged = editing && isTrEnabled() === trEnabled && days === initialDays && mealValue === initialValue && mealShare === initialMealShare;
+    const validMeal = !isTrEnabled() || (Number.isInteger(days) && days >= 1 && days <= 31 && mealValueInput.value.trim() !== "" && numericEntryValid(mealValueInput.value) && mealValue > 0 && mealValue <= 500 || trUnchanged);
+    submitBtn.disabled = !(gross > 0 && validMeal);
   };
-  updateSubmitState();
+  trToggle.querySelectorAll("button[data-tr]").forEach((button) => button.addEventListener("click", updateSubmitState));
   input.addEventListener("input", () => {
     exactSalaryValue = parseNum(input.value);
     updateSubmitState();
   });
+  [daysInput, mealValueInput].forEach((element) => element.addEventListener("input", updateSubmitState));
   input.addEventListener("blur", () => formatSalaryInput(input));
-  input.addEventListener("keydown", (e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
+  input.addEventListener("keydown", (event) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
       trySubmit();
     }
   });
-  submitBtn.addEventListener("click", trySubmit);
-  overlay.querySelector("#modalAddCancel").addEventListener("click", () => closeModal(false));
-  return pending;
-}
-function showEditScenarioModal(scenario) {
-  const initialPeriod = scenario.salaireSaisiPeriode === "an" ? "an" : "mois";
-  const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0 ? Number(scenario.salaireSaisi) : Number(scenario.brut) * (initialPeriod === "an" ? 12 : 1);
-  const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
-  const trEnabled = Number(scenario.joursResto) > 0 || Number(scenario.valeurResto) > 0;
-  const initialShare = Number(scenario.partResto) === 40 ? 40 : 50;
-  const html = `
-    <div class="edit-offer-modal">
-      <div class="field-row">
-        <label for="editOfferName">Nom de l\u2019offre</label>
-        <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
-      </div>
-      ${renderUrssafConsentNotice(true)}
-      <div class="field-row edit-offer-inline-row">
-        <span class="field-label">Votre salaire est indiqu\xE9 en</span>
-        <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="P\xE9riode du salaire brut">
-          <button type="button" data-period="mois" aria-pressed="${initialPeriod === "mois"}">Mensuel</button>
-          <button type="button" data-period="an" aria-pressed="${initialPeriod === "an"}">Annuel</button>
-        </div>
-      </div>
-      <div class="field-row">
-        <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod === "an" ? "annuel" : "mensuel"} (\u20AC)</label>
-        <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace(".", ",")}" autocomplete="off">
-      </div>
-        <div class="onboarding-tr edit-offer-tr">
-          <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
-          <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
-            <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
-            <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
-          </div>
-          <div id="editOfferTrFields" class="onboarding-tr-fields" ${trEnabled ? "" : "hidden"}>
-            <div class="three-col">
-              <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto) || 0}"></div>
-              <div class="field-row"><label for="editOfferMealValue">Valeur faciale (\u20AC)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto || 0).replace(".", ",")}"></div>
-              <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare === 50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare === 40}">40 %</button></div></div>
-            </div>
-          </div>
-        </div>
-      <div class="field-row edit-offer-inline-row">
-        <span class="field-label">Base horaire</span>
-        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
-          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType !== "39"}">35 h</button>
-          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType === "39"}">39 h</button>
-        </div>
-      </div>
-      <div class="onboarding-benefits edit-offer-benefits">
-        <div class="onboarding-mutuelle-note">
-          <span class="onboarding-mutuelle-icon" aria-hidden="true">\u2713</span>
-          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(initialMutuelle)} \u20AC / mois</button>
-        </div>
-        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
-          <label for="editOfferMutuelle">Votre part mensuelle (\u20AC)</label>
-          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace(".", ",")}" autocomplete="off">
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
-        <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
-      </div>
-    </div>`;
-  const pending = openModal(html, { initialFocusSelector: "#editOfferName", className: "modal-edit-offer", dismissible: true, role: "dialog", ariaLabel: "Modifier une offre salariale" });
-  const overlay = document.getElementById("modalOverlay");
-  const input = (id) => overlay.querySelector("#" + id);
-  const offerNameInput = input("editOfferName");
-  offerNameInput.addEventListener("focus", (event) => {
-    const field = event.currentTarget;
-    field.setSelectionRange(field.value.length, field.value.length);
-  }, { once: true });
-  offerNameInput.addEventListener("click", (event) => event.currentTarget.select());
-  let period = initialPeriod;
-  let hours = scenario.dureeType === "39" ? "39" : "35";
-  let trEnabledNow = trEnabled;
-  let mealShare = initialShare;
-  const initialMealDays = Number(scenario.joursResto) || 0;
-  const initialMealValue = Number(scenario.valeurResto) || 0;
-  const periodToggle = input("editOfferPeriod");
-  const grossInput = input("editOfferGross");
-  periodToggle.querySelectorAll("button[data-period]").forEach((button) => button.addEventListener("click", () => {
-    if (button.dataset.period === period) return;
-    const amount = parseNum(grossInput.value);
-    if (!(amount > 0)) return;
-    grossInput.value = String(period === "mois" ? amount * 12 : amount / 12).replace(".", ",");
-    period = button.dataset.period;
-    periodToggle.querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-    input("editOfferGrossLabel").textContent = "Salaire brut " + (period === "an" ? "annuel" : "mensuel") + " (\u20AC)";
-  }));
-  input("editOfferHours").querySelectorAll("button").forEach((button) => button.addEventListener("click", () => {
-    hours = button.dataset.hours;
-    input("editOfferHours").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-  }));
-  input("editOfferMutuelleToggle").addEventListener("click", () => {
-    const editor = input("editOfferMutuelleEditor");
-    const expanded = editor.hidden;
-    editor.hidden = !expanded;
-    input("editOfferMutuelleToggle").setAttribute("aria-expanded", String(expanded));
-    if (expanded) input("editOfferMutuelle").focus();
-  });
-  input("editOfferTrToggle").querySelectorAll("button[data-tr]").forEach((button) => button.addEventListener("click", () => {
-    trEnabledNow = button.dataset.tr === "oui";
-    input("editOfferTrToggle").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-    input("editOfferTrFields").hidden = !trEnabledNow;
-    updateSaveState();
-  }));
-  input("editOfferMealShare").querySelectorAll("button[data-share]").forEach((button) => button.addEventListener("click", () => {
-    mealShare = Number(button.dataset.share);
-    input("editOfferMealShare").querySelectorAll("button").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
-  }));
-  const validNumber = (id) => input(id).value.trim() !== "" && numericEntryValid(input(id).value) && Number.isFinite(parseNum(input(id).value));
-  const updateSaveState = () => {
-    const gross = parseNum(grossInput.value);
-    const mutuelle = input("editOfferMutuelle").value;
-    const mealDays = Number(input("editOfferMealDays").value);
-    const mealValue = parseNum(input("editOfferMealValue").value);
-    const mealConfigUnchanged = trEnabledNow === trEnabled && mealDays === initialMealDays && mealValue === initialMealValue && mealShare === initialShare;
-    const mealConfigValid = Number.isInteger(mealDays) && mealDays >= 1 && mealDays <= 31 && validNumber("editOfferMealValue") && mealValue > 0 && mealValue <= 500;
-    const valid = gross > 0 && gross <= 12e5 && validNumber("editOfferMutuelle") && parseNum(mutuelle) >= 0 && parseNum(mutuelle) <= 1e5 && (!trEnabledNow || mealConfigValid || mealConfigUnchanged);
-    input("editOfferSave").disabled = !valid;
-  };
-  ["editOfferGross", "editOfferMutuelle", "editOfferMealDays", "editOfferMealValue"].forEach((id) => input(id).addEventListener("input", updateSaveState));
-  updateSaveState();
-  input("editOfferSave").addEventListener("click", () => {
-    const gross = parseNum(grossInput.value);
+  const trySubmit = () => {
+    const gross = parseNum(input.value);
+    if (!(gross > 0)) return;
+    updateSubmitState();
+    if (!readMutuelleTr.isValid() || submitBtn.disabled) {
+      setText("modalMsg", "V\xE9rifiez les titres-restaurant : 1 \xE0 31 jours, 0 \xE0 500 \u20AC par titre et une part salariale de 40 \xE0 50 %.");
+      return;
+    }
+    const mealData = readMutuelleTr();
     const result = {
-      name: input("editOfferName").value.trim().slice(0, 80) || "Offre",
-      brut: period === "an" ? gross / 12 : gross,
+      name: nameInput.value.trim().slice(0, 60) || (editing ? "Offre" : String(namePrefill || "Nouvelle offre")),
+      brut: salaryPeriod === "an" ? gross / 12 : gross,
       salaireSaisi: gross,
-      salaireSaisiPeriode: period,
+      salaireSaisiPeriode: salaryPeriod,
       dureeType: hours,
+      ...mealData
+    };
+    if (editing) Object.assign(result, {
       commune: scenario.commune || "Pac\xE9",
       codePostal: scenario.codePostal || "",
       departement: scenario.departement || "",
       codeCommune: scenario.codeCommune || "",
       codeDepartement: scenario.codeDepartement || "",
-      mutuelle: parseNum(input("editOfferMutuelle").value),
-      mutuellePat: Number.isFinite(Number(scenario.mutuellePat)) ? Number(scenario.mutuellePat) : 30,
-      joursResto: trEnabledNow ? Number(input("editOfferMealDays").value) : 0,
-      valeurResto: trEnabledNow ? parseNum(input("editOfferMealValue").value) : 0,
-      partResto: trEnabledNow ? mealShare : 50,
       nbMois: Number(scenario.nbMois) || 12,
       primes: Number(scenario.primes) || 0,
       treiziemeMoisBase: scenario.treiziemeMoisBase === "ensemble" ? "ensemble" : "base"
-    };
+    });
     closeModal(result);
-  });
-  input("editOfferCancel").addEventListener("click", () => closeModal(false));
+  };
+  submitBtn.addEventListener("click", trySubmit);
+  overlay.querySelector("#" + field("Cancel")).addEventListener("click", () => closeModal(false));
+  updateSubmitState();
   return pending;
+}
+function showEditScenarioModal(scenario) {
+  return showAddScenarioModal(scenario.salaireSaisi, scenario.dureeType, scenario.name, scenario);
 }
 var headerMenu = document.getElementById("headerMenu");
 document.addEventListener("click", (event) => {
