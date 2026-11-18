@@ -2029,7 +2029,7 @@ test('la fenêtre de modification conserve les paramètres masqués avec le form
     await page.locator('#editOfferGross').fill('29500');
     await page.locator('#editOfferHours [data-hours="39"]').click();
     await page.locator('#editOfferMealDays').fill('20');
-    await page.locator('#editOfferMealValue').fill('9,50');
+    await page.locator('#editOfferMealValue').fill('9.5');
     await page.locator('#editOfferMealShare [data-share="40"]').click();
     await page.locator('#editOfferSubmit').click();
     const saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')).scenarios[0]);
