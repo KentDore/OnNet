@@ -1717,6 +1717,10 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').innerText(),'Référence actuelle');
     assert.equal(await page.locator('[data-set-offer-reference]').count(),0,
       'aucune carte ne propose un bouton individuel de référence');
+    assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').count(),1,
+      'la référence est indiquée une seule fois dans la liste des offres');
+    assert.equal(await page.locator('#stackChart .comparison-offer-card.is-reference .offer-reference-label').count(),0,
+      'le comparatif ne répète pas le badge de référence déjà affiché dans son en-tête');
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.refId, saved.scenarios[1].id, 'le choix global de référence est conservé localement');
   } finally {
