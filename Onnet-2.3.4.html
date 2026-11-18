@@ -2087,6 +2087,102 @@ body.salary-editor-open .integrated-offers{display:none!important}
 }
 .offer-comparison-card-actions .offer-comparison-remove{flex:0 0 36px}
 
+
+/* OnNet UX — trust badge in normal flow + one shared reference action. */
+header.hero .hero-copy .trust{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  display:inline-flex;
+  width:fit-content;
+  max-width:100%;
+  box-sizing:border-box;
+  margin:12px 0 0;
+  vertical-align:top;
+}
+.offer-reference-select{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:6px 9px;
+  border:1px solid #cfe3d4;
+  border-radius:9px;
+  background:#f0f8f2;
+  color:#176b49;
+  font-size:10px;
+  font-weight:750;
+  line-height:1.2;
+  text-align:center;
+  white-space:nowrap;
+}
+.offer-reference-label{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:30px;
+  padding:6px 9px;
+  border:1px solid transparent;
+  border-radius:9px;
+  background:#e2f2e6;
+  color:#176b49;
+  font-size:10px;
+  font-weight:800;
+  line-height:1.2;
+  white-space:nowrap;
+}
+@media(max-width:640px){
+  header.hero .hero-copy .trust{white-space:normal}
+  .offer-reference-select,.offer-reference-label{font-size:10px;padding:6px 8px}
+}
+
+
+/* Fix mobile hero trust badge: compact, below the intro, never floated beside the title. */
+header.hero .hero-copy{
+  display:flex!important;
+  flex-direction:column!important;
+  align-items:flex-start!important;
+}
+header.hero .hero-copy .trust{
+  position:static!important;
+  inset:auto!important;
+  float:none!important;
+  transform:none!important;
+  display:inline-flex!important;
+  align-self:flex-start!important;
+  width:max-content!important;
+  max-width:100%!important;
+  height:auto!important;
+  min-height:0!important;
+  box-sizing:border-box!important;
+  margin:10px 0 0!important;
+  padding:4px 8px!important;
+  gap:6px!important;
+  border-radius:999px!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+header.hero .hero-copy .trust strong{
+  display:inline!important;
+  font-size:9px!important;
+  line-height:1.2!important;
+}
+header.hero .hero-copy .trust-icon{
+  display:grid!important;
+  place-items:center!important;
+  width:18px!important;
+  height:18px!important;
+  min-width:18px!important;
+  flex:0 0 18px!important;
+  border-radius:50%!important;
+}
+header.hero .hero-copy .trust-icon svg{
+  display:block!important;
+  width:12px!important;
+  height:12px!important;
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -3784,7 +3880,7 @@ function renderComparisonCards(computed) {
     const deltaHtml = s.id === refId ? '<span class="comparison-reference-note">Offre de r\xE9f\xE9rence</span>' : delta === null ? '<span class="comparison-reference-note">\xC9cart indisponible</span>' : '<div class="comparison-offer-delta ' + deltaClass + '"><strong>' + config.formatSigned(delta) + "</strong><span>" + (config.key === "hour" ? "vs " : "/ " + config.unit + " vs ") + esc(reference.s.name) + "</span></div>";
     const trTotal = getMealTicketTotal(s, r);
     const details = trTotal > 0.5 ? '<details class="offer-net-details"><summary>D\xE9tail des titres-restaurant</summary>' + renderSalaryNetSummary(r.m.netSocial, trTotal, r.netApres + trTotal) + "</details>" : "";
-    const referenceAction = s.id === refId ? '<span class="comparison-reference-badge">R\xE9f\xE9rence</span>' : '<button type="button" class="comparison-set-reference" data-set-offer-reference="' + s.id + '">Choisir comme r\xE9f\xE9rence</button>';
+    const referenceAction = s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir comme r\xE9f\xE9rence</button>';
     return '<article class="comparison-offer-card ' + (s.id === refId ? "is-reference" : "") + '" data-comparison-offer="' + s.id + '"><header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE ' + (index + 1) + "</span><h3>" + esc(s.name) + "</h3></div>" + referenceAction + '</header><div class="comparison-offer-value-label">' + config.label + ' \xB7 avant imp\xF4t</div><div class="comparison-offer-value">' + (value === null ? "\u2014" : config.format(value)) + (value === null || config.key === "hour" ? "" : "<small>/ " + config.unit + "</small>") + '</div><div class="comparison-offer-meta"><span>Brut : ' + fmt(s.brut) + " / mois</span><span>" + weekly.toLocaleString("fr-FR") + " h / semaine</span></div>" + deltaHtml + details + "</article>";
   }).join("");
 }
@@ -3895,7 +3991,7 @@ function renderMaquetteControls(computedOverride) {
       const hourly = r && Number.isFinite(r.netHoraire) ? r.netHoraire : null;
       const factor = maquetteComparisonPeriod === "hour" ? 1 : maquetteComparisonPeriod === "year" ? weekly * 52 : hoursMonth;
       const value = hourly === null ? null : hourly * factor;
-      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir r\xE9f.</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut/mois \xB7 " + fmt(s.brut * 12) + " brut/an \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
+      return '<article class="offer-comparison-card ' + (s.id === refId ? "is-reference" : "") + '"><div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE ' + (index + 1) + '</span><h4 class="offer-comparison-name">' + esc(s.name) + '</h4></div><div class="offer-comparison-card-actions">' + (s.id === refId ? '<span class="offer-reference-label">R\xE9f\xE9rence</span>' : '<button type="button" class="offer-reference-select" data-set-offer-reference="' + s.id + '" aria-label="Choisir cette offre comme r\xE9f\xE9rence">Choisir comme r\xE9f\xE9rence</button>') + (allComputed.length > 1 ? '<button type="button" class="offer-comparison-remove" data-delete-offer="' + s.id + '" aria-label="Supprimer ' + esc(s.name) + '">\xD7</button>' : "") + '</div></div><div class="offer-comparison-meta">Contrat : ' + fmt(s.brut) + " brut/mois \xB7 " + fmt(s.brut * 12) + " brut/an \xB7 " + weekly + ' h</div><button type="button" class="offer-comparison-edit" data-edit-offer="' + s.id + '">Modifier cette offre <span aria-hidden="true">\u2192</span></button></article>';
     }).join("");
     if (summary.dataset.editBound !== "true") {
       summary.addEventListener("click", (event) => {
