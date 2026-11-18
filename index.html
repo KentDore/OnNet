@@ -2183,6 +2183,159 @@ header.hero .hero-copy .trust-icon svg{
   height:12px!important;
 }
 
+
+/* Badge Urssaf : séparer clairement le libellé et le nom du service. */
+header.hero .hero-copy .trust{
+  font:600 11px/1.35 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  white-space:normal!important;
+}
+header.hero .hero-copy .trust-copy{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+  column-gap:5px!important;
+  row-gap:2px!important;
+  min-width:0!important;
+  font:inherit!important;
+}
+header.hero .hero-copy .trust-copy strong,
+header.hero .hero-copy .trust-service{
+  display:inline!important;
+  font:inherit!important;
+}
+
+
+/* Menu d'en-tête : panneau compact et hiérarchie claire. */
+.header-menu-panel{width:min(276px,calc(100vw - 28px))!important;min-width:0!important;padding:12px!important;display:grid!important;gap:5px!important;border-radius:16px!important;box-sizing:border-box!important}
+.header-theme-setting{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:3px 3px 11px!important;margin-bottom:4px!important;border-bottom:1px solid var(--line)!important;font:600 11px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.header-theme-setting select{width:100%!important;min-height:40px!important;padding:8px 34px 8px 11px!important;border:1px solid var(--line)!important;border-radius:10px!important;font:500 13px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:normal!important;text-transform:none!important}
+.header-menu-panel button{display:flex!important;align-items:center!important;width:100%!important;min-height:40px!important;padding:9px 10px!important;border:0!important;border-radius:9px!important;background:transparent!important;font:500 13px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:normal!important;text-align:left!important}
+.header-menu-panel button:hover,.header-menu-panel button:focus-visible{background:var(--surface-secondary,var(--bg))!important;outline:none!important}
+:root[data-theme="dark"] .header-menu-panel{background:#202a24!important;border-color:#3b4a40!important}
+:root[data-theme="dark"] .header-theme-setting{border-bottom-color:#3b4a40!important;color:#aebdb3!important}
+:root[data-theme="dark"] .header-theme-setting select{background:#17201b!important;border-color:#46564b!important;color:#e3ece5!important}
+:root[data-theme="dark"] .header-menu-panel button{color:#dce8df!important}
+:root[data-theme="dark"] .header-menu-panel button:hover,:root[data-theme="dark"] .header-menu-panel button:focus-visible{background:#2a4032!important}
+
+
+/* Thème sombre : contraste renforcé dans la fenêtre de modification d'offre. */
+:root[data-theme="dark"] .modal-edit-offer{
+  background:#202824!important;
+  border-color:#46534b!important;
+  color:#e5ece7!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .field-row>label,
+:root[data-theme="dark"] .modal-edit-offer .field-label,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr-heading strong,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-benefits-title{
+  color:#c5d0c8!important;
+}
+:root[data-theme="dark"] .modal-edit-offer input,
+:root[data-theme="dark"] .modal-edit-offer select{
+  background:#171f1b!important;
+  border-color:#536158!important;
+  color:#edf3ef!important;
+}
+:root[data-theme="dark"] .modal-edit-offer input::placeholder{color:#9eaaa2!important}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-consent-compact,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-benefits,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr{
+  background:#171f1b!important;
+  border-color:#3d4942!important;
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-consent-compact p,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-label,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr-heading strong{
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note{
+  background:#202b24!important;
+  border-color:#435348!important;
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note strong,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note span{
+  color:#dce8df!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle{
+  background:#111815!important;
+  border-color:#3e4b43!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle button{
+  color:#b9c5bd!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle button[aria-pressed="true"]{
+  background:#24583e!important;
+  color:#f2fff6!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .modal-actions{
+  border-color:#3d4942!important;
+}
+
+
+/* Édition d'offre sur mobile : garder les titres-restaurant visibles sans
+   imposer un long défilement dans la fenêtre. */
+@media(max-width:560px){
+  .modal.modal-edit-offer{
+    max-height:calc(100dvh - 16px)!important;
+    padding:10px!important;
+  }
+  .modal-edit-offer .edit-offer-modal{gap:6px!important}
+  .modal-edit-offer .field-row label{margin-bottom:3px!important;font-size:11px!important}
+  .modal-edit-offer input{min-height:36px!important;padding:6px 9px!important}
+  .modal-edit-offer .onboarding-consent-compact{padding:6px 8px!important}
+  .modal-edit-offer .onboarding-consent-compact p{font-size:10px!important;line-height:1.3!important}
+  .modal-edit-offer .onboarding-benefits{gap:5px!important}
+  .modal-edit-offer .onboarding-mutuelle-note{min-height:32px!important;padding:5px 8px!important}
+  .modal-edit-offer .onboarding-tr{padding:6px 8px!important;gap:5px!important}
+  .modal-edit-offer .onboarding-tr-fields{padding-top:4px!important}
+  .modal-edit-offer .onboarding-tr-fields .three-col{grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:5px!important}
+  .modal-edit-offer .onboarding-tr-fields .field-row label,
+  .modal-edit-offer .onboarding-tr-fields .field-label{font-size:9px!important;line-height:1.15!important}
+  .modal-edit-offer .onboarding-tr-fields .field-row input,
+  .modal-edit-offer .onboarding-tr-fields .meal-share-toggle{height:36px!important;min-height:36px!important}
+  .modal-edit-offer .onboarding-tr-fields .meal-share-toggle button{padding:5px 3px!important;font-size:10px!important}
+  .modal-edit-offer .modal-actions{margin-top:3px!important;padding-top:6px!important}
+}
+.modal-edit-offer .onboarding-tr-fields[hidden],
+.modal-edit-offer .edit-offer-mutuelle-editor[hidden]{display:none!important}
+
+
+/* iOS : conserver 16 px minimum sur les champs pour éviter le zoom au focus. */
+@media(max-width:560px){
+  .modal-edit-offer input,
+  .modal-edit-offer select,
+  .modal-edit-offer textarea,
+  #themePreference{
+    font-size:16px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-row input{
+    font-size:16px!important;
+  }
+}
+
+
+/* Sur mobile, les deux valeurs TR restent côte à côte ; le taux occupe
+   une ligne entière pour conserver des libellés lisibles. */
+@media(max-width:560px){
+  .modal-edit-offer .onboarding-tr-fields .three-col{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .three-col>div:last-child{
+    grid-column:1/-1!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-label{
+    min-height:0!important;
+    margin-bottom:4px!important;
+    font-size:11px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-row label{
+    font-size:11px!important;
+  }
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -2194,14 +2347,14 @@ header.hero .hero-copy .trust-icon svg{
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
-        <div class="header-menu-panel"><label class="header-theme-setting" for="themePreference">Apparence<select id="themePreference" aria-label="Thème d’affichage"><option value="auto">Selon le téléphone</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><button type="button" id="printBtn">Imprimer / exporter</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
+        <div class="header-menu-panel"><label class="header-theme-setting" for="themePreference">Apparence<select id="themePreference" aria-label="Thème d’affichage"><option value="auto">Selon le téléphone</option><option value="light">Clair</option><option value="dark">Sombre</option></select></label><button type="button" id="printBtn">Imprimer</button><button type="button" id="resetBtn">Réinitialiser le comparatif</button></div>
       </details>
     </div>
   </div>
   <header class="hero">
     <div class="hero-copy"><p class="eyebrow">Simulateur de salaire</p><h1>Le brut promet.<br>Le net décide.</h1>
       <p class="intro">Comprenez votre salaire et situez-le en quelques secondes.</p>
-      <div class="trust"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
+      <div class="trust"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span class="trust-copy"><strong>Calculs via l’Urssaf</strong><span class="trust-service">Service Mon-entreprise</span></span></div>
     </div>
     <svg class="wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true"><path d="M0 55 C170 5 270 125 470 75 S770 5 1000 45 L1000 130 L0 130Z" fill="#d8f3df"/><path d="M0 88 C190 35 320 145 520 98 S820 38 1000 78 L1000 130 L0 130Z" fill="#aee9c3"/><path d="M0 111 C210 75 350 150 560 116 S830 82 1000 104 L1000 130 L0 130Z" fill="#75d99c" opacity=".65"/></svg>
   </header>
@@ -4999,15 +5152,6 @@ function showEditScenarioModal(scenario) {
         </div>
       </div>
       <div class="onboarding-benefits edit-offer-benefits">
-        <div class="onboarding-mutuelle-note">
-          <span class="onboarding-mutuelle-icon" aria-hidden="true">\u2713</span>
-          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(initialMutuelle)} \u20AC / mois</button>
-        </div>
-        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
-          <label for="editOfferMutuelle">Votre part mensuelle (\u20AC)</label>
-          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace(".", ",")}" autocomplete="off">
-        </div>
         <div class="onboarding-tr edit-offer-tr">
           <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
           <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
@@ -5021,6 +5165,15 @@ function showEditScenarioModal(scenario) {
               <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare === 50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare === 40}">40 %</button></div></div>
             </div>
           </div>
+        </div>
+        <div class="onboarding-mutuelle-note">
+          <span class="onboarding-mutuelle-icon" aria-hidden="true">\u2713</span>
+          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 }).format(initialMutuelle)} \u20AC / mois</button>
+        </div>
+        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
+          <label for="editOfferMutuelle">Votre part mensuelle (\u20AC)</label>
+          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace(".", ",")}" autocomplete="off">
         </div>
       </div>
       <div class="modal-actions">
