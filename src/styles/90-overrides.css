@@ -1106,3 +1106,59 @@ header.hero .hero-copy .trust-service{
 :root[data-theme="dark"] .header-theme-setting select{background:#17201b!important;border-color:#46564b!important;color:#e3ece5!important}
 :root[data-theme="dark"] .header-menu-panel button{color:#dce8df!important}
 :root[data-theme="dark"] .header-menu-panel button:hover,:root[data-theme="dark"] .header-menu-panel button:focus-visible{background:#2a4032!important}
+
+
+/* Thème sombre : contraste renforcé dans la fenêtre de modification d'offre. */
+:root[data-theme="dark"] .modal-edit-offer{
+  background:#202824!important;
+  border-color:#46534b!important;
+  color:#e5ece7!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .field-row>label,
+:root[data-theme="dark"] .modal-edit-offer .field-label,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr-heading strong,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-benefits-title{
+  color:#c5d0c8!important;
+}
+:root[data-theme="dark"] .modal-edit-offer input,
+:root[data-theme="dark"] .modal-edit-offer select{
+  background:#171f1b!important;
+  border-color:#536158!important;
+  color:#edf3ef!important;
+}
+:root[data-theme="dark"] .modal-edit-offer input::placeholder{color:#9eaaa2!important}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-consent-compact,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-benefits,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr{
+  background:#171f1b!important;
+  border-color:#3d4942!important;
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-consent-compact p,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-label,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-tr-heading strong{
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note{
+  background:#202b24!important;
+  border-color:#435348!important;
+  color:#e1e9e3!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note strong,
+:root[data-theme="dark"] .modal-edit-offer .onboarding-mutuelle-note span{
+  color:#dce8df!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle{
+  background:#111815!important;
+  border-color:#3e4b43!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle button{
+  color:#b9c5bd!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .pill-toggle button[aria-pressed="true"]{
+  background:#24583e!important;
+  color:#f2fff6!important;
+}
+:root[data-theme="dark"] .modal-edit-offer .modal-actions{
+  border-color:#3d4942!important;
+}
