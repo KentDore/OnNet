@@ -965,16 +965,18 @@ input.is-invalid{border-color:var(--warn, #b42318)!important;box-shadow:0 0 0 1p
 :root{--maquette-bg:#f5f3ee;--maquette-green:#1f6d4c;--maquette-dark:#075334}
 body{background:linear-gradient(180deg,#fafbf9 0%,var(--maquette-bg) 100%)}
 .wrap{width:min(100% - 32px,1000px);margin:auto;padding:22px 0 52px}
-header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:0;padding:17px 24px 43px;border:1px solid rgba(255,255,255,.95);border-radius:26px;background:linear-gradient(145deg,#fff 0%,#f7fbf8 72%,#effaf3 100%);box-shadow:0 8px 26px rgba(24,54,37,.08);margin-bottom:20px}
-header.hero .header-top{margin-bottom:12px}
-header.hero h1{margin:0 0 7px;color:#073e2b;font:700 clamp(26px,3.7vw,36px)/1.04 Georgia,serif;letter-spacing:-1.2px}
+header.hero{position:relative;isolation:isolate;overflow:hidden;min-height:0;padding:18px 26px 31px;border:1px solid rgba(255,255,255,.95);border-radius:26px;background:linear-gradient(145deg,#fff 0%,#f7fbf8 72%,#effaf3 100%);box-shadow:0 8px 26px rgba(24,54,37,.08);margin-bottom:16px}
+header.hero .header-top{margin-bottom:10px}
+header.hero h1{margin:0 0 8px;color:#073e2b;font:700 clamp(27px,3.7vw,36px)/1.04 Georgia,serif;letter-spacing:-1.2px}
 header.hero>p{display:none}
-header.hero .hero-copy{position:relative;z-index:2;max-width:580px}
-header.hero .intro{margin:0;color:#68716b;max-width:48ch;font-size:13px;line-height:1.35}
+header.hero .hero-copy{position:relative;z-index:2;max-width:720px;padding-right:210px}
+header.hero .intro{margin:0;color:#68716b;max-width:48ch;font-size:13px;line-height:1.4}
 header.hero .eyebrow{margin:0 0 5px;color:#1f6d4c;font-size:11px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
-header.hero .trust{display:inline-flex;align-items:center;gap:10px;margin-top:13px;padding:8px 13px;border:1px solid #dcebe0;border-radius:12px;background:rgba(239,248,241,.92);color:#315441;font-size:11px;line-height:1.25}
-header.hero .trust strong{display:block;color:#176b45;font-size:12px}
-header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54px;pointer-events:none}
+header.hero .trust{position:absolute;top:0;right:0;display:inline-flex;align-items:center;gap:7px;margin:0;padding:6px 9px;border:1px solid #dcebe0;border-radius:999px;background:rgba(239,248,241,.72);color:#315441;font-size:10px;line-height:1.2;white-space:nowrap}
+header.hero .trust strong{display:inline;color:#176b45;font-size:10px;font-weight:650}
+header.hero .trust-icon{width:19px;height:19px;flex:0 0 19px}
+header.hero .trust-icon svg{width:15px;height:15px}
+header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:34px;pointer-events:none}
 .unified-salary-panel{padding:clamp(18px,3vw,26px);border-radius:23px}
 .comparison-subhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px;padding:0;border:0}
 .comparison-subhead h2{margin:0;color:#103d2a;font:700 clamp(20px,3vw,25px)/1.15 Georgia,serif;letter-spacing:-.4px}
@@ -2104,8 +2106,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
   </div>
   <header class="hero">
     <div class="hero-copy"><p class="eyebrow">Simulateur de salaire</p><h1>Le brut promet.<br>Le net décide.</h1>
-      <p class="intro">Comprenez votre salaire et situez-le en quelques secondes.</p>
-      <div class="trust"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Calculs via l’Urssaf</strong>Service Mon-entreprise</span></div>
+      <p class="intro">Estimez votre salaire net et comparez vos offres.</p>
+      <div class="trust"><span class="trust-icon" aria-hidden="true"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"/><path d="m9 12 2 2 4-4"/></svg></span><span><strong>Calculs via l’Urssaf</strong> · Mon-entreprise</span></div>
     </div>
     <svg class="wave" viewBox="0 0 1000 130" preserveAspectRatio="none" aria-hidden="true"><path d="M0 55 C170 5 270 125 470 75 S770 5 1000 45 L1000 130 L0 130Z" fill="#d8f3df"/><path d="M0 88 C190 35 320 145 520 98 S820 38 1000 78 L1000 130 L0 130Z" fill="#aee9c3"/><path d="M0 111 C210 75 350 150 560 116 S830 82 1000 104 L1000 130 L0 130Z" fill="#75d99c" opacity=".65"/></svg>
   </header>
