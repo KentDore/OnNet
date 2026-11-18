@@ -1072,3 +1072,24 @@ header.hero .hero-copy .trust-icon svg{
   width:12px!important;
   height:12px!important;
 }
+
+
+/* Badge Urssaf : séparer clairement le libellé et le nom du service. */
+header.hero .hero-copy .trust{
+  font:600 11px/1.35 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;
+  white-space:normal!important;
+}
+header.hero .hero-copy .trust-copy{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+  column-gap:5px!important;
+  row-gap:2px!important;
+  min-width:0!important;
+  font:inherit!important;
+}
+header.hero .hero-copy .trust-copy strong,
+header.hero .hero-copy .trust-service{
+  display:inline!important;
+  font:inherit!important;
+}
