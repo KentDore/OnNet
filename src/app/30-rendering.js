@@ -404,6 +404,7 @@ function renderMaquetteControls(computedOverride){
   const summary=document.getElementById('maquetteYourSalary');
   if(summary){
     const allComputed=computedOverride||getCurrentComputed();
+    // La référence est choisie depuis le contrôle global, jamais depuis une carte.
     const selectedReference=allComputed.find(item=>item.s.id===refId)||allComputed[0];
     const referenceControl=allComputed.length>1
       ? '<div class="offer-reference-control"><label for="offerReferenceSelect"><span>Offre de référence</span><small>Utilisée pour calculer tous les écarts</small></label><select id="offerReferenceSelect" aria-label="Choisir l’offre de référence">'+allComputed.map(({s})=>'<option value="'+s.id+'" '+(s.id===selectedReference.s.id?'selected':'')+'>'+esc(s.name)+'</option>').join('')+'</select></div>'
