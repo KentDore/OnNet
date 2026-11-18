@@ -413,6 +413,11 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
   const input=overlay.querySelector('#'+field('Gross'));
   const nameInput=overlay.querySelector('#'+field('Name'));
   const submitBtn=overlay.querySelector('#'+field('Submit'));
+  nameInput.addEventListener('focus',event=>{
+    const target=event.currentTarget;
+    target.setSelectionRange(target.value.length,target.value.length);
+  },{once:true});
+  nameInput.addEventListener('click',event=>event.currentTarget.select());
   const periodToggle=overlay.querySelector('#'+field('Period'));
   const periodLabel=overlay.querySelector('#'+field('GrossLabel'));
   const hoursToggle=overlay.querySelector('#'+field('Hours'));
@@ -467,8 +472,9 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
   const trySubmit=()=>{
     const gross=parseNum(input.value);
     if(!(gross>0))return;
-    if(!readMutuelleTr.isValid()){
-      setText(field('Msg'),'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+    updateSubmitState();
+    if(!readMutuelleTr.isValid()||submitBtn.disabled){
+      setText(field('Msg'),'Vérifiez les titres-restaurant : 1 à 31 jours, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
       return;
     }
     const mealData=readMutuelleTr();
