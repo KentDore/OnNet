@@ -377,7 +377,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', className: 'modal-add-salary', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
   const nameInput = overlay.querySelector('#modalAddName');
