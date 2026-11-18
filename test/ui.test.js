@@ -209,7 +209,7 @@ async function openSalaryEditor(page, index = 0) {
 
 async function addSecondScenario(page, gross = '3200') {
   await page.locator('#maquetteAddSalary').click();
-  await page.locator('#modalAddInput').fill(gross);
+  await page.locator('#modalAddGross').fill(gross);
   await page.locator('#modalAddSubmit').click();
   await page.waitForFunction(() => {
     const cards = [...document.querySelectorAll('#cardsBody [data-card]')];
@@ -671,7 +671,7 @@ test('transmet les deux parts de mutuelle par défaut lors de l’ajout', { time
   try {
     const before = calls.count;
     await page.locator('#addScenario').click();
-    await page.locator('#modalAddInput').fill('3400');
+    await page.locator('#modalAddGross').fill('3400');
     assert.equal(await page.locator('.onboarding-mutuelle-note').innerText(), 'Mutuelle\n30 € salarié');
     assert.equal(await page.locator('#modalAddMutuelle').count(), 0);
     assert.equal(await page.locator('#modalAddMutuellePat').count(), 0);
@@ -1016,6 +1016,24 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   }
 });
 
+test('ajout et modification utilisent le même composant de formulaire salaire', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.locator('#maquetteAddSalary').click();
+    const addStructure=await page.locator('#modalBox .salary-form-fields').evaluate(el=>[...el.children].map(node=>node.classList[0]));
+    assert.deepEqual(addStructure,['field-row','onboarding-consent','field-row','field-row','field-row','onboarding-benefits'],
+      'le formulaire d’ajout doit utiliser la structure partagée');
+    await page.locator('#modalAddCancel').click();
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const editStructure=await page.locator('#modalBox .salary-form-fields').evaluate(el=>[...el.children].map(node=>node.classList[0]));
+    assert.deepEqual(editStructure,addStructure,
+      'le formulaire de modification doit reprendre exactement la structure de l’ajout');
+    assert.equal(await page.locator('#editOfferTrToggle').isVisible(),true);
+  } finally {
+    await context.close();
+  }
+});
+
 test('les titres-restaurant sont accessibles immédiatement dans l’éditeur mobile', { timeout:60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
@@ -1213,7 +1231,7 @@ test('les contrôles V33 restent actifs pour un utilisateur sans onboarding', { 
     assert.equal(await valueUnit.innerText(), '/ an');
 
     await page.locator('#maquetteAddSalary').click();
-    assert.equal(await page.locator('#modalAddInput').isVisible(), true,
+    assert.equal(await page.locator('#modalAddGross').isVisible(), true,
       'le bouton Ajouter doit ouvrir la modale de création de scénario');
   } finally {
     await context.close();
@@ -1359,10 +1377,10 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
     await page.locator('#addScenario').click();
     assert.equal(await page.locator('#modalAdd39Hint').count(), 0,
       'aucun paragraphe explicatif sur les 39 h ne doit être affiché');
-    assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
-    await page.locator('#modalAddDuree [data-duree="35"]').click();
-    await page.locator('#modalAddDuree [data-duree="39"]').click();
-    await page.locator('#modalAddInput').fill('3300');
+    assert.equal(await page.locator('#modalAddHours [data-duree="39"]').getAttribute('aria-pressed'), 'true');
+    await page.locator('#modalAddHours [data-duree="35"]').click();
+    await page.locator('#modalAddHours [data-duree="39"]').click();
+    await page.locator('#modalAddGross').fill('3300');
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() =>
       document.querySelectorAll('#cardsBody [data-result-state="ready"]').length === 2,
@@ -1371,7 +1389,7 @@ test('préremplit l’hypothèse 39 h sans texte explicatif dans l’ajout de sa
     const state = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(state.scenarios[1].dureeType, '39');
     await page.locator('#addScenario').click();
-    assert.equal(await page.locator('#modalAddDuree [data-duree="39"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('#modalAddHours [data-duree="39"]').getAttribute('aria-pressed'), 'true');
     await page.locator('#modalAddCancel').click();
   } finally {
     await context.close();
@@ -1820,12 +1838,12 @@ test('le changement de période affiche un salaire arrondi sans dérive de conve
   try {
     await page.locator('#maquetteAddSalary').click();
     await page.locator('#modalAddPeriod [data-period="an"]').click();
-    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddGross').fill('29500');
     await page.locator('#modalAddPeriod [data-period="mois"]').click();
-    assert.equal(await page.locator('#modalAddInput').inputValue(), '2458,33',
+    assert.equal(await page.locator('#modalAddGross').inputValue(), '2458,33',
       'le mensuel doit être affiché au centime, sans longue décimale flottante');
     await page.locator('#modalAddPeriod [data-period="an"]').click();
-    assert.equal(await page.locator('#modalAddInput').inputValue(), '29500',
+    assert.equal(await page.locator('#modalAddGross').inputValue(), '29500',
       'le retour à l’annuel doit conserver le montant initial');
     await page.locator('#modalAddCancel').click();
   } finally {
@@ -1913,7 +1931,7 @@ test('conserve exactement un brut annuel saisi et propose un nom facultatif', { 
     await page.locator('#maquetteAddSalary').click();
     assert.equal(await page.locator('#modalAddName').inputValue(), 'Offre 2');
     await page.locator('#modalAddPeriod [data-period="an"]').click();
-    await page.locator('#modalAddInput').fill('29500');
+    await page.locator('#modalAddGross').fill('29500');
     await page.locator('#modalAddName').fill('');
     await page.locator('#modalAddSubmit').click();
     await page.waitForFunction(() => {
