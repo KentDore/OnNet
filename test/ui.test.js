@@ -1935,6 +1935,39 @@ test('conserve exactement un brut annuel saisi et propose un nom facultatif', { 
 });
 
 
+test('la fenêtre d’ajout de salaire ne masque pas les titres-restaurant sur petit écran mobile', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ touch:true, consent:false });
+  try {
+    await page.setViewportSize({ width:390, height:600 });
+    await page.locator('#maquetteAddSalary').click();
+    const modal=page.locator('#modalBox');
+    assert.equal(await modal.isVisible(),true);
+    const before=await modal.evaluate(el=>({
+      height:el.getBoundingClientRect().height,
+      maxHeight:getComputedStyle(el).maxHeight,
+      viewport:window.visualViewport?.height||window.innerHeight,
+      overflow:getComputedStyle(el).overflowY
+    }));
+    assert.ok(before.height<=before.viewport-20,
+      'la fenêtre doit rester dans la hauteur réellement visible : '+JSON.stringify(before));
+    assert.equal(before.overflow,'auto');
+    const actions=page.locator('#modalAddSubmit');
+    await actions.scrollIntoViewIfNeeded();
+    const footer=await actions.evaluate(el=>el.getBoundingClientRect().bottom);
+    const tr=page.locator('#modalAddTrToggle');
+    await tr.scrollIntoViewIfNeeded();
+    const trRect=await tr.boundingBox();
+    assert.ok(trRect && trRect.y>=0 && trRect.y+trRect.height<=600,
+      'le choix titres-restaurant doit être atteignable en entier : '+JSON.stringify(trRect));
+    const footerStyle=await actions.evaluate(el=>({position:getComputedStyle(el.parentElement).position,bottom:getComputedStyle(el.parentElement).bottom}));
+    assert.equal(footerStyle.position,'static','les actions ne doivent pas recouvrir le contenu');
+    assert.ok(footer>0);
+    const output=path.join(__dirname,'..','artifacts','visual');
+    fs.mkdirSync(output,{recursive:true});
+    await modal.screenshot({path:path.join(output,'onnet-add-salary-mobile.png')});
+  } finally { await context.close(); }
+});
+
 test('conserve aussi le brut annuel saisi pendant le premier démarrage', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ emptyStorage: true, consent: false });
   try {
