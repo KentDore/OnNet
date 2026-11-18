@@ -1204,3 +1204,24 @@ header.hero .hero-copy .trust-service{
     font-size:16px!important;
   }
 }
+
+
+/* Sur mobile, les deux valeurs TR restent côte à côte ; le taux occupe
+   une ligne entière pour conserver des libellés lisibles. */
+@media(max-width:560px){
+  .modal-edit-offer .onboarding-tr-fields .three-col{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .three-col>div:last-child{
+    grid-column:1/-1!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-label{
+    min-height:0!important;
+    margin-bottom:4px!important;
+    font-size:11px!important;
+  }
+  .modal-edit-offer .onboarding-tr-fields .field-row label{
+    font-size:11px!important;
+  }
+}
