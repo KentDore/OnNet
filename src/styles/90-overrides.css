@@ -1309,3 +1309,57 @@ header.hero .hero-copy .trust-service{
   .offer-reference-control{align-items:stretch;flex-direction:column;gap:9px;padding:12px}
   .offer-reference-control select{width:100%;max-width:none;flex:1}
 }
+
+
+/* Formulaire unique ajout/modification : compact sur petits écrans sans
+   réduire la taille des contrôles tactiles ni masquer les champs. */
+@media(max-width:560px){
+  .modal-add-salary>.field-row{
+    margin-bottom:5px!important;
+  }
+  .modal-add-salary>.field-row label{
+    margin-bottom:2px!important;
+    line-height:1.15!important;
+  }
+  .modal-add-salary>.onboarding-consent{
+    padding:5px 8px!important;
+    margin-bottom:5px!important;
+  }
+  .modal-add-salary .onboarding-consent-top{
+    gap:7px!important;
+  }
+  .modal-add-salary .onboarding-consent-copy small{
+    font-size:10px!important;
+    line-height:1.2!important;
+  }
+  .modal-add-salary .onboarding-consent-details{
+    margin-top:2px!important;
+    font-size:10px!important;
+  }
+  .modal-add-salary .onboarding-benefits{
+    gap:4px!important;
+    margin-top:3px!important;
+  }
+  .modal-add-salary .onboarding-mutuelle-note{
+    min-height:32px!important;
+    padding:5px 8px!important;
+  }
+  .modal-add-salary .onboarding-tr{
+    gap:5px!important;
+    padding:6px 8px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields{
+    padding-top:4px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields .three-col{
+    gap:4px!important;
+  }
+  .modal-add-salary .onboarding-tr-fields .field-row label{
+    margin-bottom:2px!important;
+    line-height:1.15!important;
+  }
+  .modal-add-salary .modal-actions{
+    margin-top:4px!important;
+    padding-bottom:2px!important;
+  }
+}
