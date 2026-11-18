@@ -33,7 +33,7 @@ test('le build autonome embarque le client officiel et les modules source', t =>
   const favicon = fs.readFileSync(path.join(root, 'favicon.svg'), 'utf8');
   const appleTouchIcon = fs.readFileSync(path.join(root, 'apple-touch-icon.png'));
   assert.ok(html.includes('<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=9.9.9">'));
-  assert.ok(html.includes('<img class="brand-icon" src="./favicon.svg?v=9.9.9" alt="" width="24" height="24">'),
+  assert.ok(html.includes('<img class="brand-icon" src="./favicon.svg?v=9.9.9" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span>'),
     "le logo de l’en-tête doit réutiliser exactement le favicon versionné");
   assert.ok(html.includes('<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=9.9.9">'));
   assert.match(html, /<meta name="theme-color" content="#176b49">/);
