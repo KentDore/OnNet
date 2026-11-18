@@ -2038,17 +2038,18 @@ body.salary-editor-open .integrated-offers{display:none!important}
   }
 }
 
-/* Afficher les libellés complets : ne jamais les tronquer pour faire tenir les contrôles. */
+
+/* Préserver la disposition et les composants OnNet tout en donnant assez de place aux libellés. */
 .header-menu-panel{
-  width:min(340px,calc(100vw - 32px));
+  width:min(380px,calc(100vw - 32px));
   min-width:0;
   box-sizing:border-box;
 }
 .header-theme-setting{
   display:grid;
-  grid-template-columns:minmax(0,1fr);
-  align-items:start;
-  gap:7px;
+  grid-template-columns:82px minmax(0,1fr);
+  align-items:center;
+  gap:8px;
   min-width:0;
 }
 .header-theme-setting select{
@@ -2057,18 +2058,17 @@ body.salary-editor-open .integrated-offers{display:none!important}
   min-width:0;
   max-width:none;
   box-sizing:border-box;
-  font:500 16px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  white-space:normal;
+  font:inherit;
 }
 .offer-comparison-card-actions{
   display:flex;
   align-items:center;
   justify-content:flex-end;
-  flex:1 1 100%;
-  flex-wrap:wrap;
+  flex:0 0 auto;
+  flex-wrap:nowrap;
   gap:7px;
-  min-width:0;
-  width:100%;
+  min-width:max-content;
+  width:auto;
 }
 .offer-comparison-card-actions .offer-reference-select{
   display:inline-flex;
@@ -2077,7 +2077,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
   box-sizing:border-box;
   flex:0 0 auto;
   min-width:max-content;
-  max-width:100%;
+  max-width:none;
   min-height:36px;
   padding:7px 11px;
   font:700 11px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
@@ -2086,10 +2086,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
   text-overflow:clip;
 }
 .offer-comparison-card-actions .offer-comparison-remove{flex:0 0 36px}
-@media(max-width:380px){
-  .header-menu-panel{width:calc(100vw - 24px)}
-  .offer-comparison-card-actions .offer-reference-select{padding:7px 9px;font-size:10px}
-}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
