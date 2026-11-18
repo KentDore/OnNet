@@ -205,7 +205,7 @@ function renderSalaryFormFields(config){
   return [
     '<div class="salary-form-fields">',
     '<div class="field-row salary-name-field"><label for="' + prefix + 'Name">Nom de l’offre</label><input type="text" id="' + prefix + 'Name" maxlength="' + maxNameLength + '" value="' + esc(name) + '" autocomplete="off"></div>',
-    renderUrssafConsentNotice(prefix === 'editOffer'),
+    renderUrssafConsentNotice(true),
     '<div class="field-row salary-period-row"><span class="field-label">Votre salaire est indiqué en</span><div class="pill-toggle" id="' + prefix + 'Period" role="group" aria-label="Période du salaire brut"><button type="button" data-period="mois" aria-pressed="' + (!annual) + '">Mensuel</button><button type="button" data-period="an" aria-pressed="' + annual + '">Annuel</button></div></div>',
     '<div class="field-row salary-gross-field"><label for="' + prefix + 'Gross" id="' + prefix + 'GrossLabel">Salaire brut ' + (annual?'annuel':'mensuel') + ' (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'Gross" value="' + String(salary).replace('.', ',') + '" placeholder="' + (annual?'Ex. 30 000':'Ex. 2 500') + '" autocomplete="off"></div>',
     '<div class="field-row salary-hours-row"><span class="field-label">Base horaire</span><div class="pill-toggle" id="' + prefix + 'Hours" role="group" aria-label="Base horaire"><button type="button" data-hours="35" aria-pressed="' + (hours !== '39') + '">35 h</button><button type="button" data-hours="39" aria-pressed="' + (hours === '39') + '">39 h</button></div></div>',
