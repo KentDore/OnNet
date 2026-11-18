@@ -1715,8 +1715,8 @@ test('les offres peuvent être renommées et la référence est choisie explicit
     await referenceSelect.selectOption({index:1});
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference').count(),1);
     assert.equal(await page.locator('#maquetteYourSalary .offer-comparison-card.is-reference .offer-reference-label').innerText(),'Référence actuelle');
-    assert.equal(await page.locator('#maquetteYourSalary [data-set-offer-reference]').count(),0,
-      'les cartes ne proposent plus de bouton individuel de référence');
+    assert.equal(await page.locator('[data-set-offer-reference]').count(),0,
+      'aucune carte ne propose un bouton individuel de référence');
     saved = await page.evaluate(() => JSON.parse(localStorage.getItem('onnet.state.v1')));
     assert.equal(saved.refId, saved.scenarios[1].id, 'le choix global de référence est conservé localement');
   } finally {
