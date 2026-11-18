@@ -184,6 +184,33 @@
     margin:auto;
   }
   .modal-overlay.show .modal{opacity:1;transform:translateY(0) scale(1);}
+
+  /* Ajout d'une offre : le pied de formulaire reste dans le flux.
+     Sur iOS, 100vh inclut parfois la zone masquée par les barres Safari ;
+     dvh suit la hauteur réellement visible lorsque celles-ci apparaissent. */
+  .modal.modal-add-salary{
+    max-height:min(85vh,760px);
+    overscroll-behavior:contain;
+    -webkit-overflow-scrolling:touch;
+  }
+  .modal-add-salary .modal-actions{
+    position:static;
+    bottom:auto;
+    margin-top:12px!important;
+  }
+  @media(max-width:560px){
+    .modal.modal-add-salary{
+      width:calc(100vw - 24px);
+      max-height:calc(100dvh - 24px);
+      padding:12px 14px;
+    }
+    .modal-add-salary .modal-actions{
+      position:static;
+      margin-top:10px!important;
+      padding-bottom:4px;
+    }
+  }
+
   /* Les champs TR apparaissent sans saut de mise en page brutal. Le contenu
      reste dans le flux et la hauteur de la modale reste contrôlée. */
   .onboarding-tr-fields{display:grid;grid-template-rows:1fr;opacity:1;}
@@ -5053,7 +5080,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill) {
       <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
       <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
     </div>`;
-  const pending = openModal(html, { initialFocusSelector: "#modalAddInput", dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: "#modalAddInput", className: "modal-add-salary", dismissible: true });
   const overlay = document.getElementById("modalOverlay");
   const input = overlay.querySelector("#modalAddInput");
   const nameInput = overlay.querySelector("#modalAddName");
