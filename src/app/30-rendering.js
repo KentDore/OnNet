@@ -261,8 +261,8 @@ function renderComparisonCards(computed){
       ? '<details class="offer-net-details"><summary>Détail des titres-restaurant</summary>'+renderSalaryNetSummary(r.m.netSocial,trTotal,r.netApres+trTotal)+'</details>'
       : '';
     const referenceAction=s.id===refId
-      ? '<span class="comparison-reference-badge">Référence</span>'
-      : '<button type="button" class="comparison-set-reference" data-set-offer-reference="'+s.id+'">Choisir comme référence</button>';
+      ? '<span class="offer-reference-label">Référence</span>'
+      : '<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir réf.</button>';
     return '<article class="comparison-offer-card '+(s.id===refId?'is-reference':'')+'" data-comparison-offer="'+s.id+'">'+
       '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
       '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
