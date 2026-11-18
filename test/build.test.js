@@ -180,10 +180,10 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   assert.equal(published.includes('@@ONNET_'), false, 'aucun marqueur de template ne doit rester');
 });
 
-test('les libellés du menu et du bouton de référence restent entièrement visibles', () => {
+test('les libellés restent visibles sans changer la disposition des composants', () => {
   const styles = readStylesSource(path.resolve(__dirname, '..'));
-  assert.match(styles, /\.header-menu-panel\{[\s\S]*?width:min\(340px,calc\(100vw - 32px\)\)/);
-  assert.match(styles, /\.header-theme-setting\{[\s\S]*?grid-template-columns:minmax\(0,1fr\)/);
+  assert.match(styles, /\.header-menu-panel\{[\s\S]*?width:min\(380px,calc\(100vw - 32px\)\)/);
+  assert.match(styles, /\.header-theme-setting\{[\s\S]*?grid-template-columns:82px minmax\(0,1fr\)/);
+  assert.match(styles, /\.offer-comparison-card-actions\{[\s\S]*?flex-wrap:nowrap/);
   assert.match(styles, /\.offer-comparison-card-actions \.offer-reference-select\{[\s\S]*?min-width:max-content/);
-  assert.match(styles, /overflow:visible;[\s\S]*?text-overflow:clip/);
 });
