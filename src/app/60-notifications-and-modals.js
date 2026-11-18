@@ -247,12 +247,12 @@ function renderMutuelleTrFields(idPrefix){
 
 // La mutuelle est un réglage par défaut simple : 30 € de part salariale
 // et 30 € de part employeur. Seuls les titres-restaurant sont facultatifs.
-function bindMutuelleTrFields(overlay, idPrefix){
+function bindMutuelleTrFields(overlay, idPrefix, suffixes={}){
   const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
   const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
-  const joursInput = overlay.querySelector(`#${idPrefix}Jours`);
-  const valeurInput = overlay.querySelector(`#${idPrefix}Valeur`);
-  const partInput = overlay.querySelector(`#${idPrefix}Part`);
+  const joursInput = overlay.querySelector(`#${idPrefix}${suffixes.jours || 'Jours'}`);
+  const valeurInput = overlay.querySelector(`#${idPrefix}${suffixes.valeur || 'Valeur'}`);
+  const partInput = overlay.querySelector(`#${idPrefix}${suffixes.part || 'Part'}`);
   let partResto = 50;
   let trOui = false;
   partInput.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
@@ -375,14 +375,14 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
     <p id="modalMsg" class="modal-msg"></p>
     ${renderSalaryFormFields({prefix:'modalAdd',name:namePrefill || 'Nouvelle offre',period:'mois',salary:initialSalary,hours:dureePrefill === '39' ? '39' : '35',mutuelle:30,trEnabled:false,mealDays:21,mealValue:8,mealShare:50,maxNameLength:60})}
     <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button><button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button></div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddInput', className: 'modal-add-salary', dismissible: true });
+  const pending = openModal(html, { initialFocusSelector: '#modalAddGross', className: 'modal-add-salary', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
-  const input = overlay.querySelector('#modalAddInput');
+  const input = overlay.querySelector('#modalAddGross');
   const nameInput = overlay.querySelector('#modalAddName');
   const submitBtn = overlay.querySelector('#modalAddSubmit');
-  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd');
+  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd', {jours:'MealDays', valeur:'MealValue', part:'MealShare'});
   const periodToggle = overlay.querySelector('#modalAddPeriod');
-  const periodLabel = overlay.querySelector('#modalAddLabel');
+  const periodLabel = overlay.querySelector('#modalAddGrossLabel');
   let salaryPeriod = 'mois';
   let exactSalaryValue = parseNum(brutPrefill);
   periodToggle.querySelectorAll('button').forEach(button => {
@@ -405,7 +405,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   });
 
   let dureeType = dureePrefill === '39' ? '39' : '35';
-  const dureeToggle = overlay.querySelector('#modalAddDuree');
+  const dureeToggle = overlay.querySelector('#modalAddHours');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
       dureeType = b.dataset.duree;
@@ -450,6 +450,8 @@ function showEditScenarioModal(scenario){
   const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
   const trEnabled = Number(scenario.joursResto)>0 || Number(scenario.valeurResto)>0;
   const initialShare = Number(scenario.partResto)===40 ? 40 : 50;
+  const initialMealDays = Number(scenario.joursResto)||0;
+  const initialMealValue = Number(scenario.valeurResto)||0;
   const html = `
     ${renderSalaryFormFields({prefix:'editOffer',name:scenario.name,period:initialPeriod,salary:initialSalary,hours:scenario.dureeType === '39' ? '39' : '35',mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialShare,editableMutuelle:true})}
     <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button><button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button></div>`;
@@ -466,8 +468,6 @@ function showEditScenarioModal(scenario){
   let hours = scenario.dureeType==='39'?'39':'35';
   let trEnabledNow = trEnabled;
   let mealShare = initialShare;
-  const initialMealDays = Number(scenario.joursResto)||0;
-  const initialMealValue = Number(scenario.valeurResto)||0;
   const periodToggle = input('editOfferPeriod');
   const grossInput = input('editOfferGross');
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
