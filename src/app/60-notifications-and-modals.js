@@ -478,15 +478,6 @@ function showEditScenarioModal(scenario){
         </div>
       </div>
       <div class="onboarding-benefits edit-offer-benefits">
-        <div class="onboarding-mutuelle-note">
-          <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
-          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois</button>
-        </div>
-        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
-          <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
-          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
-        </div>
         <div class="onboarding-tr edit-offer-tr">
           <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
           <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
@@ -500,6 +491,15 @@ function showEditScenarioModal(scenario){
               <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
             </div>
           </div>
+        </div>
+        <div class="onboarding-mutuelle-note">
+          <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
+          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
+          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois</button>
+        </div>
+        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
+          <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
+          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
         </div>
       </div>
       <div class="modal-actions">
