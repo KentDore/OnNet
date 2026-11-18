@@ -465,6 +465,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
       ((Number.isInteger(days)&&days>=1&&days<=31&&mealValueInput.value.trim()!==''&&numericEntryValid(mealValueInput.value)&&mealValue>0&&mealValue<=500)||trUnchanged);
     submitBtn.disabled=!(gross>0&&validMeal);
   };
+  trToggle.querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',updateSubmitState));
   input.addEventListener('input',()=>{exactSalaryValue=parseNum(input.value);updateSubmitState();});
   [daysInput,mealValueInput].forEach(element=>element.addEventListener('input',updateSubmitState));
   input.addEventListener('blur',()=>formatSalaryInput(input));
