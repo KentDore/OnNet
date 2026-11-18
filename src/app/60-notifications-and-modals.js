@@ -470,14 +470,6 @@ function showEditScenarioModal(scenario){
         <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
         <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
       </div>
-      <div class="field-row edit-offer-inline-row">
-        <span class="field-label">Base horaire</span>
-        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
-          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
-          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
-        </div>
-      </div>
-      <div class="onboarding-benefits edit-offer-benefits">
         <div class="onboarding-tr edit-offer-tr">
           <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
           <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
@@ -492,6 +484,14 @@ function showEditScenarioModal(scenario){
             </div>
           </div>
         </div>
+      <div class="field-row edit-offer-inline-row">
+        <span class="field-label">Base horaire</span>
+        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
+          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
+          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
+        </div>
+      </div>
+      <div class="onboarding-benefits edit-offer-benefits">
         <div class="onboarding-mutuelle-note">
           <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
           <strong class="onboarding-mutuelle-label">Mutuelle</strong>
