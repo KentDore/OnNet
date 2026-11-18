@@ -100,7 +100,7 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
  #benchmarkMount .benchmark-details summary{font-size:10px}
  #comparePanel{padding:16px 13px;border-radius:20px}
 }
-@media(max-width:380px){#benchmarkMount .benchmark-item{padding:10px 8px}#benchmarkMount .benchmark-label{font-size:10px}}
+@media(max-width:380px){.maquette-top>.brand .brand-version{font-size:9px;padding:3px 6px;margin-left:6px}#benchmarkMount .benchmark-item{padding:10px 8px}#benchmarkMount .benchmark-label{font-size:10px}}
 
 #benchmarkMount .benchmark-your-salary{display:none!important}
 
@@ -114,16 +114,17 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 /* Alignement strict de l'en-tête sur la maquette V33 : marque au-dessus du hero. */
 .maquette-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;min-width:0}
 .maquette-top>.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32;line-height:1;display:flex;align-items:center;gap:0;white-space:nowrap}
-.maquette-top>.brand .brand-icon{display:block;width:24px;height:24px;flex:0 0 24px;margin-right:8px;border-radius:6px;object-fit:contain}
+.maquette-top>.brand .brand-icon{display:block;width:18px;height:18px;flex:0 0 18px;margin-right:10px;border-radius:4px;object-fit:contain}
+.maquette-top>.brand .brand-wordmark{display:inline-block;line-height:1;white-space:nowrap}
 .maquette-top>.brand .brand-accent{color:#138653}
-.maquette-top>.brand .brand-version{font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0;color:#68736c;background:#edf0ed;border-radius:20px;padding:4px 8px;margin-left:10px;vertical-align:middle}
+.maquette-top>.brand .brand-version{font:600 10px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0;color:#68736c;background:#f0f2ef;border-radius:20px;padding:3px 7px;margin-left:8px;vertical-align:middle}
 .maquette-top .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap;width:auto;flex:none}
 header.hero .trust-icon{display:grid;place-items:center;width:30px;height:30px;flex:0 0 30px;border-radius:10px;background:#e0f1e5;color:#176b45}
 header.hero .trust-icon svg{width:19px;height:19px}
 @media(max-width:640px){
  .maquette-top{margin-bottom:14px;gap:8px}
  .maquette-top>.brand{font-size:27px}
- .maquette-top>.brand .brand-icon{width:24px;height:24px;flex-basis:24px;margin-right:8px}
+ .maquette-top>.brand .brand-icon{width:18px;height:18px;flex-basis:18px;margin-right:10px}
  .maquette-top .header-actions{
    display:flex;align-items:center;justify-content:flex-end;
    flex:0 0 auto;width:auto;gap:7px;
