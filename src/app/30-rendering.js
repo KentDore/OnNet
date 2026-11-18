@@ -262,7 +262,7 @@ function renderComparisonCards(computed){
       : '';
     const referenceAction=s.id===refId
       ? '<span class="offer-reference-label">Référence</span>'
-      : '<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir réf.</button>';
+      : '<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir comme référence</button>';
     return '<article class="comparison-offer-card '+(s.id===refId?'is-reference':'')+'" data-comparison-offer="'+s.id+'">'+
       '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
       '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
@@ -410,7 +410,7 @@ function renderMaquetteControls(computedOverride){
       const factor=maquetteComparisonPeriod==='hour'?1:maquetteComparisonPeriod==='year'?weekly*52:hoursMonth;
       const value=hourly===null?null:hourly*factor;
       return '<article class="offer-comparison-card '+(s.id===refId?'is-reference':'')+'">'+
-        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir réf.</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
+        '<div class="offer-comparison-card-head"><div><span class="offer-comparison-index">OFFRE '+(index+1)+'</span><h4 class="offer-comparison-name">'+esc(s.name)+'</h4></div><div class="offer-comparison-card-actions">'+(s.id===refId?'<span class="offer-reference-label">Référence</span>':'<button type="button" class="offer-reference-select" data-set-offer-reference="'+s.id+'" aria-label="Choisir cette offre comme référence">Choisir comme référence</button>')+(allComputed.length>1?'<button type="button" class="offer-comparison-remove" data-delete-offer="'+s.id+'" aria-label="Supprimer '+esc(s.name)+'">×</button>':'')+'</div></div>'+
         '<div class="offer-comparison-meta">Contrat : '+fmt(s.brut)+' brut/mois · '+fmt(s.brut*12)+' brut/an · '+weekly+' h</div>'+
         '<button type="button" class="offer-comparison-edit" data-edit-offer="'+s.id+'">Modifier cette offre <span aria-hidden="true">→</span></button>'+
       '</article>';
