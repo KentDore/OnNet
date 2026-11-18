@@ -373,7 +373,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
   const field=id=>prefix+id;
   const trSuffixes={jours:'MealDays',valeur:'MealValue',part:'MealShare'};
   const html=`
-    <p id="${field('Msg')}" class="modal-msg"></p>
+    <p id="modalMsg" class="modal-msg"></p>
     <div class="field-row" style="margin:0 0 14px;">
       <label for="${field('Name')}">Nom de l’offre</label>
       <input type="text" id="${field('Name')}" maxlength="60" value="${esc(initialName)}" autocomplete="off">
@@ -475,7 +475,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
     if(!(gross>0))return;
     updateSubmitState();
     if(!readMutuelleTr.isValid()||submitBtn.disabled){
-      setText(field('Msg'),'Vérifiez les titres-restaurant : 1 à 31 jours, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      setText('modalMsg','Vérifiez les titres-restaurant : 1 à 31 jours, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
       return;
     }
     const mealData=readMutuelleTr();
