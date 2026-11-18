@@ -408,7 +408,7 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
   const dureeToggle = overlay.querySelector('#modalAddHours');
   dureeToggle.querySelectorAll('button').forEach(b => {
     b.addEventListener('click', () => {
-      dureeType = b.dataset.duree;
+      dureeType = b.dataset.hours;
       dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
     });
   });
