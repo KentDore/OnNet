@@ -367,174 +367,100 @@ function showOnboardingModal(){
 // TR) diffèrent souvent d'une offre à l'autre, impossible de les deviner
 // silencieusement.
 
-function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
-  const initialSalary = Number.isFinite(Number(brutPrefill)) && Number(brutPrefill) > 0
-    ? new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, useGrouping: false }).format(Number(brutPrefill))
-    : '';
-  const html = `
-    <p id="modalMsg" class="modal-msg"></p>
-    ${renderSalaryFormFields({prefix:'modalAdd',name:namePrefill || 'Nouvelle offre',period:'mois',salary:initialSalary,hours:dureePrefill === '39' ? '39' : '35',mutuelle:30,trEnabled:false,mealDays:21,mealValue:8,mealShare:50,maxNameLength:60})}
-    <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button><button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button></div>`;
-  const pending = openModal(html, { initialFocusSelector: '#modalAddGross', className: 'modal-add-salary', dismissible: true });
-  const overlay = document.getElementById('modalOverlay');
-  const input = overlay.querySelector('#modalAddGross');
-  const nameInput = overlay.querySelector('#modalAddName');
-  const submitBtn = overlay.querySelector('#modalAddSubmit');
-  const readMutuelleTr = bindMutuelleTrFields(overlay, 'modalAdd', {jours:'MealDays', valeur:'MealValue', part:'MealShare'});
-  const periodToggle = overlay.querySelector('#modalAddPeriod');
-  const periodLabel = overlay.querySelector('#modalAddGrossLabel');
-  let salaryPeriod = 'mois';
-  let exactSalaryValue = parseNum(brutPrefill);
-  periodToggle.querySelectorAll('button').forEach(button => {
-    button.addEventListener('click', () => {
-      if(button.dataset.period === salaryPeriod) return;
-      const current = exactSalaryValue || parseNum(input.value);
-      if(current > 0){
-        exactSalaryValue = salaryPeriod === 'mois' ? current * 12 : current / 12;
-        input.value = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 2, useGrouping: false }).format(exactSalaryValue);
-      }
-      salaryPeriod = button.dataset.period;
-      periodToggle.querySelectorAll('button').forEach(x => {
-        x.setAttribute('aria-pressed', x === button ? 'true' : 'false');
-      });
-      const annual = salaryPeriod === 'an';
-      periodLabel.textContent = annual ? 'Salaire brut annuel (€)' : 'Salaire brut mensuel (€)';
-      input.placeholder = annual ? 'Ex. 30 000' : 'Ex. 2 500';
-      updateSubmitState();
-    });
-  });
-
-  let dureeType = dureePrefill === '39' ? '39' : '35';
-  const dureeToggle = overlay.querySelector('#modalAddHours');
-  dureeToggle.querySelectorAll('button').forEach(b => {
-    b.addEventListener('click', () => {
-      dureeType = b.dataset.hours;
-      dureeToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-    });
-  });
-
-  const trySubmit = () => {
-    const v = parseNum(input.value);
-    if(!(v > 0)) return;
-    if(!readMutuelleTr.isValid()){
-      setText('modalMsg', 'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
-      return;
+function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=null){
+  const editing=Boolean(scenario);
+  const initialPeriod=editing&&scenario.salaireSaisiPeriode==='an'?'an':'mois';
+  const initialSalaryValue=editing
+    ? (Number.isFinite(Number(scenario.salaireSaisi))&&Number(scenario.salaireSaisi)>0?Number(scenario.salaireSaisi):Number(scenario.brut)*(initialPeriod==='an'?12:1))
+    : parseNum(brutPrefill);
+  const initialSalary=initialSalaryValue>0?new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2,useGrouping:false}).format(initialSalaryValue):'';
+  const trEnabled=editing&&(Number(scenario.joursResto)>0||Number(scenario.valeurResto)>0);
+  const initialHours=editing?(scenario.dureeType==='39'?'39':'35'):(dureePrefill==='39'?'39':'35');
+  const initialName=editing?scenario.name:(namePrefill||'Nouvelle offre');
+  const initialMutuelle=editing&&Number.isFinite(Number(scenario.mutuelle))?Number(scenario.mutuelle):30;
+  const initialMealDays=editing?Number(scenario.joursResto)||0:21;
+  const initialMealValue=editing?Number(scenario.valeurResto)||0:8;
+  const initialMealShare=editing&&Number(scenario.partResto)===40?40:50;
+  const html='<p id="modalMsg" class="modal-msg"></p>'+
+    renderSalaryFormFields({prefix:'modalAdd',name:initialName,period:initialPeriod,salary:initialSalary,hours:initialHours,mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialMealShare,maxNameLength:60})+
+    '<div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button><button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>'+(editing?'Enregistrer':'Ajouter ce salaire')+'</button></div>';
+  const pending=openModal(html,{initialFocusSelector:'#modalAddGross',className:'modal-add-salary',dismissible:true,role:'dialog',ariaLabel:editing?'Modifier une offre salariale':'Ajouter une offre salariale'});
+  const overlay=document.getElementById('modalOverlay');
+  const input=overlay.querySelector('#modalAddGross');
+  const nameInput=overlay.querySelector('#modalAddName');
+  const submitBtn=overlay.querySelector('#modalAddSubmit');
+  const periodToggle=overlay.querySelector('#modalAddPeriod');
+  const periodLabel=overlay.querySelector('#modalAddGrossLabel');
+  const hoursToggle=overlay.querySelector('#modalAddHours');
+  const trToggle=overlay.querySelector('#modalAddTrToggle');
+  const trFields=overlay.querySelector('#modalAddTrFields');
+  const daysInput=overlay.querySelector('#modalAddMealDays');
+  const mealValueInput=overlay.querySelector('#modalAddMealValue');
+  const mealShareToggle=overlay.querySelector('#modalAddMealShare');
+  let salaryPeriod=initialPeriod,hours=initialHours,mealShare=initialMealShare,trEnabledNow=trEnabled,exactSalaryValue=initialSalaryValue;
+  periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
+    if(button.dataset.period===salaryPeriod)return;
+    const current=exactSalaryValue||parseNum(input.value);
+    if(current>0){
+      exactSalaryValue=salaryPeriod==='mois'?current*12:current/12;
+      input.value=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2,useGrouping:false}).format(exactSalaryValue);
     }
-    const brutMensuel = salaryPeriod === 'an' ? v / 12 : v;
-    const defaultName = String(namePrefill || 'Nouvelle offre').trim() || 'Nouvelle offre';
-    const name = nameInput.value.trim().slice(0, 60) || defaultName;
-    closeModal(Object.assign({ brut: brutMensuel, dureeType, name, salaireSaisi: v, salaireSaisiPeriode: salaryPeriod }, readMutuelleTr()));
-  };
-  const updateSubmitState = () => { submitBtn.disabled = !(parseNum(input.value) > 0); };
-  updateSubmitState();
-  input.addEventListener('input', () => {
-    exactSalaryValue = parseNum(input.value);
+    salaryPeriod=button.dataset.period;
+    periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    const annual=salaryPeriod==='an';
+    periodLabel.textContent=annual?'Salaire brut annuel (€)':'Salaire brut mensuel (€)';
+    input.placeholder=annual?'Ex. 30 000':'Ex. 2 500';
     updateSubmitState();
-  });
-  input.addEventListener('blur', () => formatSalaryInput(input));
-  input.addEventListener('keydown', (e) => { if(e.key === 'Enter'){ e.preventDefault(); trySubmit(); } });
-  submitBtn.addEventListener('click', trySubmit);
-  overlay.querySelector('#modalAddCancel').addEventListener('click', () => closeModal(false));
+  }));
+  hoursToggle.querySelectorAll('button[data-hours]').forEach(button=>button.addEventListener('click',()=>{
+    hours=button.dataset.hours;
+    hoursToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
+  trToggle.querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',()=>{
+    trEnabledNow=button.dataset.tr==='oui';
+    trToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    trFields.hidden=!trEnabledNow;
+    updateSubmitState();
+  }));
+  mealShareToggle.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
+    mealShare=Number(button.dataset.share);
+    mealShareToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+  }));
+  const updateSubmitState=()=>{
+    const gross=parseNum(input.value),days=Number(daysInput.value),mealValue=parseNum(mealValueInput.value);
+    const validTr=!trEnabledNow||(daysInput.value.trim()!==''&&Number.isInteger(days)&&days>=0&&days<=31&&mealValueInput.value.trim()!==''&&numericEntryValid(mealValueInput.value)&&mealValue>=0&&mealValue<=500);
+    submitBtn.disabled=!(gross>0&&validTr);
+  };
+  input.addEventListener('input',()=>{exactSalaryValue=parseNum(input.value);updateSubmitState();});
+  [daysInput,mealValueInput].forEach(field=>field.addEventListener('input',updateSubmitState));
+  input.addEventListener('blur',()=>formatSalaryInput(input));
+  input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();trySubmit();}});
+  const trySubmit=()=>{
+    const gross=parseNum(input.value);
+    if(!(gross>0))return;
+    const days=Number(daysInput.value),mealValue=parseNum(mealValueInput.value);
+    const result={
+      name:nameInput.value.trim().slice(0,60)||(editing?'Offre':String(namePrefill||'Nouvelle offre')),
+      brut:salaryPeriod==='an'?gross/12:gross,salaireSaisi:gross,salaireSaisiPeriode:salaryPeriod,dureeType:hours,
+      mutuelle:initialMutuelle,mutuellePat:editing&&Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
+      joursResto:trEnabledNow?days:0,valeurResto:trEnabledNow?mealValue:0,partResto:trEnabledNow?mealShare:50
+    };
+    if(editing)Object.assign(result,{
+      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',departement:scenario.departement||'',
+      codeCommune:scenario.codeCommune||'',codeDepartement:scenario.codeDepartement||'',
+      nbMois:Number(scenario.nbMois)||12,primes:Number(scenario.primes)||0,
+      treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
+    });
+    closeModal(result);
+  };
+  submitBtn.addEventListener('click',trySubmit);
+  overlay.querySelector('#modalAddCancel').addEventListener('click',()=>closeModal(false));
+  updateSubmitState();
   return pending;
 }
 
-
-// Édition compacte d'une offre dans une fenêtre flottante.
-// Les paramètres historiques masqués restent dans l'objet d'origine et ne sont
-// ni écrasés ni ajoutés artificiellement au calcul net.
 function showEditScenarioModal(scenario){
-  const initialPeriod = scenario.salaireSaisiPeriode === 'an' ? 'an' : 'mois';
-  const initialSalary = Number.isFinite(Number(scenario.salaireSaisi)) && Number(scenario.salaireSaisi) > 0
-    ? Number(scenario.salaireSaisi)
-    : Number(scenario.brut) * (initialPeriod === 'an' ? 12 : 1);
-  const initialMutuelle = scenario.mutuelle != null && Number.isFinite(Number(scenario.mutuelle)) ? Number(scenario.mutuelle) : 30;
-  const trEnabled = Number(scenario.joursResto)>0 || Number(scenario.valeurResto)>0;
-  const initialShare = Number(scenario.partResto)===40 ? 40 : 50;
-  const initialMealDays = Number(scenario.joursResto)||0;
-  const initialMealValue = Number(scenario.valeurResto)||0;
-  const html = `
-    ${renderSalaryFormFields({prefix:'editOffer',name:scenario.name,period:initialPeriod,salary:initialSalary,hours:scenario.dureeType === '39' ? '39' : '35',mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialShare,editableMutuelle:true})}
-    <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button><button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button></div>`;
-  const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
-  const overlay = document.getElementById('modalOverlay');
-  const input = id => overlay.querySelector('#'+id);
-  const offerNameInput = input('editOfferName');
-  offerNameInput.addEventListener('focus', event => {
-    const field = event.currentTarget;
-    field.setSelectionRange(field.value.length, field.value.length);
-  }, { once:true });
-  offerNameInput.addEventListener('click', event => event.currentTarget.select());
-  let period = initialPeriod;
-  let hours = scenario.dureeType==='39'?'39':'35';
-  let trEnabledNow = trEnabled;
-  let mealShare = initialShare;
-  const periodToggle = input('editOfferPeriod');
-  const grossInput = input('editOfferGross');
-  periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
-    if(button.dataset.period===period) return;
-    const amount=parseNum(grossInput.value);
-    if(!(amount>0)) return;
-    grossInput.value=String(period==='mois'?amount*12:amount/12).replace('.', ',');
-    period=button.dataset.period;
-    periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-    input('editOfferGrossLabel').textContent='Salaire brut '+(period==='an'?'annuel':'mensuel')+' (€)';
-  }));
-  input('editOfferHours').querySelectorAll('button').forEach(button=>button.addEventListener('click',()=>{
-    hours=button.dataset.hours;
-    input('editOfferHours').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-  }));
-  input('editOfferMutuelleToggle').addEventListener('click',()=>{
-    const editor=input('editOfferMutuelleEditor');
-    const expanded=editor.hidden;
-    editor.hidden=!expanded;
-    input('editOfferMutuelleToggle').setAttribute('aria-expanded',String(expanded));
-    if(expanded) input('editOfferMutuelle').focus();
-  });
-  input('editOfferTrToggle').querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',()=>{
-    trEnabledNow=button.dataset.tr==='oui';
-    input('editOfferTrToggle').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-    input('editOfferTrFields').hidden=!trEnabledNow;
-    updateSaveState();
-  }));
-  input('editOfferMealShare').querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
-    mealShare=Number(button.dataset.share);
-    input('editOfferMealShare').querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-  }));
-  const validNumber=id=>input(id).value.trim()!==''&&numericEntryValid(input(id).value)&&Number.isFinite(parseNum(input(id).value));
-  const updateSaveState=()=>{
-    const gross=parseNum(grossInput.value);
-    const mutuelle= input('editOfferMutuelle').value;
-    const mealDays=Number(input('editOfferMealDays').value);
-    const mealValue=parseNum(input('editOfferMealValue').value);
-    const mealConfigUnchanged=trEnabledNow===trEnabled&&mealDays===initialMealDays&&mealValue===initialMealValue&&mealShare===initialShare;
-    const mealConfigValid=Number.isInteger(mealDays)&&mealDays>=1&&mealDays<=31&&validNumber('editOfferMealValue')&&mealValue>0&&mealValue<=500;
-    const valid=gross>0&&gross<=1200000&&validNumber('editOfferMutuelle')&&parseNum(mutuelle)>=0&&parseNum(mutuelle)<=100000&&
-      (!trEnabledNow||mealConfigValid||mealConfigUnchanged);
-    input('editOfferSave').disabled=!valid;
-  };
-  ['editOfferGross','editOfferMutuelle','editOfferMealDays','editOfferMealValue'].forEach(id=>input(id).addEventListener('input',updateSaveState));
-  updateSaveState();
-  input('editOfferSave').addEventListener('click',()=>{
-    const gross=parseNum(grossInput.value);
-    const result={
-      name:input('editOfferName').value.trim().slice(0,80)||'Offre',
-      brut:period==='an'?gross/12:gross,
-      salaireSaisi:gross,salaireSaisiPeriode:period,
-      dureeType:hours,
-      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',departement:scenario.departement||'',
-      codeCommune:scenario.codeCommune||'',codeDepartement:scenario.codeDepartement||'',
-      mutuelle:parseNum(input('editOfferMutuelle').value),
-      mutuellePat:Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
-      joursResto:trEnabledNow?Number(input('editOfferMealDays').value):0,
-      valeurResto:trEnabledNow?parseNum(input('editOfferMealValue').value):0,
-      partResto:trEnabledNow?mealShare:50,
-      nbMois:Number(scenario.nbMois)||12,primes:Number(scenario.primes)||0,
-      treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
-    };
-    closeModal(result);
-  });
-  input('editOfferCancel').addEventListener('click',()=>closeModal(false));
-  return pending;
+  return showAddScenarioModal(scenario.salaireSaisi,scenario.dureeType,scenario.name,scenario);
 }
 
 const headerMenu = document.getElementById('headerMenu');
