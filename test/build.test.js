@@ -180,10 +180,10 @@ test('les fichiers HTML publiables restent synchronisés avec les sources', t =>
   assert.equal(published.includes('@@ONNET_'), false, 'aucun marqueur de template ne doit rester');
 });
 
-test('les contrôles du menu et des cartes restent contenus sur mobile', () => {
-  const root = path.resolve(__dirname, '..');
-  const styles = readStylesSource(root);
-  assert.match(styles, /\.header-menu-panel\{[\s\S]*?width:min\(290px,calc\(100vw - 32px\)\)/);
+test('les libellés restent visibles sans changer la disposition des composants', () => {
+  const styles = readStylesSource(path.resolve(__dirname, '..'));
+  assert.match(styles, /\.header-menu-panel\{[\s\S]*?width:min\(380px,calc\(100vw - 32px\)\)/);
   assert.match(styles, /\.header-theme-setting\{[\s\S]*?grid-template-columns:82px minmax\(0,1fr\)/);
-  assert.match(styles, /\.offer-comparison-card-actions \.offer-reference-select\{[\s\S]*?min-width:112px/);
+  assert.match(styles, /\.offer-comparison-card-actions\{[\s\S]*?flex-wrap:nowrap/);
+  assert.match(styles, /\.offer-comparison-card-actions \.offer-reference-select\{[\s\S]*?min-width:max-content/);
 });

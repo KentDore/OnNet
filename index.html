@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.3.3">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.3.3">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.3.4">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.3.4">
 <script>
   (() => {
     try {
@@ -2038,9 +2038,10 @@ body.salary-editor-open .integrated-offers{display:none!important}
   }
 }
 
-/* Corriger les contrôles qui dépassent leur conteneur sur mobile. */
+
+/* Préserver la disposition et les composants OnNet tout en donnant assez de place aux libellés. */
 .header-menu-panel{
-  width:min(290px,calc(100vw - 32px));
+  width:min(380px,calc(100vw - 32px));
   min-width:0;
   box-sizing:border-box;
 }
@@ -2057,26 +2058,34 @@ body.salary-editor-open .integrated-offers{display:none!important}
   min-width:0;
   max-width:none;
   box-sizing:border-box;
-  font:500 16px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
-  text-overflow:ellipsis;
+  font:inherit;
+}
+.offer-comparison-card-actions{
+  display:flex;
+  align-items:center;
+  justify-content:flex-end;
+  flex:0 0 auto;
+  flex-wrap:nowrap;
+  gap:7px;
+  min-width:max-content;
+  width:auto;
 }
 .offer-comparison-card-actions .offer-reference-select{
   display:inline-flex;
   align-items:center;
   justify-content:center;
   box-sizing:border-box;
-  flex:0 1 auto;
-  min-width:112px;
-  max-width:100%;
+  flex:0 0 auto;
+  min-width:max-content;
+  max-width:none;
   min-height:36px;
-  padding:7px 10px;
+  padding:7px 11px;
   font:700 11px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
   white-space:nowrap;
+  overflow:visible;
+  text-overflow:clip;
 }
-@media(max-width:380px){
-  .header-theme-setting{grid-template-columns:1fr;gap:6px}
-  .offer-comparison-card-actions .offer-reference-select{min-width:104px;padding:7px 8px;font-size:10px}
-}
+.offer-comparison-card-actions .offer-comparison-remove{flex:0 0 36px}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
@@ -2085,7 +2094,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.3.3" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.3.3</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.3.4" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.3.4</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
