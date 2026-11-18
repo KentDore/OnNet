@@ -1016,6 +1016,45 @@ test('une offre ouvre une fenêtre flottante de modification complète', { timeo
   }
 });
 
+test('les titres-restaurant sont accessibles immédiatement dans l’éditeur mobile', { timeout:60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    await page.setViewportSize({ width:375, height:667 });
+    await page.locator('#maquetteYourSalary [data-edit-offer]').first().click();
+    const toggle = page.locator('#editOfferTrToggle');
+    assert.equal(await toggle.isVisible(), true, 'le choix Oui / Non des titres-restaurant doit être visible');
+    const initialPosition = await toggle.evaluate(el => {
+      const rect = el.getBoundingClientRect();
+      const modal = document.getElementById('modalBox');
+      return { top:rect.top, bottom:rect.bottom, viewportHeight:window.innerHeight, modalScrollTop:modal.scrollTop };
+    });
+    assert.ok(initialPosition.top >= 0 && initialPosition.bottom <= initialPosition.viewportHeight,
+      'le choix des titres-restaurant doit être visible sans faire défiler la fenêtre : '+JSON.stringify(initialPosition));
+    assert.equal(initialPosition.modalScrollTop, 0, 'la fenêtre ne doit pas être déjà défilée à son ouverture');
+
+    await toggle.locator('button[data-tr="oui"]').click();
+    const fields = page.locator('#editOfferTrFields');
+    assert.equal(await fields.isVisible(), true, 'les champs de titres-restaurant doivent apparaître après activation');
+    const layout = await fields.evaluate(el => {
+      const rect=el.getBoundingClientRect();
+      const grid=el.querySelector('.three-col');
+      const children=[...grid.children].map(node=>{const r=node.getBoundingClientRect();return {left:r.left,right:r.right,width:r.width};});
+      return { left:rect.left,right:rect.right,width:rect.width,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth,
+        columns:getComputedStyle(grid).gridTemplateColumns,children };
+    });
+    assert.ok(layout.scrollWidth <= layout.clientWidth + 1,
+      'les paramètres des titres-restaurant ne doivent pas déborder horizontalement : '+JSON.stringify(layout));
+    assert.ok(layout.children.every(item=>item.width>0 && item.left>=layout.left-1 && item.right<=layout.right+1),
+      'chaque paramètre doit rester entièrement visible : '+JSON.stringify(layout));
+
+    const output=path.join(__dirname,'..','artifacts','visual');
+    fs.mkdirSync(output,{recursive:true});
+    await page.locator('#modalBox').screenshot({path:path.join(output,'onnet-edit-offer-mobile.png')});
+  } finally {
+    await context.close();
+  }
+});
+
 test('les repères SMIC et médiane appartiennent au bloc Comparaison, pas à Vos offres', { timeout:60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
