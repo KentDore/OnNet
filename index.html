@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.2.12">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.2.12">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.3.0">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.3.0">
 <script>
   (() => {
     try {
@@ -1074,7 +1074,8 @@ header.hero .wave{position:absolute;left:0;right:0;bottom:0;width:100%;height:54
 
 /* Alignement strict de l'en-tête sur la maquette V33 : marque au-dessus du hero. */
 .maquette-top{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:22px;min-width:0}
-.maquette-top>.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32;line-height:1;display:flex;align-items:baseline;gap:0;white-space:nowrap}
+.maquette-top>.brand{font:700 30px Georgia,serif;letter-spacing:-1.4px;color:#064c32;line-height:1;display:flex;align-items:center;gap:0;white-space:nowrap}
+.maquette-top>.brand .brand-icon{display:block;width:30px;height:30px;flex:0 0 30px;margin-right:9px;border-radius:7px;object-fit:contain}
 .maquette-top>.brand .brand-accent{color:#138653}
 .maquette-top>.brand .brand-version{font:600 11px Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;letter-spacing:0;color:#68736c;background:#edf0ed;border-radius:20px;padding:4px 8px;margin-left:8px;vertical-align:middle}
 .maquette-top .header-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px;flex-wrap:nowrap;width:auto;flex:none}
@@ -1083,6 +1084,7 @@ header.hero .trust-icon svg{width:19px;height:19px}
 @media(max-width:640px){
  .maquette-top{margin-bottom:14px;gap:8px}
  .maquette-top>.brand{font-size:27px}
+ .maquette-top>.brand .brand-icon{width:28px;height:28px;flex-basis:28px;margin-right:8px}
  .maquette-top .header-actions{
    display:flex;align-items:center;justify-content:flex-end;
    flex:0 0 auto;width:auto;gap:7px;
@@ -2042,7 +2044,7 @@ body.salary-editor-open .integrated-offers{display:none!important}
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand">On<span class="brand-accent">net</span><span class="brand-version">v2.2.12</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.3.0" alt="" width="30" height="30">On<span class="brand-accent">net</span><span class="brand-version">v2.3.0</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
