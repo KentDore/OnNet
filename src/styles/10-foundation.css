@@ -140,9 +140,16 @@
       max-height:calc(100dvh - 24px);
       padding:12px 14px;
     }
+    /* Réduit les grands blancs du formulaire : marges inline des champs,
+       paragraphe d'aide vide et espacements des blocs avantages. */
+    .modal-add-salary .modal-msg:empty{display:none;}
+    .modal-add-salary>.field-row{margin-bottom:7px!important;}
+    .modal-add-salary>.onboarding-consent{margin:0 0 7px;padding:8px 10px;}
+    .modal-add-salary .onboarding-benefits{margin-top:5px;gap:6px;}
+    .modal-add-salary .onboarding-tr{margin-top:0;}
     .modal-add-salary .modal-actions{
       position:static;
-      margin-top:10px!important;
+      margin-top:8px!important;
       padding-bottom:4px;
     }
   }
