@@ -1225,3 +1225,47 @@ header.hero .hero-copy .trust-service{
     font-size:11px!important;
   }
 }
+
+
+/* Un seul layout partagé entre ajout et modification d'un salaire. */
+.modal-add-salary .salary-form-fields,
+.modal-edit-offer .salary-form-fields{
+  display:grid!important;
+  gap:10px!important;
+  min-width:0!important;
+}
+.modal-add-salary .salary-form-fields>.field-row,
+.modal-edit-offer .salary-form-fields>.field-row{
+  margin:0!important;
+  min-width:0!important;
+}
+.modal-add-salary .salary-form-fields .onboarding-benefits,
+.modal-edit-offer .salary-form-fields .onboarding-benefits{
+  display:grid!important;
+  gap:8px!important;
+  margin:0!important;
+}
+.modal-add-salary .salary-form-fields .onboarding-tr,
+.modal-edit-offer .salary-form-fields .onboarding-tr{
+  margin:0!important;
+}
+.modal-add-salary .salary-form-fields .salary-period-row,
+.modal-edit-offer .salary-form-fields .salary-period-row,
+.modal-add-salary .salary-form-fields .salary-hours-row,
+.modal-edit-offer .salary-form-fields .salary-hours-row{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  gap:10px!important;
+  flex-wrap:wrap!important;
+}
+.modal-add-salary .salary-form-actions,
+.modal-edit-offer .salary-form-actions{
+  margin-top:10px!important;
+}
+@media(max-width:560px){
+  .modal-add-salary .salary-form-fields,
+  .modal-edit-offer .salary-form-fields{gap:8px!important}
+  .modal-add-salary .salary-form-fields .onboarding-benefits,
+  .modal-edit-offer .salary-form-fields .onboarding-benefits{gap:7px!important}
+}
