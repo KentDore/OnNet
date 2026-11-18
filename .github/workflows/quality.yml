@@ -27,11 +27,16 @@ jobs:
           node-version: 22
       - name: Déterminer si la PR modifie l’application
         id: scope
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository
         env:
           BASE_REF: ${{ github.event.pull_request.base.ref }}
+          EVENT_BEFORE: ${{ github.event.before }}
         run: |
-          git fetch origin "$BASE_REF"
+          if [ "$GITHUB_EVENT_NAME" = "pull_request" ]; then
+            git fetch origin "$BASE_REF"
+            DIFF_RANGE="origin/$BASE_REF...HEAD"
+          else
+            DIFF_RANGE="$EVENT_BEFORE..$GITHUB_SHA"
+          fi
           is_app_change() {
             case "$1" in
               src/*|scripts/build.js|package.json|package-lock.json) return 0 ;;
@@ -45,7 +50,7 @@ jobs:
           is_app_change "scripts/build.js" || { echo "Le filtre ignore le script de build."; exit 1; }
           is_app_change "package-lock.json" || { echo "Le filtre ignore les dépendances."; exit 1; }
 
-          CHANGED_FILES="$(git diff --name-only "origin/$BASE_REF...HEAD")"
+          CHANGED_FILES="$(git diff --name-only "$DIFF_RANGE")"
           APP_CHANGED=false
           while IFS= read -r file; do
             if is_app_change "$file"; then
@@ -149,7 +154,7 @@ jobs:
       - name: Tester les parcours navigateur
         run: node --test test/ui.test.js
       - name: Préparer le HTML et le lockfile validés
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.scope.outputs.app_changed == 'true'
+        if: steps.scope.outputs.app_changed == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
         env:
           VERSION: ${{ steps.meta.outputs.version }}
         run: |
@@ -158,7 +163,7 @@ jobs:
           cp package.json "$RUNNER_TEMP/onnet-output/package.json"
           cp package-lock.json "$RUNNER_TEMP/onnet-output/package-lock.json"
       - name: Transmettre le HTML et le lockfile au job de synchronisation
-        if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && steps.scope.outputs.app_changed == 'true'
+        if: steps.scope.outputs.app_changed == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
         uses: actions/upload-artifact@v7
         with:
           name: onnet-html-${{ github.run_id }}
@@ -177,21 +182,21 @@ jobs:
   sync-generated-html:
     name: Synchroniser les HTML validés
     needs: test
-    if: github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository && needs.test.outputs.app_changed == 'true'
+    if: needs.test.outputs.app_changed == 'true' && (github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository))
     runs-on: ubuntu-24.04
     concurrency:
-      group: onnet-html-sync-${{ github.event.pull_request.number }}
+      group: onnet-html-sync-${{ github.ref }}
       cancel-in-progress: false
     permissions:
       contents: write
     steps:
       # Ce job n'exécute aucun script du dépôt : il ne fait que récupérer la branche,
       # télécharger l'artefact produit après succès des tests, puis le copier/committer.
-      - name: Récupérer la branche de la PR
+      - name: Récupérer la branche cible
         uses: actions/checkout@v7
         with:
-          repository: ${{ github.event.pull_request.head.repo.full_name }}
-          ref: ${{ github.event.pull_request.head.ref }}
+          repository: ${{ github.repository }}
+          ref: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
           fetch-depth: 0
       - name: Télécharger le HTML testé
         uses: actions/download-artifact@v8
@@ -200,12 +205,12 @@ jobs:
           path: ${{ runner.temp }}/onnet-html
       - name: Vérifier la tête de branche et préparer les artefacts
         env:
-          PR_BRANCH: ${{ github.event.pull_request.head.ref }}
-          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          TARGET_BRANCH: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.ref || github.ref_name }}
+          EXPECTED_HEAD_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.sha || github.sha }}
           VERSION: ${{ needs.test.outputs.version }}
         run: |
           CURRENT_SHA="$(git rev-parse HEAD)"
-          if [ "$CURRENT_SHA" != "$PR_HEAD_SHA" ]; then
+          if [ "$CURRENT_SHA" != "$EXPECTED_HEAD_SHA" ]; then
             echo "La branche a avancé depuis le lancement des tests ; une exécution plus récente synchronisera les artefacts."
             exit 0
           fi
@@ -230,4 +235,4 @@ jobs:
           fi
 
           git commit -m "build: synchroniser HTML générés et lockfile"
-          git push origin "HEAD:refs/heads/$PR_BRANCH"
+          git push origin "HEAD:refs/heads/$TARGET_BRANCH"
