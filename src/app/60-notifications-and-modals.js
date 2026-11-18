@@ -189,33 +189,15 @@ function renderUrssafConsentNotice(compact = false){
     </div>`;
 }
 
-function renderSalaryFormFields(config){
-  const {
-    prefix, name, period='mois', salary='', hours='35', mutuelle=30,
-    trEnabled=false, mealDays=21, mealValue=8, mealShare=50,
-    maxNameLength=80, editableMutuelle=false
-  } = config;
-  const annual = period === 'an';
-  const mutuelleBlock = editableMutuelle
-    ? '<button type="button" id="' + prefix + 'MutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">' + new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(mutuelle) + ' € / mois</button>'
-    : '<strong>' + new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(mutuelle) + ' € salarié</strong>';
-  const mutuelleEditor = editableMutuelle
-    ? '<div id="' + prefix + 'MutuelleEditor" class="edit-offer-mutuelle-editor" hidden><label for="' + prefix + 'Mutuelle">Votre part mensuelle (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'Mutuelle" value="' + String(mutuelle).replace('.', ',') + '" autocomplete="off"></div>'
-    : '';
-  return [
-    '<div class="salary-form-fields">',
-    '<div class="field-row salary-name-field"><label for="' + prefix + 'Name">Nom de l’offre</label><input type="text" id="' + prefix + 'Name" maxlength="' + maxNameLength + '" value="' + esc(name) + '" autocomplete="off"></div>',
-    renderUrssafConsentNotice(true),
-    '<div class="field-row salary-period-row"><span class="field-label">Votre salaire est indiqué en</span><div class="pill-toggle" id="' + prefix + 'Period" role="group" aria-label="Période du salaire brut"><button type="button" data-period="mois" aria-pressed="' + (!annual) + '">Mensuel</button><button type="button" data-period="an" aria-pressed="' + annual + '">Annuel</button></div></div>',
-    '<div class="field-row salary-gross-field"><label for="' + prefix + 'Gross" id="' + prefix + 'GrossLabel">Salaire brut ' + (annual?'annuel':'mensuel') + ' (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'Gross" value="' + String(salary).replace('.', ',') + '" placeholder="' + (annual?'Ex. 30 000':'Ex. 2 500') + '" autocomplete="off"></div>',
-    '<div class="field-row salary-hours-row"><span class="field-label">Base horaire</span><div class="pill-toggle" id="' + prefix + 'Hours" role="group" aria-label="Base horaire"><button type="button" data-hours="35" aria-pressed="' + (hours !== '39') + '">35 h</button><button type="button" data-hours="39" aria-pressed="' + (hours === '39') + '">39 h</button></div></div>',
-    '<div class="onboarding-benefits salary-benefits"><div class="onboarding-mutuelle-note"><span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span><strong class="onboarding-mutuelle-label">Mutuelle</strong>' + mutuelleBlock + '</div>' + mutuelleEditor,
-    '<div class="onboarding-tr salary-tr"><div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div><div class="pill-toggle onboarding-tr-toggle" id="' + prefix + 'TrToggle" role="group" aria-label="Titres-restaurant"><button type="button" data-tr="non" aria-pressed="' + (!trEnabled) + '">Non</button><button type="button" data-tr="oui" aria-pressed="' + trEnabled + '">Oui</button></div>',
-    '<div id="' + prefix + 'TrFields" class="onboarding-tr-fields" ' + (trEnabled?'':'hidden') + '><div class="three-col"><div class="field-row"><label for="' + prefix + 'MealDays">Jours/mois</label><input type="number" id="' + prefix + 'MealDays" min="0" max="31" step="1" value="' + mealDays + '"></div><div class="field-row"><label for="' + prefix + 'MealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'MealValue" value="' + String(mealValue).replace('.', ',') + '"></div><div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="' + prefix + 'MealShare"><button type="button" data-share="50" aria-pressed="' + (mealShare===50) + '">50 %</button><button type="button" data-share="40" aria-pressed="' + (mealShare===40) + '">40 %</button></div></div></div></div></div></div>'
-  ].join('');
-}
-
-function renderMutuelleTrFields(idPrefix){
+function renderMutuelleTrFields(idPrefix, options={}){
+  const mutuelle=Number.isFinite(Number(options.mutuelle))?Number(options.mutuelle):30;
+  const trEnabled=Boolean(options.trEnabled);
+  const days=options.mealDays ?? 21;
+  const value=options.mealValue ?? 8;
+  const share=Number(options.mealShare)===40?40:50;
+  const suffixes=options.suffixes||{jours:'Jours',valeur:'Valeur',part:'Part'};
+  const daysId=idPrefix+suffixes.jours, valueId=idPrefix+suffixes.valeur, shareId=idPrefix+suffixes.part;
+  const money=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(mutuelle);
   return `
     <div class="onboarding-benefits">
       <div class="onboarding-mutuelle-note">
@@ -223,7 +205,7 @@ function renderMutuelleTrFields(idPrefix){
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-11V5l-8-3-8 3v6c0 7 8 11 8 11Z"></path><path d="m9 12 2 2 4-4"></path></svg>
         </span>
         <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-        <strong>30 € salarié</strong>
+        <strong>${money} € salarié</strong>
       </div>
       <div class="onboarding-tr">
         <div class="onboarding-tr-heading">
@@ -231,14 +213,14 @@ function renderMutuelleTrFields(idPrefix){
           <strong>Titres-restaurant</strong>
         </div>
         <div class="pill-toggle onboarding-tr-toggle" id="${idPrefix}TrToggle" role="group" aria-label="Avez-vous des titres-restaurant ?">
-          <button type="button" data-tr="non" aria-pressed="true">Non</button>
-          <button type="button" data-tr="oui" aria-pressed="false">Oui</button>
+          <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
+          <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
         </div>
-        <div id="${idPrefix}TrFields" class="onboarding-tr-fields" hidden>
+        <div id="${idPrefix}TrFields" class="onboarding-tr-fields" ${trEnabled?'':'hidden'}>
           <div class="three-col">
-            <div class="field-row"><label for="${idPrefix}Jours">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${idPrefix}Jours" value="21"></div>
-            <div class="field-row"><label for="${idPrefix}Valeur">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${idPrefix}Valeur" value="8"></div>
-            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${idPrefix}Part" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="true">50 %</button><button type="button" data-share="40" aria-pressed="false">40 %</button></div></div>
+            <div class="field-row"><label for="${daysId}">Jours/mois</label><input type="number" inputmode="numeric" min="0" max="31" step="1" id="${daysId}" value="${days}"></div>
+            <div class="field-row"><label for="${valueId}">Valeur faciale (€)</label><input type="number" inputmode="decimal" min="0" max="500" step="0.01" id="${valueId}" value="${value}"></div>
+            <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="${shareId}" role="group" aria-label="Part salariale des titres-restaurant"><button type="button" data-share="50" aria-pressed="${share===50}">50 %</button><button type="button" data-share="40" aria-pressed="${share===40}">40 %</button></div></div>
           </div>
         </div>
       </div>
@@ -247,38 +229,43 @@ function renderMutuelleTrFields(idPrefix){
 
 // La mutuelle est un réglage par défaut simple : 30 € de part salariale
 // et 30 € de part employeur. Seuls les titres-restaurant sont facultatifs.
-function bindMutuelleTrFields(overlay, idPrefix, suffixes={}){
-  const trToggle = overlay.querySelector(`#${idPrefix}TrToggle`);
-  const trFields = overlay.querySelector(`#${idPrefix}TrFields`);
-  const joursInput = overlay.querySelector(`#${idPrefix}${suffixes.jours || 'Jours'}`);
-  const valeurInput = overlay.querySelector(`#${idPrefix}${suffixes.valeur || 'Valeur'}`);
-  const partInput = overlay.querySelector(`#${idPrefix}${suffixes.part || 'Part'}`);
-  let partResto = 50;
-  let trOui = false;
-  partInput.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
-    partResto=Number(button.dataset.share);
-    partInput.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-  }));
-  trToggle.querySelectorAll('button').forEach(b => {
-    b.addEventListener('click', () => {
-      trOui = b.dataset.tr === 'oui';
-      trToggle.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
-      trFields.hidden = !trOui;
-      
+function bindMutuelleTrFields(overlay, idPrefix, options={}){
+  const suffixes=options.suffixes||{jours:'Jours',valeur:'Valeur',part:'Part'};
+  const trToggle=overlay.querySelector('#'+idPrefix+'TrToggle');
+  const trFields=overlay.querySelector('#'+idPrefix+'TrFields');
+  const joursInput=overlay.querySelector('#'+idPrefix+suffixes.jours);
+  const valeurInput=overlay.querySelector('#'+idPrefix+suffixes.valeur);
+  const partInput=overlay.querySelector('#'+idPrefix+suffixes.part);
+  let partResto=Number(options.mealShare)===40?40:50;
+  let trOui=Boolean(options.trEnabled);
+  const initialMutuelle=Number.isFinite(Number(options.mutuelle))?Number(options.mutuelle):30;
+  const initialMutuellePat=Number.isFinite(Number(options.mutuellePat))?Number(options.mutuellePat):30;
+  trFields.hidden=!trOui;
+  trToggle.querySelectorAll('button[data-tr]').forEach(button=>{
+    button.setAttribute('aria-pressed',String((button.dataset.tr==='oui')===trOui));
+    button.addEventListener('click',()=>{
+      trOui=button.dataset.tr==='oui';
+      trToggle.querySelectorAll('button[data-tr]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+      trFields.hidden=!trOui;
     });
   });
-  const read = () => {
-    const result = { mutuelle:30, mutuellePat:30, joursResto:0 };
+  partInput.querySelectorAll('button[data-share]').forEach(button=>{
+    button.setAttribute('aria-pressed',String(Number(button.dataset.share)===partResto));
+    button.addEventListener('click',()=>{
+      partResto=Number(button.dataset.share);
+      partInput.querySelectorAll('button[data-share]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    });
+  });
+  const read=()=>{
+    const result={mutuelle:initialMutuelle,mutuellePat:initialMutuellePat,joursResto:0};
     if(trOui){
-      result.joursResto = Math.round(clamp(parseNum(joursInput.value), 0, 31));
-      result.valeurResto = clamp(parseNum(valeurInput.value), 0, 500);
-      result.partResto = partResto;
+      result.joursResto=Math.round(clamp(parseNum(joursInput.value),0,31));
+      result.valeurResto=clamp(parseNum(valeurInput.value),0,500);
+      result.partResto=partResto;
     }
     return result;
   };
-  read.isValid = () => !trOui || [joursInput, valeurInput].every(input =>
-    input.value.trim() !== '' && input.checkValidity()
-  );
+  read.isValid=()=>!trOui||[joursInput,valeurInput].every(input=>input.value.trim()!==''&&input.checkValidity());
   return read;
 }
 
@@ -369,37 +356,78 @@ function showOnboardingModal(){
 
 function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=null){
   const editing=Boolean(scenario);
+  const prefix=editing?'editOffer':'modalAdd';
   const initialPeriod=editing&&scenario.salaireSaisiPeriode==='an'?'an':'mois';
   const initialSalaryValue=editing
     ? (Number.isFinite(Number(scenario.salaireSaisi))&&Number(scenario.salaireSaisi)>0?Number(scenario.salaireSaisi):Number(scenario.brut)*(initialPeriod==='an'?12:1))
     : parseNum(brutPrefill);
   const initialSalary=initialSalaryValue>0?new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2,useGrouping:false}).format(initialSalaryValue):'';
-  const trEnabled=editing&&(Number(scenario.joursResto)>0||Number(scenario.valeurResto)>0);
   const initialHours=editing?(scenario.dureeType==='39'?'39':'35'):(dureePrefill==='39'?'39':'35');
   const initialName=editing?scenario.name:(namePrefill||'Nouvelle offre');
   const initialMutuelle=editing&&Number.isFinite(Number(scenario.mutuelle))?Number(scenario.mutuelle):30;
+  const initialMutuellePat=editing&&Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30;
+  const trEnabled=editing&&(Number(scenario.joursResto)>0||Number(scenario.valeurResto)>0);
   const initialMealDays=editing?Number(scenario.joursResto)||0:21;
   const initialMealValue=editing?Number(scenario.valeurResto)||0:8;
   const initialMealShare=editing&&Number(scenario.partResto)===40?40:50;
-  const prefix=editing?'editOffer':'modalAdd';
-  const fieldId=suffix=>prefix+suffix;
-  const html='<p id="modalMsg" class="modal-msg"></p>'+
-    renderSalaryFormFields({prefix:prefix,name:initialName,period:initialPeriod,salary:initialSalary,hours:initialHours,mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialMealShare,maxNameLength:60})+
-    '<div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="'+fieldId('Cancel')+'">Annuler</button><button type="button" class="btn btn-primary" id="'+fieldId('Submit')+'" disabled>'+(editing?'Enregistrer':'Ajouter ce salaire')+'</button></div>';
-  const pending=openModal(html,{initialFocusSelector:'#'+fieldId('Gross'),className:editing?'modal-edit-offer':'modal-add-salary',dismissible:true,role:'dialog',ariaLabel:editing?'Modifier une offre salariale':'Ajouter une offre salariale'});
+  const field=id=>prefix+id;
+  const trSuffixes={jours:'MealDays',valeur:'MealValue',part:'MealShare'};
+  const html=`
+    <p id="${field('Msg')}" class="modal-msg"></p>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="${field('Name')}">Nom de l’offre</label>
+      <input type="text" id="${field('Name')}" maxlength="60" value="${esc(initialName)}" autocomplete="off">
+    </div>
+    ${renderUrssafConsentNotice()}
+    <div class="field-row" style="margin:0 0 14px;">
+      <label>Votre salaire est indiqué en</label>
+      <div class="pill-toggle" id="${field('Period')}" role="group" aria-label="Période du salaire">
+        <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
+        <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
+      </div>
+    </div>
+    <div class="field-row" style="margin:0 0 14px;">
+      <label for="${field('Gross')}" id="${field('GrossLabel')}">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
+      <input type="text" inputmode="decimal" id="${field('Gross')}" value="${initialSalary}" placeholder="${initialPeriod==='an'?'Ex. 30 000':'Ex. 2 500'}" autocomplete="off">
+    </div>
+    <div class="field-row" style="margin:0 0 4px;">
+      <label>Base horaire</label>
+      <div class="pill-toggle" id="${field('Hours')}">
+        <button type="button" data-duree="35" data-hours="35" aria-pressed="${initialHours!=='39'}">35 h</button>
+        <button type="button" data-duree="39" data-hours="39" aria-pressed="${initialHours==='39'}">39 h</button>
+      </div>
+    </div>
+    ${renderMutuelleTrFields(prefix,{mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialMealShare,suffixes:trSuffixes})}
+    <div class="modal-actions" style="margin-top:18px;">
+      <button type="button" class="btn modal-btn-cancel" id="${field('Cancel')}">Annuler</button>
+      <button type="button" class="btn btn-primary" id="${field('Submit')}" disabled>${editing?'Enregistrer':'Ajouter ce salaire'}</button>
+    </div>`;
+  const pending=openModal(html,{
+    initialFocusSelector:'#'+field('Gross'),
+    className:'modal-add-salary',
+    dismissible:true,
+    role:'dialog',
+    ariaLabel:editing?'Modifier une offre salariale':'Ajouter une offre salariale'
+  });
   const overlay=document.getElementById('modalOverlay');
-  const input=overlay.querySelector('#'+fieldId('Gross'));
-  const nameInput=overlay.querySelector('#'+fieldId('Name'));
-  const submitBtn=overlay.querySelector('#'+fieldId('Submit'));
-  const periodToggle=overlay.querySelector('#'+fieldId('Period'));
-  const periodLabel=overlay.querySelector('#'+fieldId('GrossLabel'));
-  const hoursToggle=overlay.querySelector('#'+fieldId('Hours'));
-  const trToggle=overlay.querySelector('#'+fieldId('TrToggle'));
-  const trFields=overlay.querySelector('#'+fieldId('TrFields'));
-  const daysInput=overlay.querySelector('#'+fieldId('MealDays'));
-  const mealValueInput=overlay.querySelector('#'+fieldId('MealValue'));
-  const mealShareToggle=overlay.querySelector('#'+fieldId('MealShare'));
-  let salaryPeriod=initialPeriod,hours=initialHours,mealShare=initialMealShare,trEnabledNow=trEnabled,exactSalaryValue=initialSalaryValue;
+  const input=overlay.querySelector('#'+field('Gross'));
+  const nameInput=overlay.querySelector('#'+field('Name'));
+  const submitBtn=overlay.querySelector('#'+field('Submit'));
+  const periodToggle=overlay.querySelector('#'+field('Period'));
+  const periodLabel=overlay.querySelector('#'+field('GrossLabel'));
+  const hoursToggle=overlay.querySelector('#'+field('Hours'));
+  const readMutuelleTr=bindMutuelleTrFields(overlay,prefix,{
+    mutuelle:initialMutuelle,mutuellePat:initialMutuellePat,trEnabled,
+    mealShare:initialMealShare,suffixes:trSuffixes
+  });
+  let salaryPeriod=initialPeriod;
+  let hours=initialHours;
+  let exactSalaryValue=initialSalaryValue;
+  const daysInput=overlay.querySelector('#'+field('MealDays'));
+  const mealValueInput=overlay.querySelector('#'+field('MealValue'));
+  const mealShareToggle=overlay.querySelector('#'+field('MealShare'));
+  const initialDays=initialMealDays,initialValue=initialMealValue;
+  let mealShare=initialMealShare;
   periodToggle.querySelectorAll('button[data-period]').forEach(button=>button.addEventListener('click',()=>{
     if(button.dataset.period===salaryPeriod)return;
     const current=exactSalaryValue||parseNum(input.value);
@@ -408,55 +436,59 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill, scenario=n
       input.value=new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2,useGrouping:false}).format(exactSalaryValue);
     }
     salaryPeriod=button.dataset.period;
-    periodToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    periodToggle.querySelectorAll('button[data-period]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
     const annual=salaryPeriod==='an';
     periodLabel.textContent=annual?'Salaire brut annuel (€)':'Salaire brut mensuel (€)';
     input.placeholder=annual?'Ex. 30 000':'Ex. 2 500';
     updateSubmitState();
   }));
-  hoursToggle.querySelectorAll('button[data-hours]').forEach(button=>button.addEventListener('click',()=>{
-    hours=button.dataset.hours;
-    hoursToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-  }));
-  trToggle.querySelectorAll('button[data-tr]').forEach(button=>button.addEventListener('click',()=>{
-    trEnabledNow=button.dataset.tr==='oui';
-    trToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
-    trFields.hidden=!trEnabledNow;
-    updateSubmitState();
+  hoursToggle.querySelectorAll('button[data-duree]').forEach(button=>button.addEventListener('click',()=>{
+    hours=button.dataset.duree;
+    hoursToggle.querySelectorAll('button[data-duree]').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
   }));
   mealShareToggle.querySelectorAll('button[data-share]').forEach(button=>button.addEventListener('click',()=>{
     mealShare=Number(button.dataset.share);
-    mealShareToggle.querySelectorAll('button').forEach(item=>item.setAttribute('aria-pressed',String(item===button)));
+    updateSubmitState();
   }));
+  const isTrEnabled=()=>trToggle.querySelector('[data-tr="oui"]').getAttribute('aria-pressed')==='true';
+  const trToggle=overlay.querySelector('#'+field('TrToggle'));
   const updateSubmitState=()=>{
-    const gross=parseNum(input.value),days=Number(daysInput.value),mealValue=parseNum(mealValueInput.value);
-    const validTr=!trEnabledNow||(daysInput.value.trim()!==''&&Number.isInteger(days)&&days>=0&&days<=31&&mealValueInput.value.trim()!==''&&numericEntryValid(mealValueInput.value)&&mealValue>=0&&mealValue<=500);
-    submitBtn.disabled=!(gross>0&&validTr);
+    const gross=parseNum(input.value);
+    const days=Number(daysInput.value),mealValue=parseNum(mealValueInput.value);
+    const trUnchanged=editing&&isTrEnabled()===trEnabled&&days===initialDays&&mealValue===initialValue&&mealShare===initialMealShare;
+    const validMeal=!isTrEnabled()||
+      ((Number.isInteger(days)&&days>=1&&days<=31&&mealValueInput.value.trim()!==''&&numericEntryValid(mealValueInput.value)&&mealValue>0&&mealValue<=500)||trUnchanged);
+    submitBtn.disabled=!(gross>0&&validMeal);
   };
   input.addEventListener('input',()=>{exactSalaryValue=parseNum(input.value);updateSubmitState();});
-  [daysInput,mealValueInput].forEach(field=>field.addEventListener('input',updateSubmitState));
+  [daysInput,mealValueInput].forEach(element=>element.addEventListener('input',updateSubmitState));
   input.addEventListener('blur',()=>formatSalaryInput(input));
   input.addEventListener('keydown',event=>{if(event.key==='Enter'){event.preventDefault();trySubmit();}});
   const trySubmit=()=>{
     const gross=parseNum(input.value);
     if(!(gross>0))return;
-    const days=Number(daysInput.value),mealValue=parseNum(mealValueInput.value);
+    if(!readMutuelleTr.isValid()){
+      setText(field('Msg'),'Vérifiez les titres-restaurant : 0 à 31 jours entiers, 0 à 500 € par titre et une part salariale de 40 à 50 %.');
+      return;
+    }
+    const mealData=readMutuelleTr();
     const result={
       name:nameInput.value.trim().slice(0,60)||(editing?'Offre':String(namePrefill||'Nouvelle offre')),
-      brut:salaryPeriod==='an'?gross/12:gross,salaireSaisi:gross,salaireSaisiPeriode:salaryPeriod,dureeType:hours,
-      mutuelle:initialMutuelle,mutuellePat:editing&&Number.isFinite(Number(scenario.mutuellePat))?Number(scenario.mutuellePat):30,
-      joursResto:trEnabledNow?days:0,valeurResto:trEnabledNow?mealValue:0,partResto:trEnabledNow?mealShare:50
+      brut:salaryPeriod==='an'?gross/12:gross,
+      salaireSaisi:gross,salaireSaisiPeriode:salaryPeriod,dureeType:hours,
+      ...mealData
     };
     if(editing)Object.assign(result,{
-      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',departement:scenario.departement||'',
-      codeCommune:scenario.codeCommune||'',codeDepartement:scenario.codeDepartement||'',
-      nbMois:Number(scenario.nbMois)||12,primes:Number(scenario.primes)||0,
+      commune:scenario.commune||'Pacé',codePostal:scenario.codePostal||'',
+      departement:scenario.departement||'',codeCommune:scenario.codeCommune||'',
+      codeDepartement:scenario.codeDepartement||'',nbMois:Number(scenario.nbMois)||12,
+      primes:Number(scenario.primes)||0,
       treiziemeMoisBase:scenario.treiziemeMoisBase==='ensemble'?'ensemble':'base'
     });
     closeModal(result);
   };
   submitBtn.addEventListener('click',trySubmit);
-  overlay.querySelector('#'+fieldId('Cancel')).addEventListener('click',()=>closeModal(false));
+  overlay.querySelector('#'+field('Cancel')).addEventListener('click',()=>closeModal(false));
   updateSubmitState();
   return pending;
 }
