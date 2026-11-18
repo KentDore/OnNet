@@ -2665,6 +2665,17 @@ header.hero .hero-copy .trust-service{
 
 
 /* Statut Urssaf : une seule ligne discrète intégrée au panneau des offres. */
+/* Ajustement mobile : conserver le statut et ses actions sur une ligne quand l'espace le permet. */
+#urssafStatus.urssaf-status{margin:8px 0 0!important;padding:8px 0 0!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
+@media(max-width:600px){
+  #urssafStatus .urssaf-status-copy{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:6px 10px!important}
+  #urssafStatus .urssaf-status-message{flex:1 1 105px!important;min-width:0!important;font-size:11px!important}
+  #urssafStatus #urssafWarnings{flex:0 1 auto!important;margin:0!important}
+  #urssafStatus #urssafWarnings summary{min-height:24px!important;font-size:10px!important}
+  #urssafStatus .urssaf-consent-actions{flex:0 1 auto!important;gap:8px!important;margin:0!important}
+  #urssafStatus .urssaf-consent-revoke{min-height:24px!important;font-size:10px!important}
+}
+
 #urssafStatus.urssaf-status{display:block!important;margin:12px 0 0!important;padding:10px 0 0!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #urssafStatus .urssaf-status-copy{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:8px 18px!important;width:100%}
 #urssafStatus .urssaf-status-message{display:flex!important;align-items:center!important;flex:1 1 auto!important;min-width:0;margin:0!important;font-size:12px!important;line-height:1.35!important;color:var(--ink-soft)!important}
