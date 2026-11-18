@@ -1093,3 +1093,16 @@ header.hero .hero-copy .trust-service{
   display:inline!important;
   font:inherit!important;
 }
+
+
+/* Menu d'en-tête : panneau compact et hiérarchie claire. */
+.header-menu-panel{width:min(276px,calc(100vw - 28px))!important;min-width:0!important;padding:12px!important;display:grid!important;gap:5px!important;border-radius:16px!important;box-sizing:border-box!important}
+.header-theme-setting{display:grid!important;grid-template-columns:1fr!important;gap:7px!important;padding:3px 3px 11px!important;margin-bottom:4px!important;border-bottom:1px solid var(--line)!important;font:600 11px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:.04em!important;text-transform:uppercase!important}
+.header-theme-setting select{width:100%!important;min-height:40px!important;padding:8px 34px 8px 11px!important;border:1px solid var(--line)!important;border-radius:10px!important;font:500 13px/1.2 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:normal!important;text-transform:none!important}
+.header-menu-panel button{display:flex!important;align-items:center!important;width:100%!important;min-height:40px!important;padding:9px 10px!important;border:0!important;border-radius:9px!important;background:transparent!important;font:500 13px/1.25 Inter,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif!important;letter-spacing:normal!important;text-align:left!important}
+.header-menu-panel button:hover,.header-menu-panel button:focus-visible{background:var(--surface-secondary,var(--bg))!important;outline:none!important}
+:root[data-theme="dark"] .header-menu-panel{background:#202a24!important;border-color:#3b4a40!important}
+:root[data-theme="dark"] .header-theme-setting{border-bottom-color:#3b4a40!important;color:#aebdb3!important}
+:root[data-theme="dark"] .header-theme-setting select{background:#17201b!important;border-color:#46564b!important;color:#e3ece5!important}
+:root[data-theme="dark"] .header-menu-panel button{color:#dce8df!important}
+:root[data-theme="dark"] .header-menu-panel button:hover,:root[data-theme="dark"] .header-menu-panel button:focus-visible{background:#2a4032!important}
