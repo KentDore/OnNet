@@ -1269,3 +1269,43 @@ header.hero .hero-copy .trust-service{
   .modal-add-salary .salary-form-fields .onboarding-benefits,
   .modal-edit-offer .salary-form-fields .onboarding-benefits{gap:7px!important}
 }
+
+
+/* Une seule commande globale pour définir l'offre de référence. */
+.offer-reference-control{
+  grid-column:1/-1;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:16px;
+  min-width:0;
+  margin:0 0 4px;
+  padding:14px 16px;
+  border:1px solid #dce8df;
+  border-radius:14px;
+  background:#f5faf6;
+}
+.offer-reference-control label{display:flex;flex-direction:column;gap:3px;min-width:0}
+.offer-reference-control label span{color:#244b36;font-size:13px;font-weight:800}
+.offer-reference-control label small{color:#718076;font-size:11px;line-height:1.35}
+.offer-reference-control select{
+  flex:0 1 220px;
+  min-width:130px;
+  min-height:40px;
+  padding:8px 34px 8px 11px;
+  border:1px solid #cfe3d4;
+  border-radius:10px;
+  background:#fff;
+  color:#176b49;
+  font:700 13px/1.2 inherit;
+}
+.offer-reference-control select:focus-visible{
+  outline:2px solid #1b7652;
+  outline-offset:2px;
+}
+.offer-comparison-card-actions{display:flex;align-items:center;gap:6px}
+.offer-reference-label{white-space:nowrap}
+@media(max-width:560px){
+  .offer-reference-control{align-items:stretch;flex-direction:column;gap:9px;padding:12px}
+  .offer-reference-control select{width:100%;max-width:none;flex:1}
+}
