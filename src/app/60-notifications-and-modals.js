@@ -189,6 +189,32 @@ function renderUrssafConsentNotice(compact = false){
     </div>`;
 }
 
+function renderSalaryFormFields(config){
+  const {
+    prefix, name, period='mois', salary='', hours='35', mutuelle=30,
+    trEnabled=false, mealDays=21, mealValue=8, mealShare=50,
+    maxNameLength=80, editableMutuelle=false
+  } = config;
+  const annual = period === 'an';
+  const mutuelleBlock = editableMutuelle
+    ? '<button type="button" id="' + prefix + 'MutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">' + new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(mutuelle) + ' € / mois</button>'
+    : '<strong>' + new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(mutuelle) + ' € salarié</strong>';
+  const mutuelleEditor = editableMutuelle
+    ? '<div id="' + prefix + 'MutuelleEditor" class="edit-offer-mutuelle-editor" hidden><label for="' + prefix + 'Mutuelle">Votre part mensuelle (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'Mutuelle" value="' + String(mutuelle).replace('.', ',') + '" autocomplete="off"></div>'
+    : '';
+  return [
+    '<div class="salary-form-fields">',
+    '<div class="field-row salary-name-field"><label for="' + prefix + 'Name">Nom de l’offre</label><input type="text" id="' + prefix + 'Name" maxlength="' + maxNameLength + '" value="' + esc(name) + '" autocomplete="off"></div>',
+    renderUrssafConsentNotice(prefix === 'editOffer'),
+    '<div class="field-row salary-period-row"><span class="field-label">Votre salaire est indiqué en</span><div class="pill-toggle" id="' + prefix + 'Period" role="group" aria-label="Période du salaire brut"><button type="button" data-period="mois" aria-pressed="' + (!annual) + '">Mensuel</button><button type="button" data-period="an" aria-pressed="' + annual + '">Annuel</button></div></div>',
+    '<div class="field-row salary-gross-field"><label for="' + prefix + 'Gross" id="' + prefix + 'GrossLabel">Salaire brut ' + (annual?'annuel':'mensuel') + ' (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'Gross" value="' + String(salary).replace('.', ',') + '" placeholder="' + (annual?'Ex. 30 000':'Ex. 2 500') + '" autocomplete="off"></div>',
+    '<div class="field-row salary-hours-row"><span class="field-label">Base horaire</span><div class="pill-toggle" id="' + prefix + 'Hours" role="group" aria-label="Base horaire"><button type="button" data-hours="35" aria-pressed="' + (hours !== '39') + '">35 h</button><button type="button" data-hours="39" aria-pressed="' + (hours === '39') + '">39 h</button></div></div>',
+    '<div class="onboarding-benefits salary-benefits"><div class="onboarding-mutuelle-note"><span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span><strong class="onboarding-mutuelle-label">Mutuelle</strong>' + mutuelleBlock + '</div>' + mutuelleEditor,
+    '<div class="onboarding-tr salary-tr"><div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div><div class="pill-toggle onboarding-tr-toggle" id="' + prefix + 'TrToggle" role="group" aria-label="Titres-restaurant"><button type="button" data-tr="non" aria-pressed="' + (!trEnabled) + '">Non</button><button type="button" data-tr="oui" aria-pressed="' + trEnabled + '">Oui</button></div>',
+    '<div id="' + prefix + 'TrFields" class="onboarding-tr-fields" ' + (trEnabled?'':'hidden') + '><div class="three-col"><div class="field-row"><label for="' + prefix + 'MealDays">Jours/mois</label><input type="number" id="' + prefix + 'MealDays" min="0" max="31" step="1" value="' + mealDays + '"></div><div class="field-row"><label for="' + prefix + 'MealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="' + prefix + 'MealValue" value="' + String(mealValue).replace('.', ',') + '"></div><div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="' + prefix + 'MealShare"><button type="button" data-share="50" aria-pressed="' + (mealShare===50) + '">50 %</button><button type="button" data-share="40" aria-pressed="' + (mealShare===40) + '">40 %</button></div></div></div></div></div></div>'
+  ].join('');
+}
+
 function renderMutuelleTrFields(idPrefix){
   return `
     <div class="onboarding-benefits">
@@ -347,36 +373,8 @@ function showAddScenarioModal(brutPrefill, dureePrefill, namePrefill){
     : '';
   const html = `
     <p id="modalMsg" class="modal-msg"></p>
-    <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddName">Nom de l’offre</label>
-      <input type="text" id="modalAddName" maxlength="60" value="${esc(namePrefill || 'Nouvelle offre')}" autocomplete="off">
-    </div>
-        ${renderUrssafConsentNotice()}
-    <div class="field-row" style="margin:0 0 14px;">
-      <label>Votre salaire est indiqué en</label>
-      <div class="pill-toggle" id="modalAddPeriod" role="group" aria-label="Période du salaire">
-        <button type="button" data-period="mois" aria-pressed="true">Mensuel</button>
-        <button type="button" data-period="an" aria-pressed="false">Annuel</button>
-      </div>
-    </div>
-    <div class="field-row" style="margin:0 0 14px;">
-      <label for="modalAddInput" id="modalAddLabel">Salaire brut mensuel (€)</label>
-      <input type="text" inputmode="decimal" id="modalAddInput" value="${initialSalary}" placeholder="Ex. 2 500" autocomplete="off">
-    </div>
-    <div class="field-row" style="margin:0 0 4px;">
-      <label>Base horaire</label>
-      <div class="pill-toggle" id="modalAddDuree">
-        <button type="button" data-duree="35" aria-pressed="${dureePrefill !== '39'}">35 h</button>
-        <button type="button" data-duree="39" aria-pressed="${dureePrefill === '39'}">39 h</button>
-      </div>
-    </div>
-
-    ${renderMutuelleTrFields('modalAdd')}
-
-    <div class="modal-actions" style="margin-top:18px;">
-      <button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button>
-      <button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button>
-    </div>`;
+    ${renderSalaryFormFields({prefix:'modalAdd',name:namePrefill || 'Nouvelle offre',period:'mois',salary:initialSalary,hours:dureePrefill === '39' ? '39' : '35',mutuelle:30,trEnabled:false,mealDays:21,mealValue:8,mealShare:50,maxNameLength:60})}
+    <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="modalAddCancel">Annuler</button><button type="button" class="btn btn-primary" id="modalAddSubmit" disabled>Ajouter ce salaire</button></div>`;
   const pending = openModal(html, { initialFocusSelector: '#modalAddInput', className: 'modal-add-salary', dismissible: true });
   const overlay = document.getElementById('modalOverlay');
   const input = overlay.querySelector('#modalAddInput');
@@ -453,60 +451,8 @@ function showEditScenarioModal(scenario){
   const trEnabled = Number(scenario.joursResto)>0 || Number(scenario.valeurResto)>0;
   const initialShare = Number(scenario.partResto)===40 ? 40 : 50;
   const html = `
-    <div class="edit-offer-modal">
-      <div class="field-row">
-        <label for="editOfferName">Nom de l’offre</label>
-        <input type="text" id="editOfferName" maxlength="80" value="${esc(scenario.name)}" autocomplete="off">
-      </div>
-      ${renderUrssafConsentNotice(true)}
-      <div class="field-row edit-offer-inline-row">
-        <span class="field-label">Votre salaire est indiqué en</span>
-        <div class="pill-toggle" id="editOfferPeriod" role="group" aria-label="Période du salaire brut">
-          <button type="button" data-period="mois" aria-pressed="${initialPeriod==='mois'}">Mensuel</button>
-          <button type="button" data-period="an" aria-pressed="${initialPeriod==='an'}">Annuel</button>
-        </div>
-      </div>
-      <div class="field-row">
-        <label for="editOfferGross" id="editOfferGrossLabel">Salaire brut ${initialPeriod==='an'?'annuel':'mensuel'} (€)</label>
-        <input type="text" inputmode="decimal" id="editOfferGross" value="${String(initialSalary).replace('.', ',')}" autocomplete="off">
-      </div>
-        <div class="onboarding-tr edit-offer-tr">
-          <div class="onboarding-tr-heading"><strong>Titres-restaurant</strong></div>
-          <div class="pill-toggle onboarding-tr-toggle" id="editOfferTrToggle" role="group" aria-label="Titres-restaurant">
-            <button type="button" data-tr="non" aria-pressed="${!trEnabled}">Non</button>
-            <button type="button" data-tr="oui" aria-pressed="${trEnabled}">Oui</button>
-          </div>
-          <div id="editOfferTrFields" class="onboarding-tr-fields" ${trEnabled?'':'hidden'}>
-            <div class="three-col">
-              <div class="field-row"><label for="editOfferMealDays">Jours/mois</label><input type="number" id="editOfferMealDays" min="0" max="31" step="1" value="${Number(scenario.joursResto)||0}"></div>
-              <div class="field-row"><label for="editOfferMealValue">Valeur faciale (€)</label><input type="text" inputmode="decimal" id="editOfferMealValue" value="${String(scenario.valeurResto||0).replace('.', ',')}"></div>
-              <div class="field-row"><span class="field-label">Part salariale</span><div class="pill-toggle meal-share-toggle" id="editOfferMealShare"><button type="button" data-share="50" aria-pressed="${initialShare===50}">50 %</button><button type="button" data-share="40" aria-pressed="${initialShare===40}">40 %</button></div></div>
-            </div>
-          </div>
-        </div>
-      <div class="field-row edit-offer-inline-row">
-        <span class="field-label">Base horaire</span>
-        <div class="pill-toggle" id="editOfferHours" role="group" aria-label="Base horaire">
-          <button type="button" data-hours="35" aria-pressed="${scenario.dureeType!=='39'}">35 h</button>
-          <button type="button" data-hours="39" aria-pressed="${scenario.dureeType==='39'}">39 h</button>
-        </div>
-      </div>
-      <div class="onboarding-benefits edit-offer-benefits">
-        <div class="onboarding-mutuelle-note">
-          <span class="onboarding-mutuelle-icon" aria-hidden="true">✓</span>
-          <strong class="onboarding-mutuelle-label">Mutuelle</strong>
-          <button type="button" id="editOfferMutuelleToggle" class="edit-offer-mutuelle-value" aria-expanded="false">${new Intl.NumberFormat('fr-FR',{maximumFractionDigits:2}).format(initialMutuelle)} € / mois</button>
-        </div>
-        <div id="editOfferMutuelleEditor" class="edit-offer-mutuelle-editor" hidden>
-          <label for="editOfferMutuelle">Votre part mensuelle (€)</label>
-          <input type="text" inputmode="decimal" id="editOfferMutuelle" value="${String(initialMutuelle).replace('.', ',')}" autocomplete="off">
-        </div>
-      </div>
-      <div class="modal-actions">
-        <button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button>
-        <button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button>
-      </div>
-    </div>`;
+    ${renderSalaryFormFields({prefix:'editOffer',name:scenario.name,period:initialPeriod,salary:initialSalary,hours:scenario.dureeType === '39' ? '39' : '35',mutuelle:initialMutuelle,trEnabled,mealDays:initialMealDays,mealValue:initialMealValue,mealShare:initialShare,editableMutuelle:true})}
+    <div class="modal-actions salary-form-actions"><button type="button" class="btn modal-btn-cancel" id="editOfferCancel">Annuler</button><button type="button" class="btn btn-primary" id="editOfferSave">Enregistrer</button></div>`;
   const pending = openModal(html, { initialFocusSelector:'#editOfferName', className:'modal-edit-offer', dismissible:true, role:'dialog', ariaLabel:'Modifier une offre salariale' });
   const overlay = document.getElementById('modalOverlay');
   const input = id => overlay.querySelector('#'+id);
