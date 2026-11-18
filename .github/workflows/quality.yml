@@ -35,7 +35,15 @@ jobs:
             git fetch origin "$BASE_REF"
             DIFF_RANGE="origin/$BASE_REF...HEAD"
           else
-            DIFF_RANGE="$EVENT_BEFORE..$GITHUB_SHA"
+            # Une poussée ultérieure (tests, docs, etc.) peut arriver avant la
+            # synchronisation HTML d'un commit source. Comparer au dernier index
+            # généré permet au nouveau run de reprendre cette synchronisation.
+            LAST_SYNC_SHA="$(git log -1 --format=%H -- index.html)"
+            if [ -n "$LAST_SYNC_SHA" ]; then
+              DIFF_RANGE="$LAST_SYNC_SHA..$GITHUB_SHA"
+            else
+              DIFF_RANGE="$EVENT_BEFORE..$GITHUB_SHA"
+            fi
           fi
           is_app_change() {
             case "$1" in
