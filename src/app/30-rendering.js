@@ -252,7 +252,7 @@ function renderComparisonCards(computed){
     const delta=value===null||referenceValue===null?null:value-referenceValue;
     const deltaClass=delta===null?'':delta>0.01?'is-positive':delta< -0.01?'is-negative':'is-neutral';
     const deltaHtml=s.id===refId
-      ? '<span class="comparison-reference-note">Offre de référence</span>'
+      ? '<span class="comparison-reference-note">Base de comparaison</span>'
       : delta===null
         ? '<span class="comparison-reference-note">Écart indisponible</span>'
         : '<div class="comparison-offer-delta '+deltaClass+'"><strong>'+config.formatSigned(delta)+'</strong><span>'+(config.key==='hour'?'vs ':'/ '+config.unit+' vs ')+esc(reference.s.name)+'</span></div>';
@@ -260,9 +260,7 @@ function renderComparisonCards(computed){
     const details=trTotal>0.5
       ? '<details class="offer-net-details"><summary>Détail des titres-restaurant</summary>'+renderSalaryNetSummary(r.m.netSocial,trTotal,r.netApres+trTotal)+'</details>'
       : '';
-    const referenceAction=s.id===refId
-      ? '<span class="offer-reference-label">Référence actuelle</span>'
-      : '';
+    const referenceAction='';
     return '<article class="comparison-offer-card '+(s.id===refId?'is-reference':'')+'" data-comparison-offer="'+s.id+'">'+
       '<header class="comparison-offer-head"><div><span class="comparison-offer-index">OFFRE '+(index+1)+'</span><h3>'+esc(s.name)+'</h3></div>'+referenceAction+'</header>'+
       '<div class="comparison-offer-value-label">'+config.label+' · avant impôt</div>'+
