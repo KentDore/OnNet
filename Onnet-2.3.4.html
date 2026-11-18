@@ -2600,6 +2600,69 @@ header.hero .hero-copy .trust-service{
   border-color:#34443a!important;
 }
 
+
+/* Statut Urssaf intégré au panneau des offres : pas de carte supplémentaire. */
+#urssafStatus.urssaf-status{
+  display:block!important;
+  margin:14px 0 0!important;
+  padding:12px 0 0!important;
+  border:0!important;
+  border-top:1px solid var(--line)!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+#urssafStatus .urssaf-status-copy{
+  display:flex!important;
+  align-items:center!important;
+  justify-content:space-between!important;
+  flex-wrap:wrap!important;
+  gap:8px 18px!important;
+  width:100%;
+}
+#urssafStatus .urssaf-status-message{
+  margin:0!important;
+  font-size:13px!important;
+  line-height:1.4!important;
+  color:var(--ink-soft)!important;
+}
+#urssafStatus .urssaf-consent-actions{
+  display:flex!important;
+  align-items:center!important;
+  flex-wrap:wrap!important;
+  gap:8px 16px!important;
+  margin:0!important;
+}
+#urssafStatus #urssafWarnings{margin:0!important;font-size:12px!important}
+#urssafStatus #urssafWarnings summary{
+  color:var(--ink-soft)!important;
+  font-size:12px!important;
+  font-weight:550!important;
+}
+#urssafStatus .urssaf-consent-revoke{
+  min-height:28px!important;
+  padding:3px 0!important;
+  border:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  color:var(--muted,var(--ink-soft))!important;
+  font-size:12px!important;
+  font-weight:500!important;
+  text-decoration:underline;
+  text-decoration-color:transparent;
+  text-underline-offset:3px;
+}
+#urssafStatus .urssaf-consent-revoke:hover{
+  color:var(--ink)!important;
+  text-decoration-color:currentColor;
+}
+@media(max-width:560px){
+  #urssafStatus.urssaf-status{margin-top:12px!important;padding-top:10px!important}
+  #urssafStatus .urssaf-status-copy{align-items:flex-start!important;gap:7px!important}
+  #urssafStatus .urssaf-consent-actions{gap:7px 14px!important}
+  #urssafStatus .urssaf-status-message{font-size:12px!important}
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -2630,8 +2693,7 @@ header.hero .hero-copy .trust-service{
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
     <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
- </section>
-  <section class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
+  <div class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
       <details class="result-source" id="urssafWarnings" hidden>
@@ -2648,6 +2710,7 @@ header.hero .hero-copy .trust-service{
         <button type="button" class="urssaf-consent-revoke" id="urssafConsentRevoke" hidden>Retirer l’autorisation</button>
       </div>
     </div>
+  </div>
   </section>
   <div class="panel reveal" id="comparePanel">
     <h2 class="bars-title">Comparer les offres</h2>
