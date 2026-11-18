@@ -1951,6 +1951,11 @@ test('la fenêtre d’ajout de salaire ne masque pas les titres-restaurant sur p
     assert.ok(before.height<=before.viewport-20,
       'la fenêtre doit rester dans la hauteur réellement visible : '+JSON.stringify(before));
     assert.equal(before.overflow,'auto');
+    assert.equal(await page.locator('#modalMsg').evaluate(el=>getComputedStyle(el).display),'none',
+      'le message vide ne doit pas réserver une ligne');
+    const fieldMargins=await modal.locator(':scope > .field-row').evaluateAll(nodes=>nodes.map(el=>parseFloat(getComputedStyle(el).marginBottom)));
+    assert.ok(fieldMargins.every(value=>value<=7.1),
+      'les champs du formulaire mobile doivent avoir des marges resserrées : '+JSON.stringify(fieldMargins));
     const actions=page.locator('#modalAddSubmit');
     await actions.scrollIntoViewIfNeeded();
     const footer=await actions.evaluate(el=>el.getBoundingClientRect().bottom);
