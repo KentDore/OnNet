@@ -374,6 +374,9 @@
   .panel-nested-body{padding-top:10px;}
 
   .hint{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-2px 0 14px;}
+  .raise-hint{display:grid; gap:4px;}
+  .raise-hint-base{color:var(--ink);}
+  .raise-hint-base strong{color:var(--accent); font-weight:650;}
   h2.bars-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 4px;}
 
   /* ---- Encart d'analyse ---- */
@@ -2808,7 +2811,7 @@ header.hero .hero-copy .trust-service{
 
   <div class="raise-tool-card" id="raiseModule">
         <div class="module-body" id="raiseModuleBody">
-          <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Choisissez une suggestion pour préremplir les champs, puis validez avec « Ajouter ».</div>
+          <div class="hint raise-hint"><div class="raise-hint-base">Base de calcul : <strong id="raiseBaseName">Poste actuel</strong></div><div>Choisissez une suggestion ou saisissez un montant, puis cliquez sur « Ajouter ».</div></div>
           <div class="raise-chips" id="raiseChipsPct"></div>
           <div class="raise-chips" id="raiseChipsEur"></div>
           <div class="raise-controls">
