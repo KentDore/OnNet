@@ -1561,3 +1561,37 @@ header.hero .hero-copy .trust-service{
 @media(max-width:640px){
   .advanced-workspace .raise-tool-card .module-body{padding-bottom:14px;}
 }
+
+
+/* En-tête desktop : utiliser la largeur disponible plutôt que concentrer le contenu à gauche. */
+@media (min-width: 900px){
+  header.hero{padding:28px 42px 48px;}
+  header.hero .hero-copy{
+    max-width:none;
+    display:grid;
+    grid-template-columns:minmax(0,1.1fr) minmax(300px,.9fr);
+    column-gap:clamp(36px,6vw,88px);
+    align-items:end;
+  }
+  header.hero .eyebrow{grid-column:1 / -1;margin-bottom:12px;}
+  header.hero h1{
+    grid-column:1;
+    grid-row:2 / span 2;
+    align-self:center;
+    font-size:clamp(38px,4vw,52px);
+    line-height:1.02;
+  }
+  header.hero .intro{
+    grid-column:2;
+    grid-row:2;
+    max-width:48ch;
+    align-self:end;
+    font-size:clamp(14px,1.25vw,17px);
+  }
+  header.hero .trust{
+    grid-column:2;
+    grid-row:3;
+    justify-self:start;
+    margin-top:16px;
+  }
+}
