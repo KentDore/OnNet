@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.1">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.1">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.2">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.2">
 <script>
   (() => {
     try {
@@ -2685,6 +2685,29 @@ header.hero .hero-copy .trust-service{
 #comparePanel .comparison-pending-state{display:grid;place-items:center;min-height:112px;padding:22px;border:1px dashed var(--line);border-radius:16px;color:var(--ink-soft);font-size:13px;line-height:1.5;text-align:center;background:transparent}
 @media(max-width:640px){#comparePanel .comparison-pending-state{min-height:92px;padding:16px 12px;font-size:12px}}
 
+
+/* Le simulateur est le contenu du panneau parent : pas de seconde carte imbriquée. */
+.advanced-workspace .raise-tool-card{
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+.advanced-workspace .raise-tool-card .module-body{
+  max-height:none;
+  padding:0 0 16px;
+  overflow:visible;
+  opacity:1;
+  visibility:visible;
+  transition:none;
+}
+@media(max-width:640px){
+  .advanced-workspace .raise-tool-card .module-body{padding-bottom:14px;}
+}
+
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
@@ -2692,7 +2715,7 @@ header.hero .hero-copy .trust-service{
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.1" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.1</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.2" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.2</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2757,7 +2780,6 @@ header.hero .hero-copy .trust-service{
 
   <details class="advanced-workspace reveal" id="advancedWorkspace">
     <summary>Simuler une augmentation</summary>
-    <p class="advanced-workspace-intro">Testez une hausse en pourcentage ou en euros à partir du poste de référence.</p>
   <details class="legacy-salary-details" id="legacySalaryCards" hidden>
     <summary>Fiches détaillées des salaires</summary>
     <p class="legacy-salary-intro">Les réglages détaillés de chaque offre restent accessibles ici. Le comparatif principal reste dans « Votre salaire, en perspective ».</p>
@@ -2784,7 +2806,7 @@ header.hero .hero-copy .trust-service{
 
 
 
-  <div class="module-card is-open raise-tool-card" id="raiseModule">
+  <div class="raise-tool-card" id="raiseModule">
         <div class="module-body" id="raiseModuleBody">
           <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Choisissez une suggestion pour préremplir les champs, puis validez avec « Ajouter ».</div>
           <div class="raise-chips" id="raiseChipsPct"></div>
