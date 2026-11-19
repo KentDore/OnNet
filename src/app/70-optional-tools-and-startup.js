@@ -4,6 +4,12 @@ function bindModuleToggle(cardId, toggleId, bodyId){
   const toggle = document.getElementById(toggleId);
   const body = document.getElementById(bodyId);
   if(!card || !toggle || !body) return;
+  // Le module est prêt dès que la section Outils devient visible :
+  // l'utilisateur n'a plus à l'activer une seconde fois après avoir déplié
+  // le panneau parent. Le bandeau reste repliable s'il souhaite masquer
+  // temporairement son contenu.
+  card.classList.add('is-open');
+  toggle.setAttribute('aria-expanded', 'true');
   toggle.addEventListener('click', () => {
     const willOpen = !card.classList.contains('is-open');
     toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
