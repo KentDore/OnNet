@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.3.4">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.3.4">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.3.5">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.3.5">
 <script>
   (() => {
     try {
@@ -457,6 +457,8 @@
   .raise-chips{display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px;}
   .raise-chip{font-family:'Inter',sans-serif; font-weight:600; font-size:13px; padding:8px 14px; border-radius:999px; border:1px solid var(--accent); background:var(--accent-soft); color:var(--accent); cursor:pointer;}
   .raise-chip:hover{background:var(--btn-primary-bg); color:#fff;}
+  .raise-chip.is-selected{box-shadow:inset 0 0 0 1px currentColor; background:var(--btn-primary-bg); color:#fff;}
+  .raise-chip.eur.is-selected{background:var(--btn-gold-bg); color:#fff;}
   .raise-chip.eur{border-color:var(--gold); background:var(--gold-soft); color:var(--gold-ink);}
   .raise-chip.eur:hover{background:var(--btn-gold-bg); color:#fff;}
   .raise-controls{display:flex; flex-wrap:wrap; align-items:center; gap:10px; margin-top:12px;}
@@ -2665,17 +2667,6 @@ header.hero .hero-copy .trust-service{
 
 
 /* Statut Urssaf : une seule ligne discrète intégrée au panneau des offres. */
-/* Ajustement mobile : conserver le statut et ses actions sur une ligne quand l'espace le permet. */
-#urssafStatus.urssaf-status{margin:8px 0 0!important;padding:8px 0 0!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
-@media(max-width:600px){
-  #urssafStatus .urssaf-status-copy{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:wrap!important;gap:6px 10px!important}
-  #urssafStatus .urssaf-status-message{flex:1 1 105px!important;min-width:0!important;font-size:11px!important}
-  #urssafStatus #urssafWarnings{flex:0 1 auto!important;margin:0!important}
-  #urssafStatus #urssafWarnings summary{min-height:24px!important;font-size:10px!important}
-  #urssafStatus .urssaf-consent-actions{flex:0 1 auto!important;gap:8px!important;margin:0!important}
-  #urssafStatus .urssaf-consent-revoke{min-height:24px!important;font-size:10px!important}
-}
-
 #urssafStatus.urssaf-status{display:block!important;margin:12px 0 0!important;padding:10px 0 0!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
 #urssafStatus .urssaf-status-copy{display:flex!important;flex-direction:row!important;align-items:center!important;justify-content:flex-start!important;flex-wrap:nowrap!important;gap:8px 18px!important;width:100%}
 #urssafStatus .urssaf-status-message{display:flex!important;align-items:center!important;flex:1 1 auto!important;min-width:0;margin:0!important;font-size:12px!important;line-height:1.35!important;color:var(--ink-soft)!important}
@@ -2689,158 +2680,19 @@ header.hero .hero-copy .trust-service{
 #urssafStatus .urssaf-consent-revoke:hover{color:var(--ink)!important;text-decoration:underline!important;text-underline-offset:3px}
 @media(max-width:600px){#urssafStatus.urssaf-status{margin-top:10px!important;padding-top:8px!important}#urssafStatus .urssaf-status-copy{flex-wrap:wrap!important;gap:7px 12px!important}#urssafStatus .urssaf-status-message{flex:1 0 100%!important;font-size:11px!important}#urssafStatus #urssafWarnings{margin-right:auto!important}#urssafStatus .urssaf-consent-actions{gap:10px!important}}
 
-.
-/* Correctif final : deux rangées compactes, statut puis liens secondaires. */
-#urssafStatus.urssaf-status{margin:8px 0 0!important;padding:8px 0 0!important;border:0!important;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)!important;border-radius:0!important;background:transparent!important;box-shadow:none!important}
-#urssafStatus .urssaf-status-copy{display:grid!important;grid-template-columns:minmax(0,1fr) auto!important;align-items:center!important;gap:4px 12px!important;width:100%}
-#urssafStatus .urssaf-status-message{grid-column:1/-1!important;margin:0!important;font-size:12px!important;line-height:1.3!important}
-#urssafStatus #urssafWarnings{grid-column:1!important;min-width:0!important;margin:0!important;font-size:11px!important}
-#urssafStatus #urssafWarnings summary{min-height:24px!important;font-size:11px!important}
-#urssafStatus .urssaf-consent-actions{grid-column:2!important;display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:0!important;margin:0!important}
-#urssafStatus .urssaf-consent-revoke{min-height:24px!important;padding:2px 0 2px 8px!important;font-size:11px!important;text-decoration:none!important}
-@media(max-width:600px){
-  #urssafStatus .urssaf-status-copy{grid-template-columns:minmax(0,1fr) auto!important;gap:3px 8px!important}
-  #urssafStatus .urssaf-status-message{font-size:11px!important}
-  #urssafStatus #urssafWarnings summary,#urssafStatus .urssaf-consent-revoke{font-size:10px!important}
-}
+
+/* Le comparatif conserve sa place pendant l'attente des résultats Urssaf. */
+#comparePanel .comparison-pending-state{display:grid;place-items:center;min-height:112px;padding:22px;border:1px dashed var(--line);border-radius:16px;color:var(--ink-soft);font-size:13px;line-height:1.5;text-align:center;background:transparent}
+@media(max-width:640px){#comparePanel .comparison-pending-state{min-height:92px;padding:16px 12px;font-size:12px}}
 
 .result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
-
-/* Statut Urssaf en pied de page : information secondaire, hors du parcours des offres. */
-.urssaf-footer{margin:28px 0 12px;padding-top:14px;border-top:1px solid color-mix(in srgb,var(--line) 55%,transparent)}
-#urssafFooterMount #urssafStatus.urssaf-status{display:block!important;margin:0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--muted,var(--ink-soft))!important}
-#urssafFooterMount .urssaf-status-copy{display:flex!important;align-items:center!important;justify-content:space-between!important;flex-wrap:wrap!important;gap:6px 14px!important;width:100%}
-#urssafFooterMount .urssaf-status-message{flex:1 1 100%!important;margin:0!important;font-size:11px!important;line-height:1.35!important;color:var(--muted,var(--ink-soft))!important}
-#urssafFooterMount #urssafWarnings{margin:0!important;font-size:11px!important}
-#urssafFooterMount #urssafWarnings summary{min-height:24px!important;color:var(--muted,var(--ink-soft))!important;font-size:11px!important;font-weight:500!important}
-#urssafFooterMount .urssaf-consent-actions{display:flex!important;align-items:center!important;justify-content:flex-end!important;flex-wrap:wrap!important;gap:8px 14px!important;margin:0!important}
-#urssafFooterMount .urssaf-consent-details summary,#urssafFooterMount .urssaf-consent-revoke{min-height:24px!important;padding:2px 0!important;border:0!important;background:transparent!important;color:var(--muted,var(--ink-soft))!important;font-size:11px!important;font-weight:500!important;text-decoration:none!important}
-#urssafFooterMount .urssaf-consent-revoke:hover,#urssafFooterMount .urssaf-consent-details summary:hover{color:var(--ink)!important;text-decoration:underline!important;text-underline-offset:3px}
-@media(max-width:560px){.urssaf-footer{margin-top:22px;padding-top:12px}#urssafFooterMount .urssaf-status-copy{gap:5px 10px!important}#urssafFooterMount .urssaf-status-message{font-size:10px!important}#urssafFooterMount #urssafWarnings summary,#urssafFooterMount .urssaf-consent-revoke{font-size:10px!important}}
-
-
-/* Pied de page Urssaf — version discrète, alignée sur la typographie OnNet. */
-.urssaf-footer{
-  margin:22px 0 8px!important;
-  padding:10px 0 0!important;
-  border-top:1px solid var(--line)!important;
-}
-#urssafFooterMount #urssafStatus.urssaf-status,
-#urssafFooterMount #urssafStatus.urssaf-status.has-consent-actions{
-  display:block!important;
-  width:100%!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  box-shadow:none!important;
-  color:var(--ink-soft)!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-status-copy{
-  display:flex!important;
-  flex-direction:row!important;
-  align-items:center!important;
-  justify-content:flex-start!important;
-  flex-wrap:wrap!important;
-  gap:5px 16px!important;
-  width:100%!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-status-message{
-  display:inline-flex!important;
-  flex:0 0 auto!important;
-  align-items:center!important;
-  gap:7px!important;
-  margin:0!important;
-  color:var(--ink-soft)!important;
-  font-size:11px!important;
-  font-weight:500!important;
-  line-height:1.35!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-status-message::before{
-  content:"";
-  display:inline-block;
-  width:6px;height:6px;flex:none;
-  border-radius:50%;
-  background:var(--accent);
-  opacity:.9;
-}
-#urssafFooterMount #urssafStatus.is-error .urssaf-status-message::before{background:var(--warn)}
-#urssafFooterMount #urssafStatus #urssafWarnings{
-  display:block!important;
-  flex:0 1 auto!important;
-  margin:0!important;
-  font-size:11px!important;
-}
-#urssafFooterMount #urssafStatus #urssafWarnings[hidden]{display:none!important}
-#urssafFooterMount #urssafStatus #urssafWarnings summary,
-#urssafFooterMount #urssafStatus .urssaf-consent-details summary{
-  min-height:0!important;
-  padding:0!important;
-  color:var(--ink-soft)!important;
-  font-size:11px!important;
-  font-weight:500!important;
-  line-height:1.35!important;
-  cursor:pointer;
-}
-#urssafFooterMount #urssafStatus .urssaf-consent-actions{
-  display:flex!important;
-  flex:0 1 auto!important;
-  flex-direction:row!important;
-  align-items:center!important;
-  flex-wrap:wrap!important;
-  gap:5px 14px!important;
-  margin:0!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-consent-details{
-  margin:0!important;
-  color:var(--ink-soft)!important;
-  font-size:11px!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-consent-details p{
-  max-width:560px;
-  margin:8px 0 0!important;
-  color:var(--ink-soft)!important;
-  font-size:11px!important;
-  line-height:1.5!important;
-}
-#urssafFooterMount #urssafStatus .urssaf-consent-revoke{
-  min-height:0!important;
-  margin:0!important;
-  padding:0!important;
-  border:0!important;
-  border-radius:0!important;
-  background:transparent!important;
-  color:var(--muted,var(--ink-soft))!important;
-  font-size:11px!important;
-  font-weight:500!important;
-  line-height:1.35!important;
-  text-decoration:none!important;
-  cursor:pointer;
-}
-#urssafFooterMount #urssafStatus .urssaf-consent-revoke:hover,
-#urssafFooterMount #urssafStatus .urssaf-consent-details summary:hover,
-#urssafFooterMount #urssafStatus #urssafWarnings summary:hover{
-  color:var(--accent)!important;
-  text-decoration:underline!important;
-  text-underline-offset:3px;
-}
-@media(max-width:560px){
-  .urssaf-footer{margin-top:18px!important;padding-top:9px!important}
-  #urssafFooterMount #urssafStatus .urssaf-status-copy{gap:6px 12px!important}
-  #urssafFooterMount #urssafStatus .urssaf-status-message,
-  #urssafFooterMount #urssafStatus #urssafWarnings summary,
-  #urssafFooterMount #urssafStatus .urssaf-consent-details summary,
-  #urssafFooterMount #urssafStatus .urssaf-consent-revoke{font-size:10px!important}
-}
-
 </style>
 </head>
 <body>
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.3.4" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.3.4</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.3.5" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.3.5</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2862,7 +2714,7 @@ header.hero .hero-copy .trust-service{
 
     <div id="maquetteOfferTabs" class="offer-tabs" role="group" aria-label="Offres comparées"></div>
     <div id="maquetteYourSalary"></div>
-    
+    <div class="maquette-urssaf" id="maquetteUrssafMount"></div>
   <div class="urssaf-status" id="urssafStatus" role="status" aria-live="polite" aria-label="État du calcul">
     <div class="urssaf-status-copy">
       <p class="urssaf-status-message"><strong id="urssafStatusText">Calcul en attente.</strong></p>
@@ -2949,7 +2801,7 @@ header.hero .hero-copy .trust-service{
           <span class="module-switch" aria-hidden="true"></span>
         </button>
         <div class="module-body" id="raiseModuleBody">
-          <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Un clic crée un nouveau salaire à comparer.</div>
+          <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Choisissez une suggestion pour préremplir les champs, puis validez avec « Ajouter ».</div>
           <div class="raise-chips" id="raiseChipsPct"></div>
           <div class="raise-chips" id="raiseChipsEur"></div>
           <div class="raise-controls">
@@ -2972,10 +2824,10 @@ header.hero .hero-copy .trust-service{
   </details>
 
   <div class="disclaimer reveal">
+    <p class="disclaimer-summary"><strong>Estimation, pas un bulletin de paie.</strong> Les montants de rémunération sont calculés via l’API officielle Mon-entreprise de l’Urssaf à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle ; il ne constitue pas un bulletin de paie garanti conforme.</p>
     <details class="more">
-      <summary>Estimation, méthode et limites</summary>
+      <summary>Méthode et limites détaillées</summary>
       <div class="more-body">
-        <p class="disclaimer-summary"><strong>Estimation indicative, pas un bulletin de paie.</strong> Les montants sont calculés via l’API officielle Mon-entreprise à partir des paramètres transmis par OnNet. Le résultat dépend des informations saisies et des limites du modèle.</p>
         <div class="section-tag">Source des calculs</div>
         <p>Les résultats de paie affichés dans OnNet sont évalués par l’API REST officielle Mon-entreprise / Urssaf. OnNet ne recalcule pas localement les cotisations. Les valeurs du SMIC et du salaire médian gardent leurs sources de référence respectives (Urssaf et INSEE).</p>
 
@@ -2990,7 +2842,6 @@ header.hero .hero-copy .trust-service{
       </div>
     </details>
   </div>
-  <div class="urssaf-footer" id="urssafFooterMount" aria-label="Informations sur les calculs Urssaf"></div>
   </main>
 </div>
 
@@ -4673,13 +4524,13 @@ function renderMaquetteControls(computedOverride) {
       summary.dataset.editBound = "true";
     }
   }
-  const status = document.getElementById("urssafStatus"), mount = document.getElementById("urssafFooterMount");
+  const status = document.getElementById("urssafStatus"), mount = document.getElementById("maquetteUrssafMount");
   if (status && mount && status.parentElement !== mount) mount.appendChild(status);
 }
 function renderComparisonChart(computed) {
   const hasSalaryResults = computed.length > 0 && computed.every((item) => !!item.r);
   const comparePanel = document.getElementById("comparePanel");
-  if (comparePanel) comparePanel.hidden = !hasSalaryResults;
+  if (comparePanel) comparePanel.hidden = false;
   const hint = document.getElementById("stackHint");
   const insight = document.getElementById("insightBox");
   const chart = document.getElementById("stackChart");
@@ -4687,9 +4538,10 @@ function renderComparisonChart(computed) {
   const legend = document.getElementById("stackLegend");
   const alerts = document.getElementById("barsAlerts");
   const bars = document.getElementById("barsBody");
-  [hint, insight, scroll].filter(Boolean).forEach((element) => {
+  [hint, insight].filter(Boolean).forEach((element) => {
     element.hidden = !hasSalaryResults;
   });
+  if (scroll) scroll.hidden = false;
   if (legend) {
     legend.innerHTML = "";
     legend.hidden = true;
@@ -4702,8 +4554,7 @@ function renderComparisonChart(computed) {
   if (!chart) return;
   if (!hasSalaryResults) {
     chart.className = "comparison-offer-grid";
-    chart.innerHTML = "";
-    if (hint) hint.textContent = "La comparaison appara\xEEtra apr\xE8s validation des calculs par l\u2019API Urssaf.";
+    chart.innerHTML = '<div class="comparison-pending-state" role="status">Les offres compar\xE9es s\u2019afficheront ici d\xE8s que les calculs Urssaf seront disponibles.</div>';
     if (insight) insight.innerHTML = "";
     return;
   }
@@ -5807,14 +5658,28 @@ bindModuleToggle("raiseModule", "raiseModuleToggle", "raiseModuleBody");
 var raiseType = "pct";
 var RAISE_PCT_PRESETS = [2, 3, 5, 10];
 var RAISE_EUR_PRESETS = [50, 100, 150, 200];
+function setRaiseSelection(type, value) {
+  raiseType = type;
+  const amountInput = document.getElementById("raiseAmount");
+  amountInput.value = String(value).replace(".", ",");
+  document.querySelectorAll(".raise-type-toggle button").forEach((btn) => {
+    btn.setAttribute("aria-pressed", btn.dataset.rtype === type ? "true" : "false");
+  });
+  document.querySelectorAll(".raise-chip").forEach((btn) => {
+    const selected = btn.dataset.raiseType === type && Number(btn.dataset.raiseValue) === Number(value);
+    btn.classList.toggle("is-selected", selected);
+    btn.setAttribute("aria-pressed", selected ? "true" : "false");
+  });
+  setNumericInputError(amountInput, "");
+}
 function renderRaiseChips() {
-  document.getElementById("raiseChipsPct").innerHTML = RAISE_PCT_PRESETS.map((v) => `<button type="button" class="raise-chip" data-raise-pct="${v}">+${v} %</button>`).join("");
-  document.getElementById("raiseChipsEur").innerHTML = RAISE_EUR_PRESETS.map((v) => `<button type="button" class="raise-chip eur" data-raise-eur="${v}">+${v} \u20AC</button>`).join("");
+  document.getElementById("raiseChipsPct").innerHTML = RAISE_PCT_PRESETS.map((v) => `<button type="button" class="raise-chip" data-raise-type="pct" data-raise-value="${v}" data-raise-pct="${v}" aria-pressed="false">+${v} %</button>`).join("");
+  document.getElementById("raiseChipsEur").innerHTML = RAISE_EUR_PRESETS.map((v) => `<button type="button" class="raise-chip eur" data-raise-type="eur" data-raise-value="${v}" data-raise-eur="${v}" aria-pressed="false">+${v} \u20AC</button>`).join("");
   document.querySelectorAll("[data-raise-pct]").forEach((btn) => {
-    btn.addEventListener("click", () => addRaiseScenario("pct", parseFloat(btn.dataset.raisePct)));
+    btn.addEventListener("click", () => setRaiseSelection("pct", Number(btn.dataset.raisePct)));
   });
   document.querySelectorAll("[data-raise-eur]").forEach((btn) => {
-    btn.addEventListener("click", () => addRaiseScenario("eur", parseFloat(btn.dataset.raiseEur)));
+    btn.addEventListener("click", () => setRaiseSelection("eur", Number(btn.dataset.raiseEur)));
   });
 }
 function addRaiseScenario(type, value) {
@@ -5834,6 +5699,7 @@ function addRaiseScenario(type, value) {
   scenarios.push(created);
   justAddedId = created.id;
   render();
+  showToastImpl(type === "pct" ? `Augmentation de +${fmt(value)} % ajout\xE9e` : `Augmentation de +${fmt(value)} / mois ajout\xE9e`);
   scrollToNewCard();
 }
 function updateRaiseBaseName() {
@@ -5845,15 +5711,30 @@ document.querySelectorAll(".raise-type-toggle button").forEach((btn) => {
     raiseType = btn.dataset.rtype;
     document.querySelectorAll(".raise-type-toggle button").forEach((b) => b.setAttribute("aria-pressed", b === btn ? "true" : "false"));
     document.getElementById("raiseAmount").value = raiseType === "pct" ? "5" : "150";
+    document.querySelectorAll(".raise-chip").forEach((b) => {
+      b.classList.remove("is-selected");
+      b.setAttribute("aria-pressed", "false");
+    });
+    setNumericInputError(document.getElementById("raiseAmount"), "");
   });
 });
 document.getElementById("cardsBody").addEventListener("click", (e) => {
   if (e.target.closest && e.target.closest("#addScenario")) addScenario();
 });
+document.getElementById("raiseAmount").addEventListener("input", () => {
+  document.querySelectorAll(".raise-chip").forEach((btn) => {
+    btn.classList.remove("is-selected");
+    btn.setAttribute("aria-pressed", "false");
+  });
+});
 document.getElementById("addRaiseScenario").addEventListener("click", () => {
   const amountInput = document.getElementById("raiseAmount");
   if (!validateNumericInput(amountInput, true)) return;
   const val = parseNum(amountInput.value);
+  if (val <= 0) {
+    setNumericInputError(amountInput, "La valeur doit \xEAtre sup\xE9rieure \xE0 z\xE9ro.");
+    return;
+  }
   addRaiseScenario(raiseType, val);
 });
 renderRaiseChips();
