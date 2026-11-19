@@ -449,7 +449,8 @@ function renderMaquetteControls(computedOverride){
 function renderComparisonChart(computed){
   const hasSalaryResults=computed.length>0&&computed.every(item=>!!item.r);
   const comparePanel=document.getElementById('comparePanel');
-  if(comparePanel) comparePanel.hidden=!hasSalaryResults;
+  // Garder le panneau à sa place dès le premier rendu : seul son contenu évolue.
+  if(comparePanel) comparePanel.hidden=false;
 
   const hint=document.getElementById('stackHint');
   const insight=document.getElementById('insightBox');
@@ -459,7 +460,8 @@ function renderComparisonChart(computed){
   const alerts=document.getElementById('barsAlerts');
   const bars=document.getElementById('barsBody');
 
-  [hint,insight,scroll].filter(Boolean).forEach(element=>{element.hidden=!hasSalaryResults;});
+  [hint,insight].filter(Boolean).forEach(element=>{element.hidden=!hasSalaryResults;});
+  if(scroll) scroll.hidden=false;
   if(legend){legend.innerHTML='';legend.hidden=true;}
   if(alerts){alerts.innerHTML='';alerts.hidden=true;}
   if(bars) bars.innerHTML='';
@@ -467,8 +469,7 @@ function renderComparisonChart(computed){
 
   if(!hasSalaryResults){
     chart.className='comparison-offer-grid';
-    chart.innerHTML='';
-    if(hint) hint.textContent='La comparaison apparaîtra après validation des calculs par l’API Urssaf.';
+    chart.innerHTML='<div class="comparison-pending-state" role="status">Les offres comparées s’afficheront ici dès que les calculs Urssaf seront disponibles.</div>';
     if(insight) insight.innerHTML='';
     return;
   }
