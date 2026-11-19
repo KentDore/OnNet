@@ -2748,6 +2748,15 @@ header.hero .hero-copy .trust-service{
   }
 }
 
+
+/* Sur grand écran, le contenu ne doit pas rester enfermé dans une colonne de 1000 px. */
+@media(min-width:900px){
+  .wrap{
+    width:min(calc(100% - 64px),1280px);
+    max-width:1280px;
+  }
+}
+
 </style>
 </head>
 <body>
