@@ -968,6 +968,25 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
   }
 });
 
+test('les suggestions d’augmentation préremplissent le formulaire sans créer de salaire', { timeout: 60000 }, async () => {
+  const { context, page } = await openApp({ consent:false });
+  try {
+    const cards = page.locator('#cardsBody [data-card]');
+    const before = await cards.count();
+    await page.locator('#raiseModuleToggle').click();
+    await page.locator('[data-raise-eur="150"]').click();
+    assert.equal(await page.locator('#raiseAmount').inputValue(), '150');
+    assert.equal(await page.locator('[data-rtype="eur"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await page.locator('[data-raise-eur="150"]').getAttribute('aria-pressed'), 'true');
+    assert.equal(await cards.count(), before, 'une suggestion ne doit pas créer de salaire');
+    await page.locator('#addRaiseScenario').click();
+    await page.waitForFunction(count => document.querySelectorAll('#cardsBody [data-card]').length === count + 1, before);
+    assert.match(await page.locator('#toast').innerText(), /Augmentation de \+150 € \/ mois ajoutée/);
+  } finally {
+    await context.close();
+  }
+});
+
 test('une offre ouvre une fenêtre flottante de modification complète', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
