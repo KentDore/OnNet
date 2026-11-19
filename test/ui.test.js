@@ -973,7 +973,8 @@ test('les suggestions d’augmentation préremplissent le formulaire sans créer
   try {
     const cards = page.locator('#cardsBody [data-card]');
     const before = await cards.count();
-    await page.locator('#raiseModuleToggle').click();
+    assert.equal(await page.locator('#raiseModuleToggle').getAttribute('aria-expanded'), 'true',
+      'le simulateur est déjà ouvert sans activation supplémentaire');
     await page.locator('[data-raise-eur="150"]').click();
     assert.equal(await page.locator('#raiseAmount').inputValue(), '150');
     assert.equal(await page.locator('[data-rtype="eur"]').getAttribute('aria-pressed'), 'true');
