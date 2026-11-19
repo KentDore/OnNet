@@ -1029,10 +1029,12 @@ header.hero .hero-copy .trust{
 
 
 /* Fix mobile hero trust badge: compact, below the intro, never floated beside the title. */
-header.hero .hero-copy{
-  display:flex!important;
-  flex-direction:column!important;
-  align-items:flex-start!important;
+@media(max-width:640px){
+  header.hero .hero-copy{
+    display:flex!important;
+    flex-direction:column!important;
+    align-items:flex-start!important;
+  }
 }
 header.hero .hero-copy .trust{
   position:static!important;
