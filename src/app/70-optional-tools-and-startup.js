@@ -1,24 +1,4 @@
-// ---------- Modules (compléments activables) ----------
-function bindModuleToggle(cardId, toggleId, bodyId){
-  const card = document.getElementById(cardId);
-  const toggle = document.getElementById(toggleId);
-  const body = document.getElementById(bodyId);
-  if(!card || !toggle || !body) return;
-  // Le module est prêt dès que la section Outils devient visible :
-  // l'utilisateur n'a plus à l'activer une seconde fois après avoir déplié
-  // le panneau parent. Le bandeau reste repliable s'il souhaite masquer
-  // temporairement son contenu.
-  card.classList.add('is-open');
-  toggle.setAttribute('aria-expanded', 'true');
-  toggle.addEventListener('click', () => {
-    const willOpen = !card.classList.contains('is-open');
-    toggle.setAttribute('aria-expanded', willOpen ? 'true' : 'false');
-    card.classList.toggle('is-open', willOpen);
-  });
-}
-bindModuleToggle('raiseModule', 'raiseModuleToggle', 'raiseModuleBody');
-
-// ---------- Simulateur d'augmentation ----------
+// Le simulateur est directement intégré à son panneau : aucun toggle secondaire.\n\n// ---------- Simulateur d'augmentation ----------
 let raiseType = 'pct';
 const RAISE_PCT_PRESETS = [2, 3, 5, 10];
 const RAISE_EUR_PRESETS = [50, 100, 150, 200];
