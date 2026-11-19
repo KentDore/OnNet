@@ -1444,7 +1444,7 @@ test('les bascules brut/net et mensuel/annuel actualisent les valeurs et leur é
   }
 });
 
-test('les fiches de salaire précèdent le comparatif et les graphiques vides sont masqués', { timeout: 60000 }, async () => {
+test('le comparatif conserve sa place pendant l’attente des calculs Urssaf', { timeout: 60000 }, async () => {
   const { context, page } = await openApp({ consent:false });
   try {
     const order = await page.evaluate(() => {
@@ -1452,8 +1452,10 @@ test('les fiches de salaire précèdent le comparatif et les graphiques vides so
       const comparison = document.querySelector('#comparePanel');
       return form.compareDocumentPosition(comparison) & Node.DOCUMENT_POSITION_FOLLOWING;
     });
-    assert.ok(order, 'le formulaire de saisie doit précéder le graphique de répartition');
-    assert.equal(await page.locator('#comparePanel').isVisible(), false, 'ne pas afficher un panneau de résultats vide');
+    assert.ok(order, 'le formulaire de saisie doit précéder le comparatif');
+    assert.equal(await page.locator('#comparePanel').isVisible(), true, 'le panneau doit être présent dès le premier affichage');
+    assert.equal(await page.locator('#comparePanel .comparison-pending-state').isVisible(), true,
+      'un état d’attente discret doit occuper la zone du graphique');
   } finally {
     await context.close();
   }
