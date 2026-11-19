@@ -17,16 +17,30 @@ let raiseType = 'pct';
 const RAISE_PCT_PRESETS = [2, 3, 5, 10];
 const RAISE_EUR_PRESETS = [50, 100, 150, 200];
 
+function setRaiseSelection(type, value){
+  raiseType = type;
+  const amountInput = document.getElementById('raiseAmount');
+  amountInput.value = String(value).replace('.', ',');
+  document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
+    btn.setAttribute('aria-pressed', btn.dataset.rtype === type ? 'true' : 'false');
+  });
+  document.querySelectorAll('.raise-chip').forEach(btn => {
+    const selected = btn.dataset.raiseType === type && Number(btn.dataset.raiseValue) === Number(value);
+    btn.classList.toggle('is-selected', selected);
+    btn.setAttribute('aria-pressed', selected ? 'true' : 'false');
+  });
+  setNumericInputError(amountInput, '');
+}
 function renderRaiseChips(){
   document.getElementById('raiseChipsPct').innerHTML = RAISE_PCT_PRESETS
-    .map(v => `<button type="button" class="raise-chip" data-raise-pct="${v}">+${v} %</button>`).join('');
+    .map(v => `<button type="button" class="raise-chip" data-raise-type="pct" data-raise-value="${v}" data-raise-pct="${v}" aria-pressed="false">+${v} %</button>`).join('');
   document.getElementById('raiseChipsEur').innerHTML = RAISE_EUR_PRESETS
-    .map(v => `<button type="button" class="raise-chip eur" data-raise-eur="${v}">+${v} €</button>`).join('');
+    .map(v => `<button type="button" class="raise-chip eur" data-raise-type="eur" data-raise-value="${v}" data-raise-eur="${v}" aria-pressed="false">+${v} €</button>`).join('');
   document.querySelectorAll('[data-raise-pct]').forEach(btn => {
-    btn.addEventListener('click', () => addRaiseScenario('pct', parseFloat(btn.dataset.raisePct)));
+    btn.addEventListener('click', () => setRaiseSelection('pct', Number(btn.dataset.raisePct)));
   });
   document.querySelectorAll('[data-raise-eur]').forEach(btn => {
-    btn.addEventListener('click', () => addRaiseScenario('eur', parseFloat(btn.dataset.raiseEur)));
+    btn.addEventListener('click', () => setRaiseSelection('eur', Number(btn.dataset.raiseEur)));
   });
 }
 
@@ -46,6 +60,9 @@ function addRaiseScenario(type, value){
   scenarios.push(created);
   justAddedId = created.id;
   render();
+  showToastImpl(type === 'pct'
+    ? `Augmentation de +${fmt(value)} % ajoutée`
+    : `Augmentation de +${fmt(value)} / mois ajoutée`);
   scrollToNewCard();
 }
 
@@ -59,6 +76,8 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
     raiseType = btn.dataset.rtype;
     document.querySelectorAll('.raise-type-toggle button').forEach(b => b.setAttribute('aria-pressed', b === btn ? 'true' : 'false'));
     document.getElementById('raiseAmount').value = raiseType === 'pct' ? '5' : '150';
+    document.querySelectorAll('.raise-chip').forEach(b => { b.classList.remove('is-selected'); b.setAttribute('aria-pressed', 'false'); });
+    setNumericInputError(document.getElementById('raiseAmount'), '');
   });
 });
 // Le bouton est recréé par render() : déléguer au conteneur permanent
@@ -66,10 +85,14 @@ document.querySelectorAll('.raise-type-toggle button').forEach(btn => {
 document.getElementById('cardsBody').addEventListener('click', e => {
   if(e.target.closest && e.target.closest('#addScenario')) addScenario();
 });
+document.getElementById('raiseAmount').addEventListener('input', () => {
+  document.querySelectorAll('.raise-chip').forEach(btn => { btn.classList.remove('is-selected'); btn.setAttribute('aria-pressed', 'false'); });
+});
 document.getElementById('addRaiseScenario').addEventListener('click', () => {
   const amountInput = document.getElementById('raiseAmount');
   if(!validateNumericInput(amountInput, true)) return;
   const val = parseNum(amountInput.value);
+  if(val <= 0){ setNumericInputError(amountInput, 'La valeur doit être supérieure à zéro.'); return; }
   addRaiseScenario(raiseType, val);
 });
 renderRaiseChips();

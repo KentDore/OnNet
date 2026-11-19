@@ -1533,3 +1533,8 @@ header.hero .hero-copy .trust-service{
 #urssafStatus .urssaf-consent-revoke{min-height:24px!important;padding:2px 0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--muted,var(--ink-soft))!important;font-size:11px!important;font-weight:500!important;text-decoration:none!important}
 #urssafStatus .urssaf-consent-revoke:hover{color:var(--ink)!important;text-decoration:underline!important;text-underline-offset:3px}
 @media(max-width:600px){#urssafStatus.urssaf-status{margin-top:10px!important;padding-top:8px!important}#urssafStatus .urssaf-status-copy{flex-wrap:wrap!important;gap:7px 12px!important}#urssafStatus .urssaf-status-message{flex:1 0 100%!important;font-size:11px!important}#urssafStatus #urssafWarnings{margin-right:auto!important}#urssafStatus .urssaf-consent-actions{gap:10px!important}}
+
+
+/* Le comparatif conserve sa place pendant l'attente des résultats Urssaf. */
+#comparePanel .comparison-pending-state{display:grid;place-items:center;min-height:112px;padding:22px;border:1px dashed var(--line);border-radius:16px;color:var(--ink-soft);font-size:13px;line-height:1.5;text-align:center;background:transparent}
+@media(max-width:640px){#comparePanel .comparison-pending-state{min-height:92px;padding:16px 12px;font-size:12px}}
