@@ -62,7 +62,7 @@ function addRaiseScenario(type, value){
   render();
   showToastImpl(type === 'pct'
     ? `Augmentation de +${fmt(value)} % ajoutée`
-    : `Augmentation de +${fmt(value)} € / mois ajoutée`);
+    : `Augmentation de +${fmt(value)} / mois ajoutée`);
   scrollToNewCard();
 }
 
