@@ -961,8 +961,10 @@ test('les outils secondaires sont repliés par défaut et restent accessibles', 
     await advanced.evaluate(el => { el.open = true; });
     assert.equal(await advanced.evaluate(el => el.open), true);
     assert.equal(await page.locator('#cardsScroll').isVisible(), false);
-    assert.equal(await page.locator('#raiseModuleToggle').isVisible(), true,
-      'les outils secondaires deviennent accessibles lorsque leur panneau est ouvert');
+    assert.equal(await page.locator('#raiseModuleToggle').count(), 0,
+      'aucun interrupteur secondaire ne doit subsister');
+    assert.equal(await page.locator('#raiseModuleBody').isVisible(), true,
+      'le formulaire est directement accessible lorsque le panneau est ouvert');
   } finally {
     await context.close();
   }
@@ -973,8 +975,9 @@ test('les suggestions d’augmentation préremplissent le formulaire sans créer
   try {
     const cards = page.locator('#cardsBody [data-card]');
     const before = await cards.count();
-    assert.equal(await page.locator('#raiseModuleToggle').getAttribute('aria-expanded'), 'true',
-      'le simulateur est déjà ouvert sans activation supplémentaire');
+    assert.equal(await page.locator('#raiseModuleToggle').count(), 0,
+      'le simulateur ne doit plus contenir de toggle secondaire');
+    assert.equal(await page.locator('#raiseModuleBody').isVisible(), true);
     await page.locator('[data-raise-eur="150"]').click();
     assert.equal(await page.locator('#raiseAmount').inputValue(), '150');
     assert.equal(await page.locator('[data-rtype="eur"]').getAttribute('aria-pressed'), 'true');

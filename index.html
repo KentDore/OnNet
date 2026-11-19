@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.0">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.0">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.1">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.1">
 <script>
   (() => {
     try {
@@ -2692,7 +2692,7 @@ header.hero .hero-copy .trust-service{
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.0" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.0</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.1" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.1</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
@@ -2784,22 +2784,7 @@ header.hero .hero-copy .trust-service{
 
 
 
-  <section class="modules-section reveal" aria-label="Modules complémentaires">
-    <div class="modules-head">
-      <h2 class="modules-title">Outils</h2>
-      <p class="modules-sub">Facultatifs, à utiliser selon vos besoins.</p>
-    </div>
-    <div class="modules-grid">
-
-      <div class="module-card" id="raiseModule">
-        <button type="button" class="module-toggle-head" id="raiseModuleToggle" aria-expanded="false" aria-controls="raiseModuleBody">
-          <span class="module-icon"><svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"></polyline><polyline points="16 7 22 7 22 13"></polyline></svg></span>
-          <span class="module-info">
-            <span class="module-name">Simuler une augmentation</span>
-            <span class="module-desc">Comparer une hausse en % ou en euros</span>
-          </span>
-          <span class="module-switch" aria-hidden="true"></span>
-        </button>
+  <div class="module-card is-open raise-tool-card" id="raiseModule">
         <div class="module-body" id="raiseModuleBody">
           <div class="hint">Calculée à partir de <strong id="raiseBaseName">Poste actuel</strong>, le salaire marqué « référence » plus bas. Choisissez une suggestion pour préremplir les champs, puis validez avec « Ajouter ».</div>
           <div class="raise-chips" id="raiseChipsPct"></div>
@@ -2814,12 +2799,7 @@ header.hero .hero-copy .trust-service{
             <button class="btn btn-primary" id="addRaiseScenario">Ajouter</button>
           </div>
         </div>
-      </div>
-
-
-
-    </div>
-  </section>
+  </div>
 
   </details>
 
@@ -5643,20 +5623,6 @@ document.addEventListener("pointerup", (event) => {
   } catch (error) {
   }
 }, true);
-function bindModuleToggle(cardId, toggleId, bodyId) {
-  const card = document.getElementById(cardId);
-  const toggle = document.getElementById(toggleId);
-  const body = document.getElementById(bodyId);
-  if (!card || !toggle || !body) return;
-  card.classList.add("is-open");
-  toggle.setAttribute("aria-expanded", "true");
-  toggle.addEventListener("click", () => {
-    const willOpen = !card.classList.contains("is-open");
-    toggle.setAttribute("aria-expanded", willOpen ? "true" : "false");
-    card.classList.toggle("is-open", willOpen);
-  });
-}
-bindModuleToggle("raiseModule", "raiseModuleToggle", "raiseModuleBody");
 var raiseType = "pct";
 var RAISE_PCT_PRESETS = [2, 3, 5, 10];
 var RAISE_EUR_PRESETS = [50, 100, 150, 200];
