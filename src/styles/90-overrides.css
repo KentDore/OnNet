@@ -1538,3 +1538,26 @@ header.hero .hero-copy .trust-service{
 /* Le comparatif conserve sa place pendant l'attente des résultats Urssaf. */
 #comparePanel .comparison-pending-state{display:grid;place-items:center;min-height:112px;padding:22px;border:1px dashed var(--line);border-radius:16px;color:var(--ink-soft);font-size:13px;line-height:1.5;text-align:center;background:transparent}
 @media(max-width:640px){#comparePanel .comparison-pending-state{min-height:92px;padding:16px 12px;font-size:12px}}
+
+
+/* Le simulateur est le contenu du panneau parent : pas de seconde carte imbriquée. */
+.advanced-workspace .raise-tool-card{
+  min-width:0;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:0;
+  background:transparent;
+  overflow:visible;
+}
+.advanced-workspace .raise-tool-card .module-body{
+  max-height:none;
+  padding:0 0 16px;
+  overflow:visible;
+  opacity:1;
+  visibility:visible;
+  transition:none;
+}
+@media(max-width:640px){
+  .advanced-workspace .raise-tool-card .module-body{padding-bottom:14px;}
+}
