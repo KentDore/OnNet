@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.2">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.2">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.3">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.3">
 <script>
   (() => {
     try {
@@ -374,9 +374,6 @@
   .panel-nested-body{padding-top:10px;}
 
   .hint{font-size:12.5px; color:var(--ink-soft); line-height:1.5; margin:-2px 0 14px;}
-  .raise-hint{display:grid; gap:4px;}
-  .raise-hint-base{color:var(--ink);}
-  .raise-hint-base strong{color:var(--accent); font-weight:650;}
   h2.bars-title{font-family:'Fraunces',serif; font-weight:550; font-size:16px; margin:0 0 4px;}
 
   /* ---- Encart d'analyse ---- */
@@ -653,7 +650,7 @@
   .subline{display:flex; justify-content:space-between; align-items:baseline; gap:10px; padding:7px 0; font-size:13px;}
   .subline .val{font-family:'IBM Plex Mono',monospace; font-weight:500; white-space:nowrap;}
 
-  .disclaimer{margin-top:24px; font-size:12px; line-height:1.6; color:var(--ink-soft); max-width:82ch;}
+  .disclaimer{margin-top:24px; font-size:12px; line-height:1.6; color:var(--ink-soft); border-top:1px solid var(--line); padding-top:16px; max-width:82ch;}
   /* Les 2-3 phrases qui comptent vraiment (pas un bulletin de paie, un seul
      régime modélisé, le mode taux est optimiste) se distinguent du reste par
      la couleur : sans ça, tout le bloc lit au même niveau et rien n'en
@@ -1146,6 +1143,15 @@ header.hero .trust-icon svg{width:19px;height:19px}
    letter-spacing:1px;
  }
  .maquette-top .header-menu-panel{min-width:210px}
+}
+
+
+/* Sur grand écran, le contenu ne doit pas rester enfermé dans une colonne de 1000 px. */
+@media(min-width:900px){
+  .wrap{
+    width:min(calc(100% - 64px),1280px);
+    max-width:1280px;
+  }
 }
 
 /* Parcours V33 : les outils historiques restent accessibles, mais secondaires. */
@@ -1694,7 +1700,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
   --maquette-dark:#a8e4c2;
 }
 :root[data-theme="dark"] body{
-  background:linear-gradient(180deg,#171e1b 0%,var(--bg) 100%);
+  /* Fondus symétriques aux extrémités du document, sans calque fixe pendant le scroll. */
+  background:linear-gradient(180deg,#080b09 0,#101613 4rem,var(--bg) 10rem,var(--bg) calc(100% - 10rem),#101613 calc(100% - 4rem),#080b09 100%);
 }
 :root[data-theme="dark"] header.hero{
   background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
@@ -2713,7 +2720,6 @@ header.hero .hero-copy .trust-service{
   .advanced-workspace .raise-tool-card .module-body{padding-bottom:14px;}
 }
 
-.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 
 /* En-tête desktop : utiliser la largeur disponible plutôt que concentrer le contenu à gauche. */
 @media (min-width: 900px){
@@ -2748,22 +2754,14 @@ header.hero .hero-copy .trust-service{
   }
 }
 
-
-/* Sur grand écran, le contenu ne doit pas rester enfermé dans une colonne de 1000 px. */
-@media(min-width:900px){
-  .wrap{
-    width:min(calc(100% - 64px),1280px);
-    max-width:1280px;
-  }
-}
-
+.result-error{margin-top:8px;font-size:13px;color:var(--warn)}.calculation-meta{font-size:12px;color:var(--ink-soft);margin-top:8px}
 </style>
 </head>
 <body>
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.2" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.2</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.3" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.3</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
