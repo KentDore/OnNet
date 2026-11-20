@@ -544,9 +544,6 @@ body.salary-editor-open .integrated-offers{display:none!important}
   --maquette-green:#65c99a;
   --maquette-dark:#a8e4c2;
 }
-:root[data-theme="dark"] html{
-  background:#030504;
-}
 :root[data-theme="dark"] body{
   /* Le dégradé est porté par un calque couvrant toute la hauteur réelle du document. */
   position:relative;
