@@ -1598,3 +1598,10 @@ header.hero .hero-copy .trust-service{
     margin-top:16px;
   }
 }
+
+
+/* Le bloc méthodologique possède déjà le séparateur du disclaimer parent. */
+.disclaimer details.more{
+  border-top:0;
+  padding-top:0;
+}
