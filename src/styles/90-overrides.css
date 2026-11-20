@@ -545,8 +545,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
   --maquette-dark:#a8e4c2;
 }
 :root[data-theme="dark"] body{
-  /* Fondus symétriques aux extrémités du document, sans calque fixe pendant le scroll. */
-  background:linear-gradient(180deg,#080b09 0,#101613 4rem,var(--bg) 10rem,var(--bg) calc(100% - 10rem),#101613 calc(100% - 4rem),#080b09 100%);
+  /* Fondu nettement visible aux deux extrémités, sans calque fixe pendant le scroll. */
+  background:linear-gradient(180deg,#030504 0,#080e0a 6rem,#0d1410 13rem,var(--bg) 22rem,var(--bg) calc(100% - 22rem),#0d1410 calc(100% - 13rem),#080e0a calc(100% - 6rem),#030504 100%);
 }
 :root[data-theme="dark"] header.hero{
   background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
@@ -1597,4 +1597,12 @@ header.hero .hero-copy .trust-service{
     justify-self:start;
     margin-top:16px;
   }
+}
+
+
+/* Les séparateurs superposés du bloc méthodologique sont supprimés. */
+.disclaimer,
+.disclaimer details.more{
+  border-top:0;
+  padding-top:0;
 }
