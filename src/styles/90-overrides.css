@@ -545,7 +545,8 @@ body.salary-editor-open .integrated-offers{display:none!important}
   --maquette-dark:#a8e4c2;
 }
 :root[data-theme="dark"] body{
-  background:linear-gradient(180deg,#171e1b 0%,var(--bg) 100%);
+  /* Fondus symétriques aux extrémités du document, sans calque fixe pendant le scroll. */
+  background:linear-gradient(180deg,#080b09 0,#101613 4rem,var(--bg) 10rem,var(--bg) calc(100% - 10rem),#101613 calc(100% - 4rem),#080b09 100%);
 }
 :root[data-theme="dark"] header.hero{
   background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
