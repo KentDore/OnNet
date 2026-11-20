@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
 <title>Onnet — Simulateur brut → net</title>
 <meta name="theme-color" content="#176b49">
-<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.4">
-<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.4">
+<link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2.4.5">
+<link rel="apple-touch-icon" sizes="180x180" href="./apple-touch-icon.png?v=2.4.5">
 <script>
   (() => {
     try {
@@ -1699,9 +1699,22 @@ body.salary-editor-open .integrated-offers{display:none!important}
   --maquette-green:#65c99a;
   --maquette-dark:#a8e4c2;
 }
+:root[data-theme="dark"] html{
+  background:#030504;
+}
 :root[data-theme="dark"] body{
-  /* Fondu nettement visible aux deux extrémités, sans calque fixe pendant le scroll. */
-  background:linear-gradient(180deg,#030504 0,#080e0a 6rem,#0d1410 13rem,var(--bg) 22rem,var(--bg) calc(100% - 22rem),#0d1410 calc(100% - 13rem),#080e0a calc(100% - 6rem),#030504 100%);
+  /* Le dégradé est porté par un calque couvrant toute la hauteur réelle du document. */
+  position:relative;
+  isolation:isolate;
+  background:transparent!important;
+}
+:root[data-theme="dark"] body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,#030504 0,#080e0a 8rem,#0d1410 18rem,var(--bg) 34rem,var(--bg) calc(100% - 34rem),#0d1410 calc(100% - 18rem),#080e0a calc(100% - 8rem),#030504 100%);
 }
 :root[data-theme="dark"] header.hero{
   background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
@@ -2769,7 +2782,7 @@ header.hero .hero-copy .trust-service{
 <a href="#contenu" class="skip-link">Aller au contenu</a>
 <div class="wrap">
   <div class="maquette-top">
-    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.4" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.4</span></div>
+    <div class="brand"><img class="brand-icon" src="./favicon.svg?v=2.4.5" alt="" width="18" height="18"><span class="brand-wordmark">On<span class="brand-accent">net</span></span><span class="brand-version">v2.4.5</span></div>
     <div class="header-actions">
       <button class="print-btn header-share-btn" id="shareBtn" title="Copier un lien vers ce comparatif"><span>Partager</span></button>
       <details class="header-menu" id="headerMenu"><summary class="header-menu-trigger" aria-label="Autres actions">•••</summary>
