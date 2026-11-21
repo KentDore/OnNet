@@ -540,13 +540,24 @@ body.salary-editor-open .integrated-offers{display:none!important}
 /* Les écrans principaux ont des styles éditoriaux explicites : ils doivent
    suivre les mêmes surfaces et contrastes que les composants génériques. */
 :root[data-theme="dark"]{
+  background:#14181A;
   --maquette-bg:#141a18;
   --maquette-green:#65c99a;
   --maquette-dark:#a8e4c2;
 }
 :root[data-theme="dark"] body{
-  /* Fondu nettement visible aux deux extrémités, sans calque fixe pendant le scroll. */
-  background:linear-gradient(180deg,#030504 0,#080e0a 6rem,#0d1410 13rem,var(--bg) 22rem,var(--bg) calc(100% - 22rem),#0d1410 calc(100% - 13rem),#080e0a calc(100% - 6rem),#030504 100%);
+  /* Le dégradé est porté par un calque couvrant toute la hauteur réelle du document. */
+  position:relative;
+  isolation:isolate;
+  background:transparent!important;
+}
+:root[data-theme="dark"] body::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  z-index:-1;
+  pointer-events:none;
+  background:linear-gradient(180deg,#030504 0,#080e0a 8rem,#0d1410 18rem,var(--bg) 34rem,var(--bg) calc(100% - 34rem),#0d1410 calc(100% - 18rem),#080e0a calc(100% - 8rem),#030504 100%);
 }
 :root[data-theme="dark"] header.hero{
   background:linear-gradient(145deg,#202a25 0%,#1b2822 72%,#1b3026 100%);
